@@ -2,6 +2,7 @@ import os
 import time
 import threading
 import logging
+from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
 from datetime import datetime
 from app.routers.system import create_system_router
@@ -773,9 +774,7 @@ def account_limits(user=Depends(get_optional_user)):
 
 
 
-@app.get("/api/match/{match_id}/full-analysis")
-def full_analysis(match_id: int):
-    return get_cached_full_analysis(match_id)
+
 
 
 
@@ -1078,6 +1077,18 @@ system_router = create_system_router(
 )
 
 app.include_router(system_router)
+match_router = create_match_router(
+    get_cached_full_analysis_func=get_cached_full_analysis,
+    generate_match_pdf_func=generate_match_pdf,
+    get_optional_user_func=get_optional_user,
+    is_owner_or_paid_user_func=is_owner_or_paid_user,
+    enforce_premium_feature_func=enforce_premium_feature,
+    enforce_guest_or_user_limit_func=enforce_guest_or_user_limit,
+    logger=logger,
+    pdf_public_beta=PDF_PUBLIC_BETA,
+)
+
+app.include_router(match_router)
 
 app.mount(
     "/",

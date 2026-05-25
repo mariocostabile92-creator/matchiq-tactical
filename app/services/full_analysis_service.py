@@ -279,5 +279,64 @@ def build_full_analysis(
         "timeline": timeline,
         "ai_report": report
     }
+cached = full_analysis_cache.get(match_id)
+def get_cached_full_analysis(
+    match_id: int,
+    *,
+    full_analysis_cache,
+    full_analysis_cache_seconds,
+    get_dynamic_match_cache_func,
+    launch_background_refresh_func,
+    build_full_analysis_func
+):
+    cached = full_analysis_cache.get(match_id)
+
+    dynamic_seconds = full_analysis_cache_seconds
+
+    if cached:
+        try:
+            cached_match = cached["data"].get("match", {})
+            dynamic_seconds = get_dynamic_match_cache_func(cached_match)
+        except Exception:
+            pass
+
+    if cache_valid(cached, dynamic_seconds):
+        try:
+            launch_background_refresh_func(match_id)
+        except Exception:
+            pass
+
+        cached["data"]["cache"] = True
+        cached["data"]["cache_seconds"] = dynamic_seconds
+
+        return cached["data"]
+
+    try:
+        data = build_full_analysis_func(match_id)
+
+        if "error" not in data:
+            full_analysis_cache[match_id] = {
+                "timestamp": time.time(),
+                "data": data
+            }
+
+            data["cache"] = False
+            data["cache_seconds"] = dynamic_seconds
+
+        elif cached:
+            cached["data"]["cache_warning"] = data.get("error")
+            return cached["data"]
+
+        return data
+
+    except Exception as e:
+        if cached:
+            cached["data"]["cache_warning"] = str(e)
+            return cached["data"]
+
+        return {
+            "error": str(e),
+            "match_id": match_id
+        }
 
 
