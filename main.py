@@ -9,6 +9,12 @@ from fastapi import FastAPI, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from app.utils.cache import (
+    cache_valid,
+    build_cache_item,
+    get_cache_age,
+    clear_expired_cache
+)
 
 from live_data import get_live_matches, get_match_live_data
 from tactical_engine import analyze_match_tactical
@@ -129,10 +135,7 @@ DEFAULT_MATCH_CACHE = 35
 FINISHED_MATCH_CACHE = 600
 HALFTIME_CACHE = 60
 
-def cache_valid(cache_item, seconds):
-    if not cache_item:
-        return False
-    return time.time() - cache_item["timestamp"] < seconds
+
 
 def get_dynamic_match_cache(match_data):
     if not isinstance(match_data, dict):
