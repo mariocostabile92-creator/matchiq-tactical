@@ -18,9 +18,12 @@ def create_live_router(
     def api_live(top_only: bool = Query(False)):
         return get_live_matches_func(top_only=top_only)
 
-    return router
-@router.get("/live-matches")
-def live_matches(top_only: bool = Query(False)):
+    @router.get("/live-matches")
+    def live_matches(top_only: bool = Query(False)):
+        cache_key = f"top_only_{top_only}"
+        cached = live_matches_cache.get(cache_key)
+
+        # tutto il resto della funzione live_matches
     """
     Endpoint production-ready per la dashboard live.
 
