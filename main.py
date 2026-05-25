@@ -1574,10 +1574,8 @@ def clear_cache():
 
 
 @app.get("/api/match/{match_id}/full-analysis")
-def full_analysis(
-    match_id: int,
-    user=Depends(get_optional_user)
-):
+def full_analysis(match_id: int):
+    return get_cached_full_analysis(match_id)
     enforce_guest_or_user_limit(
         user=user,
         feature="full_analysis",
