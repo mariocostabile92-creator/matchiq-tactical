@@ -800,8 +800,8 @@ def build_real_scout_response(match_id: int = None):
     return scout
 
 
-@app.get("/")
-def home():
+@app.get("/api")
+def api_home():
     return {
         "app": "MatchIQ Tactical",
         "status": "online",
