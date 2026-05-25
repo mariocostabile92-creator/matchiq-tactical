@@ -2,6 +2,7 @@ import os
 import time
 import threading
 import logging
+from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
 from datetime import datetime
 
 from fastapi import FastAPI, Query, Depends
