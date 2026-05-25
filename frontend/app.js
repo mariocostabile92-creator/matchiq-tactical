@@ -435,7 +435,12 @@ async function loadMatches({ useLoading = false, force = false } = {}) {
         }
 
         const data = await response.json();
-        const matches = normalizeMatches(data.matches || []);
+        const matches = normalizeMatches(
+    data.matches ||
+    data.live_matches ||
+    data.data ||
+    []
+);
 
         if (matches.length > 0) {
             saveCache(matches);
