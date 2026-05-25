@@ -1003,9 +1003,26 @@ function getLocalAuthUser(){
 }
 
 function isLocalProUser(){
-    const user = typeof getUser === "function" ? getUser() : getLocalAuthUser();
-    const plan = String(user?.plan || "free").toLowerCase();
-    return plan === "pro" || plan === "scout";
+    const user = typeof getUser === "function"
+        ? getUser()
+        : getLocalAuthUser();
+
+    const plan = String(
+        user?.plan ||
+        user?.piano ||
+        user?.subscription ||
+        user?.role ||
+        "free"
+    ).toLowerCase();
+
+    const email = String(user?.email || "").toLowerCase();
+
+    return (
+        plan === "pro" ||
+        plan === "scout" ||
+        plan === "owner" ||
+        email === "mario.costabile92@outlook.it"
+    );
 }
 
 function showLocalPremiumPopup(feature="PDF Report PRO"){
