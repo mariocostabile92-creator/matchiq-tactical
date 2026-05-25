@@ -43,9 +43,10 @@ from ai_commentary_engine import generate_ai_commentary
 from payments import router as payments_router
 from app.services.full_analysis_service import (
     merge_pressure,
-    build_safe_ai_commentary
+    build_safe_ai_commentary,
+    build_safe_live_brain,
+    build_full_analysis
 )
-
 from auth import router as auth_router
 from database import init_db
 from usage_guard import (
@@ -243,52 +244,7 @@ def clamp(value, min_value=0, max_value=100):
 
 
 
-def build_safe_live_brain(
-    match_data,
-    pressure,
-    xg_analysis,
-    live_flow,
-    future_prediction,
-    timeline
-):
-    try:
-        timeline_events = []
 
-        if isinstance(timeline, dict):
-            timeline_events = timeline.get("events", [])
-        elif isinstance(timeline, list):
-            timeline_events = timeline
-
-        brain = build_live_match_brain(
-            match=match_data,
-            pressure_engine=pressure,
-            xg_analysis=xg_analysis,
-            live_flow=live_flow,
-            future_prediction=future_prediction,
-            timeline=timeline_events,
-        )
-
-        if isinstance(brain, dict):
-            brain["available"] = LIVE_MATCH_BRAIN_AVAILABLE
-            brain["source"] = "live_match_brain"
-            return brain
-
-        return {
-            "available": False,
-            "source": "live_match_brain",
-            "error": "Risposta live_brain non valida",
-            "commentary": [],
-            "prediction": {},
-        }
-
-    except Exception as e:
-        return {
-            "available": False,
-            "source": "live_match_brain",
-            "error": str(e),
-            "commentary": [],
-            "prediction": {},
-        }
 
 
 
@@ -299,136 +255,7 @@ def build_safe_live_brain(
 
 
 
-def build_full_analysis(match_id: int):
-    match_data = get_match_live_data(match_id)
 
-    if "error" in match_data:
-        return match_data
-
-    tactical = analyze_match_tactical(match_data)
-    live_engine = generate_live_engine(match_data)
-
-    pressure_base = analyze_pressure(match_data)
-    pressure = merge_pressure(pressure_base, live_engine)
-
-    xg_analysis = generate_xg_analysis(
-        match_data=match_data,
-        tactical_data={
-            "home_pressure": pressure.get("home", {}).get("pressure", 50),
-            "away_pressure": pressure.get("away", {}).get("pressure", 50),
-        }
-    )
-
-    live_flow = generate_live_flow(
-        match_data=match_data,
-        pressure_data=pressure,
-        xg_data=xg_analysis
-    )
-
-    ai_commentary = build_safe_ai_commentary(
-        match_data=match_data,
-        pressure=pressure,
-        live_flow=live_flow
-    )
-
-    tactical_coach = generate_tactical_coach(
-        match_data=match_data,
-        pressure_data=pressure
-    )
-
-    future_prediction = generate_future_prediction(
-        match_data=match_data,
-        pressure_data=pressure
-    )
-
-    ai_core = analyze_ai_core(match_data)
-
-    if isinstance(ai_core, dict):
-        commentary_lines = ai_commentary.get("commentary", [])
-
-        ai_core["commentary"] = (
-            commentary_lines
-            or live_engine.get("commentary")
-            or ai_core.get("commentary", [])
-        )
-
-        ai_core["confidence_score"] = live_engine.get(
-            "confidence_score",
-            ai_core.get("confidence_score", 70)
-        )
-
-        ai_core["live_flow_story"] = live_flow.get("story")
-
-    players = generate_player_ratings(match_data)
-
-    win_probability = generate_win_probability({
-        "goals": match_data.get("score", {}),
-        "minute": match_data.get("minute", 0),
-        "tactical_analysis": {
-            "home_pressure": pressure.get("home", {}).get("pressure", 0),
-            "away_pressure": pressure.get("away", {}).get("pressure", 0),
-            "home_danger": pressure.get("home", {}).get("danger", 0),
-            "away_danger": pressure.get("away", {}).get("danger", 0),
-            "home_win_momentum": live_flow.get("home", {}).get("momentum", 50),
-            "away_win_momentum": live_flow.get("away", {}).get("momentum", 50),
-        }
-    })
-
-    events = generate_tactical_events(match_data)
-    alerts = generate_live_alerts(events)
-    live_events = build_live_events(match_data)
-    report = generate_ai_report(match_data, tactical, players)
-
-    try:
-        timeline = generate_timeline(
-            match_data=match_data,
-            tactical_data={
-                "tactical": tactical,
-                "events": events
-            },
-            alerts_data={
-                "live_alerts": alerts
-            }
-        )
-    except Exception:
-        timeline = {
-            "events": live_engine.get("timeline", [])
-        }
-
-    live_brain = build_safe_live_brain(
-        match_data=match_data,
-        pressure=pressure,
-        xg_analysis=xg_analysis,
-        live_flow=live_flow,
-        future_prediction=future_prediction,
-        timeline=timeline,
-    )
-
-    if isinstance(ai_core, dict) and isinstance(live_brain, dict):
-        prediction = live_brain.get("prediction", {})
-        if isinstance(prediction, dict):
-            ai_core["live_brain_prediction"] = prediction.get("next_5_minutes")
-
-    return {
-        "match": match_data,
-        "tactical_analysis": tactical,
-        "ai_core": ai_core,
-        "ai_commentary": ai_commentary,
-        "pressure_engine": pressure,
-        "live_engine": live_engine,
-        "live_flow": live_flow,
-        "live_brain": live_brain,
-        "tactical_coach": tactical_coach,
-        "future_prediction": future_prediction,
-        "xg_analysis": xg_analysis,
-        "win_probability": win_probability,
-        "players_analysis": players,
-        "event_analysis": events,
-        "live_alerts": pressure.get("alerts", alerts),
-        "live_events": live_events,
-        "timeline": timeline,
-        "ai_report": report
-    }
 
 def get_cached_full_analysis(match_id: int):
     cached = FULL_ANALYSIS_CACHE.get(match_id)
@@ -454,7 +281,27 @@ def get_cached_full_analysis(match_id: int):
         return cached["data"]
 
     try:
-        data = build_full_analysis(match_id)
+        data = build_full_analysis(
+    match_id,
+    get_match_live_data_func=get_match_live_data,
+    analyze_match_tactical_func=analyze_match_tactical,
+    generate_live_engine_func=generate_live_engine,
+    analyze_pressure_func=analyze_pressure,
+    generate_xg_analysis_func=generate_xg_analysis,
+    generate_live_flow_func=generate_live_flow,
+    generate_tactical_coach_func=generate_tactical_coach,
+    generate_future_prediction_func=generate_future_prediction,
+    analyze_ai_core_func=analyze_ai_core,
+    generate_player_ratings_func=generate_player_ratings,
+    generate_win_probability_func=generate_win_probability,
+    generate_tactical_events_func=generate_tactical_events,
+    generate_live_alerts_func=generate_live_alerts,
+    build_live_events_func=build_live_events,
+    generate_ai_report_func=generate_ai_report,
+    generate_timeline_func=generate_timeline,
+    build_live_match_brain_func=build_live_match_brain,
+    live_match_brain_available=LIVE_MATCH_BRAIN_AVAILABLE
+)
 
         if "error" not in data:
             FULL_ANALYSIS_CACHE[match_id] = {
