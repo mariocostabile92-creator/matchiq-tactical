@@ -215,7 +215,7 @@ body{
 </div>
 
 <script>
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 function forceOwnerPro(){
@@ -324,8 +324,8 @@ function openScout(matchId){
 }
 
 forceOwnerPro();
-loadMatches(true);
-setInterval(()=>loadMatches(true),60000);
+loadMatches(false);
+setInterval(()=>loadMatches(false),60000);
 </script>
 
 </body>
