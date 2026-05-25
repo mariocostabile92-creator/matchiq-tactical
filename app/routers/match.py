@@ -107,3 +107,14 @@ def live_brain_analysis(match_id: int):
         "match_id": match_id,
         "live_brain": full.get("live_brain", {})
     }
+@router.get("/{match_id}/tactical-coach")
+def tactical_coach_analysis(match_id: int):
+    full = get_cached_full_analysis_func(match_id)
+
+    if "error" in full:
+        return full
+
+    return {
+        "match_id": match_id,
+        "tactical_coach": full["tactical_coach"]
+    }
