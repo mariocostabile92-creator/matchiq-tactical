@@ -562,17 +562,7 @@ def ai_commentary_analysis(match_id: int):
 
 
 
-@app.get("/api/match/{match_id}/win-probability")
-def win_probability_analysis(match_id: int):
-    full = get_cached_full_analysis(match_id)
 
-    if "error" in full:
-        return full
-
-    return {
-        "match_id": match_id,
-        "win_probability": full["win_probability"]
-    }
 
 
 
