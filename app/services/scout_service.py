@@ -1,11 +1,4 @@
 """
-import time
-from datetime import datetime
-
-from app.utils.safe import safe_float, safe_int, clamp
-from app.utils.cache import cache_valid
-app/services/scout_service.py
-
 Servizio Scout MatchIQ Tactical.
 Qui sposteremo progressivamente:
 - normalize_player_for_scout
@@ -13,10 +6,11 @@ Qui sposteremo progressivamente:
 - build_real_scout_response
 """
 
+import time
 from datetime import datetime
 
 from app.utils.safe import safe_float, safe_int, clamp
-
+from app.utils.cache import cache_valid
 
 def scout_service_ready():
     return {
@@ -253,39 +247,34 @@ def normalize_player_for_scout(player, match_data=None):
         "generated_at": datetime.utcnow().isoformat()
     }
 
-def extract_players_for_scout(data, match_data=None):
-    """
-    Estrae e normalizza players da varie strutture API/live engine.
-    """
+def extract_players_for_scout(players_analysis, match_data=None):
+    if not players_analysis:
+        return []
 
-    players = []
+    raw_players = []
 
-    if isinstance(data, list):
-        raw_players = data
+    if isinstance(players_analysis, dict):
+        if isinstance(players_analysis.get("players"), list):
+            raw_players = players_analysis.get("players", [])
+        elif isinstance(players_analysis.get("top_players"), list):
+            raw_players = players_analysis.get("top_players", [])
+        elif isinstance(players_analysis.get("ratings"), list):
+            raw_players = players_analysis.get("ratings", [])
+    elif isinstance(players_analysis, list):
+        raw_players = players_analysis
 
-    elif isinstance(data, dict):
+    normalized = []
 
-        raw_players = (
-            data.get("players")
-            or data.get("top_players")
-            or data.get("ratings")
-            or []
-        )
+    for p in raw_players:
+        item = normalize_player_for_scout(p, match_data=match_data)
+        if item:
+            normalized.append(item)
 
-    else:
-        raw_players = []
-
-    for player in raw_players:
-
-        normalized = normalize_player_for_scout(
-            player,
-            match_data=match_data
-        )
-
-        if normalized:
-            players.append(normalized)
-
-    return players
+    return sorted(
+        normalized,
+        key=lambda x: x.get("scout_score", 0),
+        reverse=True
+    )
 
 def build_real_scout_response(
     match_id=None,
