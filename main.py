@@ -1411,6 +1411,37 @@ def live_matches(top_only: bool = Query(False)):
 
 
 SCOUT_PUBLIC_BETA = os.getenv("SCOUT_PUBLIC_BETA", "1") == "1"
+PDF_PUBLIC_BETA = os.getenv("PDF_PUBLIC_BETA", "1") == "1"
+
+
+def is_owner_or_paid_user(user):
+    """
+    Controllo piano robusto per funzioni PRO/PDF.
+    Supporta sia schema frontend (plan) sia backend italiano (piano),
+    oltre a role/owner e all'email owner.
+    """
+    if not isinstance(user, dict):
+        return False
+
+    email = str(user.get("email") or "").lower().strip()
+
+    plan = str(
+        user.get("plan")
+        or user.get("piano")
+        or user.get("subscription")
+        or user.get("role")
+        or "guest"
+    ).lower().strip()
+
+    role = str(user.get("role") or "").lower().strip()
+
+    return (
+        email == "mario.costabile92@outlook.it"
+        or plan in ["pro", "scout", "owner"]
+        or role in ["owner", "admin", "pro", "scout"]
+        or bool(user.get("is_owner"))
+        or bool(user.get("is_pro"))
+    )
 
 
 @app.get("/api/scout/live")
@@ -1576,11 +1607,8 @@ def clear_cache():
 @app.get("/api/match/{match_id}/full-analysis")
 def full_analysis(match_id: int):
     return get_cached_full_analysis(match_id)
-    enforce_guest_or_user_limit(
-        user=user,
-        feature="full_analysis",
-        endpoint="/api/match/full-analysis"
-    )
+
+
 
     data = get_cached_full_analysis(match_id)
 
@@ -1749,16 +1777,25 @@ def download_pdf_report(
     match_id: int,
     user=Depends(get_optional_user)
 ):
-    enforce_premium_feature(
-        user=user,
-        feature="pdf_export"
-    )
+    """
+    Download PDF report.
 
-    enforce_guest_or_user_limit(
-        user=user,
-        feature="pdf_export",
-        endpoint="/api/match/download-pdf"
-    )
+    In beta può essere pubblico se PDF_PUBLIC_BETA=1.
+    In produzione metti PDF_PUBLIC_BETA=0 su Railway per richiedere piano PRO/SCOUT.
+    Include anche controllo robusto owner/pro per evitare falsi "guest".
+    """
+    if not PDF_PUBLIC_BETA:
+        if not is_owner_or_paid_user(user):
+            enforce_premium_feature(
+                user=user,
+                feature="pdf_export"
+            )
+
+        enforce_guest_or_user_limit(
+            user=user,
+            feature="pdf_export",
+            endpoint="/api/match/download-pdf"
+        )
 
     full = get_cached_full_analysis(match_id)
 
@@ -1767,7 +1804,7 @@ def download_pdf_report(
 
     try:
         pdf = generate_match_pdf(full)
-        pdf_path = pdf.get("pdf_path")
+        pdf_path = pdf.get("pdf_path") if isinstance(pdf, dict) else None
 
         if not pdf_path:
             return {
@@ -1794,6 +1831,7 @@ def download_pdf_report(
         )
 
     except Exception as e:
+        logger.exception("PDF DOWNLOAD ERROR")
         return {
             "match_id": match_id,
             "success": False,
