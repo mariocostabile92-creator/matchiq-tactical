@@ -2,6 +2,7 @@ import os
 import time
 import threading
 import logging
+from app.routers.live import create_live_router
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
 from datetime import datetime
@@ -347,9 +348,7 @@ def api_home():
 
 
 
-@app.get("/api/live")
-def api_live(top_only: bool = Query(False)):
-    return get_live_matches(top_only=top_only)
+
 
 
 @app.get("/api/live-matches")
@@ -1089,6 +1088,13 @@ match_router = create_match_router(
 )
 
 app.include_router(match_router)
+live_router = create_live_router(
+    get_live_matches_func=get_live_matches,
+    live_matches_cache=LIVE_MATCHES_CACHE,
+    live_matches_cache_seconds=LIVE_MATCHES_CACHE_SECONDS,
+)
+
+app.include_router(live_router)
 
 app.mount(
     "/",
