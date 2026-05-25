@@ -19,3 +19,14 @@ def create_match_router(
         return get_cached_full_analysis_func(match_id)
 
     return router
+@router.get("/{match_id}/players")
+def player_ratings(match_id: int):
+    full = get_cached_full_analysis_func(match_id)
+
+    if "error" in full:
+        return full
+
+    return {
+        "match_id": match_id,
+        "players_analysis": full["players_analysis"]
+    }
