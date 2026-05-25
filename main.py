@@ -914,6 +914,15 @@ def live_matches(top_only: bool = Query(True)):
             )
 
             score = m.get("score", {})
+if isinstance(score, str):
+    parts = score.replace(" ", "").split("-")
+    score = {
+        "home": safe_int(parts[0], 0) if len(parts) > 0 else 0,
+        "away": safe_int(parts[1], 0) if len(parts) > 1 else 0
+    }
+
+if not isinstance(score, dict):
+    score = {}
 
             home_goals = (
                 m.get("home_goals")
