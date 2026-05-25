@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 
 from app.utils.safe import safe_int
 from app.utils.cache import cache_valid
@@ -13,6 +13,19 @@ def create_live_router(
     get_live_matches_func,
     live_matches_cache,
     live_matches_cache_seconds,
+
+    build_real_scout_response_func,
+    scout_players_cache,
+    scout_players_cache_seconds,
+    get_match_live_data_func,
+    get_cached_full_analysis_func,
+    build_live_scout_func,
+    scout_engine_available,
+
+    get_optional_user_func,
+    enforce_premium_feature_func,
+    enforce_guest_or_user_limit_func,
+    scout_public_beta,
 ):
     @router.get("/live")
     def api_live(top_only: bool = Query(False)):
@@ -223,5 +236,28 @@ def create_live_router(
                 "api_safe": True,
                 "generated_at": datetime.utcnow().isoformat(),
             }
+
+    @router.get("/scout-live")
+    def api_scout_live_alias(
+        match_id: int = Query(None),
+        user=Depends(get_optional_user_func),
+    ):
+        if not scout_public_beta:
+            enforce_premium_feature_func(user, "scout")
+            enforce_guest_or_user_limit_func(
+                user=user,
+                feature="scout",
+                endpoint="/api/scout-live",
+            )
+
+        return build_real_scout_response_func(
+            match_id=match_id,
+            scout_players_cache=scout_players_cache,
+            scout_players_cache_seconds=scout_players_cache_seconds,
+            get_match_live_data_func=get_match_live_data_func,
+            get_cached_full_analysis_func=get_cached_full_analysis_func,
+            build_live_scout_func=build_live_scout_func,
+            scout_engine_available=scout_engine_available,
+        )
 
     return router
