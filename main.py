@@ -829,7 +829,15 @@ def api_scout_live_alias(
             endpoint="/api/scout-live"
         )
 
-    return build_real_scout_response(match_id=match_id)
+    return build_real_scout_response(
+    match_id=match_id,
+    scout_players_cache=SCOUT_PLAYERS_CACHE,
+    scout_players_cache_seconds=SCOUT_PLAYERS_CACHE_SECONDS,
+    get_match_live_data_func=get_match_live_data,
+    get_cached_full_analysis_func=get_cached_full_analysis,
+    build_live_scout_func=build_live_scout,
+    scout_engine_available=SCOUT_ENGINE_AVAILABLE
+)
 
 
 @app.get("/api/live-memory-status")
