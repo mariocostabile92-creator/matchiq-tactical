@@ -279,7 +279,7 @@ def build_full_analysis(
         "timeline": timeline,
         "ai_report": report
     }
-cached = full_analysis_cache.get(match_id)
+
 def get_cached_full_analysis(
     match_id: int,
     *,
