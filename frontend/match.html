@@ -1053,7 +1053,7 @@ function showLocalPremiumPopup(feature="PDF Report PRO"){
     document.getElementById("upgradeBtn").onclick=()=>alert("Stripe integration coming soon 🚀");
 }
 
-function downloadPDFReport(){
+async function downloadPDFReport(){
     if(!matchId){
         alert("ID partita mancante");
         return;
@@ -1064,7 +1064,54 @@ function downloadPDFReport(){
         return;
     }
 
-    window.open(`${API_BASE}/match/${matchId}/download-pdf`,"_blank");
+    try{
+        const token =
+            localStorage.getItem("matchiq_token") ||
+            localStorage.getItem("token") ||
+            localStorage.getItem("access_token");
+
+        const headers = {};
+
+        if(token){
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(
+            `${API_BASE}/match/${matchId}/download-pdf`,
+            {
+                method: "GET",
+                headers
+            }
+        );
+
+        if(response.status === 401 || response.status === 403){
+            showLocalPremiumPopup("PDF Report PRO");
+            return;
+        }
+
+        if(!response.ok){
+            const text = await response.text();
+            alert("Errore download PDF: " + text);
+            return;
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `matchiq-report-${matchId}.pdf`;
+
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+
+    }catch(error){
+        console.error("PDF download error:", error);
+        alert("Errore durante il download PDF.");
+    }
 }
 
 function calculateAdaptiveRefresh(data){
