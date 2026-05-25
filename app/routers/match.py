@@ -156,7 +156,7 @@ def pdf_report(match_id: int):
 @router.get("/{match_id}/download-pdf")
 def download_pdf_report(
     match_id: int,
-    user=Depends(get_optional_user_func)
+    user=None
 ):
     if not pdf_public_beta:
         if not is_owner_or_paid_user_func(user):
