@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MatchIQ Tactical - v1.4.1 PDF Lock Safe</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="auth.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+body{
+    background:radial-gradient(circle at top left,rgba(47,107,255,.18),transparent 35%),
+    radial-gradient(circle at top right,rgba(255,49,92,.15),transparent 35%),#020817;
+    color:white;
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:15px
+}
+.topbar{
+    min-height:76px;
+    background:rgba(12,23,61,.92);
+    backdrop-filter:blur(16px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:12px 24px;
+    position:sticky;
+    top:0;
+    z-index:50;
+    box-shadow:0 10px 30px rgba(0,0,0,.25)
+}
+.logo{font-size:22px;font-weight:1000}
+.subtitle{font-size:12px;color:#9db4dc;margin-top:4px}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dashboard-btn,.pdf-btn,.refresh-btn{
+    border:0;
+    color:white;
+    padding:11px 18px;
+    border-radius:14px;
+    cursor:pointer;
+    font-weight:1000;
+    transition:.25s ease;
+    white-space:nowrap
+}
+.dashboard-btn{background:#2f6bff}
+.pdf-btn{background:linear-gradient(135deg,#7c3aed,#2563eb);box-shadow:0 0 18px rgba(124,58,237,.38)}
+.refresh-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)}
+.pdf-btn:hover,.dashboard-btn:hover,.refresh-btn:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.live-badge{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    background:rgba(2,8,23,.72);
+    border:1px solid rgba(0,255,136,.28);
+    padding:9px 13px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:1000;
+    color:#eafff4
+}
+.live-badge.cache-mode{
+    border-color:rgba(245,158,11,.75);
+    background:rgba(245,158,11,.14);
+    color:#fff7ed;
+}
+.live-badge.critical-mode{
+    border-color:rgba(239,68,68,.78);
+    background:rgba(239,68,68,.14);
+    color:#fff1f2;
+}
+.live-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#00ff88;
+    box-shadow:0 0 16px #00ff88;
+    animation:liveDot 1.35s infinite
+}
+@keyframes liveDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.7)}}
+
+.main{width:100%;max-width:100%;padding:20px}
+.card,.dashboard-section{
+    width:100%;
+    max-width:100%;
+    background:linear-gradient(180deg,rgba(16,29,74,.96),rgba(8,16,42,.98));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+    margin-bottom:18px;
+    overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,.22);
+    transition:.35s ease
+}
+.card.live-flash,.dashboard-section.live-flash{animation:cardFlash 1.2s ease}
+.score-pulse{animation:scorePulse 1s ease}
+@keyframes cardFlash{
+    0%{box-shadow:0 0 0 rgba(47,107,255,0)}
+    35%{box-shadow:0 0 42px rgba(47,107,255,.62)}
+    100%{box-shadow:0 20px 50px rgba(0,0,0,.22)}
+}
+@keyframes scorePulse{
+    0%{transform:scale(1)}
+    35%{transform:scale(1.09);text-shadow:0 0 24px rgba(255,49,92,.65)}
+    100%{transform:scale(1)}
+}
+.section-content{padding:18px;max-width:100%}
+.section-toggle{
+    padding:15px 18px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    cursor:pointer;
+    user-select:none;
+    background:rgba(255,255,255,.01)
+}
+.section-toggle:hover{background:rgba(255,255,255,.035)}
+.section-toggle-left{display:flex;align-items:center;gap:10px;font-weight:1000;font-size:18px}
+.toggle-btn{
+    width:34px;
+    height:34px;
+    border-radius:11px;
+    border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(135deg,#223b8f,#3f2ea6);
+    color:white;
+    font-size:20px;
+    font-weight:1000;
+    cursor:pointer
+}
+.dashboard-section.closed .section-content{display:none}
+.dashboard-section.closed .toggle-btn{background:linear-gradient(135deg,#1b254f,#20294f)}
+.dashboard-section.open{box-shadow:0 0 35px rgba(69,104,255,.08)}
+
+.match-header{padding:28px}
+.match-row{display:flex;justify-content:space-between;align-items:center;text-align:center;gap:20px}
+.team{width:30%;min-width:0}
+.team img{width:86px;height:86px;object-fit:contain}
+.team-name{margin-top:10px;font-weight:1000;font-size:18px;word-break:break-word}
+.score-center{width:30%;text-align:center}
+.score{font-size:60px;font-weight:1000;letter-spacing:-1px}
+.minute{
+    margin-top:8px;
+    display:inline-block;
+    background:#ff315c;
+    padding:7px 14px;
+    border-radius:999px;
+    font-weight:1000;
+    box-shadow:0 0 18px rgba(255,49,92,.45)
+}
+.league{margin-top:10px;color:#9db4dc}
+
+.live-flow-hero{
+    position:relative;
+    padding:22px;
+    border-radius:24px;
+    overflow:hidden;
+    background:linear-gradient(135deg,rgba(47,107,255,.25),rgba(124,58,237,.16),rgba(255,49,92,.18)),rgba(8,16,42,.96);
+    border:1px solid rgba(255,255,255,.12)
+}
+.live-flow-hero:before{
+    content:"";
+    position:absolute;
+    inset:-80px;
+    background:conic-gradient(from 180deg,rgba(47,107,255,0),rgba(47,107,255,.28),rgba(255,49,92,.25),rgba(0,255,136,.15),rgba(47,107,255,0));
+    animation:rotateGlow 9s linear infinite;
+    opacity:.55
+}
+.live-flow-inner{position:relative;z-index:2}
+@keyframes rotateGlow{to{transform:rotate(360deg)}}
+.match-status-row{
+    display:grid;
+    grid-template-columns:minmax(0,1.4fr) minmax(220px,.8fr) minmax(220px,.8fr);
+    gap:16px;
+    align-items:stretch
+}
+.status-main,.status-chip{
+    min-width:0;
+    padding:22px;
+    border-radius:22px;
+    background:rgba(2,8,23,.72);
+    border:1px solid rgba(255,255,255,.12)
+}
+.status-kicker,.status-chip-label{
+    color:#9db4dc;
+    font-size:12px;
+    font-weight:1000;
+    letter-spacing:1px;
+    margin-bottom:8px
+}
+.status-title{font-size:34px;font-weight:1000;line-height:1.05;text-shadow:0 0 24px rgba(255,255,255,.18)}
+.status-subtitle{margin-top:10px;color:#dbe7ff;line-height:1.5;font-weight:800}
+.status-chip-value{font-size:30px;font-weight:1000;word-break:break-word}
+.status-chip-small{margin-top:8px;font-size:13px;color:#cbd5ff;font-weight:800}
+.status-balanced{box-shadow:0 0 28px rgba(59,130,246,.28)}
+.status-chaos{box-shadow:0 0 36px rgba(255,49,92,.42)}
+.status-pressure{box-shadow:0 0 36px rgba(255,176,32,.35)}
+.status-home{box-shadow:0 0 36px rgba(47,107,255,.42)}
+.status-away{box-shadow:0 0 36px rgba(255,49,92,.42)}
+.status-tactical{box-shadow:0 0 36px rgba(124,58,237,.38)}
+.pulse-danger{animation:pulseDanger 1.5s infinite}
+@keyframes pulseDanger{0%,100%{filter:brightness(1)}50%{filter:brightness(1.24)}}
+
+.chaos-wrapper{
+    margin-top:18px;
+    background:rgba(2,8,23,.72);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:22px;
+    padding:18px
+}
+.chaos-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.chaos-label{font-weight:1000;color:#eaf1ff}
+.chaos-value{font-size:24px;font-weight:1000;white-space:nowrap}
+.chaos-track{width:100%;height:20px;border-radius:999px;background:#07122e;overflow:hidden;position:relative}
+.chaos-fill{height:100%;border-radius:999px;transition:width .8s ease;position:relative}
+.chaos-fill:after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.38),transparent);
+    animation:barScan 1.6s linear infinite
+}
+@keyframes barScan{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.chaos-low{background:linear-gradient(90deg,#00ff88,#22c55e)}
+.chaos-mid{background:linear-gradient(90deg,#ffcc00,#ff8a00)}
+.chaos-high{background:linear-gradient(90deg,#ff315c,#ef4444,#7f1d1d)}
+
+.flow-alert-grid,.psych-grid,.win-prob-wrapper,.future-grid,.xg-grid,.simulation-grid,.identity-grid,.event-grid,.momentum-stats-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:14px;
+    margin-bottom:18px
+}
+.flow-alert,.psych-card,.prob-box,.future-card,.xg-card,.sim-card,.identity-card,.attack-card,.event-card,.momentum-stat{
+    min-width:0;
+    background:#13204a;
+    border-radius:18px;
+    padding:20px;
+    text-align:center;
+    border:1px solid rgba(255,255,255,.08)
+}
+.flow-alert{background:rgba(2,8,23,.72);font-weight:900;line-height:1.45}
+.flow-alert.critical{border-color:rgba(255,49,92,.65);box-shadow:0 0 24px rgba(255,49,92,.28)}
+.flow-alert.warning{border-color:rgba(255,176,32,.65);box-shadow:0 0 24px rgba(255,176,32,.22)}
+.flow-alert.info{border-color:rgba(47,107,255,.65);box-shadow:0 0 24px rgba(47,107,255,.2)}
+.story-box{
+    margin-top:18px;
+    padding:18px;
+    border-radius:22px;
+    background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(47,107,255,.12));
+    border:1px solid rgba(255,255,255,.1)
+}
+.story-title{color:#b9c8ff;font-size:12px;font-weight:1000;margin-bottom:8px;letter-spacing:1px}
+.story-text{font-size:18px;line-height:1.55;font-weight:900}
+
+.psych-card{background:linear-gradient(145deg,rgba(20,32,74,.95),rgba(5,15,42,.95))}
+.sim-card{background:linear-gradient(145deg,rgba(47,107,255,.18),rgba(124,58,237,.18));position:relative;overflow:hidden}
+.sim-main-card{grid-column:span 2;background:linear-gradient(135deg,rgba(255,49,92,.22),rgba(47,107,255,.18))}
+.psych-label,.prob-label,.future-title,.xg-title,.sim-label,.identity-label,.attack-label,.event-label,.momentum-label{
+    font-size:12px;
+    color:#8ea2ff;
+    margin-bottom:10px;
+    font-weight:1000
+}
+.psych-value,.prob-value,.future-value,.xg-value,.sim-value,.identity-value,.attack-value,.event-value,.momentum-value{
+    font-size:34px;
+    font-weight:1000
+}
+.sim-desc,.identity-desc,.attack-desc,.event-desc,.momentum-desc{
+    margin-top:10px;
+    color:#dce7ff;
+    font-size:13px;
+    line-height:1.45;
+    font-weight:800
+}
+.psych-bar,.sim-bar,.identity-bar,.attack-bar,.momentum-bar{
+    height:12px;
+    border-radius:999px;
+    background:#07122e;
+    overflow:hidden;
+    margin-top:14px
+}
+.psych-fill,.sim-fill,.identity-fill,.attack-fill,.momentum-fill{
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#2f6bff,#00d4ff);
+    transition:width .8s ease
+}
+.psych-fill.danger,.sim-fill.danger,.attack-fill.danger,.momentum-fill.danger{
+    background:linear-gradient(90deg,#ff315c,#ff8a00)
+}
+
+.identity-card{
+    background:linear-gradient(145deg,rgba(0,212,255,.13),rgba(124,58,237,.19));
+    position:relative;
+    overflow:hidden;
+    text-align:left
+}
+.identity-card-main{
+    grid-column:span 2;
+    background:linear-gradient(135deg,rgba(47,107,255,.22),rgba(0,255,136,.10),rgba(124,58,237,.20))
+}
+.identity-value{font-size:28px;line-height:1.15}
+.identity-tags,.attack-tags{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:13px
+}
+.identity-tag,.attack-tag{
+    font-size:11px;
+    font-weight:1000;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(2,8,23,.55);
+    padding:6px 9px;
+    border-radius:999px;
+    color:#dbe7ff
+}
+.identity-team{font-size:13px;color:#7cc8ff;font-weight:1000;margin-bottom:8px}
+
+.attack-wrapper{
+    display:grid;
+    grid-template-columns:minmax(320px,1.2fr) minmax(260px,.8fr);
+    gap:18px;
+    align-items:stretch
+}
+.attack-map{
+    position:relative;
+    height:340px;
+    border-radius:22px;
+    overflow:hidden;
+    background:linear-gradient(90deg,#0d5b2a,#0a4723);
+    border:1px solid rgba(255,255,255,.14)
+}
+.attack-map:before{
+    content:"";
+    position:absolute;
+    inset:24px;
+    border:3px solid rgba(255,255,255,.45);
+    border-radius:14px
+}
+.attack-map:after{
+    content:"";
+    position:absolute;
+    top:24px;
+    bottom:24px;
+    left:50%;
+    width:3px;
+    background:rgba(255,255,255,.45)
+}
+.attack-zone{
+    position:absolute;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(2,8,23,.22);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:12px;
+    font-weight:1000;
+    color:#dce7ff;
+    transition:.35s ease
+}
+.zone-left{left:8%;top:16%;width:25%;height:68%}
+.zone-center{left:37%;top:16%;width:26%;height:68%}
+.zone-right{right:8%;top:16%;width:25%;height:68%}
+.attack-zone.active{
+    background:linear-gradient(135deg,rgba(255,49,92,.35),rgba(47,107,255,.22));
+    box-shadow:0 0 38px rgba(255,49,92,.35);
+    transform:scale(1.025)
+}
+.attack-arrow{
+    position:absolute;
+    width:80px;
+    height:5px;
+    border-radius:99px;
+    background:#fff;
+    box-shadow:0 0 18px rgba(255,255,255,.65);
+    animation:arrowMove 1.4s infinite
+}
+.attack-arrow:after{
+    content:"";
+    position:absolute;
+    right:-8px;
+    top:-6px;
+    border-left:14px solid #fff;
+    border-top:8px solid transparent;
+    border-bottom:8px solid transparent
+}
+.arrow-left{left:18%;top:50%;transform:rotate(0deg)}
+.arrow-center{left:44%;top:50%}
+.arrow-right{right:20%;top:50%}
+@keyframes arrowMove{
+    0%{opacity:.35;transform:translateX(-10px)}
+    50%{opacity:1}
+    100%{opacity:.35;transform:translateX(14px)}
+}
+.attack-side-panel{display:grid;grid-template-columns:1fr;gap:12px}
+.attack-card{text-align:left;background:linear-gradient(145deg,rgba(47,107,255,.16),rgba(124,58,237,.16))}
+.attack-value{font-size:28px;line-height:1.15}
+
+.event-card{text-align:left;background:linear-gradient(145deg,rgba(255,49,92,.14),rgba(47,107,255,.14));position:relative;overflow:hidden}
+.event-card.critical{border-color:rgba(255,49,92,.62);box-shadow:0 0 26px rgba(255,49,92,.22)}
+.event-card.warning{border-color:rgba(255,176,32,.55);box-shadow:0 0 22px rgba(255,176,32,.16)}
+.event-card.info{border-color:rgba(47,107,255,.55);box-shadow:0 0 22px rgba(47,107,255,.15)}
+.event-time{font-size:11px;color:#9db4dc;font-weight:1000;margin-bottom:8px}
+.event-title{font-size:17px;font-weight:1000}
+.event-desc{font-size:13px}
+
+.momentum-cinematic-wrap{
+    display:grid;
+    grid-template-columns:minmax(0,1.5fr) minmax(280px,.7fr);
+    gap:18px;
+    align-items:stretch
+}
+.momentum-panel{
+    background:linear-gradient(145deg,rgba(47,107,255,.14),rgba(255,49,92,.10));
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:20px;
+    padding:18px
+}
+.momentum-temp{
+    background:rgba(2,8,23,.52);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:14px
+}
+.temp-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px}
+.temp-label{font-size:12px;color:#9db4dc;font-weight:1000}
+.temp-status{font-weight:1000}
+.temp-track{height:18px;border-radius:999px;background:#07122e;overflow:hidden}
+.temp-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#2f6bff,#00d4ff,#ffb020,#ff315c);position:relative;transition:.8s ease}
+.temp-fill:after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+    animation:barScan 1.5s linear infinite
+}
+.momentum-stat{text-align:left;background:linear-gradient(145deg,rgba(20,32,74,.95),rgba(5,15,42,.95))}
+.chart-box{height:260px;width:100%;max-width:100%}
+
+.prob-bar,.xg-bar{
+    display:flex;
+    width:100%;
+    height:22px;
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:18px;
+    background:#0b1433
+}
+.prob-home-bar,.xg-home-bar{background:#2f6bff}
+.prob-draw-bar{background:#9ca3af}
+.prob-away-bar,.xg-away-bar{background:#ff315c}
+.dominant-box{text-align:center;padding:13px;border-radius:14px;background:#0f1c44;font-size:15px}
+.future-card{background:linear-gradient(145deg,rgba(95,0,160,.35),rgba(20,20,60,.95))}
+.xg-card{background:linear-gradient(145deg,rgba(0,120,255,.25),rgba(10,20,60,.95))}
+.future-prediction{font-size:18px;font-weight:1000;line-height:1.5}
+.future-confidence{margin-top:12px;color:#cbd5ff;font-weight:900}
+.prediction-card{grid-column:span 2}
+
+.alert-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px}
+.alert-box{background:#138246;padding:14px;border-radius:14px;line-height:1.4;min-height:68px}
+.alert-box.high{background:#9b1025}
+.alert-box.medium{background:#b86200}
+
+.coach-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px}
+.coach-card{border-radius:16px;padding:16px;border:1px solid rgba(255,255,255,.08);line-height:1.5;min-height:118px}
+.coach-high{background:linear-gradient(135deg,rgba(255,40,70,.28),rgba(120,0,30,.25));border-left:5px solid #ff315c}
+.coach-medium{background:linear-gradient(135deg,rgba(255,180,0,.25),rgba(120,70,0,.22));border-left:5px solid #ffb020}
+.coach-low{background:linear-gradient(135deg,rgba(0,220,120,.20),rgba(0,120,180,.16));border-left:5px solid #27d17f}
+.coach-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
+.coach-type{font-weight:1000;font-size:14px}
+.coach-priority{font-size:11px;font-weight:1000;background:rgba(255,255,255,.12);padding:4px 8px;border-radius:999px;white-space:nowrap}
+.coach-team{color:#7cc8ff;font-weight:1000;margin-bottom:7px;font-size:14px}
+.coach-message{color:#e7ecff;font-size:14px}
+
+.analysis-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:18px}
+.metric{margin-bottom:14px}
+.metric-label{margin-bottom:6px;font-weight:900;color:#d8e5ff}
+.bar{height:15px;background:#1d2f73;border-radius:999px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,#2f6bff,#00d4ff);transition:width .8s ease}
+.bar-fill.away{background:linear-gradient(90deg,#ff315c,#ff7a94)}
+.side-stats{background:#0b173d;padding:18px;border-radius:14px}
+.side-stats div{margin-bottom:12px;color:#dce7ff}
+
+.heatmap-wrapper{padding:18px}
+.pitch{
+    position:relative;
+    width:100%;
+    height:380px;
+    border-radius:20px;
+    overflow:hidden;
+    background:radial-gradient(circle at 30% 50%,rgba(47,107,255,.24),transparent 28%),
+    radial-gradient(circle at 70% 50%,rgba(255,49,92,.22),transparent 28%),#0d5b2a
+}
+.pitch-lines{position:absolute;inset:0;pointer-events:none}
+.pitch-lines:before{content:"";position:absolute;inset:30px;border:4px solid rgba(255,255,255,.55)}
+.pitch-lines:after{content:"";position:absolute;top:30px;bottom:30px;left:50%;width:4px;background:rgba(255,255,255,.55)}
+.center-circle{position:absolute;width:160px;height:160px;border:4px solid rgba(255,255,255,.55);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+.glow{position:absolute;border-radius:50%;filter:blur(80px);transition:.8s ease}
+.home-glow{background:rgba(47,107,255,.9);left:28%;top:52%;transform:translate(-50%,-50%)}
+.away-glow{background:rgba(255,49,92,.9);right:28%;top:52%;transform:translate(50%,-50%)}
+.zone-label{position:absolute;font-size:13px;font-weight:1000;opacity:.9}
+.legend{display:flex;gap:22px;margin-top:14px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:8px;color:#dce7ff;font-weight:900}
+.legend-color{width:14px;height:14px;border-radius:50%}
+
+.players-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.player-card{min-width:0;background:linear-gradient(180deg,#13204a,#0f1735);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:17px;position:relative;min-height:168px}
+.player-top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px;padding-right:34px}
+.player-name{font-size:16px;font-weight:1000;line-height:1.25}
+.player-role{font-size:12px;color:#9fb2ff;margin-top:5px;line-height:1.3}
+.player-rating{width:60px;height:60px;min-width:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:1000}
+.rating-elite{background:linear-gradient(135deg,#22c55e,#4ade80)}
+.rating-good{background:linear-gradient(135deg,#2563eb,#60a5fa)}
+.rating-mid{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#111827}
+.rating-low{background:linear-gradient(135deg,#ef4444,#f87171)}
+.mvp-badge{position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#f59e0b,#facc15);color:#111827;font-size:10px;font-weight:1000;padding:4px 8px;border-radius:999px}
+.player-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.player-stat{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.player-stat-label{color:#94a3b8}
+.player-stat-value{font-weight:1000}
+
+.timeline-scroll{max-height:420px;overflow-y:auto;padding-right:8px}
+.timeline-scroll::-webkit-scrollbar{width:8px}
+.timeline-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:999px}
+.timeline-scroll::-webkit-scrollbar-thumb{background:rgba(47,107,255,.55);border-radius:999px}
+.timeline-event{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.timeline-minute{color:#3ea6ff;font-weight:1000;margin-bottom:6px}
+.report-box{line-height:1.8;color:#dce7ff;white-space:pre-line}
+.error-box{background:#9b1025;padding:18px;border-radius:14px;font-weight:1000}
+
+.live-overlay{
+    position:fixed;
+    left:50%;
+    top:96px;
+    transform:translateX(-50%) translateY(-20px);
+    z-index:999;
+    background:linear-gradient(135deg,rgba(255,49,92,.96),rgba(124,58,237,.94));
+    border:1px solid rgba(255,255,255,.22);
+    box-shadow:0 20px 60px rgba(255,49,92,.32);
+    border-radius:22px;
+    padding:18px 24px;
+    min-width:min(520px,calc(100% - 32px));
+    opacity:0;
+    pointer-events:none;
+    transition:.35s ease
+}
+.live-overlay.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.live-overlay-title{font-size:20px;font-weight:1000;margin-bottom:6px}
+.live-overlay-text{font-size:14px;font-weight:800;color:#f4f7ff}
+
+
+
+/* ======================================================
+   LIVE MOMENTUM GRAPH PRO
+====================================================== */
+.momentum-pro-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:14px;
+    flex-wrap:wrap
+}
+.momentum-pro-title{
+    font-size:18px;
+    font-weight:1000;
+    letter-spacing:.2px
+}
+.momentum-pro-subtitle{
+    margin-top:6px;
+    color:#9db4dc;
+    font-size:13px;
+    font-weight:800;
+    line-height:1.45
+}
+.momentum-pro-badges{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end
+}
+.momentum-pro-badge{
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(2,8,23,.55);
+    color:#dbe7ff;
+    padding:7px 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:1000
+}
+.momentum-pro-badge.hot{
+    border-color:rgba(255,49,92,.55);
+    color:#fff1f2;
+    box-shadow:0 0 18px rgba(255,49,92,.18)
+}
+.momentum-pro-badge.cold{
+    border-color:rgba(47,107,255,.45);
+    color:#dbeafe
+}
+.chart-box.momentum-pro-chart{
+    height:330px;
+    padding:10px;
+    border-radius:18px;
+    background:radial-gradient(circle at 25% 30%,rgba(47,107,255,.14),transparent 35%),
+               radial-gradient(circle at 75% 40%,rgba(255,49,92,.12),transparent 35%),
+               rgba(2,8,23,.42);
+    border:1px solid rgba(255,255,255,.08)
+}
+.momentum-live-strip{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:10px;
+    margin-top:14px
+}
+.momentum-live-chip{
+    background:rgba(2,8,23,.52);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;
+    padding:12px
+}
+.momentum-live-label{
+    font-size:11px;
+    color:#8ea2ff;
+    font-weight:1000;
+    margin-bottom:6px
+}
+.momentum-live-value{
+    font-size:20px;
+    font-weight:1000
+}
+.momentum-live-note{
+    margin-top:5px;
+    color:#cbd5ff;
+    font-size:12px;
+    font-weight:800;
+    line-height:1.35
+}
+.momentum-spike-feed{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px
+}
+.momentum-spike-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.07);
+    padding:10px 12px;
+    border-radius:14px;
+    color:#dce7ff;
+    font-size:12px;
+    font-weight:900
+}
+.momentum-spike-item strong{color:white}
+.momentum-spike-item.warning{border-color:rgba(255,176,32,.35)}
+.momentum-spike-item.critical{border-color:rgba(255,49,92,.45);box-shadow:0 0 18px rgba(255,49,92,.12)}
+@media(max-width:600px){
+    .chart-box.momentum-pro-chart{height:280px;padding:6px}
+    .momentum-pro-header{gap:10px}
+    .momentum-pro-badges{justify-content:flex-start}
+}
+
+
+/* AI COMMENTARY CINEMATIC MODE */
+.ai-commentary-wrap{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+}
+.ai-commentary-card{
+    position:relative;
+    overflow:hidden;
+    border-radius:16px;
+    padding:15px 16px 15px 52px;
+    background:linear-gradient(135deg,rgba(47,107,255,.14),rgba(124,58,237,.10));
+    border:1px solid rgba(255,255,255,.09);
+    min-height:58px;
+    animation:commentaryIn .55s ease both;
+}
+.ai-commentary-card:before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+    transform:translateX(-120%);
+    animation:commentaryScan 2.8s ease infinite;
+    pointer-events:none;
+}
+.ai-commentary-icon{
+    position:absolute;
+    left:14px;
+    top:15px;
+    width:28px;
+    height:28px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(2,8,23,.58);
+    box-shadow:0 0 18px rgba(255,255,255,.12);
+}
+.ai-commentary-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:6px;
+}
+.ai-commentary-severity{
+    font-size:10px;
+    font-weight:1000;
+    letter-spacing:.9px;
+    padding:4px 8px;
+    border-radius:999px;
+    background:rgba(255,255,255,.10);
+    color:#dbe7ff;
+}
+.ai-commentary-time{
+    font-size:10px;
+    font-weight:1000;
+    color:#8ea2ff;
+}
+.ai-commentary-text{
+    color:#f8fbff;
+    font-size:14px;
+    line-height:1.45;
+    font-weight:900;
+    text-shadow:0 0 12px rgba(255,255,255,.05);
+}
+.ai-commentary-card.normal{
+    border-color:rgba(47,107,255,.30);
+    box-shadow:0 0 20px rgba(47,107,255,.10);
+}
+.ai-commentary-card.warning{
+    background:linear-gradient(135deg,rgba(255,176,32,.16),rgba(124,58,237,.10));
+    border-color:rgba(255,176,32,.48);
+    box-shadow:0 0 24px rgba(255,176,32,.14);
+}
+.ai-commentary-card.danger{
+    background:linear-gradient(135deg,rgba(255,49,92,.18),rgba(47,107,255,.09));
+    border-color:rgba(255,49,92,.55);
+    box-shadow:0 0 30px rgba(255,49,92,.18);
+}
+.ai-commentary-card.chaos{
+    background:linear-gradient(135deg,rgba(255,49,92,.22),rgba(124,58,237,.22));
+    border-color:rgba(255,49,92,.75);
+    box-shadow:0 0 38px rgba(255,49,92,.28);
+    animation:commentaryIn .55s ease both, commentaryPulse 1.8s ease infinite;
+}
+.ai-commentary-card.normal .ai-commentary-severity{color:#bfdbfe}
+.ai-commentary-card.warning .ai-commentary-severity{color:#fde68a}
+.ai-commentary-card.danger .ai-commentary-severity{color:#fecdd3}
+.ai-commentary-card.chaos .ai-commentary-severity{color:#fff1f2}
+.ai-commentary-empty{
+    padding:16px;
+    border-radius:16px;
+    background:rgba(255,255,255,.04);
+    color:#cbd5ff;
+    font-weight:900;
+}
+@keyframes commentaryIn{
+    from{opacity:0;transform:translateY(10px) scale(.985)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes commentaryScan{
+    0%{transform:translateX(-120%)}
+    55%,100%{transform:translateX(120%)}
+}
+@keyframes commentaryPulse{
+    0%,100%{filter:brightness(1)}
+    50%{filter:brightness(1.16)}
+}
+
+@media(max-width:1200px){
+    .match-status-row,.analysis-grid,.attack-wrapper,.momentum-cinematic-wrap{grid-template-columns:1fr}
+    .players-grid{grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
+    .coach-grid{grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
+}
+@media(max-width:900px){
+    .topbar{align-items:flex-start;flex-direction:column}
+    .top-actions{width:100%;justify-content:flex-start}
+    .match-row{flex-direction:column;gap:24px}
+    .team,.score-center{width:100%}
+    .score{font-size:48px}
+    .pitch{height:340px}
+    .prediction-card,.sim-main-card,.identity-card-main{grid-column:span 1}
+    .status-title{font-size:26px}
+    .timeline-scroll{max-height:360px}
+}
+@media(max-width:600px){
+    body{font-size:14px}
+    .main{padding:12px}
+    .section-content,.heatmap-wrapper{padding:14px}
+    .match-header{padding:20px}
+    .live-flow-hero{padding:16px}
+    .status-main,.status-chip{padding:16px}
+    .psych-grid,.win-prob-wrapper,.future-grid,.xg-grid,.players-grid,.alert-grid,.coach-grid,.flow-alert-grid,.simulation-grid,.identity-grid,.event-grid,.momentum-stats-grid{grid-template-columns:1fr}
+    .psych-value,.prob-value,.future-value,.xg-value,.sim-value,.identity-value,.attack-value,.event-value,.momentum-value{font-size:28px}
+    .score{font-size:42px}
+    .pitch{height:280px}
+    .center-circle{width:100px;height:100px}
+    .live-badge{width:100%;justify-content:center}
+    .timeline-scroll{max-height:320px}
+    .player-stats{grid-template-columns:1fr}
+    .player-top{padding-right:0}
+    .attack-map{height:280px}
+}
+
+
+/* MATCHIQ PREMIUM POPUP INLINE SAFE */
+.premium-popup-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.78);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:999999;
+    backdrop-filter:blur(8px);
+}
+.premium-popup{
+    width:430px;
+    max-width:calc(100% - 28px);
+    background:linear-gradient(135deg,#131d44,#0b1028);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:28px;
+    padding:34px;
+    text-align:center;
+    box-shadow:0 0 60px rgba(0,0,0,.55),0 0 80px rgba(47,107,255,.22);
+    animation:premiumPopupIn .25s ease;
+}
+@keyframes premiumPopupIn{
+    from{opacity:0;transform:translateY(18px) scale(.96)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+}
+.premium-icon{
+    width:64px;
+    height:64px;
+    border-radius:50%;
+    margin:0 auto 18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#2f6bff,#7c4dff);
+    font-size:30px;
+    box-shadow:0 0 35px rgba(47,107,255,.35);
+}
+.premium-popup h2{margin:0;font-size:30px}
+.premium-popup p{color:#b8c7ef;line-height:1.7;margin:18px 0 20px}
+.premium-benefits{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:16px;
+    text-align:left;
+    color:#e8efff;
+    line-height:1.9;
+    margin-bottom:24px;
+    font-size:14px;
+    font-weight:700;
+}
+.premium-popup button{
+    width:100%;
+    border:0;
+    border-radius:16px;
+    padding:16px;
+    font-weight:900;
+    cursor:pointer;
+    margin-bottom:14px;
+    transition:.2s ease;
+}
+.premium-popup button:hover{transform:translateY(-1px);filter:brightness(1.1)}
+#upgradeBtn{background:linear-gradient(90deg,#2f6bff,#7c4dff);color:white}
+#closePremiumPopup{background:#1b2747;color:white}
+
+</style>
+</head>
+
+<body>
+<div class="topbar">
+    <div>
+        <div class="logo">⚽ MatchIQ Tactical</div>
+        <div class="subtitle">AI Tactical Analysis Platform</div>
+    </div>
+    <div class="top-actions">
+        <div class="live-badge">
+            <span class="live-dot"></span>
+            <span id="liveUpdateText">LIVE UPDATE</span>
+            <span>•</span>
+            <span id="refreshTimerText">Next refresh --s</span>
+        </div>
+        <button class="refresh-btn" onclick="manualRefresh()">↻ Refresh</button>
+        <button class="pdf-btn" onclick="downloadPDFReport()">📄 Download PDF</button>
+        <button class="dashboard-btn" onclick="window.location.href='index.html'">Dashboard</button>
+    </div>
+</div>
+
+<div class="live-overlay" id="liveOverlay">
+    <div class="live-overlay-title" id="liveOverlayTitle">⚡ LIVE EVENT</div>
+    <div class="live-overlay-text" id="liveOverlayText">Match flow updated.</div>
+</div>
+
+<div class="main" id="app">
+    <div class="card">
+        <div class="section-content">Loading match...</div>
+    </div>
+</div>
+
+<script>
+const API_BASE="http://127.0.0.1:8000/api";
+const matchId=new URLSearchParams(window.location.search).get("id");
+
+let momentumChart=null;
+let isRefreshing=false;
+let previousSnapshot=null;
+let refreshInterval=null;
+let countdownInterval=null;
+let countdownValue=30;
+let lastUpdateAt=null;
+let cinematicEvents=[];
+let momentumHistory=[];
+let lastMomentumSignature=null;
+
+/*
+    API SAFE MODE v1.3.7
+    Cambia questo valore quando vuoi simulare/proteggere il consumo API.
+    40 = consumo attuale circa 40%.
+*/
+const API_USAGE_PERCENT=40;
+const CACHE_VERSION="v1.3.7";
+const CACHE_KEY=`matchiq_match_${matchId||"unknown"}_last_valid_${CACHE_VERSION}`;
+const CACHE_TIME_KEY=`matchiq_match_${matchId||"unknown"}_last_valid_time_${CACHE_VERSION}`;
+let lastValidData=null;
+let cacheModeActive=false;
+
+let sectionState={
+    psych:true,
+    sim:true,
+    identity:true,
+    attack:true,
+    events:true,
+    win:true,
+    future:true,
+    xg:true,
+    alerts:true,
+    coach:true,
+    momentum:true,
+    tactical:false,
+    heatmap:false,
+    players:false,
+    commentary:false,
+    timeline:false,
+    report:false
+};
+
+function safeNumber(v,f=0){const n=Number(v);return Number.isFinite(n)?n:f}
+function clamp(v,min=0,max=100){return Math.max(min,Math.min(max,safeNumber(v,0)))}
+
+function getScore(m){
+    return m.score&&typeof m.score==="object"
+        ? {home:safeNumber(m.score.home),away:safeNumber(m.score.away)}
+        : {home:safeNumber(m.home_goals),away:safeNumber(m.away_goals)}
+}
+function getAlerts(d){
+    if(Array.isArray(d.live_alerts))return d.live_alerts;
+    if(Array.isArray(d.live_alerts?.alerts))return d.live_alerts.alerts;
+    if(Array.isArray(d.pressure_engine?.alerts))return d.pressure_engine.alerts;
+    return[]
+}
+function getTimeline(d){
+    if(Array.isArray(d.timeline))return d.timeline;
+    if(Array.isArray(d.timeline?.events))return d.timeline.events;
+    return[]
+}
+function getPlayers(d){
+    if(Array.isArray(d.players_analysis?.players))return d.players_analysis.players;
+    if(Array.isArray(d.players))return d.players;
+    return[]
+}
+function getCoach(d){return Array.isArray(d.tactical_coach?.tactical_advice)?d.tactical_coach.tactical_advice:[]}
+function getFuture(d){return d.future_prediction?.prediction_engine||d.future_prediction||{}}
+function getXg(d){return d.xg_analysis||{}}
+function getReport(d){return d.ai_report?.ai_report||d.ai_report?.summary||d.ai_report?.report||"Report AI non disponibile."}
+function getWinProbability(d){return d.win_probability||{home_win:33.3,draw:33.4,away_win:33.3,dominant_outcome:"draw"}}
+function getTempoLabel(v){if(!v)return"N/A";if(typeof v==="string")return v;if(typeof v==="object")return v.label||v.value||"N/A";return String(v)}
+
+function getLocalAuthUser(){
+    try{
+        return JSON.parse(localStorage.getItem("matchiq_auth_user"));
+    }catch(e){
+        return null;
+    }
+}
+
+function isLocalProUser(){
+    const user = typeof getUser === "function" ? getUser() : getLocalAuthUser();
+    const plan = String(user?.plan || "free").toLowerCase();
+    return plan === "pro" || plan === "scout";
+}
+
+function showLocalPremiumPopup(feature="PDF Report PRO"){
+    const existing=document.getElementById("premiumPopup");
+    if(existing)existing.remove();
+
+    const popup=document.createElement("div");
+    popup.id="premiumPopup";
+    popup.innerHTML=`
+        <div class="premium-popup-overlay">
+            <div class="premium-popup">
+                <div class="premium-icon">🔒</div>
+                <h2>${feature}</h2>
+                <p>Questa funzionalità è disponibile solo per utenti <strong>PRO</strong> o <strong>SCOUT</strong>.</p>
+                <div class="premium-benefits">
+                    <div>✅ PDF report avanzati</div>
+                    <div>✅ AI Tactical Insights</div>
+                    <div>✅ Player Ratings PRO</div>
+                    <div>✅ Scout Mode</div>
+                </div>
+                <button id="upgradeBtn">Upgrade to PRO</button>
+                <button id="closePremiumPopup">Chiudi</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(popup);
+    document.getElementById("closePremiumPopup").onclick=()=>popup.remove();
+    document.getElementById("upgradeBtn").onclick=()=>alert("Stripe integration coming soon 🚀");
+}
+
+function downloadPDFReport(){
+    if(!matchId){
+        alert("ID partita mancante");
+        return;
+    }
+
+    if(!isLocalProUser()){
+        showLocalPremiumPopup("PDF Report PRO");
+        return;
+    }
+
+    window.open(`${API_BASE}/match/${matchId}/download-pdf`,"_blank");
+}
+
+function calculateAdaptiveRefresh(data){
+    /*
+        Refresh adattivo con protezione consumo API.
+        Non aggiunge nuove chiamate: decide solo ogni quanti secondi aggiornare.
+    */
+    const m=data?.match||{};
+    const minute=safeNumber(m.minute,0);
+    const status=String(m.status||m.fixture_status||m.elapsed_status||"").toUpperCase();
+
+    if(API_USAGE_PERCENT>=95)return 300;
+    if(API_USAGE_PERCENT>=85)return 120;
+    if(API_USAGE_PERCENT>=70)return 75;
+    if(API_USAGE_PERCENT>=50)return 45;
+
+    if(status.includes("FT")||status.includes("FINISHED")||minute>=90)return 120;
+    if(status.includes("HT")||status.includes("BREAK"))return 60;
+    if(minute>=80)return 18;
+    if(minute>=60)return 25;
+    return 30
+}
+
+function updateLiveBadge(){
+    const liveText=document.getElementById("liveUpdateText");
+    const timerText=document.getElementById("refreshTimerText");
+    const badge=document.querySelector(".live-badge");
+
+    if(badge){
+        badge.classList.toggle("cache-mode",cacheModeActive && API_USAGE_PERCENT<95);
+        badge.classList.toggle("critical-mode",API_USAGE_PERCENT>=95);
+    }
+
+    let modeLabel="LIVE UPDATE";
+    if(API_USAGE_PERCENT>=95)modeLabel="CACHE ONLY MODE";
+    else if(cacheModeActive)modeLabel="OFFLINE CACHE MODE";
+    else if(API_USAGE_PERCENT>=85)modeLabel="CRITICAL SAFE MODE";
+    else if(API_USAGE_PERCENT>=70)modeLabel="API SAFE MODE";
+    else if(API_USAGE_PERCENT>=50)modeLabel="SMART SAFE MODE";
+
+    if(liveText){
+        liveText.textContent=lastUpdateAt
+            ? `${modeLabel} • Updated ${Math.max(0,Math.round((Date.now()-lastUpdateAt)/1000))}s ago`
+            : modeLabel;
+    }
+
+    if(timerText){
+        timerText.textContent=`Next refresh ${countdownValue}s`;
+    }
+}
+
+function restartSmartRefresh(seconds){
+    countdownValue=seconds;
+
+    if(refreshInterval)clearInterval(refreshInterval);
+    if(countdownInterval)clearInterval(countdownInterval);
+
+    refreshInterval=setInterval(()=>{
+        if(!document.hidden)loadMatch({silent:true});
+    },seconds*1000);
+
+    countdownInterval=setInterval(()=>{
+        if(document.hidden)return;
+        countdownValue=Math.max(0,countdownValue-1);
+        updateLiveBadge();
+        if(countdownValue===0)countdownValue=seconds;
+    },1000);
+
+    updateLiveBadge();
+}
+
+function showLiveOverlay(title,text){
+    const overlay=document.getElementById("liveOverlay");
+    if(!overlay)return;
+
+    document.getElementById("liveOverlayTitle").textContent=title;
+    document.getElementById("liveOverlayText").textContent=text;
+
+    overlay.classList.add("show");
+    setTimeout(()=>overlay.classList.remove("show"),2800)
+}
+
+function saveLastValidData(data){
+    try{
+        const payload={
+            savedAt:Date.now(),
+            data
+        };
+        localStorage.setItem(CACHE_KEY,JSON.stringify(payload));
+        localStorage.setItem(CACHE_TIME_KEY,String(Date.now()));
+        lastValidData=data;
+    }catch(e){
+        console.warn("Cache MatchIQ non salvata:",e);
+    }
+}
+
+function loadLastValidData(){
+    try{
+        const raw=localStorage.getItem(CACHE_KEY);
+        if(!raw)return null;
+        const payload=JSON.parse(raw);
+        return payload?.data||null;
+    }catch(e){
+        console.warn("Cache MatchIQ non leggibile:",e);
+        return null;
+    }
+}
+
+function renderCachedDataIfAvailable(){
+    const cached=lastValidData||loadLastValidData();
+    if(!cached)return false;
+    cacheModeActive=true;
+    render(cached);
+    lastUpdateAt=Number(localStorage.getItem(CACHE_TIME_KEY))||Date.now();
+    updateLiveBadge();
+    return true;
+}
+
+async function manualRefresh(){await loadMatch({silent:false,force:true})}
+
+async function loadMatch({silent=false,force=false}={}){
+    if(!matchId){showError("ID partita mancante.");return}
+    if(isRefreshing&&!force)return;
+
+    /*
+        Se consumo API è critico, non chiamiamo il backend:
+        usiamo direttamente cache/fallback.
+    */
+    if(API_USAGE_PERCENT>=95&&!force){
+        if(renderCachedDataIfAvailable()){
+            restartSmartRefresh(calculateAdaptiveRefresh(lastValidData));
+            return;
+        }
+    }
+
+    isRefreshing=true;
+    cacheModeActive=false;
+    updateLiveBadge();
+
+    try{
+        const r=await fetch(`${API_BASE}/match/${matchId}/full-analysis`,{
+            cache:"no-store"
+        });
+
+        if(!r.ok)throw new Error("HTTP "+r.status);
+
+        const data=await r.json();
+
+        if(data.error){
+            throw new Error(data.error);
+        }
+
+        saveLastValidData(data);
+        cacheModeActive=false;
+        render(data);
+        lastUpdateAt=Date.now();
+        restartSmartRefresh(calculateAdaptiveRefresh(data));
+
+    }catch(e){
+        console.error("MatchIQ live API fallback:",e);
+
+        const hasCache=renderCachedDataIfAvailable();
+
+        if(!hasCache){
+            if(!silent)showError("Errore caricamento match e nessuna cache disponibile. Controlla backend/API.");
+        }else{
+            restartSmartRefresh(60);
+        }
+    }finally{
+        isRefreshing=false;
+        updateLiveBadge();
+    }
+}
+
+function showError(msg){
+    document.getElementById("app").innerHTML=`<div class="error-box">❌ ${msg}</div>`
+}
+
+function renderSection(id,icon,title,content,flash=false){
+    const open=sectionState[id];
+
+    return`
+    <div class="dashboard-section ${open?"open":"closed"} ${flash?"live-flash":""}" data-section="${id}">
+        <div class="section-toggle">
+            <div class="section-toggle-left"><span>${icon}</span><span>${title}</span></div>
+            <button class="toggle-btn">${open?"−":"+"}</button>
+        </div>
+        <div class="section-content">${content}</div>
+    </div>`;
+}
+
+function initToggles(){
+    document.querySelectorAll(".section-toggle").forEach(toggle=>{
+        toggle.addEventListener("click",()=>{
+            const section=toggle.closest(".dashboard-section");
+            const id=section.dataset.section;
+
+            sectionState[id]=!sectionState[id];
+
+            section.classList.toggle("open",sectionState[id]);
+            section.classList.toggle("closed",!sectionState[id]);
+
+            const btn=section.querySelector(".toggle-btn");
+            if(btn)btn.textContent=sectionState[id]?"−":"+";
+        });
+    });
+}
+
+function calculateLiveFlowVisual(data){
+    const match=data.match||{};
+    const tactical=data.tactical_analysis||{};
+    const pressure=data.pressure_engine||{};
+    const liveFlow=data.live_flow||{};
+    const aiCore=data.ai_core||{};
+    const xg=getXg(data);
+    const score=getScore(match);
+
+    const homePressure=clamp(pressure.home?.pressure??tactical.home_pressure??0);
+    const awayPressure=clamp(pressure.away?.pressure??tactical.away_pressure??0);
+    const homeDanger=clamp(pressure.home?.danger??tactical.home_danger??0);
+    const awayDanger=clamp(pressure.away?.danger??tactical.away_danger??0);
+    const homeMomentum=clamp(liveFlow.home?.momentum??homePressure);
+    const awayMomentum=clamp(liveFlow.away?.momentum??awayPressure);
+
+    const momentumGap=Math.abs(homeMomentum-awayMomentum);
+    const pressureGap=Math.abs(homePressure-awayPressure);
+    const dangerMax=Math.max(homeDanger,awayDanger);
+    const pressureMax=Math.max(homePressure,awayPressure);
+    const xgGap=Math.abs(safeNumber(xg.home_xg,0)-safeNumber(xg.away_xg,0));
+    const goalShock=Math.abs(score.home-score.away)>=2&&safeNumber(match.minute,0)<60;
+
+    let chaosIndex=clamp(dangerMax*.35+pressureMax*.22+momentumGap*.18+xgGap*12+(goalShock?12:0));
+
+    let status="🔵 BALANCED";
+    let statusClass="status-balanced";
+    let subtitle="Match equilibrato: nessuna squadra sta prendendo il controllo totale.";
+
+    if(chaosIndex>=72){
+        status="⚡ CHAOTIC MATCH";
+        statusClass="status-chaos pulse-danger";
+        subtitle="Partita instabile: intensità, pericolo e transizioni stanno aumentando.";
+    }else if(dangerMax>=72||pressureMax>=75){
+        status="🔥 HIGH PRESSURE";
+        statusClass="status-pressure pulse-danger";
+        subtitle="Pressione alta rilevata: una fase critica può cambiare il match.";
+    }else if(homeMomentum-awayMomentum>=18||homePressure-awayPressure>=22){
+        status="🔴 DOMINATING HOME";
+        statusClass="status-home";
+        subtitle="La squadra di casa sta imponendo ritmo, territorio e pressione.";
+    }else if(awayMomentum-homeMomentum>=18||awayPressure-homePressure>=22){
+        status="🟣 DOMINATING AWAY";
+        statusClass="status-away";
+        subtitle="Gli ospiti stanno prendendo campo e aumentando la pericolosità.";
+    }else if(momentumGap<=12&&pressureGap<=14&&chaosIndex>=35){
+        status="🧠 TACTICAL BATTLE";
+        statusClass="status-tactical";
+        subtitle="Battaglia tattica aperta: equilibrio ma con segnali di instabilità.";
+    }
+
+    const chaosLabel=chaosIndex<30?"CONTROLLED":chaosIndex<60?"VOLATILE":"CHAOTIC";
+    const chaosClass=chaosIndex<30?"chaos-low":chaosIndex<60?"chaos-mid":"chaos-high";
+
+    const dominant=homeMomentum>awayMomentum
+        ? match.home||match.home_team||"Home"
+        : awayMomentum>homeMomentum
+            ? match.away||match.away_team||"Away"
+            : "Equilibrio";
+
+    const confidenceHome=clamp(50+(homeMomentum-awayMomentum)/2+(homePressure-awayPressure)/3);
+    const confidenceAway=clamp(50+(awayMomentum-homeMomentum)/2+(awayPressure-homePressure)/3);
+    const panicHome=clamp(awayDanger*.55+awayPressure*.25+(score.away>score.home?18:0));
+    const panicAway=clamp(homeDanger*.55+homePressure*.25+(score.home>score.away?18:0));
+    const fatiguePressure=clamp((safeNumber(match.minute,0)*.45)+((homePressure+awayPressure)/4));
+    const emotionalControl=clamp(100-((panicHome+panicAway)/2)+(100-chaosIndex)*.15);
+
+    const story=generateLiveStory({
+        dominant,chaosIndex,homeDanger,awayDanger,homeMomentum,awayMomentum,
+        home:match.home||match.home_team||"Home",
+        away:match.away||match.away_team||"Away",
+        backendStory:liveFlow.story||aiCore.live_flow_story
+    });
+
+    const alerts=generateFlowAlerts({
+        chaosIndex,homeDanger,awayDanger,homeMomentum,awayMomentum,homePressure,awayPressure,
+        home:match.home||match.home_team||"Home",
+        away:match.away||match.away_team||"Away"
+    });
+
+    return{
+        status,statusClass,subtitle,chaosIndex,chaosLabel,chaosClass,dominant,
+        confidenceHome,confidenceAway,panicHome,panicAway,fatiguePressure,
+        emotionalControl,story,alerts,homeMomentum,awayMomentum
+    };
+}
+
+function generateLiveStory(ctx){
+    if(ctx.backendStory)return ctx.backendStory;
+
+    if(ctx.chaosIndex>=72)return`Il match è entrato in una fase caotica: transizioni rapide, pressione crescente e margine d’errore sempre più basso. ${ctx.dominant} sta vivendo il momento più influente della partita.`;
+    if(ctx.homeDanger>=75)return`${ctx.home} sta creando una zona di pericolo costante. La difesa ospite è sotto stress e il prossimo episodio può pesare molto.`;
+    if(ctx.awayDanger>=75)return`${ctx.away} sta aumentando la minaccia offensiva. La squadra di casa sta perdendo controllo emotivo e territoriale.`;
+    if(ctx.homeMomentum-ctx.awayMomentum>=18)return`${ctx.home} sta imponendo il proprio ritmo: più intensità, più controllo e maggiore fiducia nella fase live.`;
+    if(ctx.awayMomentum-ctx.homeMomentum>=18)return`Momentum invertito: ${ctx.away} sta reagendo e sta spostando il flusso tattico dalla propria parte.`;
+    if(ctx.chaosIndex>=45)return`Partita tatticamente instabile: nessuna squadra domina del tutto, ma il livello di pressione può generare un cambio improvviso.`;
+
+    return`Match in equilibrio controllato: le squadre stanno gestendo ritmo, pressione e rischio senza esporsi troppo.`;
+}
+
+function generateFlowAlerts(ctx){
+    const alerts=[];
+
+    if(ctx.chaosIndex>=75)alerts.push({type:"critical",title:"⚡ MOMENTUM SHIFT DETECTED",text:"Il flusso del match è altamente instabile."});
+
+    if(Math.max(ctx.homeDanger,ctx.awayDanger)>=78){
+        const team=ctx.homeDanger>ctx.awayDanger?ctx.home:ctx.away;
+        alerts.push({type:"critical",title:"🚨 DANGER ZONE",text:`${team} è entrata in una fase offensiva ad alto rischio.`});
+    }
+
+    if(Math.max(ctx.homePressure,ctx.awayPressure)>=76){
+        const team=ctx.homePressure>ctx.awayPressure?ctx.home:ctx.away;
+        alerts.push({type:"warning",title:"🔥 PRESSURE SPIKE",text:`Pressione elevata rilevata per ${team}.`});
+    }
+
+    if(Math.abs(ctx.homeMomentum-ctx.awayMomentum)>=25){
+        const team=ctx.homeMomentum>ctx.awayMomentum?ctx.home:ctx.away;
+        alerts.push({type:"info",title:"💥 FLOW BREAK",text:`${team} sta rompendo l’equilibrio del match.`});
+    }
+
+    if(!alerts.length)alerts.push({type:"info",title:"🧠 TACTICAL CONTROL",text:"Nessuno shock live rilevato in questo aggiornamento."});
+
+    return alerts;
+}
+
+function generateMatchSimulation(data,flow){
+    const match=data.match||{};
+    const pressure=data.pressure_engine||{};
+    const xg=getXg(data);
+
+    const home=match.home||match.home_team||"Home";
+    const away=match.away||match.away_team||"Away";
+
+    const homePressure=clamp(pressure.home?.pressure||0);
+    const awayPressure=clamp(pressure.away?.pressure||0);
+    const homeDanger=clamp(pressure.home?.danger||0);
+    const awayDanger=clamp(pressure.away?.danger||0);
+
+    const homeXg=safeNumber(xg.home_xg,0);
+    const awayXg=safeNumber(xg.away_xg,0);
+
+    const homePower=homePressure*.35+homeDanger*.42+homeXg*12+(flow.confidenceHome||0)*.12;
+    const awayPower=awayPressure*.35+awayDanger*.42+awayXg*12+(flow.confidenceAway||0)*.12;
+
+    const attackingTeam=homePower>=awayPower?home:away;
+    const attackPower=clamp(Math.max(homePower,awayPower));
+
+    const shotProbability=clamp(attackPower*.55+(flow.chaosIndex||0)*.18+(flow.fatiguePressure||0)*.08);
+    const goalProbability=clamp(attackPower*.28+(flow.chaosIndex||0)*.12+Math.max(homeXg,awayXg)*8);
+    const pressureWave=clamp(Math.max(homePressure,awayPressure)*.5+Math.max(homeDanger,awayDanger)*.35+(flow.chaosIndex||0)*.15);
+    const collapseRisk=clamp((flow.chaosIndex||0)*.35+(flow.fatiguePressure||0)*.25+Math.max(flow.panicHome||0,flow.panicAway||0)*.35);
+
+    let scenario="Fase equilibrata: probabile gestione del ritmo senza grande rischio immediato.";
+
+    if(goalProbability>=45)scenario=`Possibile grande occasione per ${attackingTeam} nei prossimi 5 minuti.`;
+    else if(shotProbability>=55)scenario=`${attackingTeam} potrebbe produrre almeno un tiro o una situazione pericolosa.`;
+    else if(pressureWave>=60)scenario=`Pressione crescente: ${flow.dominant} può alzare il baricentro e forzare l’errore.`;
+    else if(collapseRisk>=65)scenario="Rischio instabilità: una delle due squadre può perdere controllo emotivo o tattico.";
+
+    return{attackingTeam,shotProbability,goalProbability,pressureWave,collapseRisk,scenario};
+}
+
+function detectTeamIdentity(teamName,side,pressure,danger,xg,flow,score){
+    const confidence=side==="home"?flow.confidenceHome:flow.confidenceAway;
+    const panic=side==="home"?flow.panicHome:flow.panicAway;
+    const momentum=side==="home"?flow.homeMomentum:flow.awayMomentum;
+    const losing=side==="home"?score.home<score.away:score.away<score.home;
+
+    let style="Balanced Control";
+    let icon="🧠";
+    let desc="Squadra in equilibrio: alterna gestione, pressione e fasi di controllo senza un’identità dominante.";
+    let tags=["BALANCED","CONTROL","STABLE"];
+
+    if(pressure>=78&&danger>=70){
+        style="High Pressing Machine";
+        icon="🔥";
+        desc="Pressione alta e recupero aggressivo: la squadra sta cercando di soffocare l’avversario nella sua metà campo.";
+        tags=["HIGH PRESS","AGGRESSIVE","TERRITORIAL"];
+    }else if(danger>=78&&pressure<65){
+        style="Direct Attack";
+        icon="⚡";
+        desc="Approccio verticale: poche fasi di possesso, ma forte capacità di generare pericolo in modo rapido.";
+        tags=["DIRECT","FAST ATTACK","RISK"];
+    }else if(pressure>=70&&danger<55){
+        style="Possession Control";
+        icon="🔵";
+        desc="Controllo territoriale e gestione del ritmo: la squadra sta costruendo superiorità senza forzare troppo.";
+        tags=["POSSESSION","CONTROL","TEMPO"];
+    }else if(momentum>=70&&danger>=60){
+        style="Momentum Surge";
+        icon="🚀";
+        desc="Momento favorevole evidente: intensità e fiducia stanno spostando il flusso tattico dalla sua parte.";
+        tags=["MOMENTUM","CONFIDENCE","PUSH"];
+    }else if(losing&&pressure>=65){
+        style="Chasing Mode";
+        icon="🚨";
+        desc="La squadra sta inseguendo il risultato e aumenta pressione e rischio per rientrare nel match.";
+        tags=["CHASING","HIGH RISK","REACTION"];
+    }else if(panic>=72&&pressure<55){
+        style="Defensive Stress";
+        icon="🧱";
+        desc="Fase di sofferenza: la squadra sembra più reattiva che propositiva e sta assorbendo pressione.";
+        tags=["LOW BLOCK","STRESS","DEFENSIVE"];
+    }else if(flow.chaosIndex>=70){
+        style="Chaos Football";
+        icon="🌪️";
+        desc="Match instabile: transizioni, errori e ritmo alto stanno creando una partita poco controllabile.";
+        tags=["CHAOS","TRANSITIONS","UNSTABLE"];
+    }
+
+    const identityScore=clamp((pressure*.32)+(danger*.36)+(momentum*.22)+(confidence*.10));
+
+    return{teamName,style,icon,desc,tags,identityScore,pressure,danger,xg,momentum,confidence,panic};
+}
+
+function generateTacticalIdentity(data,flow){
+    const match=data.match||{};
+    const pressure=data.pressure_engine||{};
+    const xg=getXg(data);
+    const score=getScore(match);
+
+    const home=match.home||match.home_team||"Home";
+    const away=match.away||match.away_team||"Away";
+
+    const homePressure=clamp(pressure.home?.pressure||0);
+    const awayPressure=clamp(pressure.away?.pressure||0);
+    const homeDanger=clamp(pressure.home?.danger||0);
+    const awayDanger=clamp(pressure.away?.danger||0);
+
+    const homeId=detectTeamIdentity(home,"home",homePressure,homeDanger,safeNumber(xg.home_xg,0),flow,score);
+    const awayId=detectTeamIdentity(away,"away",awayPressure,awayDanger,safeNumber(xg.away_xg,0),flow,score);
+
+    const dominant=homeId.identityScore>=awayId.identityScore?homeId:awayId;
+
+    let matchDNA="Balanced Tactical Battle";
+
+    if(flow.chaosIndex>=70)matchDNA="Chaotic Transition Game";
+    else if(Math.max(homePressure,awayPressure)>=75)matchDNA="High Pressure Match";
+    else if(Math.abs(homeId.identityScore-awayId.identityScore)<=8)matchDNA="Tactical Chess Match";
+    else if(dominant.style.includes("Possession"))matchDNA="Territorial Control Match";
+
+    return{homeId,awayId,dominant,matchDNA};
+}
+
+function generateAttackPrediction(data,flow){
+    const match=data.match||{};
+    const pressure=data.pressure_engine||{};
+    const xg=getXg(data);
+
+    const home=match.home||match.home_team||"Home";
+    const away=match.away||match.away_team||"Away";
+
+    const hp=clamp(pressure.home?.pressure||0);
+    const ap=clamp(pressure.away?.pressure||0);
+    const hd=clamp(pressure.home?.danger||0);
+    const ad=clamp(pressure.away?.danger||0);
+
+    const hx=safeNumber(xg.home_xg,0);
+    const ax=safeNumber(xg.away_xg,0);
+
+    const homePower=hp*.32+hd*.42+hx*13+flow.confidenceHome*.1;
+    const awayPower=ap*.32+ad*.42+ax*13+flow.confidenceAway*.1;
+
+    const team=homePower>=awayPower?home:away;
+    const power=clamp(Math.max(homePower,awayPower));
+    const chaos=flow.chaosIndex;
+
+    let lane="center";
+    let label="⚡ CENTRAL BUILDUP";
+    let desc=`${team} sta sviluppando la manovra prevalentemente per vie centrali, cercando superiorità tra le linee.`;
+
+    if(power>=70&&chaos>=55){
+        lane="right";
+        label="🟥 RIGHT SIDE PRESSURE";
+        desc=`${team} sta aumentando la pressione sulla corsia destra con un flusso offensivo molto intenso.`;
+    }else if(power>=60&&hd+ad>hp+ap){
+        lane="left";
+        label="🔥 LEFT SIDE OVERLOAD";
+        desc=`${team} sta creando un possibile sovraccarico sulla fascia sinistra, con rischio di cross o attacco rapido.`;
+    }else if(power>=55){
+        lane="center";
+        label="⚡ CENTRAL BUILDUP";
+        desc=`${team} sta cercando di costruire per vie centrali e forzare la linea difensiva avversaria.`;
+    }
+
+    const shot=clamp(power*.55+chaos*.12);
+    const box=clamp(power*.42+Math.max(hx,ax)*12);
+    const overload=clamp(power*.48+Math.max(hd,ad)*.28);
+
+    return{team,lane,label,desc,power,shot,box,overload};
+}
+
+function generateMomentumCinematic(data,flow,simulation){
+    const match=data.match||{};
+    const minute=safeNumber(match.minute,0);
+
+    const homeM=clamp(flow.homeMomentum);
+    const awayM=clamp(flow.awayMomentum);
+    const gap=Math.abs(homeM-awayM);
+
+    const temperature=clamp(
+        flow.chaosIndex*.38+
+        simulation.pressureWave*.24+
+        simulation.goalProbability*.20+
+        gap*.18
+    );
+
+    let tempLabel="COLD";
+    let tempText="Ritmo basso, poche variazioni nel flusso della partita.";
+
+    if(temperature>=80){
+        tempLabel="CHAOTIC";
+        tempText="Partita in fase altamente instabile: ogni episodio può cambiare il match.";
+    }else if(temperature>=65){
+        tempLabel="VOLATILE";
+        tempText="Il match è molto vivo: pressione, transizioni e rischio stanno aumentando.";
+    }else if(temperature>=48){
+        tempLabel="INTENSE";
+        tempText="Ritmo intenso: una squadra sta provando ad alzare pressione e baricentro.";
+    }else if(temperature>=30){
+        tempLabel="BALANCED";
+        tempText="Partita equilibrata con fasi alterne e controllo distribuito.";
+    }
+
+    let swing="STABLE";
+    let swingText="Nessun cambio netto di inerzia rilevato.";
+
+    if(gap>=28){
+        swing="STRONG MOMENTUM";
+        swingText=`${flow.dominant} sta vivendo una fase di dominio tattico evidente.`;
+    }else if(gap>=15){
+        swing="MOMENTUM EDGE";
+        swingText=`${flow.dominant} ha un vantaggio nel flusso recente della partita.`;
+    }
+
+    const dangerPulse=clamp((simulation.goalProbability*.55)+(simulation.collapseRisk*.45));
+    const pressurePulse=clamp(simulation.pressureWave);
+
+    return{
+        minute,
+        homeM,
+        awayM,
+        gap,
+        temperature,
+        tempLabel,
+        tempText,
+        swing,
+        swingText,
+        dangerPulse,
+        pressurePulse
+    };
+}
+
+function buildSnapshot(data,flow,sim,momentum){
+    const m=data.match||{};
+    const s=getScore(m);
+    const p=data.pressure_engine||{};
+    const x=getXg(data);
+
+    return{
+        score:`${s.home}-${s.away}`,
+        minute:safeNumber(m.minute,0),
+        homePressure:Math.round(clamp(p.home?.pressure)),
+        awayPressure:Math.round(clamp(p.away?.pressure)),
+        homeDanger:Math.round(clamp(p.home?.danger)),
+        awayDanger:Math.round(clamp(p.away?.danger)),
+        homeXg:safeNumber(x.home_xg,0).toFixed(2),
+        awayXg:safeNumber(x.away_xg,0).toFixed(2),
+        chaos:Math.round(flow.chaosIndex),
+        status:flow.status,
+        dominant:flow.dominant,
+        goalProb:Math.round(sim.goalProbability),
+        shotProb:Math.round(sim.shotProbability),
+        collapseRisk:Math.round(sim.collapseRisk),
+        temperature:Math.round(momentum.temperature),
+        swing:momentum.swing
+    };
+}
+
+function pushEvent(level,title,text){
+    const now=new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    cinematicEvents.unshift({level,title,text,time:now});
+    cinematicEvents=cinematicEvents.slice(0,6);
+}
+
+function detectCinematicEvents(snapshot){
+    if(!previousSnapshot)return{changed:false,scoreChanged:false,major:false,messages:[]};
+
+    const messages=[];
+    const scoreChanged=snapshot.score!==previousSnapshot.score;
+
+    if(scoreChanged){
+        messages.push("💥 GOAL SHOCK");
+        pushEvent("critical","💥 GOAL SHOCK","Il risultato è cambiato: l’AI sta ricalcolando inerzia e rischio tattico.");
+    }
+
+    if(Math.abs(snapshot.chaos-previousSnapshot.chaos)>=10){
+        messages.push("⚡ CHAOS SHIFT");
+        pushEvent("warning","⚡ CHAOS SHIFT","La temperatura tattica del match è cambiata in modo evidente.");
+    }
+
+    if(Math.abs(snapshot.goalProb-previousSnapshot.goalProb)>=8){
+        messages.push("🔥 GOAL PROBABILITY SPIKE");
+        pushEvent("critical","🔥 GOAL PROBABILITY SPIKE","Aumento improvviso della probabilità goal nei prossimi minuti.");
+    }
+
+    if(Math.abs(snapshot.collapseRisk-previousSnapshot.collapseRisk)>=10){
+        messages.push("🚨 COLLAPSE RISK");
+        pushEvent("critical","🚨 TACTICAL COLLAPSE RISK","Una squadra mostra segnali di perdita di controllo tattico o mentale.");
+    }
+
+    if(Math.abs(snapshot.temperature-previousSnapshot.temperature)>=12){
+        messages.push("🌡️ MATCH TEMPERATURE SHIFT");
+        pushEvent("warning","🌡️ MATCH TEMPERATURE SHIFT","Il livello emotivo e tattico della partita è cambiato in modo netto.");
+    }
+
+    if(snapshot.swing!==previousSnapshot.swing){
+        messages.push("⚡ MOMENTUM SWING");
+        pushEvent("info","⚡ MOMENTUM SWING","Cambio di inerzia rilevato: il flusso della partita si sta spostando.");
+    }
+
+    if(Math.abs(snapshot.homePressure-previousSnapshot.homePressure)>=15||Math.abs(snapshot.awayPressure-previousSnapshot.awayPressure)>=15){
+        messages.push("🔥 PRESSURE OVERLOAD");
+        pushEvent("warning","🔥 PRESSURE OVERLOAD","Pressione improvvisa rilevata: possibile fase di assedio.");
+    }
+
+    return{changed:messages.length>0,scoreChanged,major:scoreChanged||messages.length>=2,messages};
+}
+
+function renderLiveFlowVisual(flow){
+    return`
+    <div class="live-flow-hero ${flow.statusClass}">
+        <div class="live-flow-inner">
+            <div class="match-status-row">
+                <div class="status-main">
+                    <div class="status-kicker">LIVE MATCH STATUS</div>
+                    <div class="status-title">${flow.status}</div>
+                    <div class="status-subtitle">${flow.subtitle}</div>
+                </div>
+                <div class="status-chip">
+                    <div class="status-chip-label">DOMINANT FLOW</div>
+                    <div class="status-chip-value">${flow.dominant}</div>
+                    <div class="status-chip-small">pressione, danger e momentum</div>
+                </div>
+                <div class="status-chip">
+                    <div class="status-chip-label">MATCH CHAOS</div>
+                    <div class="status-chip-value">${Math.round(flow.chaosIndex)}</div>
+                    <div class="status-chip-small">${flow.chaosLabel}</div>
+                </div>
+            </div>
+
+            <div class="chaos-wrapper">
+                <div class="chaos-top">
+                    <div class="chaos-label">CHAOS INDEX VISIVO</div>
+                    <div class="chaos-value">${Math.round(flow.chaosIndex)} / 100</div>
+                </div>
+                <div class="chaos-track">
+                    <div class="chaos-fill ${flow.chaosClass}" style="width:${flow.chaosIndex}%"></div>
+                </div>
+            </div>
+
+            <div class="flow-alert-grid">
+                ${flow.alerts.map(a=>`<div class="flow-alert ${a.type}"><strong>${a.title}</strong><br>${a.text}</div>`).join("")}
+            </div>
+
+            <div class="story-box">
+                <div class="story-title">LIVE STORYTELLING AI</div>
+                <div class="story-text">${flow.story}</div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderPsychologicalEngine(flow,home,away){
+    return`
+    <div class="psych-grid">
+        <div class="psych-card"><div class="psych-label">${home} CONFIDENCE</div><div class="psych-value">${Math.round(flow.confidenceHome)}%</div><div class="psych-bar"><div class="psych-fill" style="width:${flow.confidenceHome}%"></div></div></div>
+        <div class="psych-card"><div class="psych-label">${away} CONFIDENCE</div><div class="psych-value">${Math.round(flow.confidenceAway)}%</div><div class="psych-bar"><div class="psych-fill" style="width:${flow.confidenceAway}%"></div></div></div>
+        <div class="psych-card"><div class="psych-label">${home} PANIC LEVEL</div><div class="psych-value">${Math.round(flow.panicHome)}%</div><div class="psych-bar"><div class="psych-fill danger" style="width:${flow.panicHome}%"></div></div></div>
+        <div class="psych-card"><div class="psych-label">${away} PANIC LEVEL</div><div class="psych-value">${Math.round(flow.panicAway)}%</div><div class="psych-bar"><div class="psych-fill danger" style="width:${flow.panicAway}%"></div></div></div>
+        <div class="psych-card"><div class="psych-label">FATIGUE PRESSURE</div><div class="psych-value">${Math.round(flow.fatiguePressure)}%</div><div class="psych-bar"><div class="psych-fill danger" style="width:${flow.fatiguePressure}%"></div></div></div>
+        <div class="psych-card"><div class="psych-label">EMOTIONAL CONTROL</div><div class="psych-value">${Math.round(flow.emotionalControl)}%</div><div class="psych-bar"><div class="psych-fill" style="width:${flow.emotionalControl}%"></div></div></div>
+    </div>`;
+}
+
+function renderMatchSimulation(sim){
+    return`
+    <div class="simulation-grid">
+        <div class="sim-card"><div class="sim-label">NEXT 5 MIN ATTACK</div><div class="sim-value">${sim.attackingTeam}</div><div class="sim-desc">Squadra più probabile a generare pressione offensiva.</div></div>
+        <div class="sim-card"><div class="sim-label">SHOT PROBABILITY</div><div class="sim-value">${Math.round(sim.shotProbability)}%</div><div class="sim-bar"><div class="sim-fill" style="width:${sim.shotProbability}%"></div></div></div>
+        <div class="sim-card"><div class="sim-label">GOAL PROBABILITY</div><div class="sim-value">${Math.round(sim.goalProbability)}%</div><div class="sim-bar"><div class="sim-fill danger" style="width:${sim.goalProbability}%"></div></div></div>
+        <div class="sim-card"><div class="sim-label">PRESSURE WAVE</div><div class="sim-value">${Math.round(sim.pressureWave)}%</div><div class="sim-bar"><div class="sim-fill" style="width:${sim.pressureWave}%"></div></div></div>
+        <div class="sim-card"><div class="sim-label">COLLAPSE RISK</div><div class="sim-value">${Math.round(sim.collapseRisk)}%</div><div class="sim-bar"><div class="sim-fill danger" style="width:${sim.collapseRisk}%"></div></div></div>
+        <div class="sim-card sim-main-card"><div class="sim-label">AI SCENARIO</div><div class="sim-value">Next 5 Minutes</div><div class="sim-desc">${sim.scenario}</div></div>
+    </div>`;
+}
+
+function renderTacticalIdentity(identity){
+    const card=(id)=>`
+    <div class="identity-card">
+        <div class="identity-team">${id.teamName}</div>
+        <div class="identity-label">TACTICAL IDENTITY</div>
+        <div class="identity-value">${id.icon} ${id.style}</div>
+        <div class="identity-desc">${id.desc}</div>
+        <div class="identity-bar"><div class="identity-fill" style="width:${id.identityScore}%"></div></div>
+        <div class="identity-tags">${id.tags.map(t=>`<span class="identity-tag">${t}</span>`).join("")}</div>
+    </div>`;
+
+    return`
+    <div class="identity-grid">
+        <div class="identity-card identity-card-main">
+            <div class="identity-label">MATCH TACTICAL DNA</div>
+            <div class="identity-value">${identity.matchDNA}</div>
+            <div class="identity-desc">Identità live calcolata da pressione, danger, momentum, panic, confidence e xG già presenti nella pagina.</div>
+            <div class="identity-tags"><span class="identity-tag">ZERO NEW API</span><span class="identity-tag">LIVE INTERPRETATION</span><span class="identity-tag">TACTICAL AI</span></div>
+        </div>
+        ${card(identity.homeId)}
+        ${card(identity.awayId)}
+    </div>`;
+}
+
+function renderAttackPrediction(a){
+    return`
+    <div class="attack-wrapper">
+        <div class="attack-map">
+            <div class="attack-zone zone-left ${a.lane==="left"?"active":""}">LEFT SIDE<br>Fascia sinistra</div>
+            <div class="attack-zone zone-center ${a.lane==="center"?"active":""}">CENTRAL<br>Zona centrale</div>
+            <div class="attack-zone zone-right ${a.lane==="right"?"active":""}">RIGHT SIDE<br>Fascia destra</div>
+            <div class="attack-arrow arrow-${a.lane}"></div>
+        </div>
+
+        <div class="attack-side-panel">
+            <div class="attack-card">
+                <div class="attack-label">ATTACK FLOW</div>
+                <div class="attack-value">${a.label}</div>
+                <div class="attack-desc">${a.desc}</div>
+                <div class="attack-tags"><span class="attack-tag">TEAM: ${a.team}</span><span class="attack-tag">ZERO NEW API</span></div>
+            </div>
+            <div class="attack-card"><div class="attack-label">OFFENSIVE INTENSITY</div><div class="attack-value">${Math.round(a.power)}%</div><div class="attack-bar"><div class="attack-fill" style="width:${a.power}%"></div></div></div>
+            <div class="attack-card"><div class="attack-label">BOX ENTRY RISK</div><div class="attack-value">${Math.round(a.box)}%</div><div class="attack-bar"><div class="attack-fill danger" style="width:${a.box}%"></div></div></div>
+            <div class="attack-card"><div class="attack-label">OVERLOAD PROBABILITY</div><div class="attack-value">${Math.round(a.overload)}%</div><div class="attack-bar"><div class="attack-fill" style="width:${a.overload}%"></div></div></div>
+        </div>
+    </div>`;
+}
+
+function renderCinematicEvents(){
+    if(!cinematicEvents.length){
+        return`
+        <div class="event-card info">
+            <div class="event-label">AI EVENT FEED</div>
+            <div class="event-value">Monitoraggio attivo</div>
+            <div class="event-desc">Nessuno shock live rilevato nell’ultimo aggiornamento.</div>
+        </div>`;
+    }
+
+    return`
+    <div class="event-grid">
+        ${cinematicEvents.map(e=>`
+        <div class="event-card ${e.level}">
+            <div class="event-time">${e.time}</div>
+            <div class="event-title">${e.title}</div>
+            <div class="event-desc">${e.text}</div>
+        </div>`).join("")}
+    </div>`;
+}
+
+function renderMomentumCinematic(momentum){
+    const heatClass=momentum.temperature>=65?"hot":"cold";
+    const spikeLevel=momentum.dangerPulse>=70?"critical":momentum.pressurePulse>=60?"warning":"";
+    const spikeText=momentum.dangerPulse>=70
+        ? "Danger spike attivo"
+        : momentum.pressurePulse>=60
+            ? "Pressione in crescita"
+            : "Flusso stabile";
+
+    return`
+    <div class="momentum-cinematic-wrap">
+        <div class="momentum-panel">
+            <div class="momentum-pro-header">
+                <div>
+                    <div class="momentum-pro-title">📈 Live Momentum Graph PRO</div>
+                    <div class="momentum-pro-subtitle">Grafico dinamico basato su momentum, pressione, danger pulse e temperatura partita. Nessuna API extra.</div>
+                </div>
+                <div class="momentum-pro-badges">
+                    <span class="momentum-pro-badge ${heatClass}">TEMP ${Math.round(momentum.temperature)}/100</span>
+                    <span class="momentum-pro-badge">MIN ${Math.round(momentum.minute)}'</span>
+                    <span class="momentum-pro-badge ${spikeLevel}">${spikeText}</span>
+                </div>
+            </div>
+
+            <div class="momentum-temp">
+                <div class="temp-top">
+                    <div>
+                        <div class="temp-label">MATCH TEMPERATURE</div>
+                        <div class="temp-status">${momentum.tempLabel}</div>
+                    </div>
+                    <div class="temp-status">${Math.round(momentum.temperature)} / 100</div>
+                </div>
+                <div class="temp-track">
+                    <div class="temp-fill" style="width:${momentum.temperature}%"></div>
+                </div>
+                <div class="momentum-desc">${momentum.tempText}</div>
+            </div>
+
+            <div class="chart-box momentum-pro-chart">
+                <canvas id="momentumChart"></canvas>
+            </div>
+
+            <div class="momentum-live-strip">
+                <div class="momentum-live-chip">
+                    <div class="momentum-live-label">HOME FLOW</div>
+                    <div class="momentum-live-value">${Math.round(momentum.homeM)}%</div>
+                    <div class="momentum-live-note">Momentum casa aggiornato live.</div>
+                </div>
+                <div class="momentum-live-chip">
+                    <div class="momentum-live-label">AWAY FLOW</div>
+                    <div class="momentum-live-value">${Math.round(momentum.awayM)}%</div>
+                    <div class="momentum-live-note">Momentum trasferta aggiornato live.</div>
+                </div>
+                <div class="momentum-live-chip">
+                    <div class="momentum-live-label">SWING GAP</div>
+                    <div class="momentum-live-value">${Math.round(momentum.gap)}</div>
+                    <div class="momentum-live-note">Differenza inerzia tra le due squadre.</div>
+                </div>
+            </div>
+
+            <div class="momentum-spike-feed">
+                <div class="momentum-spike-item ${spikeLevel}">
+                    <span><strong>${momentum.swing}</strong> — ${momentum.swingText}</span>
+                    <span>${Math.round(momentum.pressurePulse)}%</span>
+                </div>
+                <div class="momentum-spike-item ${momentum.dangerPulse>=70?"critical":""}">
+                    <span><strong>Danger Pulse</strong> — rischio fase offensiva improvvisa</span>
+                    <span>${Math.round(momentum.dangerPulse)}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="momentum-stats-grid">
+            <div class="momentum-stat">
+                <div class="momentum-label">MOMENTUM SWING</div>
+                <div class="momentum-value">${momentum.swing}</div>
+                <div class="momentum-desc">${momentum.swingText}</div>
+            </div>
+
+            <div class="momentum-stat">
+                <div class="momentum-label">PRESSURE PULSE</div>
+                <div class="momentum-value">${Math.round(momentum.pressurePulse)}%</div>
+                <div class="momentum-bar"><div class="momentum-fill" style="width:${momentum.pressurePulse}%"></div></div>
+            </div>
+
+            <div class="momentum-stat">
+                <div class="momentum-label">DANGER PULSE</div>
+                <div class="momentum-value">${Math.round(momentum.dangerPulse)}%</div>
+                <div class="momentum-bar"><div class="momentum-fill danger" style="width:${momentum.dangerPulse}%"></div></div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderXg(xg){
+    const h=safeNumber(xg.home_xg,0);
+    const a=safeNumber(xg.away_xg,0);
+    const t=h+a||1;
+
+    return`
+    <div class="xg-grid">
+        <div class="xg-card"><div class="xg-title">HOME xG</div><div class="xg-value">${h.toFixed(2)}</div></div>
+        <div class="xg-card"><div class="xg-title">AWAY xG</div><div class="xg-value">${a.toFixed(2)}</div></div>
+        <div class="xg-card"><div class="xg-title">HOME BIG CHANCES</div><div class="xg-value">${xg.home_big_chances??0}</div></div>
+        <div class="xg-card"><div class="xg-title">AWAY BIG CHANCES</div><div class="xg-value">${xg.away_big_chances??0}</div></div>
+        <div class="xg-card"><div class="xg-title">HOME SHOT QUALITY</div><div class="xg-value">${xg.home_shot_quality??0}</div></div>
+        <div class="xg-card"><div class="xg-title">AWAY SHOT QUALITY</div><div class="xg-value">${xg.away_shot_quality??0}</div></div>
+        <div class="xg-card"><div class="xg-title">HOME xTHREAT</div><div class="xg-value">${xg.home_xthreat??0}</div></div>
+        <div class="xg-card"><div class="xg-title">AWAY xTHREAT</div><div class="xg-value">${xg.away_xthreat??0}</div></div>
+    </div>
+    <div class="xg-bar"><div class="xg-home-bar" style="width:${(h/t)*100}%"></div><div class="xg-away-bar" style="width:${(a/t)*100}%"></div></div>
+    <div class="dominant-box">xG Dominance: <strong>${xg.dominance||"BALANCED"}</strong></div>`;
+}
+
+function renderFuture(f){
+    return`
+    <div class="future-grid">
+        <div class="future-card"><div class="future-title">NEXT GOAL</div><div class="future-value">${f.next_goal_probability??"--"}%</div></div>
+        <div class="future-card"><div class="future-title">COUNTER ATTACK</div><div class="future-value">${f.counter_attack_risk??"--"}</div></div>
+        <div class="future-card"><div class="future-title">COLLAPSE RISK</div><div class="future-value">${f.collapse_risk??"--"}</div></div>
+        <div class="future-card"><div class="future-title">FATIGUE</div><div class="future-value">${f.fatigue_warning??"--"}</div></div>
+        <div class="future-card prediction-card">
+            <div class="future-title">AI PREDICTION</div>
+            <div class="future-prediction">${f.prediction??"Prediction non disponibile."}</div>
+            <div class="future-confidence">Confidence: ${f.confidence??"--"}%</div>
+        </div>
+    </div>`;
+}
+
+function renderCoach(items){
+    if(!items.length)return`<div class="coach-card coach-low"><div class="coach-message">Tactical Coach AI non disponibile.</div></div>`;
+
+    return`
+    <div class="coach-grid">
+        ${items.map(i=>{
+            const p=String(i.priority||"LOW").toUpperCase();
+            const cls=p==="HIGH"?"coach-high":p==="MEDIUM"?"coach-medium":"coach-low";
+
+            return`
+            <div class="coach-card ${cls}">
+                <div class="coach-top"><span class="coach-type">${i.type||"TACTICAL"}</span><span class="coach-priority">${p}</span></div>
+                <div class="coach-team">${i.team||"MATCH"}</div>
+                <div class="coach-message">${i.message||""}</div>
+            </div>`;
+        }).join("")}
+    </div>`;
+}
+
+function renderPlayers(players){
+    if(!players.length)return"Player ratings non disponibili.";
+
+    return`
+    <div class="players-grid">
+        ${players.slice(0,12).map((p,i)=>{
+            const r=safeNumber(p.rating,6.5);
+            let cls="rating-mid";
+
+            if(r>=8)cls="rating-elite";
+            else if(r>=7)cls="rating-good";
+            else if(r<6)cls="rating-low";
+
+            return`
+            <div class="player-card">
+                ${i===0?`<div class="mvp-badge">MVP</div>`:""}
+                <div class="player-top">
+                    <div>
+                        <div class="player-name">${p.name||"Player"}</div>
+                        <div class="player-role">${p.role||p.position||"N/A"} • ${p.team||""}</div>
+                    </div>
+                    <div class="player-rating ${cls}">${r.toFixed(1)}</div>
+                </div>
+                <div class="player-stats">
+                    <div class="player-stat"><span class="player-stat-label">Danger</span><span class="player-stat-value">${Math.round(safeNumber(p.danger))}</span></div>
+                    <div class="player-stat"><span class="player-stat-label">Fatigue</span><span class="player-stat-value">${Math.round(safeNumber(p.fatigue))}%</span></div>
+                    <div class="player-stat"><span class="player-stat-label">Aggression</span><span class="player-stat-value">${Math.round(safeNumber(p.aggression))}</span></div>
+                    <div class="player-stat"><span class="player-stat-label">Status</span><span class="player-stat-value">${p.status||"STABLE"}</span></div>
+                </div>
+            </div>`;
+        }).join("")}
+    </div>`;
+}
+
+
+function classifyCommentarySeverity(text){
+    const t=String(text||"").toLowerCase();
+    if(t.includes("caot")||t.includes("altissima intensità")||t.includes("momento decisivo")||t.includes("cambia tutto")){
+        return {level:"chaos",label:"CHAOS",icon:"🌪️"};
+    }
+    if(t.includes("pericol")||t.includes("sotto forte pressione")||t.includes("difesa")||t.includes("probabilità gol")||t.includes("gol")){
+        return {level:"danger",label:"DANGER",icon:"🚨"};
+    }
+    if(t.includes("pressione")||t.includes("momentum")||t.includes("ritmo")||t.includes("intensità")||t.includes("transizioni")){
+        return {level:"warning",label:"WARNING",icon:"🔥"};
+    }
+    return {level:"normal",label:"AI LIVE",icon:"🧠"};
+}
+
+function getCommentaryLines(data,aiCore){
+    const fromNewEngine=Array.isArray(data.ai_commentary?.commentary)?data.ai_commentary.commentary:[];
+    const fromCore=Array.isArray(aiCore.commentary)?aiCore.commentary:[];
+    const merged=[...fromNewEngine,...fromCore]
+        .filter(Boolean)
+        .map(x=>String(x).trim())
+        .filter(Boolean);
+
+    return [...new Set(merged)].slice(0,6);
+}
+
+function renderAICommentary(commentary,match){
+    if(!commentary||!commentary.length){
+        return `<div class="ai-commentary-empty">Commentary AI non disponibile.</div>`;
+    }
+
+    const minute=safeNumber(match?.minute,0);
+
+    return `<div class="ai-commentary-wrap">
+        ${commentary.map((line,index)=>{
+            const s=classifyCommentarySeverity(line);
+            return `<div class="ai-commentary-card ${s.level}" style="animation-delay:${index*90}ms">
+                <div class="ai-commentary-icon">${s.icon}</div>
+                <div class="ai-commentary-top">
+                    <div class="ai-commentary-severity">${s.label}</div>
+                    <div class="ai-commentary-time">${minute}' • LIVE AI</div>
+                </div>
+                <div class="ai-commentary-text">${line}</div>
+            </div>`;
+        }).join("")}
+    </div>`;
+}
+
+function renderWinProbability(p){
+    const h=clamp(p.home_win??p.home??33.3);
+    const d=clamp(p.draw??33.4);
+    const a=clamp(p.away_win??p.away??33.3);
+    const dom=String(p.dominant_outcome||"draw").toUpperCase();
+
+    return`
+    <div class="win-prob-wrapper">
+        <div class="prob-box"><div class="prob-label">HOME WIN</div><div class="prob-value">${h}%</div></div>
+        <div class="prob-box"><div class="prob-label">DRAW</div><div class="prob-value">${d}%</div></div>
+        <div class="prob-box"><div class="prob-label">AWAY WIN</div><div class="prob-value">${a}%</div></div>
+    </div>
+    <div class="prob-bar">
+        <div class="prob-home-bar" style="width:${h}%"></div>
+        <div class="prob-draw-bar" style="width:${d}%"></div>
+        <div class="prob-away-bar" style="width:${a}%"></div>
+    </div>
+    <div class="dominant-box">Dominant Outcome: <strong>${dom}</strong></div>`;
+}
+
+function renderBar(label,value,extraClass){
+    const w=clamp(value);
+    return`
+    <div class="metric">
+        <div class="metric-label">${label}: ${Math.round(w)}</div>
+        <div class="bar"><div class="bar-fill ${extraClass}" style="width:${w}%"></div></div>
+    </div>`;
+}
+
+function render(data){
+    const match=data.match||{};
+    const tactical=data.tactical_analysis||{};
+    const pressure=data.pressure_engine||{};
+    const aiCore=data.ai_core||{};
+    const winProb=getWinProbability(data);
+    const players=getPlayers(data);
+    const coach=getCoach(data);
+    const future=getFuture(data);
+    const xg=getXg(data);
+
+    const homePressure=clamp(pressure.home?.pressure??tactical.home_pressure??0);
+    const awayPressure=clamp(pressure.away?.pressure??tactical.away_pressure??0);
+    const homeDanger=clamp(pressure.home?.danger??tactical.home_danger??0);
+    const awayDanger=clamp(pressure.away?.danger??tactical.away_danger??0);
+
+    const score=getScore(match);
+    const alerts=getAlerts(data);
+    const timeline=getTimeline(data);
+    const commentary=getCommentaryLines(data,aiCore);
+
+    const homeGlow=clamp(Math.max(homePressure,homeDanger),8,100);
+    const awayGlow=clamp(Math.max(awayPressure,awayDanger),8,100);
+
+    const home=match.home||match.home_team||"Home";
+    const away=match.away||match.away_team||"Away";
+
+    const flow=calculateLiveFlowVisual(data);
+    const simulation=generateMatchSimulation(data,flow);
+    const identity=generateTacticalIdentity(data,flow);
+    const attack=generateAttackPrediction(data,flow);
+    const momentum=generateMomentumCinematic(data,flow,simulation);
+
+    const snapshot=buildSnapshot(data,flow,simulation,momentum);
+    const change=detectCinematicEvents(snapshot);
+    const scorePulse=change.scoreChanged?"score-pulse":"";
+
+    if(change.major){
+        showLiveOverlay(change.messages[0]||"⚡ LIVE CHANGE",`Aggiornamento rilevato: ${change.messages.join(" • ")}`);
+    }
+
+    previousSnapshot=snapshot;
+
+    document.getElementById("app").innerHTML=`
+    <div class="card ${change.changed?"live-flash":""}">
+        <div class="section-content">${renderLiveFlowVisual(flow)}</div>
+    </div>
+
+    <div class="card match-header ${change.scoreChanged?"live-flash":""}">
+        <div class="match-row">
+            <div class="team"><img src="${match.home_logo||""}" alt="${home}"><div class="team-name">${home}</div></div>
+            <div class="score-center"><div class="score ${scorePulse}">${score.home}-${score.away}</div><div class="minute">${safeNumber(match.minute,0)}'</div><div class="league">${match.league||""}</div></div>
+            <div class="team"><img src="${match.away_logo||""}" alt="${away}"><div class="team-name">${away}</div></div>
+        </div>
+    </div>
+
+    ${renderSection("psych","🧠","Psychological Live Engine",renderPsychologicalEngine(flow,home,away))}
+    ${renderSection("sim","🔥","Match Simulation Engine — Next 5 Minutes",renderMatchSimulation(simulation))}
+    ${renderSection("identity","🧬","Team Tactical Identity Engine",renderTacticalIdentity(identity))}
+    ${renderSection("attack","🗺️","Attack Prediction Map Engine",renderAttackPrediction(attack))}
+    ${renderSection("events","⚡","Live Event Cinematic System",renderCinematicEvents(),change.changed)}
+    ${renderSection("momentum","📈","Momentum Engine Cinematico",renderMomentumCinematic(momentum),change.changed)}
+    ${renderSection("win","🔥","AI Win Probability",renderWinProbability(winProb))}
+    ${renderSection("future","🔮","AI Future Prediction",renderFuture(future))}
+    ${renderSection("xg","⚽","Live xG Analysis",renderXg(xg))}
+
+    ${renderSection("alerts","🚨","Live Tactical Alerts",`
+        <div class="alert-grid">
+            ${
+                alerts.length
+                ? alerts.map(a=>`
+                    <div class="alert-box ${String(a.level||a.type||"").toUpperCase().includes("HIGH")?"high":String(a.level||a.type||"").toUpperCase().includes("MEDIUM")?"medium":""}">
+                        <strong>${a.title||a.type||"AI Alert"}</strong><br>${a.message||a.detail||""}
+                    </div>`).join("")
+                : `<div class="alert-box"><strong>Nessun alert critico</strong><br>Match sotto controllo.</div>`
+            }
+        </div>
+    `)}
+
+    ${renderSection("coach","🧠","Tactical Coach AI",renderCoach(coach))}
+
+    ${renderSection("tactical","📊","Tactical Analysis",`
+        <div class="analysis-grid">
+            <div>
+                ${renderBar("Home Pressure",homePressure,"")}
+                ${renderBar("Away Pressure",awayPressure,"away")}
+                ${renderBar("Home Danger",homeDanger,"")}
+                ${renderBar("Away Danger",awayDanger,"away")}
+            </div>
+            <div class="side-stats">
+                <div>Dominant Team: <strong>${pressure.dominant_team||"Equilibrio"}</strong></div>
+                <div>Dominance: <strong>${pressure.dominance_label||"N/A"}</strong></div>
+                <div>Goal Prob. Home: <strong>${pressure.home?.goal_probability??"N/A"}</strong></div>
+                <div>Goal Prob. Away: <strong>${pressure.away?.goal_probability??"N/A"}</strong></div>
+                <div>Match Tempo: <strong>${getTempoLabel(tactical.match_tempo||aiCore.match_tempo)}</strong></div>
+                <div>AI Confidence: <strong>${aiCore.confidence_score||"N/A"}</strong></div>
+            </div>
+        </div>
+    `)}
+
+    ${renderSection("heatmap","🔥","Tactical Heatmap PRO",`
+        <div class="heatmap-wrapper">
+            <div class="pitch">
+                <div class="pitch-lines"></div>
+                <div class="center-circle"></div>
+                <div class="glow home-glow" style="opacity:${homeGlow/100};width:${280+homeGlow*4}px;height:${280+homeGlow*4}px;"></div>
+                <div class="glow away-glow" style="opacity:${awayGlow/100};width:${280+awayGlow*4}px;height:${280+awayGlow*4}px;"></div>
+                <div class="zone-label" style="left:16%;top:12%;">HOME PRESSURE</div>
+                <div class="zone-label" style="left:44%;top:12%;">CENTRAL ZONE</div>
+                <div class="zone-label" style="right:16%;top:12%;">AWAY PRESSURE</div>
+                <div class="zone-label" style="left:43%;bottom:10%;">TRANSITION ZONE</div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background:#2f6bff"></div>${home}: ${Math.round(homePressure)} pressure / ${Math.round(homeDanger)} danger</div>
+                <div class="legend-item"><div class="legend-color" style="background:#ff315c"></div>${away}: ${Math.round(awayPressure)} pressure / ${Math.round(awayDanger)} danger</div>
+            </div>
+        </div>
+    `)}
+
+    ${renderSection("players","⭐","AI Player Ratings",renderPlayers(players))}
+    ${renderSection("commentary","🧠","AI Commentary",renderAICommentary(commentary,match),change.changed)}
+    ${renderSection("timeline","⏱️","AI Timeline",timeline.length?`<div class="timeline-scroll">${timeline.slice(0,8).map(ev=>`<div class="timeline-event"><div class="timeline-minute">${safeNumber(ev.minute,0)}'</div><div>${ev.icon||"🧠"} ${ev.title||ev.type||"Evento"}</div><div style="color:#dce7ff;margin-top:5px;">${ev.message||ev.detail||ev.text||""}</div></div>`).join("")}</div>`:"Timeline non disponibile.")}
+    ${renderSection("report","📑","AI Match Report",`<div class="report-box">${getReport(data)}</div>`)}
+    `;
+
+    initToggles();
+    buildMomentumChart(momentum);
+}
+
+function updateMomentumHistory(momentum){
+    const minute=Math.round(clamp(momentum.minute,0,120));
+    const signature=`${minute}-${Math.round(momentum.homeM)}-${Math.round(momentum.awayM)}-${Math.round(momentum.temperature)}`;
+
+    if(lastMomentumSignature===signature && momentumHistory.length>0)return;
+    lastMomentumSignature=signature;
+
+    momentumHistory.push({
+        minute,
+        home:clamp(momentum.homeM),
+        away:clamp(momentum.awayM),
+        temp:clamp(momentum.temperature),
+        pressure:clamp(momentum.pressurePulse),
+        danger:clamp(momentum.dangerPulse),
+        swing:momentum.swing
+    });
+
+    const seen=new Map();
+    momentumHistory.forEach(p=>seen.set(p.minute,p));
+    momentumHistory=[...seen.values()].sort((a,b)=>a.minute-b.minute).slice(-14);
+}
+
+function createMomentumSeries(momentum){
+    updateMomentumHistory(momentum);
+
+    if(momentumHistory.length>=3){
+        return {
+            labels:momentumHistory.map(p=>`${p.minute}'`),
+            home:momentumHistory.map(p=>p.home),
+            away:momentumHistory.map(p=>p.away),
+            temp:momentumHistory.map(p=>p.temp),
+            danger:momentumHistory.map(p=>p.danger),
+            pressure:momentumHistory.map(p=>p.pressure),
+            spikePoints:momentumHistory.map(p=>p.danger>=70||p.pressure>=72?p.temp:null)
+        };
+    }
+
+    const h=clamp(momentum.homeM);
+    const a=clamp(momentum.awayM);
+    const temp=clamp(momentum.temperature);
+    const pressure=clamp(momentum.pressurePulse);
+    const danger=clamp(momentum.dangerPulse);
+    const minute=Math.round(clamp(momentum.minute,0,90));
+    const labels=[0,15,30,45,60,75,90].map(m=>`${m}'`);
+
+    return {
+        labels,
+        home:[
+            clamp(h-16+temp*.05),
+            clamp(h-10+pressure*.03),
+            clamp(h-5+danger*.03),
+            clamp(h+3),
+            clamp(h+8-temp*.02),
+            clamp(h+4),
+            clamp(h)
+        ],
+        away:[
+            clamp(a+12-temp*.03),
+            clamp(a+7-danger*.02),
+            clamp(a+3),
+            clamp(a-2+pressure*.03),
+            clamp(a-7+temp*.03),
+            clamp(a-3),
+            clamp(a)
+        ],
+        temp:[
+            clamp(temp-24),
+            clamp(temp-17),
+            clamp(temp-10),
+            clamp(temp-2),
+            clamp(temp+5),
+            clamp(temp+2),
+            clamp(temp)
+        ],
+        danger:[
+            clamp(danger-20),
+            clamp(danger-14),
+            clamp(danger-8),
+            clamp(danger-2),
+            clamp(danger+4),
+            clamp(danger+2),
+            clamp(danger)
+        ],
+        pressure:[
+            clamp(pressure-18),
+            clamp(pressure-12),
+            clamp(pressure-6),
+            clamp(pressure),
+            clamp(pressure+5),
+            clamp(pressure+2),
+            clamp(pressure)
+        ],
+        spikePoints:labels.map((_,i)=> i===Math.min(6,Math.max(0,Math.round(minute/15))) && (danger>=70||pressure>=72) ? temp : null)
+    };
+}
+
+function buildMomentumChart(momentum){
+    const canvas=document.getElementById("momentumChart");
+    if(!canvas)return;
+
+    if(momentumChart)momentumChart.destroy();
+
+    const series=createMomentumSeries(momentum);
+
+    momentumChart=new Chart(canvas,{
+        type:"line",
+        data:{
+            labels:series.labels,
+            datasets:[
+                {
+                    label:"Home Momentum",
+                    data:series.home,
+                    borderColor:"#2f6bff",
+                    backgroundColor:"rgba(47,107,255,.20)",
+                    fill:true,
+                    tension:.42,
+                    pointRadius:4,
+                    pointHoverRadius:7,
+                    borderWidth:3
+                },
+                {
+                    label:"Away Momentum",
+                    data:series.away,
+                    borderColor:"#ff315c",
+                    backgroundColor:"rgba(255,49,92,.18)",
+                    fill:true,
+                    tension:.42,
+                    pointRadius:4,
+                    pointHoverRadius:7,
+                    borderWidth:3
+                },
+                {
+                    label:"Match Temperature",
+                    data:series.temp,
+                    borderColor:"#ffb020",
+                    backgroundColor:"rgba(255,176,32,.08)",
+                    fill:false,
+                    tension:.35,
+                    pointRadius:2,
+                    borderWidth:2,
+                    borderDash:[8,6]
+                },
+                {
+                    label:"Danger Pulse",
+                    data:series.danger,
+                    borderColor:"rgba(255,255,255,.60)",
+                    backgroundColor:"rgba(255,255,255,.05)",
+                    fill:false,
+                    tension:.28,
+                    pointRadius:0,
+                    borderWidth:1,
+                    borderDash:[2,6]
+                },
+                {
+                    label:"Spike Alert",
+                    data:series.spikePoints,
+                    borderColor:"#ffffff",
+                    backgroundColor:"#ff315c",
+                    showLine:false,
+                    pointRadius:7,
+                    pointHoverRadius:10,
+                    pointStyle:"rectRot"
+                }
+            ]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            animation:{duration:900,easing:"easeOutQuart"},
+            interaction:{mode:"index",intersect:false},
+            plugins:{
+                legend:{
+                    labels:{color:"white",font:{weight:"bold"},boxWidth:14,usePointStyle:true}
+                },
+                tooltip:{
+                    backgroundColor:"rgba(2,8,23,.95)",
+                    borderColor:"rgba(255,255,255,.12)",
+                    borderWidth:1,
+                    titleColor:"#ffffff",
+                    bodyColor:"#dbe7ff",
+                    callbacks:{
+                        label:function(ctx){
+                            if(ctx.raw===null)return null;
+                            return `${ctx.dataset.label}: ${Math.round(ctx.raw)}%`;
+                        }
+                    }
+                }
+            },
+            scales:{
+                x:{
+                    ticks:{color:"#dbe7ff",font:{weight:"bold"}},
+                    grid:{color:"rgba(255,255,255,.06)"}
+                },
+                y:{
+                    min:0,
+                    max:100,
+                    ticks:{color:"#dbe7ff",font:{weight:"bold"}},
+                    grid:{color:"rgba(255,255,255,.06)"}
+                }
+            }
+        }
+    });
+}
+
+document.addEventListener("visibilitychange",()=>{
+    if(document.hidden){
+        if(refreshInterval)clearInterval(refreshInterval);
+        if(countdownInterval)clearInterval(countdownInterval);
+    }else{
+        loadMatch({silent:true});
+    }
+});
+
+renderCachedDataIfAvailable();
+loadMatch();
+</script>
+</body>
+</html>

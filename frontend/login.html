@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MatchIQ Tactical - Login</title>
+
+    <script src="auth.js"></script>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, Helvetica, sans-serif;
+        }
+
+        body{
+            background:
+                radial-gradient(circle at top left,#1f2bff22,transparent 40%),
+                radial-gradient(circle at bottom right,#ff00aa11,transparent 40%),
+                #030b26;
+
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:white;
+        }
+
+        .login-container{
+            width:420px;
+
+            background:linear-gradient(
+                135deg,
+                rgba(20,30,70,.95),
+                rgba(10,15,40,.98)
+            );
+
+            border:1px solid rgba(255,255,255,.08);
+
+            border-radius:24px;
+
+            padding:40px;
+
+            box-shadow:
+                0 0 40px rgba(0,0,0,.5),
+                0 0 60px rgba(77,110,255,.12);
+
+            backdrop-filter:blur(10px);
+        }
+
+        .logo{
+            text-align:center;
+            margin-bottom:30px;
+        }
+
+        .logo h1{
+            font-size:34px;
+            margin-bottom:8px;
+        }
+
+        .logo p{
+            color:#8ea6ff;
+            font-size:14px;
+        }
+
+        .input-group{
+            margin-bottom:20px;
+        }
+
+        .input-group label{
+            display:block;
+            margin-bottom:8px;
+            color:#9eb0ff;
+            font-size:13px;
+        }
+
+        .input-group input{
+            width:100%;
+            padding:16px;
+
+            border-radius:14px;
+
+            border:1px solid rgba(255,255,255,.08);
+
+            background:#0b1438;
+            color:white;
+
+            outline:none;
+
+            transition:.2s;
+        }
+
+        .input-group input:focus{
+            border-color:#4d6eff;
+            box-shadow:0 0 20px rgba(77,110,255,.2);
+        }
+
+        .login-btn{
+            width:100%;
+            padding:16px;
+
+            border:none;
+            border-radius:14px;
+
+            background:linear-gradient(
+                90deg,
+                #4d6eff,
+                #7d4dff
+            );
+
+            color:white;
+
+            font-weight:700;
+            cursor:pointer;
+
+            transition:.2s;
+        }
+
+        .login-btn:hover{
+            transform:translateY(-2px);
+            box-shadow:0 0 25px rgba(77,110,255,.4);
+        }
+
+        .message{
+            margin-top:18px;
+            text-align:center;
+            font-size:14px;
+        }
+
+        .error{
+            color:#ff5f7d;
+        }
+
+        .success{
+            color:#00ff9d;
+        }
+
+        .bottom-link{
+            margin-top:25px;
+            text-align:center;
+            font-size:14px;
+        }
+
+        .bottom-link a{
+            color:#7da2ff;
+            text-decoration:none;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+
+    <div class="logo">
+        <h1>⚽ MatchIQ Tactical</h1>
+        <p>AI Tactical Analysis Platform</p>
+    </div>
+
+    <form id="loginForm">
+
+        <div class="input-group">
+            <label>Email</label>
+
+            <input
+                type="email"
+                id="email"
+                required
+                placeholder="Inserisci email"
+            >
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+
+            <input
+                type="password"
+                id="password"
+                required
+                placeholder="Inserisci password"
+            >
+        </div>
+
+        <button type="submit" class="login-btn">
+            LOGIN
+        </button>
+
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <div class="bottom-link">
+        Non hai un account?
+        <a href="register.html">Registrati</a>
+    </div>
+
+</div>
+
+<script>
+
+redirectIfLoggedIn();
+
+const form = document.getElementById("loginForm");
+const message = document.getElementById("message");
+
+form.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    message.innerHTML = "";
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+
+        message.innerHTML = `
+            <span class="success">
+                Login in corso...
+            </span>
+        `;
+
+        await loginUser(email, password);
+
+        message.innerHTML = `
+            <span class="success">
+                Login completato!
+            </span>
+        `;
+
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 800);
+
+    } catch(err){
+
+        message.innerHTML = `
+            <span class="error">
+                ${err.message}
+            </span>
+        `;
+    }
+
+});
+
+</script>
+
+</body>
+</html>

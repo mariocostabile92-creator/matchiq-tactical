@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchIQ Scout V5.5 CLEAN</title>
+
+  <style>
+    :root{
+      --bg:#05070d;
+      --panel:#0d1322;
+      --panel2:#121a2d;
+      --card:#090e1a;
+      --soft:rgba(255,255,255,.08);
+      --soft2:rgba(255,255,255,.14);
+      --text:#f5f7fb;
+      --muted:#8f9bb3;
+      --cyan:#00e5ff;
+      --purple:#7c3cff;
+      --green:#00f5a0;
+      --red:#ff3b6b;
+      --yellow:#ffc857;
+      --orange:#ff8c42;
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at top left,rgba(0,229,255,.08),transparent 35%),
+        radial-gradient(circle at top right,rgba(124,60,255,.12),transparent 35%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:22px;
+    }
+
+    button,input,select{font-family:inherit}
+    button{cursor:pointer}
+
+    .app{max-width:1500px;margin:auto}
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    h1{font-size:28px;letter-spacing:-1px}
+    .subtitle{color:var(--muted);font-size:13px;margin-top:4px}
+    .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+    .btn{
+      border:1px solid var(--soft);
+      background:var(--panel2);
+      color:var(--text);
+      padding:11px 15px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:13px;
+      transition:.2s ease;
+    }
+
+    .btn:hover{transform:translateY(-1px);background:#172033}
+    .btn-primary{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#030612;border:none}
+    .btn-green{background:linear-gradient(135deg,var(--green),#1ce7ff);color:#030612;border:none}
+    .btn-red{background:rgba(255,59,107,.12);color:#ff9bb2;border:1px solid rgba(255,59,107,.28)}
+
+    .pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+
+    .pill-live{border:1px solid rgba(0,245,160,.25);background:rgba(0,245,160,.09);color:var(--green)}
+    .pill-api{border:1px solid rgba(255,200,87,.24);background:rgba(255,200,87,.08);color:var(--yellow)}
+    .pill-clean{border:1px solid rgba(0,229,255,.25);background:rgba(0,229,255,.08);color:var(--cyan)}
+
+    .dot{
+      width:9px;height:9px;border-radius:50%;
+      background:var(--green);
+      box-shadow:0 0 16px var(--green);
+      animation:dot 1.2s infinite;
+    }
+
+    @keyframes dot{50%{transform:scale(1.4);opacity:.55}}
+
+    .ticker{
+      margin-bottom:18px;
+      padding:12px 16px;
+      background:rgba(13,19,34,.82);
+      border:1px solid var(--soft);
+      border-radius:999px;
+      overflow:hidden;
+      white-space:nowrap;
+      color:#dce8ff;
+      font-size:13px;
+    }
+
+    .notice{
+      margin-bottom:14px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,200,87,.28);
+      background:rgba(255,200,87,.07);
+      color:#ffe9b4;
+      display:none;
+      line-height:1.45;
+      font-size:13px;
+    }
+
+    .notice.show{display:block}
+
+    .layout{
+      display:grid;
+      grid-template-columns:320px 1fr 380px;
+      gap:18px;
+      align-items:start;
+    }
+
+    .panel{
+      background:rgba(13,19,34,.86);
+      border:1px solid var(--soft);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      backdrop-filter:blur(16px);
+    }
+
+    .panel-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+      align-items:center;
+    }
+
+    .panel-head h2{font-size:17px}
+    .panel-head small{color:var(--muted);font-size:11px}
+
+    label{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      margin:12px 0 7px;
+    }
+
+    input,select{
+      width:100%;
+      background:#070b15;
+      color:var(--text);
+      border:1px solid var(--soft);
+      border-radius:13px;
+      padding:12px;
+      outline:none;
+    }
+
+    input:focus,select:focus{border-color:rgba(0,229,255,.55);box-shadow:0 0 0 3px rgba(0,229,255,.08)}
+
+    .side-actions{display:grid;gap:10px;margin-top:14px}
+
+    .match-list{display:grid;gap:10px;margin-top:16px;max-height:430px;overflow:auto}
+
+    .match-card{
+      padding:13px;
+      border-radius:16px;
+      background:var(--card);
+      border:1px solid var(--soft);
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .match-card:hover,.match-card.active{border-color:rgba(0,229,255,.65);background:#101a2b}
+    .match-row{display:flex;justify-content:space-between;gap:10px;font-weight:900;font-size:14px}
+    .match-meta{display:flex;justify-content:space-between;margin-top:8px;color:var(--muted);font-size:12px}
+    .score-live{color:var(--green);font-weight:1000}
+
+    .hero{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      padding:18px;
+      border-radius:var(--radius);
+      border:1px solid rgba(0,229,255,.18);
+      background:linear-gradient(135deg,rgba(0,229,255,.1),rgba(124,60,255,.1)),var(--card);
+      margin-bottom:14px;
+    }
+
+    .hero h3{font-size:23px}
+    .hero p{color:var(--muted);font-size:13px;margin-top:5px}
+    .hero-score{text-align:center;min-width:150px}
+    .hero-score strong{font-size:38px}
+    .hero-score div{color:var(--green);font-weight:1000;margin-top:3px}
+
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+
+    .metric{
+      background:var(--card);
+      border:1px solid var(--soft);
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .metric small{color:var(--muted);font-size:10px;font-weight:1000;text-transform:uppercase}
+    .metric strong{display:block;margin-top:7px;font-size:20px}
+
+    .players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+
+    .player{
+      background:linear-gradient(180deg,#10182a,#080c16);
+      border:1px solid var(--soft);
+      border-radius:var(--radius);
+      padding:16px;
+      cursor:pointer;
+      transition:.22s;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .player:before{
+      content:"";
+      position:absolute;
+      inset:-60%;
+      background:radial-gradient(circle,rgba(0,229,255,.12),transparent 45%);
+      opacity:0;
+      transition:.25s;
+      pointer-events:none;
+    }
+
+    .player:hover:before{opacity:1}
+    .player:hover{transform:translateY(-2px);border-color:rgba(0,229,255,.45)}
+    .player.hot{border-color:rgba(0,245,160,.55)}
+    .player.danger{border-color:rgba(255,59,107,.58)}
+    .player.pressure{border-color:rgba(255,200,87,.45)}
+    .player.watch{box-shadow:0 0 0 1px rgba(255,200,87,.3),0 0 30px rgba(255,200,87,.07)}
+    .player.flash{animation:flash .9s ease}
+    @keyframes flash{30%{transform:scale(1.015);box-shadow:0 0 32px rgba(0,229,255,.35)}}
+
+    .player-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:13px;position:relative;z-index:1}
+    .player-name{font-size:17px;font-weight:1000}
+    .player-sub{color:var(--muted);font-size:12px;margin-top:4px}
+
+    .score{
+      width:58px;height:58px;border-radius:17px;
+      display:grid;place-items:center;
+      color:var(--cyan);
+      border:1px solid rgba(0,229,255,.35);
+      background:rgba(0,229,255,.08);
+      font-size:21px;
+      font-weight:1000;
+    }
+
+    .score.high{color:var(--green);border-color:rgba(0,245,160,.45)}
+    .score.mid{color:var(--yellow);border-color:rgba(255,200,87,.45)}
+
+    .signal{
+      display:inline-flex;
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      margin-bottom:12px;
+      border:1px solid rgba(124,60,255,.3);
+      color:#c8b7ff;
+      background:rgba(124,60,255,.12);
+      position:relative;
+      z-index:1;
+    }
+
+    .signal.hot-signal{color:var(--green);background:rgba(0,245,160,.1)}
+    .signal.alert{color:#ff9bb2;background:rgba(255,59,107,.11)}
+    .signal.pressure-signal{color:var(--yellow);background:rgba(255,200,87,.1)}
+    .signal.watch-signal{color:var(--yellow);background:rgba(255,200,87,.1)}
+
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative;z-index:1}
+    .stat{padding:9px;text-align:center;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid var(--soft)}
+    .stat small{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}
+    .stat strong{font-size:14px}
+
+    .player-actions{display:flex;gap:8px;margin-top:12px;position:relative;z-index:2}
+    .player-actions .btn{flex:1;padding:9px 10px;font-size:12px}
+
+    .timeline{display:grid;gap:10px;max-height:550px;overflow:auto}
+    .event{padding:13px;border-radius:16px;background:var(--card);border:1px solid var(--soft)}
+    .event.alert{border-color:rgba(255,59,107,.55)}
+    .event.goal{border-color:rgba(0,245,160,.55)}
+    .event.momentum{border-color:rgba(255,200,87,.55)}
+    .event-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px}
+    .minute{color:var(--cyan);font-weight:1000}
+    .tag{font-size:10px;font-weight:1000;padding:4px 8px;border-radius:999px;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.22)}
+    .event-title{font-size:14px;font-weight:900}
+    .event-desc{color:var(--muted);font-size:12px;margin-top:5px;line-height:1.45}
+
+    .watchlist{display:grid;gap:10px;max-height:260px;overflow:auto}
+    .watch-item{padding:12px;border-radius:16px;background:var(--card);border:1px solid rgba(255,200,87,.22)}
+    .watch-item-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .watch-name{font-weight:1000;font-size:14px}
+    .watch-meta{color:var(--muted);font-size:12px;margin-top:4px}
+    .watch-remove{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,59,107,.25);background:rgba(255,59,107,.1);color:#ff9bb2;cursor:pointer;font-weight:1000}
+
+    .empty{color:var(--muted);padding:28px;text-align:center;border:1px dashed var(--soft);border-radius:16px;grid-column:1/-1}
+    .empty strong{display:block;color:var(--text);font-size:16px;margin-bottom:8px}
+
+    .loading{position:fixed;inset:0;background:rgba(5,7,13,.78);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:999}
+    .loading.show{display:flex}
+    .loader-card{background:var(--panel);border:1px solid rgba(0,229,255,.25);border-radius:22px;padding:24px;text-align:center;min-width:280px}
+    .spinner{width:42px;height:42px;margin:0 auto 14px;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:var(--cyan);animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.76);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+    .modal-bg.show{display:flex}
+
+    .modal{
+      width:min(1120px,100%);
+      max-height:92vh;
+      overflow:auto;
+      background:
+        radial-gradient(circle at top left,rgba(0,229,255,.12),transparent 28%),
+        radial-gradient(circle at top right,rgba(124,60,255,.12),transparent 28%),
+        #080d18;
+      border:1px solid rgba(0,229,255,.24);
+      border-radius:30px;
+      padding:24px;
+      box-shadow:0 30px 120px rgba(0,0,0,.55);
+    }
+
+    .modal-pro-head{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;margin-bottom:18px}
+    .player-identity{display:flex;align-items:center;gap:16px}
+    .avatar{width:74px;height:74px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(0,229,255,.18),rgba(124,60,255,.22));border:1px solid rgba(0,229,255,.25);font-size:28px;font-weight:1000;color:var(--cyan);overflow:hidden}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .modal-title h2{font-size:31px;letter-spacing:-1px}
+    .modal-title p{color:var(--muted);margin-top:5px;font-size:13px}
+    .modal-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+    .badge{padding:7px 10px;border-radius:999px;font-size:11px;font-weight:1000;border:1px solid var(--soft2);background:rgba(255,255,255,.045);color:#dce8ff}
+    .badge.green{color:var(--green);background:rgba(0,245,160,.09);border-color:rgba(0,245,160,.25)}
+    .badge.red{color:#ff9bb2;background:rgba(255,59,107,.1);border-color:rgba(255,59,107,.28)}
+    .badge.yellow{color:var(--yellow);background:rgba(255,200,87,.1);border-color:rgba(255,200,87,.28)}
+    .badge.cyan{color:var(--cyan);background:rgba(0,229,255,.08);border-color:rgba(0,229,255,.24)}
+
+    .close{width:44px;height:44px;border-radius:50%;border:1px solid var(--soft);background:#111827;color:white;cursor:pointer;font-size:20px}
+
+    .modal-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+    .kpi{border:1px solid var(--soft);background:rgba(255,255,255,.035);border-radius:18px;padding:13px}
+    .kpi small{color:var(--muted);font-size:10px;font-weight:1000;text-transform:uppercase}
+    .kpi strong{display:block;font-size:23px;margin-top:7px}
+
+    .pro-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .pro-card{border:1px solid var(--soft);background:rgba(13,19,34,.78);border-radius:22px;padding:16px}
+    .pro-card h3{font-size:15px;margin-bottom:12px;display:flex;justify-content:space-between;gap:10px}
+
+    .impact-wrap{display:grid;grid-template-columns:160px 1fr;gap:18px;align-items:center}
+    .impact-ring{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) var(--impact),rgba(255,255,255,.08) 0);position:relative}
+    .impact-ring:after{content:"";position:absolute;inset:13px;border-radius:50%;background:#0b1120;border:1px solid var(--soft)}
+    .impact-value{position:relative;z-index:2;text-align:center}
+    .impact-value strong{display:block;font-size:34px}
+    .impact-value span{color:var(--muted);font-size:11px;font-weight:1000}
+
+    .bars{display:grid;gap:11px}
+    .bar-row{display:grid;gap:6px}
+    .bar-top{display:flex;justify-content:space-between;font-size:12px;color:#dce8ff;font-weight:800}
+    .bar{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+    .bar span{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .6s ease}
+    .bar.red span{background:linear-gradient(90deg,var(--orange),var(--red))}
+    .bar.yellow span{background:linear-gradient(90deg,var(--yellow),var(--orange))}
+
+    .radar-wrap{display:grid;place-items:center;padding:8px}
+    .radar{width:260px;height:260px}
+    .ai-box{line-height:1.55;color:#dce8ff;font-size:14px;padding:15px;border-radius:18px;border:1px solid rgba(0,229,255,.18);background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(124,60,255,.1));white-space:pre-line}
+
+    .profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .profile-item{border:1px solid var(--soft);background:rgba(255,255,255,.035);border-radius:16px;padding:12px}
+    .profile-item small{color:var(--muted);font-size:10px;font-weight:1000;text-transform:uppercase}
+    .profile-item strong{display:block;margin-top:6px;font-size:15px}
+
+    .mini-pitch{height:220px;border-radius:22px;border:1px solid rgba(0,245,160,.2);background:linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(135deg,rgba(0,245,160,.08),rgba(0,229,255,.05));background-size:36px 36px,36px 36px,100% 100%;position:relative;overflow:hidden}
+    .zone{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,245,160,.42),rgba(0,229,255,.06),transparent 70%);width:110px;height:110px;transform:translate(-50%,-50%);animation:zonePulse 1.8s infinite}
+    @keyframes zonePulse{50%{transform:translate(-50%,-50%) scale(1.12);opacity:.7}}
+    .pitch-line{position:absolute;inset:14px;border:1px solid rgba(255,255,255,.12);border-radius:16px}
+    .pitch-mid{position:absolute;top:14px;bottom:14px;left:50%;width:1px;background:rgba(255,255,255,.12)}
+
+    .prob-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .prob{border:1px solid var(--soft);background:rgba(255,255,255,.035);border-radius:18px;padding:13px}
+    .prob small{color:var(--muted);font-size:10px;font-weight:1000;text-transform:uppercase}
+    .prob strong{display:block;margin-top:6px;font-size:22px}
+
+    .modal-events{display:grid;gap:9px;max-height:260px;overflow:auto}
+
+    .toast-area{position:fixed;right:20px;bottom:20px;display:grid;gap:10px;z-index:300;width:min(360px,calc(100vw - 40px))}
+    .toast{padding:14px 16px;border-radius:16px;background:var(--panel);border:1px solid rgba(0,229,255,.24);box-shadow:0 18px 55px rgba(0,0,0,.3)}
+    .toast strong{display:block;margin-bottom:4px}
+    .toast span{color:var(--muted);font-size:13px}
+
+    @media(max-width:1180px){.layout{grid-template-columns:1fr}.players{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.pro-grid{grid-template-columns:1fr}}
+    @media(max-width:760px){body{padding:14px}.hero{flex-direction:column;align-items:stretch}.hero-score{text-align:left}.metrics,.modal-kpis,.profile-grid,.prob-grid{grid-template-columns:1fr}.impact-wrap{grid-template-columns:1fr}.modal-pro-head{grid-template-columns:1fr}.radar{width:220px;height:220px}}
+  </style>
+</head>
+
+<body>
+  <div class="loading show" id="loading">
+    <div class="loader-card">
+      <div class="spinner"></div>
+      <strong>Caricamento Scout V5.5 CLEAN...</strong>
+      <p style="color:var(--muted);margin-top:6px;font-size:13px;">Schema unico · Metriche stabili · Release-ready</p>
+    </div>
+  </div>
+
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>MatchIQ Scout V5.5 CLEAN</h1>
+        <div class="subtitle">Real Players · Clean Schema · Threat · Creativity · Pressure · Impact</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" onclick="goDashboard()">← Dashboard</button>
+        <div class="pill pill-live"><span class="dot"></span> REAL PLAYERS</div>
+        <div class="pill pill-clean">V5.5 CLEAN</div>
+        <div class="pill pill-api" id="apiSafePill">API SAFE</div>
+        <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
+        <button class="btn btn-green" onclick="exportScoutReport()">Export report</button>
+        <button class="btn btn-primary" onclick="simulateHighImpactEvent()">Simula evento</button>
+      </div>
+    </header>
+
+    <div class="ticker" id="tickerText">MatchIQ Scout V5.5 · caricamento dati...</div>
+    <div class="notice" id="noticeBox"></div>
+
+    <main class="layout">
+      <aside class="panel">
+        <div class="panel-head">
+          <h2>Filtri Scout</h2>
+          <small id="lastUpdate">--</small>
+        </div>
+
+        <label>Cerca giocatore</label>
+        <input id="searchInput" placeholder="Es. Lautaro, Dybala, Nico..." />
+
+        <label>Ruolo</label>
+        <select id="roleFilter">
+          <option value="all">Tutti</option>
+          <option value="ATT">Attaccanti</option>
+          <option value="MID">Centrocampisti</option>
+          <option value="DEF">Difensori</option>
+          <option value="GK">Portieri</option>
+        </select>
+
+        <label>Segnale AI</label>
+        <select id="signalFilter">
+          <option value="all">Tutti</option>
+          <option value="hot">Hot Player</option>
+          <option value="danger">Danger Creator</option>
+          <option value="gem">Hidden Gem</option>
+          <option value="pressure">Pressure Trigger</option>
+          <option value="watch">AI Watch</option>
+        </select>
+
+        <label>Score minimo</label>
+        <select id="scoreFilter">
+          <option value="0">Tutti</option>
+          <option value="65">65+</option>
+          <option value="75">75+</option>
+          <option value="85">85+</option>
+        </select>
+
+        <div class="side-actions">
+          <button class="btn" onclick="resetFilters()">Reset filtri</button>
+          <button class="btn btn-green" onclick="exportWatchlist()">Export watchlist</button>
+          <button class="btn btn-red" onclick="clearWatchlist()">Svuota watchlist</button>
+        </div>
+
+        <div class="match-list" id="matchList"></div>
+      </aside>
+
+      <section>
+        <div class="hero" id="hero"></div>
+
+        <div class="metrics">
+          <div class="metric"><small>Momentum</small><strong id="mMomentum">--</strong></div>
+          <div class="metric"><small>Pressure Index</small><strong id="mPressure">--</strong></div>
+          <div class="metric"><small>Creativity</small><strong id="mCreativity">--</strong></div>
+          <div class="metric"><small>Live Threat</small><strong id="mThreat">--</strong></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Player Live Cards</h2>
+            <small>clicca un player per Modal PRO</small>
+          </div>
+          <div class="players" id="players"></div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-head">
+          <h2>AI Live Timeline</h2>
+          <small id="eventCount">0 eventi</small>
+        </div>
+
+        <div class="timeline" id="timeline"></div>
+
+        <div style="height:16px"></div>
+
+        <div class="panel-head">
+          <h2>Watchlist</h2>
+          <small id="watchCount">0 salvati</small>
+        </div>
+
+        <div class="watchlist" id="watchlist"></div>
+      </aside>
+    </main>
+  </div>
+
+  <div class="modal-bg" id="modalBg">
+    <div class="modal">
+      <div class="modal-pro-head">
+        <div class="player-identity">
+          <div class="avatar" id="modalAvatar">AI</div>
+          <div class="modal-title">
+            <h2 id="modalName">--</h2>
+            <p id="modalSub">--</p>
+            <div class="modal-badges" id="modalBadges"></div>
+          </div>
+        </div>
+        <button class="close" onclick="closeModal()">×</button>
+      </div>
+
+      <div class="modal-kpis">
+        <div class="kpi"><small>Scout Score</small><strong id="modalScore">--</strong></div>
+        <div class="kpi"><small>Threat</small><strong id="modalThreat">--</strong></div>
+        <div class="kpi"><small>Creativity</small><strong id="modalCreativity">--</strong></div>
+        <div class="kpi"><small>Stamina</small><strong id="modalStamina">--</strong></div>
+      </div>
+
+      <div class="pro-grid">
+        <div class="pro-card">
+          <h3>Live Impact Meter <span id="impactLabel">--</span></h3>
+          <div class="impact-wrap">
+            <div class="impact-ring" id="impactRing" style="--impact:0%;">
+              <div class="impact-value">
+                <strong id="impactValue">--</strong>
+                <span>LIVE IMPACT</span>
+              </div>
+            </div>
+
+            <div class="bars">
+              <div class="bar-row"><div class="bar-top"><span>Threat</span><span id="barThreatText">--</span></div><div class="bar"><span id="barThreat"></span></div></div>
+              <div class="bar-row"><div class="bar-top"><span>Creatività</span><span id="barCreativityText">--</span></div><div class="bar"><span id="barCreativity"></span></div></div>
+              <div class="bar-row"><div class="bar-top"><span>Pressione</span><span id="barPressureText">--</span></div><div class="bar yellow"><span id="barPressure"></span></div></div>
+              <div class="bar-row"><div class="bar-top"><span>Fatica</span><span id="barFatigueText">--</span></div><div class="bar red"><span id="barFatigue"></span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pro-card">
+          <h3>Radar Performance <span>V5.5</span></h3>
+          <div class="radar-wrap"><svg class="radar" viewBox="0 0 300 300" id="radarSvg"></svg></div>
+        </div>
+
+        <div class="pro-card">
+          <h3>AI Coach Commentary <span id="commentSource">live</span></h3>
+          <div class="ai-box" id="modalComment">--</div>
+        </div>
+
+        <div class="pro-card">
+          <h3>Mini Tactical Zone <span id="zoneLabel">--</span></h3>
+          <div class="mini-pitch"><div class="pitch-line"></div><div class="pitch-mid"></div><div class="zone" id="tacticalZone"></div></div>
+        </div>
+
+        <div class="pro-card">
+          <h3>Profilo Tattico <span>AI</span></h3>
+          <div class="profile-grid" id="profileGrid"></div>
+        </div>
+
+        <div class="pro-card">
+          <h3>Probabilità Live <span>frontend-side</span></h3>
+          <div class="prob-grid">
+            <div class="prob"><small>Goal Probability</small><strong id="goalProb">--</strong></div>
+            <div class="prob"><small>Assist Probability</small><strong id="assistProb">--</strong></div>
+            <div class="prob"><small>Next Action Impact</small><strong id="nextImpact">--</strong></div>
+            <div class="prob"><small>Watchlist Fit</small><strong id="watchFit">--</strong></div>
+          </div>
+        </div>
+
+        <div class="pro-card" style="grid-column:1/-1;">
+          <h3>Eventi Player <span>timeline personale</span></h3>
+          <div class="modal-events" id="modalEvents"></div>
+        </div>
+
+        <div class="pro-card" style="grid-column:1/-1;">
+          <h3>Azioni Scout <span>V5.5 CLEAN</span></h3>
+          <div class="actions">
+            <button class="btn btn-green" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
+            <button class="btn" onclick="exportOpenPlayerReport()">Export player report</button>
+            <button class="btn btn-red" onclick="removeOpenPlayerFromWatchlist()">Rimuovi da watchlist</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-area" id="toastArea"></div>
+
+<script>
+const API_BASE = "";
+const STORAGE_KEY = "matchiq_scout_watchlist_v55_clean";
+
+const API_SAFE = {
+  liveMatchesRefreshMs: 60000,
+  scoutRefreshMs: 90000,
+  localEventMs: 7000
+};
+
+const state = {
+  matches: [],
+  selectedMatchId: null,
+  currentMatch: null,
+  players: [],
+  events: [],
+  summary: {},
+  schemaVersion: "5.5",
+  playerCache: {},
+  openPlayerId: null,
+  timers: {},
+  tick: 0,
+  lastLiveMatchesFetch: 0,
+  lastScoutFetch: {},
+  hasRealPlayers: false,
+  watchlist: loadWatchlist()
+};
+
+document.addEventListener("DOMContentLoaded", async () => {
+  bindFilters();
+  await init();
+  startTimers();
+  hideLoading();
+});
+
+function bindFilters(){
+  ["searchInput","roleFilter","signalFilter","scoreFilter"].forEach(id => {
+    document.getElementById(id).addEventListener("input", renderPlayers);
+  });
+
+  document.addEventListener("keydown", e => {
+    if(e.key === "Escape") closeModal();
+  });
+
+  document.getElementById("modalBg").addEventListener("click", e => {
+    if(e.target.id === "modalBg") closeModal();
+  });
+}
+
+async function init(){
+  state.selectedMatchId = getMatchIdFromUrl();
+  await loadLiveMatches(true);
+
+  if(!state.selectedMatchId){
+    state.selectedMatchId = state.matches[0]?.id || null;
+  }
+
+  await loadScoutData(true);
+  renderAll();
+}
+
+function getMatchIdFromUrl(){
+  const p = new URLSearchParams(window.location.search);
+  return p.get("match_id") || p.get("id") || p.get("fixture_id") || p.get("matchId");
+}
+
+function goDashboard(){
+  window.location.href = "/index.html";
+}
+
+async function loadLiveMatches(force=false){
+  const now = Date.now();
+
+  if(!force && now - state.lastLiveMatchesFetch < API_SAFE.liveMatchesRefreshMs && state.matches.length){
+    return;
+  }
+
+  try{
+    let data = null;
+
+    try{
+      const res = await fetch(`${API_BASE}/api/live-matches`);
+      if(!res.ok) throw new Error("live-matches ko");
+      data = await res.json();
+    }catch{
+      const alt = await fetch(`${API_BASE}/api/live`);
+      if(!alt.ok) throw new Error("live ko");
+      data = await alt.json();
+    }
+
+    state.matches = normalizeMatches(data);
+
+    if(state.selectedMatchId && !state.matches.some(m => String(m.id) === String(state.selectedMatchId))){
+      state.matches.unshift(buildPlaceholderMatch(state.selectedMatchId));
+    }
+
+    clearNotice();
+
+  }catch{
+    state.matches = state.selectedMatchId ? [buildPlaceholderMatch(state.selectedMatchId)] : [];
+    showNotice("Lista partite live non disponibile: uso comunque il match_id dell'URL e provo a leggere /api/scout-live.");
+  }
+
+  state.lastLiveMatchesFetch = now;
+}
+
+async function loadScoutData(force=false){
+  const matchId = state.selectedMatchId;
+
+  if(!matchId){
+    showNotice("Nessun match_id trovato nell'URL. Apri scout.html?match_id=ID_PARTITA");
+    return;
+  }
+
+  const now = Date.now();
+
+  if(!force && state.playerCache[matchId] && now - (state.lastScoutFetch[matchId] || 0) < API_SAFE.scoutRefreshMs){
+    const cached = state.playerCache[matchId];
+    state.players = clone(cached.players);
+    state.events = clone(cached.events);
+    state.currentMatch = clone(cached.match);
+    state.summary = clone(cached.summary || {});
+    state.hasRealPlayers = state.players.length > 0;
+    return;
+  }
+
+  try{
+    let data = null;
+
+    try{
+      const res = await fetch(`${API_BASE}/api/scout-live?match_id=${encodeURIComponent(matchId)}`);
+      if(!res.ok) throw new Error("scout-live ko");
+      data = await res.json();
+    }catch{
+      const alt = await fetch(`${API_BASE}/api/match/${encodeURIComponent(matchId)}/full-analysis`);
+      if(!alt.ok) throw new Error("full-analysis ko");
+      data = await alt.json();
+    }
+
+    state.currentMatch = normalizeScoutMatch(data, matchId);
+    upsertCurrentMatch();
+
+    state.players = normalizePlayers(data.players || []);
+    state.events = normalizeEvents(data.events || []);
+    state.summary = data.summary || buildLocalSummary(state.players);
+    state.schemaVersion = data.version || "5.5";
+    state.hasRealPlayers = state.players.length > 0;
+
+    if(state.hasRealPlayers){
+      clearNotice();
+    }else{
+      showNotice("Il backend ha risposto, ma non ha restituito players reali in data.players.");
+    }
+
+  }catch{
+    state.players = [];
+    state.events = [];
+    state.summary = {};
+    state.hasRealPlayers = false;
+
+    if(!state.currentMatch){
+      state.currentMatch = buildPlaceholderMatch(matchId);
+      upsertCurrentMatch();
+    }
+
+    showNotice("Dati Scout non disponibili. Controlla /api/scout-live?match_id=...");
+  }
+
+  state.playerCache[matchId] = {
+    players: clone(state.players),
+    events: clone(state.events),
+    match: clone(state.currentMatch),
+    summary: clone(state.summary)
+  };
+
+  state.lastScoutFetch[matchId] = now;
+  updateLastRefresh();
+}
+
+function normalizeScoutMatch(data, fallbackId){
+  const m = data.match || {};
+  const goals = m.score || m.goals || data.score || data.goals || {};
+
+  return {
+    id:String(m.id || m.fixture_id || m.match_id || fallbackId),
+    league:cleanText(m.league?.name || m.league || data.league?.name || data.league || "Live"),
+    home:cleanText(m.home || m.home_team || data.home || data.home_team || "Home"),
+    away:cleanText(m.away || m.away_team || data.away || data.away_team || "Away"),
+    scoreHome:num(m.scoreHome ?? m.home_goals ?? goals.home ?? goals.home_goals,0),
+    scoreAway:num(m.scoreAway ?? m.away_goals ?? goals.away ?? goals.away_goals,0),
+    minute:num(m.minute ?? m.elapsed ?? data.minute,0),
+    status:cleanText(m.status || data.status || "LIVE")
+  };
+}
+
+function upsertCurrentMatch(){
+  if(!state.currentMatch) return;
+
+  const idx = state.matches.findIndex(m => String(m.id) === String(state.currentMatch.id));
+
+  if(idx >= 0){
+    state.matches[idx] = {...state.matches[idx],...state.currentMatch};
+  }else{
+    state.matches.unshift(state.currentMatch);
+  }
+}
+
+function normalizeMatches(data){
+  const list = Array.isArray(data) ? data : data.matches || data.response || data.data || [];
+
+  return list.map((m,i) => ({
+    id:String(m.id || m.fixture_id || m.match_id || m.fixture?.id || `match_${i}`),
+    league:cleanText(m.league || m.competition || m.league_name || m.league?.name || "Live"),
+    home:cleanText(m.home || m.home_team || m.teams?.home?.name || "Home"),
+    away:cleanText(m.away || m.away_team || m.teams?.away?.name || "Away"),
+    scoreHome:num(m.scoreHome ?? m.home_goals ?? m.goals?.home ?? m.score?.home,0),
+    scoreAway:num(m.scoreAway ?? m.away_goals ?? m.goals?.away ?? m.score?.away,0),
+    minute:num(m.minute ?? m.elapsed ?? m.fixture?.status?.elapsed,0),
+    status:cleanText(m.status || m.fixture?.status?.short || "LIVE")
+  }));
+}
+
+function buildPlaceholderMatch(id){
+  return {id:String(id),league:"MatchIQ",home:"Match",away:"Live",scoreHome:0,scoreAway:0,minute:0,status:"LIVE"};
+}
+
+function normalizePlayers(players=[]){
+  if(!Array.isArray(players)) return [];
+
+  return players
+    .filter(p => p && (p.name || p.player_name || p.player?.name))
+    .map((p,i) => {
+      const rawName = p.name || p.player_name || p.player?.name || `Player ${i+1}`;
+      const rawTeam = typeof p.team === "string" ? p.team : (p.team?.name || p.team_name || p.club || "Team");
+      const rawRole = p.role || p.position || p.pos || "MID";
+
+      const scoutScore = clamp(num(p.scout_score ?? p.scoutScore ?? p.score ?? p.rating_score ?? 0),0,99);
+      const rating = clamp(num(p.rating ?? p.rating_api ?? 6.5),0,10);
+
+      let threat = num(p.threat ?? p.xThreat ?? p.x_threat ?? p.xthreat ?? p.danger ?? p.danger_score ?? p.offensive_danger,0);
+      let creativity = num(p.creativity ?? p.creative_score ?? p.creativeScore ?? p.chance_creation ?? p.keyPassImpact,0);
+      let pressure = num(p.pressure ?? p.pressure_score ?? p.pressing ?? p.aggression ?? p.defensive_pressure,0);
+      let momentum = num(p.momentum ?? p.momentum_score ?? p.form,0);
+      let fatigue = num(p.fatigue ?? p.fatigue_score ?? p.tiredness,0);
+      let stamina = num(p.stamina,0);
+      let impactScore = num(p.impact_score ?? p.impact ?? p.live_impact ?? p.impactScore,0);
+
+      const goals = intNum(p.goals);
+      const assists = intNum(p.assists);
+      const shots = intNum(p.shots ?? p.shots_total);
+      const shotsOnTarget = intNum(p.shots_on_target ?? p.shots_on);
+      const keyPasses = intNum(p.key_passes ?? p.keyPasses);
+      const dribbles = intNum(p.dribbles ?? p.dribbles_success);
+      const tackles = intNum(p.tackles);
+      const interceptions = intNum(p.interceptions);
+      const duelsWon = intNum(p.duels_won);
+      const minutes = intNum(p.minutes);
+
+      const roleValue = cleanRole(rawRole);
+
+      if(threat <= 0){
+        threat = calcThreatFrontend(roleValue, shots, shotsOnTarget, goals, keyPasses, dribbles, rating);
+      }
+
+      if(creativity <= 0){
+        creativity = calcCreativityFrontend(roleValue, keyPasses, assists, dribbles, rating);
+      }
+
+      if(pressure <= 0){
+        pressure = calcPressureFrontend(roleValue, tackles, interceptions, duelsWon, rating);
+      }
+
+      if(momentum <= 0){
+        momentum = clamp(rating * 7 + threat * .22 + creativity * .16 + pressure * .10 + goals * 12 + assists * 8,1,99);
+      }
+
+      if(fatigue <= 0){
+        const matchMinute = getMatch()?.minute || 60;
+        fatigue = clamp((minutes || matchMinute) * .45 + pressure * .10 + dribbles * 1.3 + tackles * 1.7,8,94);
+      }
+
+      if(stamina <= 0){
+        stamina = clamp(100 - fatigue,1,100);
+      }
+
+      if(impactScore <= 0){
+        impactScore = clamp(scoutScore * .28 + threat * .22 + creativity * .16 + pressure * .10 + momentum * .16 + stamina * .08 + goals * 7 + assists * 5,1,99);
+      }
+
+      const clean = {
+        id:String(p.id || p.player_id || p.player?.id || `${rawName}_${i}`),
+        name:cleanText(rawName),
+        photo:cleanText(p.photo || p.player?.photo || "",""),
+        team:cleanText(rawTeam,"Team"),
+        role:roleValue,
+        rating,
+
+        goals,
+        assists,
+        shots,
+        shots_on_target:shotsOnTarget,
+        key_passes:keyPasses,
+        dribbles,
+        tackles,
+        interceptions,
+        fouls:intNum(p.fouls),
+        duels_won:duelsWon,
+        minutes,
+
+        threat:clamp(threat,1,99),
+        creativity:clamp(creativity,1,99),
+        pressure:clamp(pressure,1,99),
+        momentum:clamp(momentum,1,99),
+        fatigue:clamp(fatigue,1,99),
+        stamina:clamp(stamina,1,100),
+        scout_score:scoutScore > 0 ? scoutScore : clamp(rating*8 + threat*.20 + creativity*.18 + pressure*.10 + momentum*.24 + stamina*.08 + goals*8 + assists*5,1,99),
+        impact_score:clamp(impactScore,1,99),
+
+        signal_type:cleanText(p.signal_type || p.signalType || guessSignalFrontend(threat,creativity,pressure,impactScore),"watch"),
+        signal:cleanText(p.signal || p.ai_signal || guessSignalLabelFrontend(threat,creativity,pressure,impactScore),"AI Watch"),
+        level:cleanText(p.level || "DEVELOPING"),
+        data_quality:cleanText(p.data_quality || "frontend-normalized"),
+        data_source:cleanText(p.data_source || "frontend_mapping"),
+        is_estimated:Boolean(p.is_estimated),
+        real_data:Boolean(p.real_data),
+        danger_creator:Boolean(p.danger_creator),
+        hidden_gem:Boolean(p.hidden_gem),
+        ai_summary:cleanText(p.ai_summary || "")
+      };
+
+      return clean;
+    })
+    .sort((a,b) => b.scout_score - a.scout_score);
+}
+
+function calcThreatFrontend(role, shots, shotsOnTarget, goals, keyPasses, dribbles, rating){
+  const base = {ATT:34,MID:26,DEF:12,GK:4}[role] || 20;
+  return clamp(base + shots*7 + shotsOnTarget*12 + goals*24 + keyPasses*4 + dribbles*4 + Math.max(0,rating-6)*5,1,99);
+}
+
+function calcCreativityFrontend(role, keyPasses, assists, dribbles, rating){
+  const base = {ATT:24,MID:38,DEF:16,GK:4}[role] || 22;
+  return clamp(base + keyPasses*12 + assists*25 + dribbles*6 + Math.max(0,rating-6)*4,1,99);
+}
+
+function calcPressureFrontend(role, tackles, interceptions, duelsWon, rating){
+  const base = {ATT:20,MID:34,DEF:44,GK:8}[role] || 28;
+  return clamp(base + tackles*9 + interceptions*9 + duelsWon*5 + Math.max(0,rating-6)*3,1,99);
+}
+
+function guessSignalFrontend(threat,creativity,pressure,impact){
+  if(impact >= 84) return "hot";
+  if(threat >= 78) return "danger";
+  if(pressure >= 78) return "pressure";
+  if(creativity >= 76) return "gem";
+  return "watch";
+}
+
+function guessSignalLabelFrontend(threat,creativity,pressure,impact){
+  const t = guessSignalFrontend(threat,creativity,pressure,impact);
+  if(t === "hot") return "Hot Player";
+  if(t === "danger") return "High Threat Zone";
+  if(t === "pressure") return "Pressure Trigger";
+  if(t === "gem") return "Creative Hidden Gem";
+  return "AI Watch";
+}
+
+function normalizeEvents(events){
+  if(!Array.isArray(events)) return [];
+
+  return events.map(e => ({
+    id:String(e.id || uid()),
+    minute:intNum(e.minute),
+    type:cleanText(e.type || "ai"),
+    label:cleanText(e.label || String(e.type || "AI").toUpperCase()),
+    className:cleanText(e.className || eventClass(e.type)),
+    playerId:e.playerId || e.player_id || "",
+    playerName:cleanText(e.playerName || e.player_name || "Player"),
+    title:cleanText(e.title || e.event || "Evento live"),
+    desc:cleanText(e.desc || e.description || "Evento rilevato da MatchIQ AI.")
+  }));
+}
+
+function eventClass(type){
+  const t = String(type || "").toLowerCase();
+  if(t.includes("goal")) return "goal";
+  if(t.includes("chance") || t.includes("alert")) return "alert";
+  if(t.includes("momentum") || t.includes("pressure")) return "momentum";
+  return "";
+}
+
+function buildLocalSummary(players){
+  return {
+    total_players:players.length,
+    avg_scout_score:avgField(players,"scout_score"),
+    avg_threat:avgField(players,"threat"),
+    avg_creativity:avgField(players,"creativity"),
+    avg_pressure:avgField(players,"pressure"),
+    avg_momentum:avgField(players,"momentum"),
+    avg_stamina:avgField(players,"stamina")
+  };
+}
+
+function renderAll(){
+  renderMatches();
+  renderHero();
+  renderMetrics();
+  renderPlayers();
+  renderTimeline();
+  renderTicker();
+  renderWatchlist();
+  refreshModal();
+  updateApiPill();
+}
+
+function renderMatches(){
+  const box = document.getElementById("matchList");
+
+  if(!state.matches.length){
+    box.innerHTML = `<div class="empty"><strong>Nessuna partita live disponibile</strong>Uso il match_id dell'URL se presente.</div>`;
+    return;
+  }
+
+  box.innerHTML = state.matches.map(m => `
+    <div class="match-card ${String(m.id) === String(state.selectedMatchId) ? "active" : ""}" onclick="selectMatch('${escAttr(m.id)}')">
+      <div class="match-row"><span>${esc(m.home)}</span><span>${esc(m.away)}</span></div>
+      <div class="match-meta"><span>${esc(m.league)}</span><span class="score-live">${m.scoreHome}-${m.scoreAway} · ${m.minute}'</span></div>
+    </div>
+  `).join("");
+}
+
+function renderHero(){
+  const m = getMatch();
+
+  if(!m){
+    document.getElementById("hero").innerHTML = `<div><h3>Nessun match selezionato</h3><p>Apri scout.html?match_id=ID_PARTITA.</p></div>`;
+    return;
+  }
+
+  document.getElementById("hero").innerHTML = `
+    <div><h3>${esc(m.home)}</h3><p>${esc(m.league)} · Home Team</p></div>
+    <div class="hero-score"><strong>${m.scoreHome} - ${m.scoreAway}</strong><div>${m.minute}' · ${esc(m.status)}</div></div>
+    <div style="text-align:right;"><h3>${esc(m.away)}</h3><p>Away Team</p></div>
+  `;
+}
+
+function renderMetrics(){
+  const summary = state.summary || buildLocalSummary(state.players);
+
+  document.getElementById("mMomentum").textContent = valuePct(summary.avg_momentum ?? avgField(state.players,"momentum"));
+  document.getElementById("mPressure").textContent = valuePct(summary.avg_pressure ?? avgField(state.players,"pressure"));
+  document.getElementById("mCreativity").textContent = valuePct(summary.avg_creativity ?? avgField(state.players,"creativity"));
+  document.getElementById("mThreat").textContent = valuePct(summary.avg_threat ?? avgField(state.players,"threat"));
+}
+
+function renderPlayers(){
+  const box = document.getElementById("players");
+
+  if(!state.hasRealPlayers){
+    box.innerHTML = `<div class="empty"><strong>Giocatori reali non disponibili</strong>Scout V5.5 legge solo data.players dello schema clean.</div>`;
+    return;
+  }
+
+  const list = filteredPlayers();
+
+  if(!list.length){
+    box.innerHTML = `<div class="empty"><strong>Nessun giocatore trovato</strong>Modifica i filtri scout.</div>`;
+    return;
+  }
+
+  box.innerHTML = list.map(p => {
+    const scoreClass = p.scout_score >= 82 ? "high" : p.scout_score >= 70 ? "mid" : "";
+    const cardClass = p.signal_type === "hot" ? "hot" : p.signal_type === "danger" ? "danger" : p.signal_type === "pressure" ? "pressure" : "";
+    const signalClass = p.signal_type === "hot" ? "hot-signal" : p.signal_type === "danger" ? "alert" : p.signal_type === "pressure" ? "pressure-signal" : "";
+    const watched = isWatched(p.id);
+
+    return `
+      <article class="player ${cardClass} ${watched ? "watch" : ""}" id="card-${escAttr(p.id)}">
+        <div onclick="openModal('${escAttr(p.id)}')">
+          <div class="player-head">
+            <div>
+              <div class="player-name">${esc(p.name)}</div>
+              <div class="player-sub">${esc(p.team)} · ${esc(p.role)} · ${esc(p.data_source)}</div>
+            </div>
+            <div class="score ${scoreClass}">${Math.round(p.scout_score)}</div>
+          </div>
+
+          <div class="signal ${watched ? "watch-signal" : signalClass}">
+            ${watched ? "⭐ WATCHLIST" : "⚡ " + esc(p.signal)}
+          </div>
+
+          <div class="stats">
+            <div class="stat"><small>Threat</small><strong>${Math.round(p.threat)}</strong></div>
+            <div class="stat"><small>Creative</small><strong>${Math.round(p.creativity)}</strong></div>
+            <div class="stat"><small>Press</small><strong>${Math.round(p.pressure)}</strong></div>
+            <div class="stat"><small>Mom</small><strong>${Math.round(p.momentum)}</strong></div>
+          </div>
+        </div>
+
+        <div class="player-actions">
+          <button class="btn" onclick="openModal('${escAttr(p.id)}')">Analizza</button>
+          <button class="btn btn-green" onclick="toggleWatchlistById('${escAttr(p.id)}')">${watched ? "Salvato" : "Watch"}</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderTimeline(){
+  const box = document.getElementById("timeline");
+  document.getElementById("eventCount").textContent = `${state.events.length} eventi`;
+
+  if(!state.events.length){
+    box.innerHTML = `<div class="empty"><strong>Nessun evento player reale</strong>La timeline si popolerà con eventi live.</div>`;
+    return;
+  }
+
+  box.innerHTML = [...state.events].sort((a,b) => b.minute - a.minute).slice(0,30).map(e => `
+    <div class="event ${e.className || ""}">
+      <div class="event-top"><span class="minute">${e.minute}'</span><span class="tag">${esc(e.label)}</span></div>
+      <div class="event-title">${esc(e.title)}</div>
+      <div class="event-desc">${esc(e.desc)}</div>
+    </div>
+  `).join("");
+}
+
+function renderTicker(){
+  const m = getMatch();
+
+  if(!m){
+    document.getElementById("tickerText").textContent = "MatchIQ Scout V5.5 · nessuna partita live ricevuta";
+    return;
+  }
+
+  if(!state.hasRealPlayers){
+    document.getElementById("tickerText").textContent = `LIVE ${m.home} - ${m.away} · ${m.minute}' · giocatori reali non disponibili`;
+    return;
+  }
+
+  const top = [...state.players].sort((a,b) => b.scout_score - a.scout_score)[0];
+
+  document.getElementById("tickerText").textContent =
+    `LIVE ${m.home} - ${m.away} · ${m.minute}' · Top Scout: ${top?.name || "--"} · Threat ${Math.round(top?.threat || 0)} · Source ${top?.data_source || "--"}`;
+}
+
+function renderWatchlist(){
+  const box = document.getElementById("watchlist");
+  document.getElementById("watchCount").textContent = `${state.watchlist.length} salvati`;
+
+  if(!state.watchlist.length){
+    box.innerHTML = `<div class="empty"><strong>Watchlist vuota</strong>Salva i player da monitorare.</div>`;
+    return;
+  }
+
+  box.innerHTML = state.watchlist.map(p => `
+    <div class="watch-item">
+      <div class="watch-item-top">
+        <div>
+          <div class="watch-name">${esc(p.name)}</div>
+          <div class="watch-meta">${esc(p.team)} · ${esc(p.role)} · Score ${Math.round(p.scout_score)}</div>
+        </div>
+        <button class="watch-remove" onclick="removeWatchlist('${escAttr(p.id)}')">×</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function filteredPlayers(){
+  const q = document.getElementById("searchInput").value.toLowerCase().trim();
+  const roleVal = document.getElementById("roleFilter").value;
+  const signalVal = document.getElementById("signalFilter").value;
+  const minScore = Number(document.getElementById("scoreFilter").value);
+
+  return state.players.filter(p =>
+    (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)) &&
+    (roleVal === "all" || p.role === roleVal) &&
+    (signalVal === "all" || p.signal_type === signalVal) &&
+    p.scout_score >= minScore
+  ).sort((a,b) => b.scout_score - a.scout_score);
+}
+
+async function selectMatch(id){
+  showLoading();
+  state.selectedMatchId = id;
+  state.events = [];
+  state.openPlayerId = null;
+  closeModal(false);
+  await loadScoutData(true);
+  renderAll();
+  hideLoading();
+  toast("Partita cambiata","Scout V5.5 ricalibrato sul nuovo match.");
+}
+
+async function manualRefresh(){
+  showLoading();
+  await loadLiveMatches(true);
+  await loadScoutData(true);
+  renderAll();
+  hideLoading();
+  toast("Refresh completato","Dati aggiornati con schema clean.");
+}
+
+function resetFilters(){
+  document.getElementById("searchInput").value = "";
+  document.getElementById("roleFilter").value = "all";
+  document.getElementById("signalFilter").value = "all";
+  document.getElementById("scoreFilter").value = "0";
+  renderPlayers();
+}
+
+function startTimers(){
+  clearInterval(state.timers.soft);
+  clearInterval(state.timers.events);
+
+  state.timers.soft = setInterval(async () => {
+    state.tick++;
+    await loadLiveMatches(false);
+
+    const m = getMatch();
+    if(m && m.minute < 90) m.minute += 1;
+
+    if(state.tick % 9 === 0){
+      await loadScoutData(false);
+    }
+
+    renderAll();
+  },10000);
+
+  state.timers.events = setInterval(() => {
+    if(state.hasRealPlayers && Math.random() > .5){
+      generateLocalEvent(false);
+    }
+  },API_SAFE.localEventMs);
+}
+
+function simulateHighImpactEvent(){
+  if(!state.hasRealPlayers){
+    toast("Nessun player reale","Prima carica dati reali.");
+    return;
+  }
+  generateLocalEvent(true);
+}
+
+function generateLocalEvent(high=false){
+  if(!state.players.length) return;
+
+  const templates = [
+    {type:"shot",label:"TIRO",className:"",score:3,threat:5,momentum:3},
+    {type:"chance",label:"OCCASIONE",className:"alert",score:5,threat:8,momentum:4},
+    {type:"goal",label:"GOAL",className:"goal",score:10,threat:10,momentum:8},
+    {type:"assist",label:"ASSIST",className:"goal",score:8,threat:6,momentum:7},
+    {type:"pressure",label:"PRESSIONE",className:"momentum",score:4,threat:2,momentum:6},
+    {type:"momentum",label:"MOMENTUM",className:"momentum",score:4,threat:4,momentum:9}
+  ];
+
+  const pool = high ? templates.filter(t => ["goal","assist","chance","momentum"].includes(t.type)) : templates;
+  const t = pool[Math.floor(Math.random() * pool.length)];
+  const p = pickPlayer();
+  const m = getMatch();
+
+  const event = {
+    id:uid(),
+    minute:m?.minute || 1,
+    type:t.type,
+    label:t.label,
+    className:t.className,
+    playerId:p.id,
+    playerName:p.name,
+    title:eventTitle(t.type,p),
+    desc:eventDesc(t.type,p)
+  };
+
+  applyImpact(p,t);
+  state.events.push(event);
+  updateCache();
+  renderAll();
+  flashCard(p.id);
+  toast(event.title,event.desc);
+}
+
+function pickPlayer(){
+  const weighted = [];
+  state.players.forEach(p => {
+    let w = 1;
+    if(p.signal_type === "hot") w += 3;
+    if(p.signal_type === "danger") w += 2;
+    if(p.threat >= 75) w += 2;
+    for(let i=0;i<w;i++) weighted.push(p);
+  });
+  return weighted[Math.floor(Math.random() * weighted.length)];
+}
+
+function applyImpact(p,t){
+  p.scout_score = clamp(p.scout_score + t.score,0,99);
+  p.impact_score = clamp(p.impact_score + t.score,0,99);
+  p.threat = clamp(p.threat + t.threat,0,99);
+  p.momentum = clamp(p.momentum + t.momentum,0,99);
+  p.fatigue = clamp((p.fatigue || 35) + 2,0,99);
+  p.stamina = clamp(100 - p.fatigue,0,100);
+
+  if(t.type === "shot") p.shots++;
+  if(t.type === "assist" || t.type === "chance") p.key_passes++;
+  if(t.type === "pressure") p.pressure = clamp(p.pressure + 8,0,99);
+
+  if(t.type === "goal" || t.type === "assist" || p.scout_score >= 84){
+    p.signal_type = "hot";
+    p.signal = "Hot Player";
+  }else if(t.type === "chance" || p.threat >= 82){
+    p.signal_type = "danger";
+    p.signal = "High Threat Zone";
+  }else if(t.type === "pressure"){
+    p.signal_type = "pressure";
+    p.signal = "Pressure Trigger";
+  }
+}
+
+function eventTitle(type,p){
+  const map = {
+    shot:`${p.name} tenta la conclusione`,
+    chance:`AI ALERT: ${p.name} crea una grande occasione`,
+    goal:`GOAL IMPACT: ${p.name}`,
+    assist:`Assist rilevato per ${p.name}`,
+    pressure:`${p.name} attiva pressione alta`,
+    momentum:`Momentum spike detected`
+  };
+  return map[type] || `Evento live per ${p.name}`;
+}
+
+function eventDesc(type,p){
+  const map = {
+    shot:`Threat offensivo in crescita per ${p.name}.`,
+    chance:`${p.name} entra in zona ad alta pericolosità.`,
+    goal:`Scout score aggiornato dopo evento decisivo.`,
+    assist:`Contributo creativo diretto rilevato dal motore AI.`,
+    pressure:`Pressure engine segnala intensità sopra media.`,
+    momentum:`${p.name} sta influenzando il ritmo della partita.`
+  };
+  return map[type] || "Evento rilevato da MatchIQ AI.";
+}
+
+function openModal(id){
+  state.openPlayerId = id;
+  renderModal();
+  document.getElementById("modalBg").classList.add("show");
+}
+
+function closeModal(clear=true){
+  document.getElementById("modalBg").classList.remove("show");
+  if(clear) state.openPlayerId = null;
+}
+
+function refreshModal(){
+  if(state.openPlayerId && document.getElementById("modalBg").classList.contains("show")){
+    renderModal();
+  }
+}
+
+function renderModal(){
+  const p = state.players.find(x => String(x.id) === String(state.openPlayerId));
+  if(!p) return;
+
+  const threat = clamp(num(p.threat,0),1,99);
+  const creativity = clamp(num(p.creativity,0),1,99);
+  const pressure = clamp(num(p.pressure,0),1,99);
+  const momentum = clamp(num(p.momentum,0),1,99);
+  const stamina = clamp(num(p.stamina,0),1,100);
+  const fatigue = clamp(num(p.fatigue,0),1,99);
+  const impact = clamp(num(p.impact_score,0),1,99);
+  const score = clamp(num(p.scout_score,0),1,99);
+
+  const goalProb = clamp((threat*.48)+(p.shots*9)+(p.goals*20),0,99);
+  const assistProb = clamp((creativity*.55)+(p.key_passes*8)+(p.assists*15),0,99);
+  const nextImpact = clamp((impact*.55)+(momentum*.25)+(threat*.2),0,99);
+  const watchFit = clamp((score*.6)+(impact*.25)+(stamina*.15),0,99);
+  const watched = isWatched(p.id);
+
+  renderAvatar(p);
+
+  document.getElementById("modalName").textContent = p.name;
+  document.getElementById("modalSub").textContent = `${p.team} · ${p.role} · ${p.signal}`;
+
+  document.getElementById("modalBadges").innerHTML = `
+    <span class="badge ${watched ? "yellow" : "green"}">${watched ? "⭐ Watchlist" : esc(p.signal)}</span>
+    <span class="badge ${impact >= 80 ? "green" : impact >= 60 ? "yellow" : ""}">Impact ${Math.round(impact)}</span>
+    <span class="badge ${p.is_estimated ? "yellow" : "cyan"}">${esc(p.data_source)}</span>
+    <span class="badge ${stamina < 45 ? "red" : "green"}">Stamina ${Math.round(stamina)}%</span>
+  `;
+
+  document.getElementById("modalScore").textContent = Math.round(score);
+  document.getElementById("modalThreat").textContent = Math.round(threat) + "%";
+  document.getElementById("modalCreativity").textContent = Math.round(creativity) + "%";
+  document.getElementById("modalStamina").textContent = Math.round(stamina) + "%";
+
+  document.getElementById("impactRing").style.setProperty("--impact",impact + "%");
+  document.getElementById("impactValue").textContent = Math.round(impact);
+  document.getElementById("impactLabel").textContent = impact >= 85 ? "Elite Impact" : impact >= 70 ? "High Impact" : "Monitoring";
+
+  setBar("barThreat","barThreatText",threat);
+  setBar("barCreativity","barCreativityText",creativity);
+  setBar("barPressure","barPressureText",pressure);
+  setBar("barFatigue","barFatigueText",fatigue);
+
+  document.getElementById("modalComment").textContent = p.ai_summary || aiComment({...p,threat,creativity,pressure,momentum,stamina,impact_score:impact,scout_score:score});
+  document.getElementById("commentSource").textContent = p.data_source;
+
+  document.getElementById("goalProb").textContent = Math.round(goalProb) + "%";
+  document.getElementById("assistProb").textContent = Math.round(assistProb) + "%";
+  document.getElementById("nextImpact").textContent = Math.round(nextImpact) + "%";
+  document.getElementById("watchFit").textContent = Math.round(watchFit) + "%";
+
+  renderRadar({...p,threat,creativity,pressure,momentum,stamina,impact_score:impact,scout_score:score});
+  renderTacticalZone({...p,threat,creativity,pressure,stamina});
+  renderProfileGrid({...p,threat,creativity,pressure,stamina,impact_score:impact});
+  renderModalEvents(p);
+}
+
+function renderAvatar(p){
+  const avatar = document.getElementById("modalAvatar");
+  if(p.photo){
+    avatar.innerHTML = `<img src="${escAttr(p.photo)}" alt="${escAttr(p.name)}">`;
+  }else{
+    avatar.textContent = p.name.split(" ").map(x => x[0]).join("").slice(0,2).toUpperCase();
+  }
+}
+
+function renderProfileGrid(p){
+  const profile = tacticalProfile(p);
+
+  document.getElementById("profileGrid").innerHTML = `
+    <div class="profile-item"><small>Archetipo</small><strong>${esc(profile.type)}</strong></div>
+    <div class="profile-item"><small>Zona Forte</small><strong>${esc(profile.zone)}</strong></div>
+    <div class="profile-item"><small>Decisione AI</small><strong>${esc(profile.decision)}</strong></div>
+    <div class="profile-item"><small>Qualità Dato</small><strong>${esc(p.data_quality)}</strong></div>
+    <div class="profile-item"><small>Live Impact</small><strong>${Math.round(p.impact_score)}%</strong></div>
+    <div class="profile-item"><small>Stamina</small><strong>${Math.round(p.stamina)}%</strong></div>
+  `;
+}
+
+function renderModalEvents(p){
+  const list = state.events.filter(e => String(e.playerId) === String(p.id) || e.playerName === p.name).sort((a,b) => b.minute - a.minute);
+
+  document.getElementById("modalEvents").innerHTML = list.length
+    ? list.map(e => `<div class="event ${e.className || ""}"><div class="event-top"><span class="minute">${e.minute}'</span><span class="tag">${esc(e.label)}</span></div><div class="event-title">${esc(e.title)}</div><div class="event-desc">${esc(e.desc)}</div></div>`).join("")
+    : `<div class="empty"><strong>Nessun evento specifico</strong>In attesa di eventi live del player.</div>`;
+}
+
+function setBar(id,textId,value){
+  const v = clamp(Math.round(value),0,100);
+  document.getElementById(id).style.width = v + "%";
+  document.getElementById(textId).textContent = v + "%";
+}
+
+function renderRadar(p){
+  const values = [
+    clamp(p.scout_score,0,99),
+    clamp(p.threat,0,99),
+    clamp(p.momentum,0,99),
+    clamp(p.pressure,0,99),
+    clamp(p.creativity,0,99),
+    clamp(p.stamina,0,99)
+  ];
+
+  const labels = ["Score","Threat","Momentum","Press","Creative","Stamina"];
+  const cx = 150, cy = 150, maxR = 105, sides = values.length;
+
+  function point(i,r){
+    const angle = (-Math.PI/2) + (i*2*Math.PI/sides);
+    return [cx + Math.cos(angle)*r, cy + Math.sin(angle)*r];
+  }
+
+  const grid = [.25,.5,.75,1].map(scale => `<polygon points="${labels.map((_,i) => point(i,maxR*scale).join(",")).join(" ")}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>`).join("");
+
+  const axes = labels.map((label,i) => {
+    const [x,y] = point(i,maxR);
+    const [tx,ty] = point(i,maxR+24);
+    return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(255,255,255,.1)"/><text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" fill="#8f9bb3" font-size="11" font-weight="700">${label}</text>`;
+  }).join("");
+
+  const polyPoints = values.map((v,i) => point(i,maxR*(v/100)).join(",")).join(" ");
+
+  document.getElementById("radarSvg").innerHTML = `
+    ${grid}
+    ${axes}
+    <polygon points="${polyPoints}" fill="rgba(0,229,255,.24)" stroke="#00e5ff" stroke-width="3"/>
+    ${values.map((v,i) => { const [x,y] = point(i,maxR*(v/100)); return `<circle cx="${x}" cy="${y}" r="4" fill="#00f5a0"/>`; }).join("")}
+  `;
+}
+
+function renderTacticalZone(p){
+  const zone = document.getElementById("tacticalZone");
+  const label = document.getElementById("zoneLabel");
+  const profile = tacticalProfile(p);
+
+  label.textContent = profile.zone;
+
+  let x = 50, y = 50;
+  if(p.role === "ATT"){ x = 78; y = p.threat >= 70 ? 38 : 50; }
+  else if(p.role === "MID"){ x = 54; y = p.key_passes >= 2 ? 38 : 55; }
+  else if(p.role === "DEF"){ x = 27; y = p.pressure >= 65 ? 42 : 55; }
+  else if(p.role === "GK"){ x = 12; y = 50; }
+
+  zone.style.left = x + "%";
+  zone.style.top = y + "%";
+}
+
+function tacticalProfile(p){
+  if(p.role === "ATT" && p.threat >= 70) return {type:"Finalizzatore dinamico",zone:"Half-space offensivo",decision:"Monitorare goal"};
+  if(p.role === "MID" && p.creativity >= 70) return {type:"Creatore di gioco",zone:"Rifinitura centrale",decision:"Watchlist assist"};
+  if(p.pressure >= 70) return {type:"Pressing trigger",zone:"Zona recupero alto",decision:"Valore tattico"};
+  if(p.role === "DEF") return {type:"Stabilizzatore difensivo",zone:"Linea bassa/media",decision:"Controllo rischio"};
+  if(p.role === "GK") return {type:"Portiere reattivo",zone:"Area difensiva",decision:"Monitorare clean sheet"};
+  return {type:"Profilo bilanciato",zone:"Zona mista",decision:"Monitoraggio live"};
+}
+
+function aiComment(p){
+  if(p.impact_score >= 88) return `${p.name} sta producendo un impatto elite. Profilo prioritario da monitorare.`;
+  if(p.threat >= 82) return `${p.name} entra spesso in zone pericolose. Alta probabilità di azione decisiva.`;
+  if(p.creativity >= 75) return `${p.name} sta creando valore tra le linee: ottimo profilo per assist e chance creation.`;
+  if(p.pressure >= 78) return `${p.name} è un trigger di pressione: intensità e duelli stanno influenzando il ritmo.`;
+  if(p.stamina < 40) return `${p.name} mostra segnali di fatica. Possibile calo se il ritmo aumenta.`;
+  return `${p.name} è in monitoraggio live. Profilo stabile con margine di crescita.`;
+}
+
+function toggleWatchlistById(id){
+  const p = state.players.find(x => String(x.id) === String(id));
+  if(!p) return;
+
+  if(isWatched(id)){
+    removeWatchlist(id);
+    toast("Rimosso dalla watchlist",p.name);
+  }else{
+    addWatchlist(p);
+    toast("Aggiunto alla watchlist",p.name);
+  }
+  renderAll();
+}
+
+function addOpenPlayerToWatchlist(){
+  const p = state.players.find(x => String(x.id) === String(state.openPlayerId));
+  if(!p) return;
+  addWatchlist(p);
+  renderAll();
+  renderModal();
+  toast("Aggiunto alla watchlist",p.name);
+}
+
+function removeOpenPlayerFromWatchlist(){
+  if(!state.openPlayerId) return;
+  removeWatchlist(state.openPlayerId);
+  renderAll();
+  renderModal();
+}
+
+function addWatchlist(p){
+  if(isWatched(p.id)) return;
+  state.watchlist.push({
+    id:p.id,
+    name:p.name,
+    team:p.team,
+    role:p.role,
+    scout_score:p.scout_score,
+    threat:p.threat,
+    creativity:p.creativity,
+    pressure:p.pressure,
+    momentum:p.momentum,
+    signal:p.signal,
+    data_source:p.data_source
+  });
+  saveWatchlist();
+}
+
+function removeWatchlist(id){
+  state.watchlist = state.watchlist.filter(p => String(p.id) !== String(id));
+  saveWatchlist();
+}
+
+function clearWatchlist(){
+  state.watchlist = [];
+  saveWatchlist();
+  renderAll();
+  toast("Watchlist svuotata","Tutti i giocatori salvati sono stati rimossi.");
+}
+
+function isWatched(id){
+  return state.watchlist.some(p => String(p.id) === String(id));
+}
+
+function loadWatchlist(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");}
+  catch{return [];}
+}
+
+function saveWatchlist(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(state.watchlist));
+}
+
+function exportWatchlist(){
+  if(!state.watchlist.length){toast("Watchlist vuota","Non ci sono player da esportare.");return;}
+
+  const rows = [
+    "Nome;Squadra;Ruolo;Score;Threat;Creativity;Pressure;Momentum;Signal;Source",
+    ...state.watchlist.map(p => `${csv(p.name)};${csv(p.team)};${csv(p.role)};${Math.round(p.scout_score)};${Math.round(p.threat)};${Math.round(p.creativity)};${Math.round(p.pressure)};${Math.round(p.momentum)};${csv(p.signal)};${csv(p.data_source)}`)
+  ];
+
+  downloadText("matchiq_watchlist_v55_clean.csv",rows.join("\n"));
+}
+
+function exportScoutReport(){
+  if(!state.players.length){toast("Nessun dato","Non ci sono player reali da esportare.");return;}
+
+  const m = getMatch();
+
+  const report = [
+    "MATCHIQ SCOUT V5.5 CLEAN REPORT",
+    "=================================",
+    "",
+    `Match: ${m ? `${m.home} - ${m.away}` : "--"}`,
+    `Minuto: ${m ? m.minute + "'" : "--"}`,
+    `Generato: ${new Date().toLocaleString("it-IT")}`,
+    "",
+    "TOP PLAYERS",
+    "-----------",
+    ...state.players.map((p,i) => `${i+1}. ${p.name} | ${p.team} | ${p.role} | Score ${Math.round(p.scout_score)} | Threat ${Math.round(p.threat)} | Creativity ${Math.round(p.creativity)} | Pressure ${Math.round(p.pressure)} | ${p.signal} | ${p.data_source}`),
+    "",
+    "TIMELINE",
+    "--------",
+    ...(state.events.length ? state.events.map(e => `${e.minute}' ${e.label} - ${e.title}: ${e.desc}`) : ["Nessun evento disponibile."])
+  ].join("\n");
+
+  downloadText("matchiq_scout_report_v55_clean.txt",report);
+}
+
+function exportOpenPlayerReport(){
+  const p = state.players.find(x => String(x.id) === String(state.openPlayerId));
+  if(!p) return;
+
+  const report = [
+    "MATCHIQ PLAYER SCOUT REPORT V5.5 CLEAN",
+    "=======================================",
+    "",
+    `Giocatore: ${p.name}`,
+    `Squadra: ${p.team}`,
+    `Ruolo: ${p.role}`,
+    `Data source: ${p.data_source}`,
+    `Data quality: ${p.data_quality}`,
+    "",
+    `Scout Score: ${Math.round(p.scout_score)}`,
+    `Impact Score: ${Math.round(p.impact_score)}`,
+    `Threat: ${Math.round(p.threat)}%`,
+    `Creativity: ${Math.round(p.creativity)}%`,
+    `Pressure: ${Math.round(p.pressure)}%`,
+    `Momentum: ${Math.round(p.momentum)}%`,
+    `Stamina: ${Math.round(p.stamina)}%`,
+    "",
+    p.ai_summary || aiComment(p)
+  ].join("\n");
+
+  downloadText(`matchiq_player_${safeFilename(p.name)}_v55_clean.txt`,report);
+}
+
+function downloadText(filename,text){
+  const blob = new Blob([text],{type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast("Export completato",filename);
+}
+
+function updateCache(){
+  if(!state.selectedMatchId) return;
+  state.playerCache[state.selectedMatchId] = {
+    players:clone(state.players),
+    events:clone(state.events),
+    match:clone(state.currentMatch),
+    summary:clone(state.summary)
+  };
+}
+
+function flashCard(id){
+  requestAnimationFrame(() => {
+    const el = document.getElementById(`card-${CSS.escape(String(id))}`);
+    if(!el) return;
+    el.classList.remove("flash");
+    void el.offsetWidth;
+    el.classList.add("flash");
+    setTimeout(() => el.classList.remove("flash"),1000);
+  });
+}
+
+function getMatch(){
+  return state.currentMatch || state.matches.find(m => String(m.id) === String(state.selectedMatchId)) || state.matches[0];
+}
+
+function valuePct(v){
+  return Number.isFinite(Number(v)) ? Math.round(Number(v)) + "%" : "--";
+}
+
+function avgField(list,field){
+  if(!list.length) return 0;
+  return list.reduce((a,b) => a + Number(b[field] || 0),0) / list.length;
+}
+
+function cleanRole(v){
+  const r = String(v || "MID").toUpperCase();
+  if(["ATT","MID","DEF","GK"].includes(r)) return r;
+  if(r.includes("ATT") || r.includes("FORWARD") || r.includes("STRIKER")) return "ATT";
+  if(r.includes("MID")) return "MID";
+  if(r.includes("DEF") || r.includes("BACK")) return "DEF";
+  if(r.includes("KEEP") || r === "G") return "GK";
+  return "MID";
+}
+
+function intNum(v){
+  return Math.round(num(v,0));
+}
+
+function num(v,f=0){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : f;
+}
+
+function clamp(v,min,max){
+  return Math.max(min,Math.min(max,Number(v) || 0));
+}
+
+function cleanText(v,f="Unknown"){
+  if(v === null || v === undefined || v === "") return f;
+  return String(v);
+}
+
+function clone(obj){
+  return JSON.parse(JSON.stringify(obj || {}));
+}
+
+function uid(){
+  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+function esc(v){
+  return String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+function escAttr(v){
+  return esc(v).replaceAll("\\","\\\\");
+}
+
+function csv(v){
+  return `"${String(v ?? "").replaceAll('"','""')}"`;
+}
+
+function safeFilename(v){
+  return String(v || "player").toLowerCase().replace(/[^a-z0-9]+/gi,"_").replace(/^_+|_+$/g,"");
+}
+
+function updateLastRefresh(){
+  const now = new Date();
+  document.getElementById("lastUpdate").textContent = "refresh " + now.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+}
+
+function updateApiPill(){
+  document.getElementById("apiSafePill").textContent = `API SAFE ${Math.round(API_SAFE.scoutRefreshMs/1000)}s`;
+}
+
+function showNotice(message){
+  const box = document.getElementById("noticeBox");
+  box.innerHTML = `<strong>Nota:</strong> ${esc(message)}`;
+  box.classList.add("show");
+}
+
+function clearNotice(){
+  const box = document.getElementById("noticeBox");
+  box.classList.remove("show");
+  box.innerHTML = "";
+}
+
+function showLoading(){document.getElementById("loading").classList.add("show")}
+function hideLoading(){document.getElementById("loading").classList.remove("show")}
+
+function toast(title,desc){
+  const area = document.getElementById("toastArea");
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `<strong>${esc(title)}</strong><span>${esc(desc)}</span>`;
+  area.appendChild(el);
+  setTimeout(() => {el.style.opacity = "0";el.style.transform = "translateY(8px)";el.style.transition = ".2s";},3500);
+  setTimeout(() => el.remove(),3900);
+}
+</script>
+</body>
+</html>
