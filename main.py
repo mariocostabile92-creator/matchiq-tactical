@@ -874,24 +874,149 @@ def live_matches(top_only: bool = Query(True)):
     try:
         data = get_live_matches(top_only=top_only)
 
-        if data and "error" not in data:
-            data["cache"] = False
-            data["api_safe"] = True
+        matches = []
 
-            LIVE_MATCHES_CACHE[cache_key] = {
-                "timestamp": time.time(),
-                "data": data
+        if isinstance(data, dict):
+            raw_matches = (
+                data.get("matches")
+                or data.get("data")
+                or data.get("live_matches")
+                or []
+            )
+        elif isinstance(data, list):
+            raw_matches = data
+        else:
+            raw_matches = []
+
+        for m in raw_matches:
+            if not isinstance(m, dict):
+                continue
+
+            match_id = (
+                m.get("id")
+                or m.get("match_id")
+                or m.get("fixture_id")
+                or m.get("fixture", {}).get("id")
+            )
+
+            home = (
+                m.get("home")
+                or m.get("home_team")
+                or m.get("teams", {}).get("home", {}).get("name")
+                or "Home"
+            )
+
+            away = (
+                m.get("away")
+                or m.get("away_team")
+                or m.get("teams", {}).get("away", {}).get("name")
+                or "Away"
+            )
+
+            score = m.get("score", {})
+
+            home_goals = (
+                m.get("home_goals")
+                or m.get("goals", {}).get("home")
+                or score.get("home")
+                or 0
+            )
+
+            away_goals = (
+                m.get("away_goals")
+                or m.get("goals", {}).get("away")
+                or score.get("away")
+                or 0
+            )
+
+            minute = (
+                m.get("minute")
+                or m.get("elapsed")
+                or m.get("fixture", {}).get("status", {}).get("elapsed")
+                or 0
+            )
+
+            status = (
+                m.get("status")
+                or m.get("fixture", {}).get("status", {}).get("short")
+                or "LIVE"
+            )
+
+            league = (
+                m.get("league")
+                or m.get("league_name")
+                or m.get("league", {}).get("name")
+                or "Live"
+            )
+
+            home_logo = (
+                m.get("home_logo")
+                or m.get("teams", {}).get("home", {}).get("logo")
+                or ""
+            )
+
+            away_logo = (
+                m.get("away_logo")
+                or m.get("teams", {}).get("away", {}).get("logo")
+                or ""
+            )
+
+            item = {
+                "id": match_id,
+                "match_id": match_id,
+                "fixture_id": match_id,
+
+                "home": home,
+                "away": away,
+                "home_team": home,
+                "away_team": away,
+
+                "home_logo": home_logo,
+                "away_logo": away_logo,
+
+                "score": {
+                    "home": home_goals,
+                    "away": away_goals
+                },
+
+                "home_goals": home_goals,
+                "away_goals": away_goals,
+
+                "minute": minute,
+                "status": status,
+                "league": league,
+
+                "url_match": f"/match.html?id={match_id}",
+                "url_scout": f"/scout.html?match_id={match_id}"
             }
 
-        elif cached:
+            if match_id:
+                matches.append(item)
+
+        response = {
+            "source": "api-football",
+            "top_only": top_only,
+            "total_matches": len(matches),
+            "matches": matches,
+            "data": matches,
+            "live_matches": matches,
+            "cache": False,
+            "api_safe": True
+        }
+
+        if matches:
+            LIVE_MATCHES_CACHE[cache_key] = {
+                "timestamp": time.time(),
+                "data": response
+            }
+            return response
+
+        if cached:
             cached["data"]["cache"] = True
-            cached["data"]["cache_warning"] = data.get(
-                "error",
-                "API error"
-            )
+            cached["data"]["cache_warning"] = "Nessuna partita live nuova, uso cache precedente"
             return cached["data"]
 
-        return data
+        return response
 
     except Exception as e:
         if cached:
@@ -904,6 +1029,8 @@ def live_matches(top_only: bool = Query(True)):
             "top_only": top_only,
             "total_matches": 0,
             "matches": [],
+            "data": [],
+            "live_matches": [],
             "error": str(e),
             "api_safe": True
         }
