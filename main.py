@@ -1404,43 +1404,25 @@ def live_matches(top_only: bool = Query(False)):
 
 
 @app.get("/api/scout/live")
-def api_scout_live(
-    match_id: int = Query(None),
-    user=Depends(get_optional_user)
-):
-    enforce_guest_or_user_limit(
-        user=user,
-        feature="scout",
-        endpoint="/api/scout/live"
-    )
+def api_scout_live(match_id: int = Query(None)):
+    """
+    Scout Live pubblico temporaneo per beta/test online.
 
-    data = build_real_scout_response(match_id=match_id)
-
-    return attach_usage_info(
-        response=data,
-        user=user,
-        feature="scout"
-    )
+    Nota: non richiede login per permettere al frontend scout.html
+    di funzionare subito in produzione durante la fase beta.
+    Quando attiverai Stripe/Login definitivo, rimetteremo il guard premium.
+    """
+    return build_real_scout_response(match_id=match_id)
 
 
 @app.get("/api/scout-live")
-def api_scout_live_alias(
-    match_id: int = Query(None),
-    user=Depends(get_optional_user)
-):
-    enforce_guest_or_user_limit(
-        user=user,
-        feature="scout",
-        endpoint="/api/scout-live"
-    )
-
-    data = build_real_scout_response(match_id=match_id)
-
-    return attach_usage_info(
-        response=data,
-        user=user,
-        feature="scout"
-    )
+def api_scout_live_alias(match_id: int = Query(None)):
+    """
+    Alias compatibile con scout.html.
+    Ritorna sempre match + players, inclusi fallback virtual roles
+    se API-Football non fornisce giocatori reali.
+    """
+    return build_real_scout_response(match_id=match_id)
 
 
 @app.get("/api/live-memory-status")
