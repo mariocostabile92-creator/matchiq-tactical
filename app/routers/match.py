@@ -63,3 +63,14 @@ def xg_analysis(match_id: int):
         "match_id": match_id,
         "xg_analysis": full["xg_analysis"]
     }
+@router.get("/{match_id}/ai-commentary")
+def ai_commentary_analysis(match_id: int):
+    full = get_cached_full_analysis_func(match_id)
+
+    if "error" in full:
+        return full
+
+    return {
+        "match_id": match_id,
+        "ai_commentary": full.get("ai_commentary", {})
+    }

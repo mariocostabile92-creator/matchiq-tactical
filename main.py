@@ -546,17 +546,7 @@ def account_limits(user=Depends(get_optional_user)):
     )
 
 
-@app.get("/api/match/{match_id}/ai-commentary")
-def ai_commentary_analysis(match_id: int):
-    full = get_cached_full_analysis(match_id)
 
-    if "error" in full:
-        return full
-
-    return {
-        "match_id": match_id,
-        "ai_commentary": full.get("ai_commentary", {})
-    }
 
 
 
