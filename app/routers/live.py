@@ -230,7 +230,7 @@ def live_matches(top_only: bool = Query(False)):
         }
 
         if matches:
-            LIVE_MATCHES_CACHE[cache_key] = {
+            live_matches_cache[cache_key] = {
                 "timestamp": time.time(),
                 "data": response
             }
