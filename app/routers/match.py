@@ -85,3 +85,14 @@ def live_engine_analysis(match_id: int):
         "match_id": match_id,
         "live_engine": full["live_engine"]
     }
+@router.get("/{match_id}/live-flow")
+def live_flow_analysis(match_id: int):
+    full = get_cached_full_analysis_func(match_id)
+
+    if "error" in full:
+        return full
+
+    return {
+        "match_id": match_id,
+        "live_flow": full["live_flow"]
+    }
