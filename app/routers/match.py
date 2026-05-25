@@ -118,3 +118,14 @@ def tactical_coach_analysis(match_id: int):
         "match_id": match_id,
         "tactical_coach": full["tactical_coach"]
     }
+@router.get("/{match_id}/future-prediction")
+def future_prediction_analysis(match_id: int):
+    full = get_cached_full_analysis_func(match_id)
+
+    if "error" in full:
+        return full
+
+    return {
+        "match_id": match_id,
+        "future_prediction": full["future_prediction"]
+    }
