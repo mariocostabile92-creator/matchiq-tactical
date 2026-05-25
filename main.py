@@ -320,6 +320,10 @@ def build_safe_live_brain(
 
 
 def normalize_player_for_scout(player, match_data=None):
+    """
+    Normalizza qualsiasi player ricevuto da API-Football / engine interni
+    nello schema che scout.html V5.5 si aspetta.
+    """
     if not isinstance(player, dict):
         return None
 
@@ -328,8 +332,8 @@ def normalize_player_for_scout(player, match_data=None):
     name = (
         player.get("name")
         or player.get("player_name")
-        or player.get("player")
         or player.get("nome")
+        or player.get("player")
     )
 
     if isinstance(name, dict):
@@ -337,6 +341,24 @@ def normalize_player_for_scout(player, match_data=None):
 
     if not name:
         return None
+
+    raw_role = (
+        player.get("role")
+        or player.get("position")
+        or player.get("pos")
+        or "MID"
+    )
+
+    role_upper = str(raw_role).upper()
+
+    if role_upper in ["G", "GK", "GOALKEEPER", "PORTIERE"]:
+        role = "GK"
+    elif any(x in role_upper for x in ["ATT", "FORWARD", "STRIKER", "PUNTA", "ALA", "WINGER"]):
+        role = "ATT"
+    elif any(x in role_upper for x in ["DEF", "BACK", "CB", "LB", "RB", "DIF", "TERZINO"]):
+        role = "DEF"
+    else:
+        role = "MID"
 
     rating = safe_float(
         player.get("rating_api")
@@ -348,122 +370,187 @@ def normalize_player_for_scout(player, match_data=None):
 
     goals = safe_int(player.get("goals", 0))
     assists = safe_int(player.get("assists", 0))
-    shots = safe_int(player.get("shots", 0))
-    key_passes = safe_int(player.get("key_passes", 0))
+    shots = safe_int(player.get("shots", player.get("shots_total", 0)))
+    shots_on_target = safe_int(player.get("shots_on_target", player.get("shots_on", 0)))
+    key_passes = safe_int(player.get("key_passes", player.get("keyPasses", 0)))
     dribbles = safe_int(player.get("dribbles", player.get("dribbles_success", 0)))
     tackles = safe_int(player.get("tackles", 0))
+    interceptions = safe_int(player.get("interceptions", 0))
     duels_won = safe_int(player.get("duels_won", 0))
     minutes = safe_int(player.get("minutes", match_data.get("minute", 0)))
-    xg = safe_float(player.get("xg", 0.0))
-    pass_accuracy = safe_int(player.get("pass_accuracy", 0))
+    xg = safe_float(player.get("xg", player.get("expected_goals", 0.0)))
+    pass_accuracy = safe_int(player.get("pass_accuracy", player.get("passes_accuracy", 0)))
     fouls = safe_int(player.get("fouls", player.get("fouls_committed", 0)))
     cards_yellow = safe_int(player.get("cards_yellow", 0))
     cards_red = safe_int(player.get("cards_red", 0))
 
+    threat = clamp(
+        shots * 12
+        + shots_on_target * 10
+        + key_passes * 7
+        + xg * 30
+        + goals * 22
+        + assists * 12
+    )
+
+    creativity = clamp(
+        key_passes * 14
+        + assists * 18
+        + dribbles * 7
+        + pass_accuracy * 0.35
+    )
+
+    pressure = clamp(
+        tackles * 10
+        + interceptions * 8
+        + duels_won * 6
+        + pass_accuracy * 0.20
+    )
+
     momentum = clamp(
-        rating * 10
-        + shots * 3
-        + key_passes * 4
-        + dribbles * 3
-        + goals * 10
-        + assists * 7
+        rating * 8
+        + threat * 0.22
+        + creativity * 0.16
+        + pressure * 0.10
+        + goals * 12
+        + assists * 8
     )
 
     fatigue = clamp(
-        minutes * 0.85
+        minutes * 0.55
         + fouls * 4
         + tackles * 2
         + dribbles * 1.5
         + cards_yellow * 5
-        + cards_red * 15
+        + cards_red * 15,
+        5,
+        94
     )
 
+    stamina = clamp(100 - fatigue, 1, 100)
+
     scout_score = clamp(
-        rating * 12
-        + key_passes * 3
-        + dribbles * 2
-        + duels_won
+        rating * 8
+        + threat * 0.20
+        + creativity * 0.18
+        + pressure * 0.10
+        + momentum * 0.24
+        + stamina * 0.08
         + goals * 8
-        + assists * 6
-        + xg * 10
+        + assists * 5,
+        1,
+        99
+    )
+
+    impact_score = clamp(
+        scout_score * 0.35
+        + threat * 0.22
+        + creativity * 0.16
+        + pressure * 0.10
+        + momentum * 0.17,
+        1,
+        99
     )
 
     hidden_gem = (
-        rating >= 7.0
-        and dribbles >= 2
-        and key_passes >= 1
+        scout_score >= 65
+        and creativity >= 55
         and goals == 0
+        and assists == 0
     )
 
     danger_creator = (
-        shots >= 2
+        threat >= 70
+        or shots >= 2
         or key_passes >= 3
         or xg >= 0.35
         or goals >= 1
         or assists >= 1
     )
 
-    if scout_score >= 90:
-        level = "WORLD CLASS"
-    elif scout_score >= 75:
+    if scout_score >= 86:
         level = "ELITE"
-    elif scout_score >= 60:
+    elif scout_score >= 74:
         level = "TOP PLAYER"
+    elif scout_score >= 62:
+        level = "GOOD TALENT"
     else:
         level = "STANDARD"
 
-    if scout_score >= 82:
+    if impact_score >= 84:
         signal_type = "hot"
         signal = "Hot Player"
     elif danger_creator:
         signal_type = "danger"
         signal = "Danger Creator"
+    elif pressure >= 75:
+        signal_type = "pressure"
+        signal = "Pressure Trigger"
     elif hidden_gem:
         signal_type = "gem"
         signal = "Hidden Gem"
-    elif tackles >= 3 or duels_won >= 5:
-        signal_type = "pressure"
-        signal = "Pressure Trigger"
     else:
-        signal_type = "gem"
+        signal_type = "watch"
         signal = "AI Watch"
 
     return {
-        "id": player.get("id"),
+        "id": player.get("id") or player.get("player_id") or str(name).lower().replace(" ", "_"),
         "name": name,
-        "photo": player.get("photo"),
-        "team": player.get("team") or player.get("team_name") or player.get("squadra") or "Unknown",
+        "photo": player.get("photo") or (player.get("player") or {}).get("photo") if isinstance(player.get("player"), dict) else player.get("photo"),
+
+        "team": (
+            player.get("team")
+            if isinstance(player.get("team"), str)
+            else (player.get("team") or {}).get("name") if isinstance(player.get("team"), dict) else None
+        ) or player.get("team_name") or player.get("squadra") or "Unknown",
+
         "team_logo": player.get("team_logo"),
-        "role": player.get("role") or player.get("position"),
-        "position": player.get("position") or player.get("role"),
+        "role": role,
+        "position": role,
 
         "rating": round(rating, 1),
         "goals": goals,
         "assists": assists,
         "shots": shots,
+        "shots_on_target": shots_on_target,
         "key_passes": key_passes,
         "dribbles": dribbles,
         "tackles": tackles,
+        "interceptions": interceptions,
         "duels_won": duels_won,
         "minutes": minutes,
         "pass_accuracy": pass_accuracy,
         "xg": round(xg, 2),
 
-        "momentum": momentum,
-        "fatigue": fatigue,
-        "scout_score": scout_score,
-        "scoutScore": scout_score,
-        "threat": clamp(shots * 12 + key_passes * 10 + xg * 30 + goals * 20 + assists * 15),
-        "pressure": clamp(tackles * 10 + duels_won * 6 + pass_accuracy * 0.25),
+        "momentum": int(momentum),
+        "fatigue": int(fatigue),
+        "stamina": int(stamina),
+        "impact_score": int(impact_score),
+        "impact": int(impact_score),
+        "scout_score": int(scout_score),
+        "scoutScore": int(scout_score),
+        "threat": int(threat),
+        "danger": int(threat),
+        "creativity": int(creativity),
+        "creative_score": int(creativity),
+        "pressure": int(pressure),
+        "pressure_score": int(pressure),
         "keyPasses": key_passes,
 
         "hidden_gem": hidden_gem,
         "danger_creator": danger_creator,
         "level": level,
+        "signal_type": signal_type,
         "signalType": signal_type,
         "signal": signal,
+        "ai_signal": signal,
 
-        "real_data": bool(player.get("rating_api") or player.get("id")),
+        "real_data": bool(player.get("rating_api") or player.get("id") or player.get("player_id")),
+        "is_estimated": False,
+        "data_quality": "real_live_player",
+        "data_source": "api_football_live",
+        "source": "api_football_live",
+        "ai_summary": f"{name} monitorato da MatchIQ: segnale {signal}, impact {int(impact_score)} e threat {int(threat)}.",
         "generated_at": datetime.utcnow().isoformat()
     }
 
@@ -682,15 +769,25 @@ def get_cached_full_analysis(match_id: int):
 
        
 def build_real_scout_response(match_id: int = None):
+    """
+    Risposta Scout V6 compatibile con scout.html V5.5.
+    - Usa player reali quando disponibili.
+    - Se API-Football non fornisce players, genera profili ruolo stimati.
+    - Non restituisce mai players vuoto per match valido.
+    - Evita cache vuote vecchie.
+    """
     cache_key = f"scout_{match_id}"
-
     cached = SCOUT_PLAYERS_CACHE.get(cache_key)
 
     if cache_valid(cached, SCOUT_PLAYERS_CACHE_SECONDS):
         data = cached["data"].copy()
-        data["cache"] = True
-        data["cache_seconds"] = SCOUT_PLAYERS_CACHE_SECONDS
-        return data
+        cached_players = data.get("players", [])
+
+        # Non bloccare lo Scout con vecchie cache vuote.
+        if isinstance(cached_players, list) and len(cached_players) > 0:
+            data["cache"] = True
+            data["cache_seconds"] = SCOUT_PLAYERS_CACHE_SECONDS
+            return data
 
     match_data = {}
     players = []
@@ -701,15 +798,22 @@ def build_real_scout_response(match_id: int = None):
         try:
             match_data = get_match_live_data(match_id)
 
-            if "error" not in match_data:
-                real_players = match_data.get("players", [])
+            if isinstance(match_data, dict) and "error" not in match_data:
+                real_players = (
+                    match_data.get("players")
+                    or match_data.get("lineups")
+                    or match_data.get("player_statistics")
+                    or []
+                )
+
                 players = extract_players_for_scout(
                     real_players,
                     match_data=match_data
                 )
+
                 source_mode = "live_real_players" if players else "live_no_players"
             else:
-                error_message = match_data.get("error")
+                error_message = match_data.get("error") if isinstance(match_data, dict) else "match_data non valido"
 
         except Exception as e:
             error_message = str(e)
@@ -723,8 +827,8 @@ def build_real_scout_response(match_id: int = None):
         try:
             full = get_cached_full_analysis(match_id)
 
-            if "error" not in full:
-                match_data = full.get("match", match_data)
+            if isinstance(full, dict) and "error" not in full:
+                match_data = full.get("match", match_data) or match_data
 
                 players = extract_players_for_scout(
                     full.get("match", {}).get("players", []),
@@ -759,9 +863,11 @@ def build_real_scout_response(match_id: int = None):
     )
 
     league = match_data.get("league") or "Live"
-    minute = safe_int(match_data.get("minute", 0), 0)
+    minute = safe_int(match_data.get("minute", match_data.get("elapsed", 0)), 0)
+    status = match_data.get("status") or "LIVE"
 
     score_raw = match_data.get("score", {})
+
     if isinstance(score_raw, str):
         parts = score_raw.replace(" ", "").split("-")
         score = {
@@ -779,69 +885,31 @@ def build_real_scout_response(match_id: int = None):
     home_goals = safe_int(score.get("home", match_data.get("home_goals", 0)), 0)
     away_goals = safe_int(score.get("away", match_data.get("away_goals", 0)), 0)
 
-    def make_virtual_player(team, role, index, side):
+    def make_virtual_player(team, role_code, role_label, index, side):
         is_home = side == "home"
         team_goals = home_goals if is_home else away_goals
         opp_goals = away_goals if is_home else home_goals
 
         role_bonus = {
-            "Attaccante": 14,
-            "Regista": 12,
-            "Esterno": 10,
-            "Mezzala": 9,
-            "Difensore": 7,
-            "Portiere": 5
-        }.get(role, 6)
+            "ATT": 16,
+            "MID": 12,
+            "DEF": 8,
+            "GK": 5
+        }.get(role_code, 8)
 
         match_bonus = clamp((team_goals - opp_goals) * 8, -12, 18)
         minute_bonus = clamp(minute * 0.35, 0, 35)
 
-        base = 58 + role_bonus + match_bonus + minute_bonus - (index * 2)
-        scout_score = clamp(base, 45, 94)
+        scout_score = clamp(58 + role_bonus + match_bonus + minute_bonus - (index * 2), 45, 94)
+        threat = clamp((team_goals * 18) + (role_bonus * 2) + (minute * 0.25) - (index * 3), 5, 88)
+        creativity = clamp(role_bonus * 3 + minute * 0.18 + team_goals * 10 - index, 8, 86)
+        pressure = clamp(30 + minute * 0.22 + abs(team_goals - opp_goals) * 8 + (6 - index), 10, 90)
+        momentum = clamp(scout_score * 0.65 + threat * 0.2 + creativity * 0.15, 0, 99)
+        fatigue = clamp(minute * 0.55 + index * 3, 10, 88)
+        stamina = clamp(100 - fatigue, 0, 100)
+        impact_score = clamp(momentum * 0.55 + threat * 0.25 + creativity * 0.20, 1, 99)
 
-        threat = clamp(
-            (team_goals * 18)
-            + (role_bonus * 2)
-            + (minute * 0.25)
-            - (index * 3),
-            5,
-            88
-        )
-
-        creativity = clamp(
-            role_bonus * 3
-            + minute * 0.18
-            + team_goals * 10
-            - index,
-            8,
-            86
-        )
-
-        pressure = clamp(
-            30
-            + minute * 0.22
-            + abs(team_goals - opp_goals) * 8
-            + (6 - index),
-            10,
-            90
-        )
-
-        momentum = clamp(
-            scout_score * 0.65
-            + threat * 0.2
-            + creativity * 0.15,
-            0,
-            99
-        )
-
-        fatigue = clamp(
-            minute * 0.55
-            + index * 3,
-            10,
-            88
-        )
-
-        if scout_score >= 82:
+        if impact_score >= 82:
             signal_type = "hot"
             signal = "Hot Player"
             level = "ELITE"
@@ -854,26 +922,28 @@ def build_real_scout_response(match_id: int = None):
             signal = "Hidden Gem"
             level = "GOOD TALENT"
         else:
-            signal_type = "pressure"
+            signal_type = "watch"
             signal = "AI Watch"
             level = "STANDARD"
 
         return {
-            "id": f"virtual_{side}_{index}_{role.lower()}",
-            "name": f"{team} {role}",
+            "id": f"virtual_{side}_{index}_{role_code.lower()}",
+            "name": f"{team} {role_label}",
             "photo": None,
             "team": team,
             "team_logo": match_data.get("home_logo") if is_home else match_data.get("away_logo"),
-            "role": role,
-            "position": role,
+            "role": role_code,
+            "position": role_code,
 
             "rating": round(6.3 + scout_score / 40, 1),
             "goals": 0,
             "assists": 0,
             "shots": 0,
+            "shots_on_target": 0,
             "key_passes": 0,
             "dribbles": 0,
             "tackles": 0,
+            "interceptions": 0,
             "duels_won": 0,
             "minutes": minute,
             "pass_accuracy": 0,
@@ -881,11 +951,11 @@ def build_real_scout_response(match_id: int = None):
 
             "momentum": int(momentum),
             "fatigue": int(fatigue),
-            "stamina": clamp(100 - fatigue, 0, 100),
+            "stamina": int(stamina),
             "scout_score": int(scout_score),
             "scoutScore": int(scout_score),
-            "impact_score": int(momentum),
-            "impact": int(momentum),
+            "impact_score": int(impact_score),
+            "impact": int(impact_score),
             "threat": int(threat),
             "danger": int(threat),
             "creativity": int(creativity),
@@ -897,29 +967,39 @@ def build_real_scout_response(match_id: int = None):
             "hidden_gem": signal_type == "gem",
             "danger_creator": signal_type == "danger",
             "level": level,
+            "signal_type": signal_type,
             "signalType": signal_type,
             "signal": signal,
             "ai_signal": signal,
 
             "real_data": False,
+            "is_estimated": True,
             "data_quality": "fallback_role_profile",
+            "data_source": "matchiq_virtual_scout",
             "source": "matchiq_virtual_scout",
+            "ai_summary": f"Profilo ruolo stimato per {team}: {role_label}. Utile quando API-Football non fornisce player reali per campionati minori.",
             "generated_at": datetime.utcnow().isoformat()
         }
 
     if not players:
-        roles = ["Attaccante", "Regista", "Esterno", "Mezzala", "Difensore", "Portiere"]
+        role_plan = [
+            ("ATT", "Attaccante"),
+            ("MID", "Regista"),
+            ("MID", "Mezzala"),
+            ("DEF", "Difensore"),
+            ("GK", "Portiere"),
+        ]
 
         generated_players = []
 
-        for i, role in enumerate(roles[:5]):
+        for i, (role_code, role_label) in enumerate(role_plan):
             generated_players.append(
-                make_virtual_player(home, role, i, "home")
+                make_virtual_player(home, role_code, role_label, i, "home")
             )
 
-        for i, role in enumerate(roles[:5]):
+        for i, (role_code, role_label) in enumerate(role_plan):
             generated_players.append(
-                make_virtual_player(away, role, i, "away")
+                make_virtual_player(away, role_code, role_label, i, "away")
             )
 
         players = sorted(
@@ -936,10 +1016,18 @@ def build_real_scout_response(match_id: int = None):
         reverse=True
     )[:16]
 
-    scout = build_live_scout(
-        players=players,
-        match_data=match_data
-    )
+    try:
+        scout = build_live_scout(
+            players=players,
+            match_data=match_data
+        )
+    except Exception as e:
+        scout = {
+            "available": False,
+            "source": "scout_engine_exception",
+            "error": str(e),
+            "players": players
+        }
 
     if not isinstance(scout, dict):
         scout = {
@@ -948,7 +1036,7 @@ def build_real_scout_response(match_id: int = None):
             "players": players
         }
 
-    scout["available"] = SCOUT_ENGINE_AVAILABLE
+    scout["available"] = True
     scout["source"] = "scout_engine" if SCOUT_ENGINE_AVAILABLE else "fallback"
     scout["match_id"] = match_id
     scout["mode"] = "live" if match_id else "demo"
@@ -962,9 +1050,14 @@ def build_real_scout_response(match_id: int = None):
     scout["api_safe"] = True
     scout["players"] = players
     scout["total_players"] = len(players)
+    scout["events"] = scout.get("events", [])
     scout["error"] = error_message
+    scout["version"] = "6.0-scout-fallback"
 
     scout["match"] = {
+        "id": match_id,
+        "match_id": match_id,
+        "fixture_id": match_id,
         "home": home,
         "away": away,
         "home_logo": match_data.get("home_logo"),
@@ -973,8 +1066,11 @@ def build_real_scout_response(match_id: int = None):
             "home": home_goals,
             "away": away_goals
         },
+        "home_goals": home_goals,
+        "away_goals": away_goals,
         "minute": minute,
-        "status": match_data.get("status"),
+        "elapsed": minute,
+        "status": status,
         "league": league,
     }
 
@@ -987,13 +1083,15 @@ def build_real_scout_response(match_id: int = None):
         ),
         "total_players": len(players),
         "top_player": players[0].get("name") if players else None,
-        "avg_scout_score": round(
-            sum(p.get("scout_score", 0) for p in players) / len(players),
-            1
-        ) if players else 0
+        "avg_scout_score": round(sum(p.get("scout_score", 0) for p in players) / len(players), 1) if players else 0,
+        "avg_threat": round(sum(p.get("threat", 0) for p in players) / len(players), 1) if players else 0,
+        "avg_creativity": round(sum(p.get("creativity", 0) for p in players) / len(players), 1) if players else 0,
+        "avg_pressure": round(sum(p.get("pressure", 0) for p in players) / len(players), 1) if players else 0,
+        "avg_momentum": round(sum(p.get("momentum", 0) for p in players) / len(players), 1) if players else 0,
+        "avg_stamina": round(sum(p.get("stamina", 0) for p in players) / len(players), 1) if players else 0,
     }
 
-    if match_id:
+    if match_id and players:
         SCOUT_PLAYERS_CACHE[cache_key] = {
             "timestamp": time.time(),
             "data": scout
