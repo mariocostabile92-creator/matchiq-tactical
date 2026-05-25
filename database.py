@@ -14,11 +14,16 @@ Gestisce:
 - subscriptions base
 """
 
+import os
 import sqlite3
+import psycopg2
+import psycopg2.extras
 from datetime import datetime, date
 from pathlib import Path
 
 DB_PATH = Path(__file__).resolve().parent / "matchiq.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
+USE_POSTGRES = bool(DATABASE_URL)
 
 
 # =========================================================
@@ -72,10 +77,28 @@ def get_plan_limits(plan: str):
 # =========================================================
 
 def get_connection():
+
+    # =========================================
+    # POSTGRESQL (RAILWAY PRODUCTION)
+    # =========================================
+
+    if USE_POSTGRES:
+
+        conn = psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=psycopg2.extras.RealDictCursor
+        )
+
+        return conn
+
+    # =========================================
+    # SQLITE (LOCALE)
+    # =========================================
+
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
 
+    return conn
 
 def utc_now():
     return datetime.utcnow().isoformat()
@@ -764,4 +787,4 @@ def cancel_subscription(user_id: int):
 
     update_user_plan(user_id, "free")
 
-    return True
+    return TrueF
