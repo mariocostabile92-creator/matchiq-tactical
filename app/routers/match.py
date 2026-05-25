@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 
@@ -146,6 +148,64 @@ def pdf_report(match_id: int):
         }
 
     except Exception as e:
+        return {
+            "match_id": match_id,
+            "success": False,
+            "error": str(e)
+        }
+@router.get("/{match_id}/download-pdf")
+def download_pdf_report(
+    match_id: int,
+    user=Depends(get_optional_user_func)
+):
+    if not pdf_public_beta:
+        if not is_owner_or_paid_user_func(user):
+            enforce_premium_feature_func(
+                user=user,
+                feature="pdf_export"
+            )
+
+        enforce_guest_or_user_limit_func(
+            user=user,
+            feature="pdf_export",
+            endpoint="/api/match/download-pdf"
+        )
+
+    full = get_cached_full_analysis_func(match_id)
+
+    if "error" in full:
+        return full
+
+    try:
+        pdf = generate_match_pdf_func(full)
+        pdf_path = pdf.get("pdf_path") if isinstance(pdf, dict) else None
+
+        if not pdf_path:
+            return {
+                "match_id": match_id,
+                "success": False,
+                "error": "PDF path non trovato"
+            }
+
+        absolute_path = os.path.abspath(pdf_path)
+
+        if not os.path.exists(absolute_path):
+            return {
+                "match_id": match_id,
+                "success": False,
+                "error": "PDF non trovato"
+            }
+
+        filename = os.path.basename(absolute_path)
+
+        return FileResponse(
+            path=absolute_path,
+            media_type="application/pdf",
+            filename=filename
+        )
+
+    except Exception as e:
+        logger.exception("PDF DOWNLOAD ERROR")
         return {
             "match_id": match_id,
             "success": False,
