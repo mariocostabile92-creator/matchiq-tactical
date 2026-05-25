@@ -1294,14 +1294,40 @@ def download_pdf_report(
             "error": str(e)
         }
 
+# =========================================================
+# FRONTEND STATIC
+# =========================================================
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend"))
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
 print("FRONTEND_DIR:", FRONTEND_DIR)
+print("FRONTEND EXISTS:", os.path.exists(FRONTEND_DIR))
 
 if os.path.exists(FRONTEND_DIR):
+
+    @app.get("/")
+    def serve_home():
+        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+    @app.get("/scout.html")
+    def serve_scout():
+        return FileResponse(os.path.join(FRONTEND_DIR, "scout.html"))
+
+    @app.get("/match.html")
+    def serve_match():
+        return FileResponse(os.path.join(FRONTEND_DIR, "match.html"))
+
+    @app.get("/login.html")
+    def serve_login():
+        return FileResponse(os.path.join(FRONTEND_DIR, "login.html"))
+
+    @app.get("/register.html")
+    def serve_register():
+        return FileResponse(os.path.join(FRONTEND_DIR, "register.html"))
+
     app.mount(
         "/",
-        StaticFiles(directory=FRONTEND_DIR, html=True),
+        StaticFiles(directory=FRONTEND_DIR),
         name="frontend"
     )
