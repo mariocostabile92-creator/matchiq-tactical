@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+import logging
 from datetime import datetime
 
 from fastapi import FastAPI, Query, Depends
@@ -37,6 +38,9 @@ from usage_guard import (
     attach_usage_info,
     build_account_limits_response
 )
+
+logger = logging.getLogger("matchiq")
+logging.basicConfig(level=logging.INFO)
 
 try:
     from scout_engine import build_live_scout
@@ -88,7 +92,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.getenv(
+        "CORS_ORIGINS",
+        "https://matchiq-tactical-production.up.railway.app,http://127.0.0.1:8000,http://localhost:8000"
+    ).split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -150,7 +157,7 @@ def background_refresh_match(match_id):
 
     try:
 
-        print(f"[BACKGROUND REFRESH] {match_id}")
+        logger.info("[BACKGROUND REFRESH] %s", match_id)
 
         data = build_full_analysis(match_id)
 
@@ -161,11 +168,11 @@ def background_refresh_match(match_id):
                 "data": data
             }
 
-            print(f"[CACHE UPDATED] {match_id}")
+            logger.info("[CACHE UPDATED] %s", match_id)
 
     except Exception as e:
 
-        print("BACKGROUND REFRESH ERROR:", e)
+        logger.exception("BACKGROUND REFRESH ERROR")
 
 
 def launch_background_refresh(match_id):
@@ -185,7 +192,7 @@ def launch_background_refresh(match_id):
 
     except Exception as e:
 
-        print("THREAD ERROR:", e)
+        logger.exception("THREAD ERROR")
 
 
 
@@ -1403,25 +1410,49 @@ def live_matches(top_only: bool = Query(False)):
         }
 
 
-@app.get("/api/scout/live")
-def api_scout_live(match_id: int = Query(None)):
-    """
-    Scout Live pubblico temporaneo per beta/test online.
+SCOUT_PUBLIC_BETA = os.getenv("SCOUT_PUBLIC_BETA", "1") == "1"
 
-    Nota: non richiede login per permettere al frontend scout.html
-    di funzionare subito in produzione durante la fase beta.
-    Quando attiverai Stripe/Login definitivo, rimetteremo il guard premium.
+
+@app.get("/api/scout/live")
+def api_scout_live(
+    match_id: int = Query(None),
+    user=Depends(get_optional_user)
+):
     """
+    Scout Live.
+
+    In beta resta pubblico se SCOUT_PUBLIC_BETA=1.
+    In produzione imposta SCOUT_PUBLIC_BETA=0 per richiedere piano Scout.
+    """
+    if not SCOUT_PUBLIC_BETA:
+        enforce_premium_feature(user, "scout")
+        enforce_guest_or_user_limit(
+            user=user,
+            feature="scout",
+            endpoint="/api/scout/live"
+        )
+
     return build_real_scout_response(match_id=match_id)
 
 
 @app.get("/api/scout-live")
-def api_scout_live_alias(match_id: int = Query(None)):
+def api_scout_live_alias(
+    match_id: int = Query(None),
+    user=Depends(get_optional_user)
+):
     """
     Alias compatibile con scout.html.
     Ritorna sempre match + players, inclusi fallback virtual roles
     se API-Football non fornisce giocatori reali.
     """
+    if not SCOUT_PUBLIC_BETA:
+        enforce_premium_feature(user, "scout")
+        enforce_guest_or_user_limit(
+            user=user,
+            feature="scout",
+            endpoint="/api/scout-live"
+        )
+
     return build_real_scout_response(match_id=match_id)
 
 
@@ -1778,8 +1809,8 @@ def download_pdf_report(
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
-print("FRONTEND_DIR:", FRONTEND_DIR)
-print("FRONTEND EXISTS:", os.path.exists(FRONTEND_DIR))
+logger.info("FRONTEND_DIR: %s", FRONTEND_DIR)
+logger.info("FRONTEND EXISTS: %s", os.path.exists(FRONTEND_DIR))
 
 if os.path.exists(FRONTEND_DIR):
 
