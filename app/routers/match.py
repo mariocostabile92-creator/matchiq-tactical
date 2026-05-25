@@ -129,3 +129,25 @@ def future_prediction_analysis(match_id: int):
         "match_id": match_id,
         "future_prediction": full["future_prediction"]
     }
+@router.get("/{match_id}/pdf-report")
+def pdf_report(match_id: int):
+    full = get_cached_full_analysis_func(match_id)
+
+    if "error" in full:
+        return full
+
+    try:
+        pdf = generate_match_pdf_func(full)
+
+        return {
+            "match_id": match_id,
+            "success": True,
+            "pdf_report": pdf
+        }
+
+    except Exception as e:
+        return {
+            "match_id": match_id,
+            "success": False,
+            "error": str(e)
+        }

@@ -575,27 +575,6 @@ def account_limits(user=Depends(get_optional_user)):
 
 
 
-@app.get("/api/match/{match_id}/pdf-report")
-def pdf_report(match_id: int):
-    full = get_cached_full_analysis(match_id)
-
-    if "error" in full:
-        return full
-
-    try:
-        pdf = generate_match_pdf(full)
-        return {
-            "match_id": match_id,
-            "success": True,
-            "pdf_report": pdf
-        }
-
-    except Exception as e:
-        return {
-            "match_id": match_id,
-            "success": False,
-            "error": str(e)
-        }
 
 
 @app.get("/api/match/{match_id}/download-pdf")
