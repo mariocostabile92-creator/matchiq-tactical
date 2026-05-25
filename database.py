@@ -116,87 +116,171 @@ def init_db():
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            plan TEXT NOT NULL DEFAULT 'free',
-            is_active INTEGER NOT NULL DEFAULT 1,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-    """)
+    if USE_POSTGRES:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                plan TEXT NOT NULL DEFAULT 'free',
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
 
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS saved_matches (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            match_id INTEGER NOT NULL,
-            home TEXT,
-            away TEXT,
-            league TEXT,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS saved_matches (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                match_id INTEGER NOT NULL,
+                home TEXT,
+                away TEXT,
+                league TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
 
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS saved_players (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            player_name TEXT NOT NULL,
-            team TEXT,
-            role TEXT,
-            notes TEXT,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS saved_players (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                player_name TEXT NOT NULL,
+                team TEXT,
+                role TEXT,
+                notes TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
 
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS api_usage (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            endpoint TEXT NOT NULL,
-            feature TEXT NOT NULL,
-            usage_date TEXT NOT NULL,
-            count INTEGER NOT NULL DEFAULT 1,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS api_usage (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                endpoint TEXT NOT NULL,
+                feature TEXT NOT NULL,
+                usage_date TEXT NOT NULL,
+                count INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
 
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS subscriptions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            plan TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'active',
-            provider TEXT DEFAULT 'manual',
-            provider_customer_id TEXT,
-            provider_subscription_id TEXT,
-            current_period_start TEXT,
-            current_period_end TEXT,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS subscriptions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                plan TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'active',
+                provider TEXT DEFAULT 'manual',
+                provider_customer_id TEXT,
+                provider_subscription_id TEXT,
+                current_period_start TEXT,
+                current_period_end TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
 
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS scout_reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            match_id INTEGER,
-            title TEXT,
-            report_type TEXT DEFAULT 'scout',
-            payload TEXT,
-            created_at TEXT NOT NULL,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS scout_reports (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                match_id INTEGER,
+                title TEXT,
+                report_type TEXT DEFAULT 'scout',
+                payload TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+    else:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                plan TEXT NOT NULL DEFAULT 'free',
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS saved_matches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                match_id INTEGER NOT NULL,
+                home TEXT,
+                away TEXT,
+                league TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS saved_players (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                player_name TEXT NOT NULL,
+                team TEXT,
+                role TEXT,
+                notes TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS api_usage (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                endpoint TEXT NOT NULL,
+                feature TEXT NOT NULL,
+                usage_date TEXT NOT NULL,
+                count INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS subscriptions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                plan TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'active',
+                provider TEXT DEFAULT 'manual',
+                provider_customer_id TEXT,
+                provider_subscription_id TEXT,
+                current_period_start TEXT,
+                current_period_end TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS scout_reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                match_id INTEGER,
+                title TEXT,
+                report_type TEXT DEFAULT 'scout',
+                payload TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
 
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_api_usage_user_feature_date
