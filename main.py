@@ -633,17 +633,7 @@ def future_prediction_analysis(match_id: int):
     }
 
 
-@app.get("/api/match/{match_id}/xg")
-def xg_analysis(match_id: int):
-    full = get_cached_full_analysis(match_id)
 
-    if "error" in full:
-        return full
-
-    return {
-        "match_id": match_id,
-        "xg_analysis": full["xg_analysis"]
-    }
 
 
 @app.get("/api/match/{match_id}/pdf-report")

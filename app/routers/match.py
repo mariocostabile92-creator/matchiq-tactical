@@ -52,3 +52,14 @@ def win_probability_analysis(match_id: int):
         "match_id": match_id,
         "win_probability": full["win_probability"]
     }
+@router.get("/{match_id}/xg")
+def xg_analysis(match_id: int):
+    full = get_cached_full_analysis_func(match_id)
+
+    if "error" in full:
+        return full
+
+    return {
+        "match_id": match_id,
+        "xg_analysis": full["xg_analysis"]
+    }
