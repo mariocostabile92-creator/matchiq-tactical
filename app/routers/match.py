@@ -30,3 +30,14 @@ def player_ratings(match_id: int):
         "match_id": match_id,
         "players_analysis": full["players_analysis"]
     }
+@router.get("/{match_id}/pressure")
+def pressure_analysis(match_id: int):
+    full = get_cached_full_analysis_func(match_id)
+
+    if "error" in full:
+        return full
+
+    return {
+        "match_id": match_id,
+        "pressure_engine": full["pressure_engine"]
+    }
