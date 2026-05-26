@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MatchIQ Scout V6.2 Stable</title>
+  <title>MatchIQ Scout V6.3 Storage</title>
 
   <link rel="stylesheet" href="css/scout.css">
 
   <script src="js/scout-state.js"></script>
   <script src="js/scout-normalizers.js"></script>
   <script src="js/scout-api.js"></script>
+  <script src="js/scout-storage.js"></script>
 </head>
 
 <body>
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
-      <strong>Caricamento Scout V6.2 STABLE...</strong>
+      <strong>Caricamento Scout V6.3 STORAGE...</strong>
       <p style="color:var(--muted);margin-top:6px;font-size:13px;">Live sync dashboard · Metriche stabili · Release-ready</p>
     </div>
   </div>
@@ -24,14 +25,14 @@
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>MatchIQ Scout V6.2 STABLE</h1>
+        <h1>MatchIQ Scout V6.3 STORAGE</h1>
         <div class="subtitle">Real Players · Live Sync · Threat · Creativity · Pressure · Impact</div>
       </div>
 
       <div class="actions">
         <button class="btn" onclick="goDashboard()">← Dashboard</button>
         <div class="pill pill-live"><span class="dot"></span> REAL PLAYERS</div>
-        <div class="pill pill-clean">V6.2 STABLE</div>
+        <div class="pill pill-clean">V6.3 STORAGE</div>
         <div class="pill pill-api" id="apiSafePill">API SAFE</div>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
         <button class="btn btn-green" onclick="exportScoutReport()">Export report</button>
@@ -39,7 +40,7 @@
       </div>
     </header>
 
-    <div class="ticker" id="tickerText">MatchIQ Scout V6.2 · caricamento dati...</div>
+    <div class="ticker" id="tickerText">MatchIQ Scout V6.3 · caricamento dati...</div>
     <div class="notice" id="noticeBox"></div>
 
     <main class="layout">
@@ -169,7 +170,7 @@
         </div>
 
         <div class="pro-card">
-          <h3>Radar Performance <span>V6.2</span></h3>
+          <h3>Radar Performance <span>V6.3</span></h3>
           <div class="radar-wrap"><svg class="radar" viewBox="0 0 300 300" id="radarSvg"></svg></div>
         </div>
 
@@ -204,7 +205,7 @@
         </div>
 
         <div class="pro-card" style="grid-column:1/-1;">
-          <h3>Azioni Scout <span>V6.2 STABLE</span></h3>
+          <h3>Azioni Scout <span>V6.3 STORAGE</span></h3>
           <div class="actions">
             <button class="btn btn-green" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
             <button class="btn" onclick="exportOpenPlayerReport()">Export player report</button>
@@ -317,7 +318,7 @@ function renderPlayers(){
   const box = document.getElementById("players");
 
   if(!state.hasRealPlayers){
-    box.innerHTML = `<div class="empty"><strong>Giocatori reali non disponibili</strong>Scout V6.2 legge solo data.players dello schema clean.</div>`;
+    box.innerHTML = `<div class="empty"><strong>Giocatori reali non disponibili</strong>Scout V6.3 legge solo data.players dello schema clean.</div>`;
     return;
   }
 
@@ -388,7 +389,7 @@ function renderTicker(){
   const m = getMatch();
 
   if(!m){
-    document.getElementById("tickerText").textContent = "MatchIQ Scout V6.2 · nessuna partita live ricevuta";
+    document.getElementById("tickerText").textContent = "MatchIQ Scout V6.3 · nessuna partita live ricevuta";
     return;
   }
 
@@ -788,155 +789,6 @@ function aiComment(p){
   return `${p.name} è in monitoraggio live. Profilo stabile con margine di crescita.`;
 }
 
-function toggleWatchlistById(id){
-  const p = state.players.find(x => String(x.id) === String(id));
-  if(!p) return;
-
-  if(isWatched(id)){
-    removeWatchlist(id);
-    toast("Rimosso dalla watchlist",p.name);
-  }else{
-    addWatchlist(p);
-    toast("Aggiunto alla watchlist",p.name);
-  }
-  renderAll();
-}
-
-function addOpenPlayerToWatchlist(){
-  const p = state.players.find(x => String(x.id) === String(state.openPlayerId));
-  if(!p) return;
-  addWatchlist(p);
-  renderAll();
-  renderModal();
-  toast("Aggiunto alla watchlist",p.name);
-}
-
-function removeOpenPlayerFromWatchlist(){
-  if(!state.openPlayerId) return;
-  removeWatchlist(state.openPlayerId);
-  renderAll();
-  renderModal();
-}
-
-function addWatchlist(p){
-  if(isWatched(p.id)) return;
-  state.watchlist.push({
-    id:p.id,
-    name:p.name,
-    team:p.team,
-    role:p.role,
-    scout_score:p.scout_score,
-    threat:p.threat,
-    creativity:p.creativity,
-    pressure:p.pressure,
-    momentum:p.momentum,
-    signal:p.signal,
-    data_source:p.data_source
-  });
-  saveWatchlist();
-}
-
-function removeWatchlist(id){
-  state.watchlist = state.watchlist.filter(p => String(p.id) !== String(id));
-  saveWatchlist();
-}
-
-function clearWatchlist(){
-  state.watchlist = [];
-  saveWatchlist();
-  renderAll();
-  toast("Watchlist svuotata","Tutti i giocatori salvati sono stati rimossi.");
-}
-
-function isWatched(id){
-  return state.watchlist.some(p => String(p.id) === String(id));
-}
-
-function loadWatchlist(){
-  try{return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");}
-  catch{return [];}
-}
-
-function saveWatchlist(){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(state.watchlist));
-}
-
-function exportWatchlist(){
-  if(!state.watchlist.length){toast("Watchlist vuota","Non ci sono player da esportare.");return;}
-
-  const rows = [
-    "Nome;Squadra;Ruolo;Score;Threat;Creativity;Pressure;Momentum;Signal;Source",
-    ...state.watchlist.map(p => `${csv(p.name)};${csv(p.team)};${csv(p.role)};${Math.round(p.scout_score)};${Math.round(p.threat)};${Math.round(p.creativity)};${Math.round(p.pressure)};${Math.round(p.momentum)};${csv(p.signal)};${csv(p.data_source)}`)
-  ];
-
-  downloadText("matchiq_watchlist_v62_stable.csv",rows.join("\n"));
-}
-
-function exportScoutReport(){
-  if(!state.players.length){toast("Nessun dato","Non ci sono player reali da esportare.");return;}
-
-  const m = getMatch();
-
-  const report = [
-    "MATCHIQ SCOUT V6.2 STABLE REPORT",
-    "=================================",
-    "",
-    `Match: ${m ? `${m.home} - ${m.away}` : "--"}`,
-    `Minuto: ${m ? m.minute + "'" : "--"}`,
-    `Generato: ${new Date().toLocaleString("it-IT")}`,
-    "",
-    "TOP PLAYERS",
-    "-----------",
-    ...state.players.map((p,i) => `${i+1}. ${p.name} | ${p.team} | ${p.role} | Score ${Math.round(p.scout_score)} | Threat ${Math.round(p.threat)} | Creativity ${Math.round(p.creativity)} | Pressure ${Math.round(p.pressure)} | ${p.signal} | ${p.data_source}`),
-    "",
-    "TIMELINE",
-    "--------",
-    ...(state.events.length ? state.events.map(e => `${e.minute}' ${e.label} - ${e.title}: ${e.desc}`) : ["Nessun evento disponibile."])
-  ].join("\n");
-
-  downloadText("matchiq_scout_report_v62_stable.txt",report);
-}
-
-function exportOpenPlayerReport(){
-  const p = state.players.find(x => String(x.id) === String(state.openPlayerId));
-  if(!p) return;
-
-  const report = [
-    "MATCHIQ PLAYER SCOUT REPORT V6.2 STABLE",
-    "=======================================",
-    "",
-    `Giocatore: ${p.name}`,
-    `Squadra: ${p.team}`,
-    `Ruolo: ${p.role}`,
-    `Data source: ${p.data_source}`,
-    `Data quality: ${p.data_quality}`,
-    "",
-    `Scout Score: ${Math.round(p.scout_score)}`,
-    `Impact Score: ${Math.round(p.impact_score)}`,
-    `Threat: ${Math.round(p.threat)}%`,
-    `Creativity: ${Math.round(p.creativity)}%`,
-    `Pressure: ${Math.round(p.pressure)}%`,
-    `Momentum: ${Math.round(p.momentum)}%`,
-    `Stamina: ${Math.round(p.stamina)}%`,
-    "",
-    p.ai_summary || aiComment(p)
-  ].join("\n");
-
-  downloadText(`matchiq_player_${safeFilename(p.name)}_v62_stable.txt`,report);
-}
-
-function downloadText(filename,text){
-  const blob = new Blob([text],{type:"text/plain;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast("Export completato",filename);
-}
 
 function updateCache(){
   if(!state.selectedMatchId) return;
