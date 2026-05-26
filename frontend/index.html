@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical V7.0 Launch Beta</title>
+<title>MatchIQ Tactical V7.1 Beta Access</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -39,6 +39,7 @@ body{
 }
 .btn.dark{background:rgba(255,255,255,.08)}
 .btn.green{background:linear-gradient(135deg,#00c980,#2f6bff)}
+.btn.gold{background:linear-gradient(135deg,#f7b733,#fc4a1a)}
 .account{
     border:1px solid rgba(255,255,255,.1);
     background:rgba(255,255,255,.06);
@@ -79,7 +80,7 @@ body{
     display:grid;
     grid-template-columns:1.4fr .6fr;
     gap:22px;
-    margin-bottom:34px;
+    margin-bottom:24px;
 }
 .card{
     background:rgba(255,255,255,.055);
@@ -111,7 +112,37 @@ body{
 .section-title{
     font-size:28px;
     font-weight:1000;
-    margin:24px 0 18px;
+    margin:28px 0 18px;
+}
+.launch-note{
+    color:#9fb2e7;
+    font-size:13px;
+    line-height:1.6;
+    margin-top:10px;
+}
+.beta-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:16px;
+    margin:24px 0 30px;
+}
+.beta-card{
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:24px;
+    padding:22px;
+}
+.beta-card h3{
+    font-size:18px;
+    margin-bottom:10px;
+}
+.beta-card p{
+    color:#aebee7;
+    line-height:1.6;
+    font-size:14px;
+}
+.beta-card strong{
+    color:#fff;
 }
 .matches-grid{
     display:grid;
@@ -170,12 +201,6 @@ body{
     background:rgba(255,70,70,.12);
     border:1px solid rgba(255,70,70,.25);
 }
-.launch-note{
-    color:#9fb2e7;
-    font-size:13px;
-    line-height:1.6;
-    margin-top:10px;
-}
 @media(max-width:900px){
     .hero{grid-template-columns:1fr}
     .topbar{flex-direction:column;align-items:flex-start;gap:16px}
@@ -188,13 +213,14 @@ body{
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">AI Football Intelligence Platform · V7.0 Launch Beta</div>
+        <div class="subtitle">AI Football Intelligence Platform · V7.1 Beta Access</div>
     </div>
 
     <div class="actions">
         <button class="btn" onclick="loadMatches(true)">TOP LEAGUES</button>
         <button class="btn dark" onclick="loadMatches(false)">ALL LIVE</button>
         <button class="btn green" onclick="openScoutHome()">🧠 OPEN SCOUT BETA</button>
+        <button class="btn gold" onclick="requestBetaAccess()">RICHIEDI ACCESSO</button>
 
         <div class="account">
             <div id="userEmail">mario.costabile92@outlook.it</div>
@@ -211,26 +237,27 @@ body{
         <div class="status-card"><span class="dot"></span>LIVE ENGINE ACTIVE</div>
         <div class="status-card"><span class="dot"></span>API FOOTBALL CONNECTED</div>
         <div class="status-card"><span class="dot"></span>AI TACTICAL ENGINE ONLINE</div>
-        <div class="status-card"><span class="dot"></span>LAUNCH BETA ACTIVE</div>
+        <div class="status-card"><span class="dot"></span>BETA ACCESS ACTIVE</div>
     </div>
 
     <div class="hero">
         <div class="card">
-            <span class="beta-badge">V7.0 LAUNCH BETA</span>
-            <h1>Live Tactical Intelligence for Football</h1>
+            <span class="beta-badge">V7.1 BETA ACCESS</span>
+            <h1>AI Football Intelligence per chi vuole leggere la partita prima degli altri</h1>
             <p>
-                Analizza partite live, segnali tattici, momentum, pressure engine,
-                player ratings e Scout Mode in tempo reale. MatchIQ trasforma i dati live
-                in insight operativi per scouting, analisi e decisioni rapide.
+                MatchIQ analizza partite live, momentum, pressure engine, segnali tattici,
+                player ratings e Scout Mode in tempo reale. Una piattaforma pensata per
+                scouting, analisi live, creator sportivi e decisioni rapide basate sui dati.
             </p>
 
             <div class="hero-actions">
                 <button class="btn green" onclick="openScoutHome()">Avvia Scout Beta</button>
+                <button class="btn gold" onclick="requestBetaAccess()">Richiedi accesso Beta</button>
                 <button class="btn dark" onclick="loadMatches(false)">Aggiorna partite live</button>
             </div>
 
             <div class="launch-note">
-                Versione beta privata: moduli live, watchlist, export report e schede player PRO attivi.
+                Beta privata attiva: moduli live, watchlist, export report e schede player PRO già disponibili.
             </div>
         </div>
 
@@ -238,6 +265,36 @@ body{
             <div class="league">PARTITE LIVE MONITORATE</div>
             <div class="stat-number" id="liveCount">--</div>
             <p>Match disponibili in tempo reale.</p>
+        </div>
+    </div>
+
+    <div class="beta-grid">
+        <div class="beta-card">
+            <h3>🎯 Per analisti e scout</h3>
+            <p>
+                Monitora player, segnali AI, impatto live, threat e creativity in un’unica dashboard.
+            </p>
+        </div>
+
+        <div class="beta-card">
+            <h3>📊 Per creator sportivi</h3>
+            <p>
+                Trova insight rapidi per contenuti, live reaction, analisi pre/post match e report.
+            </p>
+        </div>
+
+        <div class="beta-card">
+            <h3>🚀 Free / Pro in arrivo</h3>
+            <p>
+                La beta prepara i futuri piani <strong>Free</strong> e <strong>Pro</strong> con funzioni avanzate.
+            </p>
+        </div>
+
+        <div class="beta-card">
+            <h3>📩 Accesso beta</h3>
+            <p>
+                Vuoi provarlo o ricevere aggiornamenti? Richiedi accesso e lascia un contatto.
+            </p>
         </div>
     </div>
 
@@ -252,8 +309,8 @@ body{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10014";
-const SCOUT_VERSION_LABEL = "SCOUT V7.0 Launch Beta";
+const APP_VERSION = "10015";
+const SCOUT_VERSION_LABEL = "SCOUT V7.1 Beta Access";
 
 function forceOwnerPro(){
     const user = {
@@ -269,6 +326,14 @@ function forceOwnerPro(){
 function logout(){
     localStorage.removeItem("matchiq_auth_user");
     location.href = "login.html";
+}
+
+function requestBetaAccess(){
+    const subject = encodeURIComponent("Richiesta accesso Beta MatchIQ Tactical");
+    const body = encodeURIComponent(
+        "Ciao Mario,%0D%0A%0D%0Avorrei richiedere accesso alla beta di MatchIQ Tactical.%0D%0A%0D%0ANome:%0D%0AEmail:%0D%0AProfilo: scout / analista / creator / altro%0D%0A"
+    );
+    window.location.href = `mailto:${OWNER_EMAIL}?subject=${subject}&body=${body}`;
 }
 
 function safe(v,d="--"){
@@ -365,7 +430,7 @@ function openScoutHome(){
 }
 
 function setVersionLabels(){
-    document.title = "MatchIQ Tactical V7.0 Launch Beta";
+    document.title = "MatchIQ Tactical V7.1 Beta Access";
 }
 
 forceOwnerPro();
