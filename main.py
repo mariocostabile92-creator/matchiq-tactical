@@ -4,6 +4,8 @@ import threading
 import logging
 import csv
 import io
+import random
+import string
 from app.routers.live import create_live_router
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
@@ -133,7 +135,7 @@ app.include_router(payments_router)
 
 
 # =========================================================
-# BETA REQUESTS - V7.6 MINI CRM SAFE
+# BETA REQUESTS - V7.8 BETA ACCESS CODE SAFE
 # =========================================================
 
 VALID_LEAD_STATUSES = [
@@ -156,15 +158,26 @@ class BetaRequestPayload(BaseModel):
 class BetaLeadUpdatePayload(BaseModel):
     status: Optional[str] = None
     internal_note: Optional[str] = None
+    beta_code: Optional[str] = None
 
 
 def get_database_url():
     return os.getenv("DATABASE_URL")
 
 
+def generate_beta_code():
+    """
+    Genera codice beta leggibile.
+    Esempio: MATCHIQ-BETA-7F3K9
+    """
+    chars = string.ascii_uppercase + string.digits
+    suffix = "".join(random.choice(chars) for _ in range(5))
+    return f"MATCHIQ-BETA-{suffix}"
+
+
 def normalize_beta_row(row):
     """
-    Mantiene compatibilità con admin-beta.html V7.5:
+    Mantiene compatibilità con admin-beta.html:
     - requests[]
     - plan
     - reason
@@ -173,6 +186,7 @@ def normalize_beta_row(row):
     - status
     - internal_note
     - updated_at
+    - beta_code
     """
     if not row:
         return {}
@@ -190,14 +204,13 @@ def normalize_beta_row(row):
 
     item["status"] = item.get("status") or "Nuovo"
     item["internal_note"] = item.get("internal_note") or ""
+    item["beta_code"] = item.get("beta_code") or ""
 
     return item
 
 
 def validate_lead_status(status: str):
-    if status not in VALID_LEAD_STATUSES:
-        return False
-    return True
+    return status in VALID_LEAD_STATUSES
 
 
 def ensure_beta_requests_table():
@@ -242,6 +255,11 @@ def ensure_beta_requests_table():
         """)
 
         cur.execute("""
+            ALTER TABLE beta_requests
+            ADD COLUMN IF NOT EXISTS beta_code TEXT DEFAULT '';
+        """)
+
+        cur.execute("""
             UPDATE beta_requests
             SET status = 'Nuovo'
             WHERE status IS NULL OR status = '';
@@ -260,6 +278,12 @@ def ensure_beta_requests_table():
         """)
 
         cur.execute("""
+            UPDATE beta_requests
+            SET beta_code = ''
+            WHERE beta_code IS NULL;
+        """)
+
+        cur.execute("""
             CREATE INDEX IF NOT EXISTS idx_beta_requests_email
             ON beta_requests(email);
         """)
@@ -274,10 +298,15 @@ def ensure_beta_requests_table():
             ON beta_requests(status);
         """)
 
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_beta_requests_beta_code
+            ON beta_requests(beta_code);
+        """)
+
         conn.commit()
         cur.close()
 
-        logger.info("[BETA REQUEST] Tabella beta_requests pronta V7.6 Mini CRM")
+        logger.info("[BETA REQUEST] Tabella beta_requests pronta V7.8 Beta Access Code")
         return True
 
     except Exception:
@@ -308,8 +337,8 @@ def save_beta_request_to_db(payload: BetaRequestPayload):
 
         cur.execute("""
             INSERT INTO beta_requests
-            (name, email, profile, plan, reason, source, status, internal_note, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Nuovo', '', NOW(), NOW())
+            (name, email, profile, plan, reason, source, status, internal_note, beta_code, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Nuovo', '', '', NOW(), NOW())
             RETURNING
                 id,
                 name,
@@ -320,6 +349,7 @@ def save_beta_request_to_db(payload: BetaRequestPayload):
                 source,
                 status,
                 internal_note,
+                beta_code,
                 created_at,
                 updated_at;
         """, (
@@ -328,7 +358,7 @@ def save_beta_request_to_db(payload: BetaRequestPayload):
             payload.profile.strip(),
             (payload.plan or "Beta gratuita").strip(),
             (payload.reason or "").strip(),
-            "matchiq_v76_mini_crm"
+            "matchiq_v78_beta_access_code"
         ))
 
         row = cur.fetchone()
@@ -446,10 +476,11 @@ def list_beta_requests(
                     profile ILIKE %s OR
                     plan ILIKE %s OR
                     COALESCE(reason, '') ILIKE %s OR
-                    COALESCE(internal_note, '') ILIKE %s
+                    COALESCE(internal_note, '') ILIKE %s OR
+                    COALESCE(beta_code, '') ILIKE %s
                 )
             """)
-            params.extend([q, q, q, q, q, q])
+            params.extend([q, q, q, q, q, q, q])
 
         where_sql = ""
         if where:
@@ -468,6 +499,7 @@ def list_beta_requests(
                 source,
                 status,
                 internal_note,
+                beta_code,
                 created_at,
                 updated_at
             FROM beta_requests
@@ -542,6 +574,10 @@ def update_beta_request(
             fields.append("internal_note = %s")
             params.append((payload.internal_note or "").strip())
 
+        if payload.beta_code is not None:
+            fields.append("beta_code = %s")
+            params.append((payload.beta_code or "").strip().upper())
+
         if not fields:
             return {
                 "ok": False,
@@ -568,6 +604,7 @@ def update_beta_request(
                 source,
                 status,
                 internal_note,
+                beta_code,
                 created_at,
                 updated_at;
         """, params)
@@ -616,6 +653,141 @@ def update_beta_request_put(
     user=Depends(get_optional_user)
 ):
     return update_beta_request(lead_id, payload, user)
+
+
+@app.post("/api/beta-requests/{lead_id}/generate-code")
+def generate_beta_code_for_lead(
+    lead_id: int,
+    user=Depends(get_optional_user)
+):
+    """
+    Genera e salva codice beta per un lead.
+    Se il lead ha già un codice, lo mantiene e lo restituisce.
+    """
+    if not is_owner_or_paid_user(user):
+        enforce_premium_feature(user, "owner")
+
+    database_url = get_database_url()
+
+    if not database_url:
+        return {
+            "ok": False,
+            "message": "DATABASE_URL non configurato"
+        }
+
+    conn = None
+
+    try:
+        ensure_beta_requests_table()
+
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("""
+            SELECT
+                id,
+                name,
+                email,
+                profile,
+                plan,
+                reason,
+                source,
+                status,
+                internal_note,
+                beta_code,
+                created_at,
+                updated_at
+            FROM beta_requests
+            WHERE id = %s;
+        """, (lead_id,))
+
+        row = cur.fetchone()
+
+        if not row:
+            cur.close()
+            return {
+                "ok": False,
+                "message": "Lead non trovato"
+            }
+
+        current_code = (row.get("beta_code") or "").strip()
+
+        if current_code:
+            lead = normalize_beta_row(row)
+            cur.close()
+            return {
+                "ok": True,
+                "message": "Lead già associato a un codice beta",
+                "beta_code": current_code,
+                "lead": lead,
+                "request": lead,
+                "data": lead
+            }
+
+        code = generate_beta_code()
+
+        # Evita collisioni in modo semplice
+        for _ in range(10):
+            cur.execute("""
+                SELECT id
+                FROM beta_requests
+                WHERE beta_code = %s
+                LIMIT 1;
+            """, (code,))
+            exists = cur.fetchone()
+
+            if not exists:
+                break
+
+            code = generate_beta_code()
+
+        cur.execute("""
+            UPDATE beta_requests
+            SET beta_code = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING
+                id,
+                name,
+                email,
+                profile,
+                plan,
+                reason,
+                source,
+                status,
+                internal_note,
+                beta_code,
+                created_at,
+                updated_at;
+        """, (code, lead_id))
+
+        updated = cur.fetchone()
+        conn.commit()
+        cur.close()
+
+        lead = normalize_beta_row(updated)
+
+        return {
+            "ok": True,
+            "message": "Codice beta generato",
+            "beta_code": code,
+            "lead": lead,
+            "request": lead,
+            "data": lead
+        }
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        logger.exception("[BETA REQUEST] Errore generazione beta code")
+        return {
+            "ok": False,
+            "message": str(e)
+        }
+
+    finally:
+        if conn:
+            conn.close()
 
 
 @app.get("/api/beta-requests-stats")
@@ -684,6 +856,13 @@ def beta_requests_stats(user=Depends(get_optional_user)):
         """)
         last_7_days = cur.fetchone()["last_7_days"]
 
+        cur.execute("""
+            SELECT COUNT(*) AS with_code
+            FROM beta_requests
+            WHERE beta_code IS NOT NULL AND beta_code <> '';
+        """)
+        with_code = cur.fetchone()["with_code"]
+
         cur.close()
 
         return {
@@ -691,6 +870,7 @@ def beta_requests_stats(user=Depends(get_optional_user)):
             "total": total,
             "today": today,
             "last_7_days": last_7_days,
+            "with_code": with_code,
             "statuses": VALID_LEAD_STATUSES,
             "by_status": by_status,
             "by_profile": by_profile,
@@ -782,6 +962,7 @@ def export_beta_requests_csv(
                 source,
                 status,
                 internal_note,
+                beta_code,
                 created_at,
                 updated_at
             FROM beta_requests
@@ -805,6 +986,7 @@ def export_beta_requests_csv(
             "source",
             "status",
             "internal_note",
+            "beta_code",
             "created_at",
             "updated_at"
         ])
@@ -821,6 +1003,7 @@ def export_beta_requests_csv(
                 r.get("source", ""),
                 r.get("status", "Nuovo"),
                 r.get("internal_note", ""),
+                r.get("beta_code", ""),
                 r.get("created_at", ""),
                 r.get("updated_at", "")
             ])
@@ -1049,7 +1232,8 @@ def api_home():
         "auth": "enabled",
         "scout_mode": "real_players_only",
         "api_safe": True,
-        "beta_crm": "v7.6"
+        "beta_crm": "v7.8",
+        "beta_access_code": True
     }
 
 
@@ -1186,7 +1370,8 @@ def backend_status():
         "online": True,
         "version": "4.0 ONLINE READY",
         "api_safe": True,
-        "beta_crm": "V7.6 Mini CRM Safe",
+        "beta_crm": "V7.8 Beta Access Code",
+        "beta_access_code": True,
         "background_refresh": BACKGROUND_REFRESH_ENABLED,
         "cache_system": {
             "live_matches_seconds": LIVE_MATCHES_CACHE_SECONDS,
@@ -1280,6 +1465,7 @@ def get_services_status():
         "live_memory": "online",
         "static_files": "online",
         "beta_crm": "online",
+        "beta_access_code": "online",
     }
 
 
