@@ -1,10 +1,10 @@
 /*
     MatchIQ Scout - Core Module
     Init, routing, filtri, refresh, timer e navigazione dashboard.
-    V7.3 Beta Backend
+    V7.4 Admin Beta
 */
 
-const APP_VERSION = "10017";
+const APP_VERSION = "10018";
 
 document.addEventListener("DOMContentLoaded", async () => {
   bindFilters();
