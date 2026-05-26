@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical Dashboard V6.1</title>
+<title>MatchIQ Tactical Dashboard V6.2</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -195,7 +195,7 @@ body{
             <h1>Live Tactical Dashboard</h1>
             <p>
                 Monitora partite live, analisi tattiche AI, momentum, pressure engine,
-                player ratings e Scout Mode V6.1 con cache-buster automatico.
+                player ratings e Scout Mode V6.2 con cache-buster automatico.
             </p>
         </div>
 
@@ -301,10 +301,10 @@ async function loadMatches(topOnly=true){
                     </div>
 
                     <div class="match-actions">
-                        <button class="analysis" onclick="openAnalysis(${id})">
+                        <button class="analysis" onclick="openAnalysis('${String(id)}')">
                             OPEN ANALYSIS
                         </button>
-                        <button class="scout" onclick="openScout(${id})">
+                        <button class="scout" onclick="openScout('${String(id)}')">
                             SCOUT LIVE
                         </button>
                     </div>
@@ -330,7 +330,7 @@ function openScoutHome(){
 }
 
 function setVersionLabels(){
-    document.title = `MatchIQ Tactical Dashboard ${APP_VERSION}`;
+    document.title = "MatchIQ Tactical Dashboard V6.2";
 }
 
 forceOwnerPro();
