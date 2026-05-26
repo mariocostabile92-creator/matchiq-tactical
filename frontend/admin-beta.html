@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Admin Beta Requests V7.4</title>
+<title>MatchIQ Admin Beta Requests V7.4.1</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -25,21 +25,9 @@ body{
     top:0;
     z-index:10;
 }
-.logo{
-    font-size:26px;
-    font-weight:1000;
-}
-.subtitle{
-    color:#8fa3d7;
-    font-size:13px;
-    margin-top:4px;
-}
-.actions{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    flex-wrap:wrap;
-}
+.logo{font-size:26px;font-weight:1000}
+.subtitle{color:#8fa3d7;font-size:13px;margin-top:4px}
+.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .btn{
     border:0;
     border-radius:14px;
@@ -52,11 +40,7 @@ body{
 .btn.dark{background:rgba(255,255,255,.08)}
 .btn.green{background:linear-gradient(135deg,#00c980,#2f6bff)}
 .btn.gold{background:linear-gradient(135deg,#f7b733,#fc4a1a)}
-.main{
-    max-width:1500px;
-    margin:auto;
-    padding:32px;
-}
+.main{max-width:1500px;margin:auto;padding:32px}
 .status-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -96,14 +80,8 @@ body{
     font-weight:1000;
     margin-bottom:14px;
 }
-.hero h1{
-    font-size:38px;
-    margin-bottom:10px;
-}
-.hero p{
-    color:#b7c7ef;
-    line-height:1.7;
-}
+.hero h1{font-size:38px;margin-bottom:10px}
+.hero p{color:#b7c7ef;line-height:1.7}
 .panel{
     background:rgba(255,255,255,.055);
     border:1px solid rgba(255,255,255,.09);
@@ -117,14 +95,8 @@ body{
     align-items:center;
     margin-bottom:18px;
 }
-.panel-head h2{
-    font-size:24px;
-}
-.controls{
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
-}
+.panel-head h2{font-size:24px}
+.controls{display:flex;gap:12px;flex-wrap:wrap}
 input,select{
     border:1px solid rgba(255,255,255,.10);
     background:rgba(4,8,18,.85);
@@ -140,11 +112,7 @@ input,select{
     border-radius:20px;
     border:1px solid rgba(255,255,255,.08);
 }
-table{
-    width:100%;
-    border-collapse:collapse;
-    min-width:980px;
-}
+table{width:100%;border-collapse:collapse;min-width:980px}
 th,td{
     text-align:left;
     padding:14px 16px;
@@ -157,20 +125,14 @@ th{
     text-transform:uppercase;
     background:rgba(255,255,255,.045);
 }
-td{
-    color:#eaf0ff;
-    font-size:14px;
-}
+td{color:#eaf0ff;font-size:14px}
 .reason{
     color:#aebee7;
     max-width:360px;
     white-space:normal;
     line-height:1.45;
 }
-.email{
-    color:#00f5a0;
-    font-weight:900;
-}
+.email{color:#00f5a0;font-weight:900}
 .profile-pill{
     display:inline-block;
     padding:6px 10px;
@@ -180,24 +142,23 @@ td{
     font-size:12px;
     font-weight:1000;
 }
-.empty,.error{
+.empty,.error,.ok{
     padding:22px;
     border-radius:18px;
     margin-top:12px;
 }
-.empty{
-    background:rgba(255,255,255,.05);
-    color:#b7c7ef;
+.empty{background:rgba(255,255,255,.05);color:#b7c7ef}
+.ok{
+    color:#00f5a0;
+    background:rgba(0,245,160,.10);
+    border:1px solid rgba(0,245,160,.25);
 }
 .error{
     color:#ffb8b8;
     background:rgba(255,70,70,.12);
     border:1px solid rgba(255,70,70,.25);
 }
-.small{
-    color:#8fa3d7;
-    font-size:12px;
-}
+.small{color:#8fa3d7;font-size:12px}
 @media(max-width:900px){
     .topbar{flex-direction:column;align-items:flex-start}
 }
@@ -209,7 +170,7 @@ td{
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Admin</div>
-        <div class="subtitle">Beta Requests · V7.4 Admin Beta</div>
+        <div class="subtitle">Beta Requests · V7.4.1 Admin Fix</div>
     </div>
 
     <div class="actions">
@@ -224,12 +185,12 @@ td{
     <div class="status-grid">
         <div class="status-card"><span class="dot"></span>ADMIN PANEL ACTIVE</div>
         <div class="status-card"><span class="dot"></span>BETA DATABASE CONNECTED</div>
-        <div class="status-card"><span class="dot"></span>V7.4 ADMIN BETA</div>
-        <div class="status-card"><span class="dot"></span id="requestTotal">0 RICHIESTE</div>
+        <div class="status-card"><span class="dot"></span>V7.4.1 ADMIN FIX</div>
+        <div class="status-card"><span class="dot"></span><span id="requestTotal">0 RICHIESTE</span></div>
     </div>
 
     <div class="hero">
-        <span class="badge">V7.4 ADMIN BETA</span>
+        <span class="badge">V7.4.1 ADMIN FIX</span>
         <h1>Richieste accesso Beta</h1>
         <p>
             Qui puoi vedere le richieste inviate dal form beta di MatchIQ Tactical.
@@ -256,13 +217,13 @@ td{
         </div>
 
         <div id="messageBox"></div>
-        <div id="tableBox"></div>
+        <div id="tableBox"><div class="empty">Caricamento richieste beta...</div></div>
     </div>
 
 </div>
 
 <script>
-const APP_VERSION = "10018";
+const APP_VERSION = "10019";
 const API_BASE = `${window.location.origin}/api`;
 let betaRequests = [];
 
@@ -272,61 +233,95 @@ function goDashboard(){
 
 function showMessage(message,type="empty"){
     const box = document.getElementById("messageBox");
+    if(!box) return;
     box.innerHTML = `<div class="${type}">${message}</div>`;
 }
 
 function clearMessage(){
-    document.getElementById("messageBox").innerHTML = "";
+    const box = document.getElementById("messageBox");
+    if(box) box.innerHTML = "";
 }
 
 async function loadBetaRequests(){
     clearMessage();
-    document.getElementById("tableBox").innerHTML = `<div class="empty">Caricamento richieste beta...</div>`;
+
+    const tableBox = document.getElementById("tableBox");
+    tableBox.innerHTML = `<div class="empty">Caricamento richieste beta...</div>`;
 
     try{
-        const res = await fetch(`${API_BASE}/beta-requests`);
-        const data = await res.json();
+        const res = await fetch(`/api/beta-requests?ts=${Date.now()}`, {
+            method:"GET",
+            headers:{
+                "Accept":"application/json"
+            },
+            cache:"no-store"
+        });
 
-        if(!res.ok || !data.ok){
+        const text = await res.text();
+
+        let data;
+        try{
+            data = JSON.parse(text);
+        }catch(parseErr){
+            throw new Error("Risposta non JSON: " + text.slice(0,120));
+        }
+
+        const requests = Array.isArray(data.requests)
+            ? data.requests
+            : Array.isArray(data.data)
+                ? data.data
+                : [];
+
+        if(!res.ok || data.ok === false){
             betaRequests = [];
-            document.getElementById("requestTotal").textContent = "0 RICHIESTE";
-            document.getElementById("tableBox").innerHTML = "";
+            updateTotal(0);
+            tableBox.innerHTML = "";
             showMessage(data.message || data.reason || "Errore caricamento richieste beta.", "error");
             return;
         }
 
-        betaRequests = Array.isArray(data.requests) ? data.requests : [];
-        document.getElementById("requestTotal").textContent = `${betaRequests.length} RICHIESTE`;
+        betaRequests = requests;
+        updateTotal(betaRequests.length);
+
+        if(betaRequests.length){
+            showMessage(`Richieste caricate correttamente: ${betaRequests.length}`, "ok");
+        }
+
         renderRequests();
 
     }catch(e){
         betaRequests = [];
-        document.getElementById("requestTotal").textContent = "0 RICHIESTE";
-        document.getElementById("tableBox").innerHTML = "";
-        showMessage("Errore rete: " + e.message, "error");
+        updateTotal(0);
+        tableBox.innerHTML = "";
+        showMessage("Errore caricamento: " + e.message, "error");
     }
 }
 
 function renderRequests(){
     const tableBox = document.getElementById("tableBox");
-    const q = document.getElementById("searchInput").value.toLowerCase().trim();
-    const profile = document.getElementById("profileFilter").value;
+    const searchEl = document.getElementById("searchInput");
+    const profileEl = document.getElementById("profileFilter");
 
-    let list = betaRequests.filter(r => {
+    const q = (searchEl?.value || "").toLowerCase().trim();
+    const profile = profileEl?.value || "all";
+
+    const list = betaRequests.filter(r => {
         const haystack = [
+            r.id,
             r.name,
             r.email,
             r.profile,
             r.plan,
             r.reason,
-            r.source
+            r.source,
+            r.created_at
         ].join(" ").toLowerCase();
 
         return (!q || haystack.includes(q)) &&
                (profile === "all" || String(r.profile || "") === profile);
     });
 
-    document.getElementById("requestTotal").textContent = `${list.length} RICHIESTE`;
+    updateTotal(list.length);
 
     if(!list.length){
         tableBox.innerHTML = `<div class="empty">Nessuna richiesta beta trovata.</div>`;
@@ -368,6 +363,11 @@ function renderRequests(){
     `;
 }
 
+function updateTotal(value){
+    const total = document.getElementById("requestTotal");
+    if(total) total.textContent = `${value} RICHIESTE`;
+}
+
 function exportBetaCSV(){
     if(!betaRequests.length){
         showMessage("Nessuna richiesta da esportare.", "error");
@@ -388,13 +388,16 @@ function exportBetaCSV(){
         ])
     ];
 
-    const csv = rows.map(row => row.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(",")).join("\n");
+    const csv = rows
+        .map(row => row.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(","))
+        .join("\n");
+
     const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "matchiq_beta_requests_v74.csv";
+    a.download = "matchiq_beta_requests_v741.csv";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -421,7 +424,9 @@ function esc(v){
         .replaceAll("'","&#039;");
 }
 
-loadBetaRequests();
+window.addEventListener("load", () => {
+    loadBetaRequests();
+});
 </script>
 
 </body>
