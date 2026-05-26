@@ -170,7 +170,7 @@ body{
     <div class="actions">
         <button class="btn" onclick="loadMatches(true)">TOP LEAGUES</button>
         <button class="btn dark" onclick="loadMatches(false)">ALL LIVE</button>
-        <button class="btn" onclick="window.location.href='scout.html'">🧠 SCOUT MODE</button>
+        <button class="btn" onclick="openScoutHome()">🧠 SCOUT MODE</button>
 
         <div class="account">
             <div id="userEmail">mario.costabile92@outlook.it</div>
@@ -217,6 +217,7 @@ body{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
+const APP_VERSION = "10005";
 
 function forceOwnerPro(){
     const user = {
@@ -316,11 +317,15 @@ async function loadMatches(topOnly=true){
 }
 
 function openAnalysis(matchId){
-    window.location.href = `match.html?id=${matchId}`;
+    window.location.href = `match.html?id=${encodeURIComponent(matchId)}&v=${APP_VERSION}`;
 }
 
 function openScout(matchId){
-    window.location.href = `scout.html?match_id=${matchId}`;
+    window.location.href = `scout.html?match_id=${encodeURIComponent(matchId)}&v=${APP_VERSION}`;
+}
+
+function openScoutHome(){
+    window.location.href = `scout.html?v=${APP_VERSION}`;
 }
 
 forceOwnerPro();
