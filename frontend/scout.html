@@ -258,8 +258,15 @@ function getMatchIdFromUrl(){
   return p.get("match_id") || p.get("id") || p.get("fixture_id") || p.get("matchId");
 }
 
+const APP_VERSION = "10008";
+
+function versionedUrl(path){
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}v=${APP_VERSION}`;
+}
+
 function goDashboard(){
-  window.location.href = "/index.html?v=10006";
+  window.location.href = versionedUrl("/index.html");
 }
 
 function renderAll(){
