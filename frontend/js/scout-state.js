@@ -27,5 +27,5 @@ const state = {
   lastLiveMatchesFetch: 0,
   lastScoutFetch: {},
   hasRealPlayers: false,
-  watchlist: loadWatchlist()
+  watchlist: []
 };
