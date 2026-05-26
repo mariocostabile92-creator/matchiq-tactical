@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MatchIQ Scout V6.4 Render</title>
+  <title>MatchIQ Scout V6.5 Modal</title>
 
   <link rel="stylesheet" href="css/scout.css">
 
@@ -12,13 +12,14 @@
   <script src="js/scout-api.js"></script>
   <script src="js/scout-storage.js"></script>
   <script src="js/scout-render.js"></script>
+  <script src="js/scout-modal.js"></script>
 </head>
 
 <body>
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
-      <strong>Caricamento Scout V6.4 RENDER...</strong>
+      <strong>Caricamento Scout V6.5 MODAL...</strong>
       <p style="color:var(--muted);margin-top:6px;font-size:13px;">Live sync dashboard · Metriche stabili · Release-ready</p>
     </div>
   </div>
@@ -26,14 +27,14 @@
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>MatchIQ Scout V6.4 RENDER</h1>
+        <h1>MatchIQ Scout V6.5 MODAL</h1>
         <div class="subtitle">Real Players · Live Sync · Threat · Creativity · Pressure · Impact</div>
       </div>
 
       <div class="actions">
         <button class="btn" onclick="goDashboard()">← Dashboard</button>
         <div class="pill pill-live"><span class="dot"></span> REAL PLAYERS</div>
-        <div class="pill pill-clean">V6.4 RENDER</div>
+        <div class="pill pill-clean">V6.5 MODAL</div>
         <div class="pill pill-api" id="apiSafePill">API SAFE</div>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
         <button class="btn btn-green" onclick="exportScoutReport()">Export report</button>
@@ -41,7 +42,7 @@
       </div>
     </header>
 
-    <div class="ticker" id="tickerText">MatchIQ Scout V6.4 · caricamento dati...</div>
+    <div class="ticker" id="tickerText">MatchIQ Scout V6.5 · caricamento dati...</div>
     <div class="notice" id="noticeBox"></div>
 
     <main class="layout">
@@ -171,7 +172,7 @@
         </div>
 
         <div class="pro-card">
-          <h3>Radar Performance <span>V6.4</span></h3>
+          <h3>Radar Performance <span>V6.5</span></h3>
           <div class="radar-wrap"><svg class="radar" viewBox="0 0 300 300" id="radarSvg"></svg></div>
         </div>
 
@@ -206,7 +207,7 @@
         </div>
 
         <div class="pro-card" style="grid-column:1/-1;">
-          <h3>Azioni Scout <span>V6.4 RENDER</span></h3>
+          <h3>Azioni Scout <span>V6.5 MODAL</span></h3>
           <div class="actions">
             <button class="btn btn-green" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
             <button class="btn" onclick="exportOpenPlayerReport()">Export player report</button>
@@ -259,7 +260,7 @@ function getMatchIdFromUrl(){
   return p.get("match_id") || p.get("id") || p.get("fixture_id") || p.get("matchId");
 }
 
-const APP_VERSION = "10008";
+const APP_VERSION = "10010";
 
 function versionedUrl(path){
   const sep = path.includes("?") ? "&" : "?";
@@ -269,22 +270,6 @@ function versionedUrl(path){
 function goDashboard(){
   window.location.href = versionedUrl("/index.html");
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -445,191 +430,13 @@ function eventDesc(type,p){
   return map[type] || "Evento rilevato da MatchIQ AI.";
 }
 
-function openModal(id){
-  state.openPlayerId = id;
-  renderModal();
-  document.getElementById("modalBg").classList.add("show");
-}
 
-function closeModal(clear=true){
-  const modalBg = document.getElementById("modalBg");
-  if(modalBg){
-    modalBg.classList.remove("show");
-  }
-  if(clear) state.openPlayerId = null;
-}
 
-function refreshModal(){
-  if(state.openPlayerId && document.getElementById("modalBg").classList.contains("show")){
-    renderModal();
-  }
-}
 
-function renderModal(){
-  const p = state.players.find(x => String(x.id) === String(state.openPlayerId));
-  if(!p) return;
 
-  const threat = clamp(num(p.threat,0),1,99);
-  const creativity = clamp(num(p.creativity,0),1,99);
-  const pressure = clamp(num(p.pressure,0),1,99);
-  const momentum = clamp(num(p.momentum,0),1,99);
-  const stamina = clamp(num(p.stamina,0),1,100);
-  const fatigue = clamp(num(p.fatigue,0),1,99);
-  const impact = clamp(num(p.impact_score,0),1,99);
-  const score = clamp(num(p.scout_score,0),1,99);
 
-  const goalProb = clamp((threat*.48)+(p.shots*9)+(p.goals*20),0,99);
-  const assistProb = clamp((creativity*.55)+(p.key_passes*8)+(p.assists*15),0,99);
-  const nextImpact = clamp((impact*.55)+(momentum*.25)+(threat*.2),0,99);
-  const watchFit = clamp((score*.6)+(impact*.25)+(stamina*.15),0,99);
-  const watched = isWatched(p.id);
 
-  renderAvatar(p);
 
-  document.getElementById("modalName").textContent = p.name;
-  document.getElementById("modalSub").textContent = `${p.team} · ${p.role} · ${p.signal}`;
-
-  document.getElementById("modalBadges").innerHTML = `
-    <span class="badge ${watched ? "yellow" : "green"}">${watched ? "⭐ Watchlist" : esc(p.signal)}</span>
-    <span class="badge ${impact >= 80 ? "green" : impact >= 60 ? "yellow" : ""}">Impact ${Math.round(impact)}</span>
-    <span class="badge ${p.is_estimated ? "yellow" : "cyan"}">${esc(p.data_source)}</span>
-    <span class="badge ${stamina < 45 ? "red" : "green"}">Stamina ${Math.round(stamina)}%</span>
-  `;
-
-  document.getElementById("modalScore").textContent = Math.round(score);
-  document.getElementById("modalThreat").textContent = Math.round(threat) + "%";
-  document.getElementById("modalCreativity").textContent = Math.round(creativity) + "%";
-  document.getElementById("modalStamina").textContent = Math.round(stamina) + "%";
-
-  document.getElementById("impactRing").style.setProperty("--impact",impact + "%");
-  document.getElementById("impactValue").textContent = Math.round(impact);
-  document.getElementById("impactLabel").textContent = impact >= 85 ? "Elite Impact" : impact >= 70 ? "High Impact" : "Monitoring";
-
-  setBar("barThreat","barThreatText",threat);
-  setBar("barCreativity","barCreativityText",creativity);
-  setBar("barPressure","barPressureText",pressure);
-  setBar("barFatigue","barFatigueText",fatigue);
-
-  document.getElementById("modalComment").textContent = p.ai_summary || aiComment({...p,threat,creativity,pressure,momentum,stamina,impact_score:impact,scout_score:score});
-  document.getElementById("commentSource").textContent = p.data_source;
-
-  document.getElementById("goalProb").textContent = Math.round(goalProb) + "%";
-  document.getElementById("assistProb").textContent = Math.round(assistProb) + "%";
-  document.getElementById("nextImpact").textContent = Math.round(nextImpact) + "%";
-  document.getElementById("watchFit").textContent = Math.round(watchFit) + "%";
-
-  renderRadar({...p,threat,creativity,pressure,momentum,stamina,impact_score:impact,scout_score:score});
-  renderTacticalZone({...p,threat,creativity,pressure,stamina});
-  renderProfileGrid({...p,threat,creativity,pressure,stamina,impact_score:impact});
-  renderModalEvents(p);
-}
-
-function renderAvatar(p){
-  const avatar = document.getElementById("modalAvatar");
-  if(p.photo){
-    avatar.innerHTML = `<img src="${escAttr(p.photo)}" alt="${escAttr(p.name)}">`;
-  }else{
-    avatar.textContent = p.name.split(" ").map(x => x[0]).join("").slice(0,2).toUpperCase();
-  }
-}
-
-function renderProfileGrid(p){
-  const profile = tacticalProfile(p);
-
-  document.getElementById("profileGrid").innerHTML = `
-    <div class="profile-item"><small>Archetipo</small><strong>${esc(profile.type)}</strong></div>
-    <div class="profile-item"><small>Zona Forte</small><strong>${esc(profile.zone)}</strong></div>
-    <div class="profile-item"><small>Decisione AI</small><strong>${esc(profile.decision)}</strong></div>
-    <div class="profile-item"><small>Qualità Dato</small><strong>${esc(p.data_quality)}</strong></div>
-    <div class="profile-item"><small>Live Impact</small><strong>${Math.round(p.impact_score)}%</strong></div>
-    <div class="profile-item"><small>Stamina</small><strong>${Math.round(p.stamina)}%</strong></div>
-  `;
-}
-
-function renderModalEvents(p){
-  const list = state.events.filter(e => String(e.playerId) === String(p.id) || e.playerName === p.name).sort((a,b) => b.minute - a.minute);
-
-  document.getElementById("modalEvents").innerHTML = list.length
-    ? list.map(e => `<div class="event ${e.className || ""}"><div class="event-top"><span class="minute">${e.minute}'</span><span class="tag">${esc(e.label)}</span></div><div class="event-title">${esc(e.title)}</div><div class="event-desc">${esc(e.desc)}</div></div>`).join("")
-    : `<div class="empty"><strong>Nessun evento specifico</strong>In attesa di eventi live del player.</div>`;
-}
-
-function setBar(id,textId,value){
-  const v = clamp(Math.round(value),0,100);
-  document.getElementById(id).style.width = v + "%";
-  document.getElementById(textId).textContent = v + "%";
-}
-
-function renderRadar(p){
-  const values = [
-    clamp(p.scout_score,0,99),
-    clamp(p.threat,0,99),
-    clamp(p.momentum,0,99),
-    clamp(p.pressure,0,99),
-    clamp(p.creativity,0,99),
-    clamp(p.stamina,0,99)
-  ];
-
-  const labels = ["Score","Threat","Momentum","Press","Creative","Stamina"];
-  const cx = 150, cy = 150, maxR = 105, sides = values.length;
-
-  function point(i,r){
-    const angle = (-Math.PI/2) + (i*2*Math.PI/sides);
-    return [cx + Math.cos(angle)*r, cy + Math.sin(angle)*r];
-  }
-
-  const grid = [.25,.5,.75,1].map(scale => `<polygon points="${labels.map((_,i) => point(i,maxR*scale).join(",")).join(" ")}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>`).join("");
-
-  const axes = labels.map((label,i) => {
-    const [x,y] = point(i,maxR);
-    const [tx,ty] = point(i,maxR+24);
-    return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(255,255,255,.1)"/><text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" fill="#8f9bb3" font-size="11" font-weight="700">${label}</text>`;
-  }).join("");
-
-  const polyPoints = values.map((v,i) => point(i,maxR*(v/100)).join(",")).join(" ");
-
-  document.getElementById("radarSvg").innerHTML = `
-    ${grid}
-    ${axes}
-    <polygon points="${polyPoints}" fill="rgba(0,229,255,.24)" stroke="#00e5ff" stroke-width="3"/>
-    ${values.map((v,i) => { const [x,y] = point(i,maxR*(v/100)); return `<circle cx="${x}" cy="${y}" r="4" fill="#00f5a0"/>`; }).join("")}
-  `;
-}
-
-function renderTacticalZone(p){
-  const zone = document.getElementById("tacticalZone");
-  const label = document.getElementById("zoneLabel");
-  const profile = tacticalProfile(p);
-
-  label.textContent = profile.zone;
-
-  let x = 50, y = 50;
-  if(p.role === "ATT"){ x = 78; y = p.threat >= 70 ? 38 : 50; }
-  else if(p.role === "MID"){ x = 54; y = p.key_passes >= 2 ? 38 : 55; }
-  else if(p.role === "DEF"){ x = 27; y = p.pressure >= 65 ? 42 : 55; }
-  else if(p.role === "GK"){ x = 12; y = 50; }
-
-  zone.style.left = x + "%";
-  zone.style.top = y + "%";
-}
-
-function tacticalProfile(p){
-  if(p.role === "ATT" && p.threat >= 70) return {type:"Finalizzatore dinamico",zone:"Half-space offensivo",decision:"Monitorare goal"};
-  if(p.role === "MID" && p.creativity >= 70) return {type:"Creatore di gioco",zone:"Rifinitura centrale",decision:"Watchlist assist"};
-  if(p.pressure >= 70) return {type:"Pressing trigger",zone:"Zona recupero alto",decision:"Valore tattico"};
-  if(p.role === "DEF") return {type:"Stabilizzatore difensivo",zone:"Linea bassa/media",decision:"Controllo rischio"};
-  if(p.role === "GK") return {type:"Portiere reattivo",zone:"Area difensiva",decision:"Monitorare clean sheet"};
-  return {type:"Profilo bilanciato",zone:"Zona mista",decision:"Monitoraggio live"};
-}
-
-function aiComment(p){
-  if(p.impact_score >= 88) return `${p.name} sta producendo un impatto elite. Profilo prioritario da monitorare.`;
-  if(p.threat >= 82) return `${p.name} entra spesso in zone pericolose. Alta probabilità di azione decisiva.`;
-  if(p.creativity >= 75) return `${p.name} sta creando valore tra le linee: ottimo profilo per assist e chance creation.`;
-  if(p.pressure >= 78) return `${p.name} è un trigger di pressione: intensità e duelli stanno influenzando il ritmo.`;
-  if(p.stamina < 40) return `${p.name} mostra segnali di fatica. Possibile calo se il ritmo aumenta.`;
-  return `${p.name} è in monitoraggio live. Profilo stabile con margine di crescita.`;
-}
 
 
 function updateCache(){
