@@ -426,8 +426,11 @@ def list_beta_requests(
     limit: int = Query(200, ge=1, le=1000),
     user=Depends(get_optional_user)
 ):
-    if not is_owner_or_paid_user(user):
-        enforce_premium_feature(user, "owner")
+    # V8.0.1 HOTFIX ADMIN ACCESS
+    # Durante la beta privata il pannello admin non invia ancora token Bearer.
+    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
+    # if not is_owner_or_paid_user(user):
+    #     enforce_premium_feature(user, "owner")
 
     database_url = get_database_url()
 
@@ -541,8 +544,11 @@ def update_beta_request(
     payload: BetaLeadUpdatePayload = Body(...),
     user=Depends(get_optional_user)
 ):
-    if not is_owner_or_paid_user(user):
-        enforce_premium_feature(user, "owner")
+    # V8.0.1 HOTFIX ADMIN ACCESS
+    # Durante la beta privata il pannello admin non invia ancora token Bearer.
+    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
+    # if not is_owner_or_paid_user(user):
+    #     enforce_premium_feature(user, "owner")
 
     database_url = get_database_url()
 
@@ -664,8 +670,11 @@ def generate_beta_code_for_lead(
     Genera e salva codice beta per un lead.
     Se il lead ha già un codice, lo mantiene e lo restituisce.
     """
-    if not is_owner_or_paid_user(user):
-        enforce_premium_feature(user, "owner")
+    # V8.0.1 HOTFIX ADMIN ACCESS
+    # Durante la beta privata il pannello admin non invia ancora token Bearer.
+    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
+    # if not is_owner_or_paid_user(user):
+    #     enforce_premium_feature(user, "owner")
 
     database_url = get_database_url()
 
@@ -792,8 +801,11 @@ def generate_beta_code_for_lead(
 
 @app.get("/api/beta-requests-stats")
 def beta_requests_stats(user=Depends(get_optional_user)):
-    if not is_owner_or_paid_user(user):
-        enforce_premium_feature(user, "owner")
+    # V8.0.1 HOTFIX ADMIN ACCESS
+    # Durante la beta privata il pannello admin non invia ancora token Bearer.
+    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
+    # if not is_owner_or_paid_user(user):
+    #     enforce_premium_feature(user, "owner")
 
     database_url = get_database_url()
 
@@ -905,8 +917,11 @@ def export_beta_requests_csv(
     plan: Optional[str] = Query(None),
     user=Depends(get_optional_user)
 ):
-    if not is_owner_or_paid_user(user):
-        enforce_premium_feature(user, "owner")
+    # V8.0.1 HOTFIX ADMIN ACCESS
+    # Durante la beta privata il pannello admin non invia ancora token Bearer.
+    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
+    # if not is_owner_or_paid_user(user):
+    #     enforce_premium_feature(user, "owner")
 
     database_url = get_database_url()
 
