@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MatchIQ Scout V6.1 Stable</title>
+  <title>MatchIQ Scout V6.2 Stable</title>
 
   <link rel="stylesheet" href="css/scout.css">
 
@@ -16,7 +16,7 @@
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
-      <strong>Caricamento Scout V6.1 STABLE...</strong>
+      <strong>Caricamento Scout V6.2 STABLE...</strong>
       <p style="color:var(--muted);margin-top:6px;font-size:13px;">Live sync dashboard · Metriche stabili · Release-ready</p>
     </div>
   </div>
@@ -24,14 +24,14 @@
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>MatchIQ Scout V6.1 STABLE</h1>
+        <h1>MatchIQ Scout V6.2 STABLE</h1>
         <div class="subtitle">Real Players · Live Sync · Threat · Creativity · Pressure · Impact</div>
       </div>
 
       <div class="actions">
         <button class="btn" onclick="goDashboard()">← Dashboard</button>
         <div class="pill pill-live"><span class="dot"></span> REAL PLAYERS</div>
-        <div class="pill pill-clean">V6.1 STABLE</div>
+        <div class="pill pill-clean">V6.2 STABLE</div>
         <div class="pill pill-api" id="apiSafePill">API SAFE</div>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
         <button class="btn btn-green" onclick="exportScoutReport()">Export report</button>
@@ -39,7 +39,7 @@
       </div>
     </header>
 
-    <div class="ticker" id="tickerText">MatchIQ Scout V6.1 · caricamento dati...</div>
+    <div class="ticker" id="tickerText">MatchIQ Scout V6.2 · caricamento dati...</div>
     <div class="notice" id="noticeBox"></div>
 
     <main class="layout">
@@ -169,7 +169,7 @@
         </div>
 
         <div class="pro-card">
-          <h3>Radar Performance <span>V6.1</span></h3>
+          <h3>Radar Performance <span>V6.2</span></h3>
           <div class="radar-wrap"><svg class="radar" viewBox="0 0 300 300" id="radarSvg"></svg></div>
         </div>
 
@@ -204,7 +204,7 @@
         </div>
 
         <div class="pro-card" style="grid-column:1/-1;">
-          <h3>Azioni Scout <span>V6.1 STABLE</span></h3>
+          <h3>Azioni Scout <span>V6.2 STABLE</span></h3>
           <div class="actions">
             <button class="btn btn-green" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
             <button class="btn" onclick="exportOpenPlayerReport()">Export player report</button>
@@ -258,7 +258,7 @@ function getMatchIdFromUrl(){
 }
 
 function goDashboard(){
-  window.location.href = "/index.html";
+  window.location.href = "/index.html?v=10006";
 }
 
 function renderAll(){
@@ -317,7 +317,7 @@ function renderPlayers(){
   const box = document.getElementById("players");
 
   if(!state.hasRealPlayers){
-    box.innerHTML = `<div class="empty"><strong>Giocatori reali non disponibili</strong>Scout V6.1 legge solo data.players dello schema clean.</div>`;
+    box.innerHTML = `<div class="empty"><strong>Giocatori reali non disponibili</strong>Scout V6.2 legge solo data.players dello schema clean.</div>`;
     return;
   }
 
@@ -388,7 +388,7 @@ function renderTicker(){
   const m = getMatch();
 
   if(!m){
-    document.getElementById("tickerText").textContent = "MatchIQ Scout V6.1 · nessuna partita live ricevuta";
+    document.getElementById("tickerText").textContent = "MatchIQ Scout V6.2 · nessuna partita live ricevuta";
     return;
   }
 
@@ -469,8 +469,12 @@ function resetFilters(){
 }
 
 function startTimers(){
-  clearInterval(state.timers.soft);
-  clearInterval(state.timers.events);
+  if(state.timers?.soft) clearInterval(state.timers.soft);
+  if(state.timers?.events) clearInterval(state.timers.events);
+
+  if(!state.timers){
+    state.timers = {soft:null,events:null};
+  }
 
   state.timers.soft = setInterval(async () => {
     state.tick++;
@@ -605,7 +609,10 @@ function openModal(id){
 }
 
 function closeModal(clear=true){
-  document.getElementById("modalBg").classList.remove("show");
+  const modalBg = document.getElementById("modalBg");
+  if(modalBg){
+    modalBg.classList.remove("show");
+  }
   if(clear) state.openPlayerId = null;
 }
 
@@ -862,7 +869,7 @@ function exportWatchlist(){
     ...state.watchlist.map(p => `${csv(p.name)};${csv(p.team)};${csv(p.role)};${Math.round(p.scout_score)};${Math.round(p.threat)};${Math.round(p.creativity)};${Math.round(p.pressure)};${Math.round(p.momentum)};${csv(p.signal)};${csv(p.data_source)}`)
   ];
 
-  downloadText("matchiq_watchlist_v61_stable.csv",rows.join("\n"));
+  downloadText("matchiq_watchlist_v62_stable.csv",rows.join("\n"));
 }
 
 function exportScoutReport(){
@@ -871,7 +878,7 @@ function exportScoutReport(){
   const m = getMatch();
 
   const report = [
-    "MATCHIQ SCOUT V6.1 STABLE REPORT",
+    "MATCHIQ SCOUT V6.2 STABLE REPORT",
     "=================================",
     "",
     `Match: ${m ? `${m.home} - ${m.away}` : "--"}`,
@@ -887,7 +894,7 @@ function exportScoutReport(){
     ...(state.events.length ? state.events.map(e => `${e.minute}' ${e.label} - ${e.title}: ${e.desc}`) : ["Nessun evento disponibile."])
   ].join("\n");
 
-  downloadText("matchiq_scout_report_v61_stable.txt",report);
+  downloadText("matchiq_scout_report_v62_stable.txt",report);
 }
 
 function exportOpenPlayerReport(){
@@ -895,7 +902,7 @@ function exportOpenPlayerReport(){
   if(!p) return;
 
   const report = [
-    "MATCHIQ PLAYER SCOUT REPORT V6.1 STABLE",
+    "MATCHIQ PLAYER SCOUT REPORT V6.2 STABLE",
     "=======================================",
     "",
     `Giocatore: ${p.name}`,
@@ -915,7 +922,7 @@ function exportOpenPlayerReport(){
     p.ai_summary || aiComment(p)
   ].join("\n");
 
-  downloadText(`matchiq_player_${safeFilename(p.name)}_v61_stable.txt`,report);
+  downloadText(`matchiq_player_${safeFilename(p.name)}_v62_stable.txt`,report);
 }
 
 function downloadText(filename,text){
@@ -1038,8 +1045,14 @@ function clearNotice(){
   box.innerHTML = "";
 }
 
-function showLoading(){document.getElementById("loading").classList.add("show")}
-function hideLoading(){document.getElementById("loading").classList.remove("show")}
+function showLoading(){
+  const loading = document.getElementById("loading");
+  if(loading) loading.classList.add("show");
+}
+function hideLoading(){
+  const loading = document.getElementById("loading");
+  if(loading) loading.classList.remove("show");
+}
 
 function toast(title,desc){
   const area = document.getElementById("toastArea");
