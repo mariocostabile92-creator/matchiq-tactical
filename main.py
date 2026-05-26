@@ -2,6 +2,8 @@ import os
 import time
 import threading
 import logging
+import csv
+import io
 from app.routers.live import create_live_router
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
@@ -17,9 +19,9 @@ from app.services.scout_service import (
     build_real_scout_response
 )
 
-from fastapi import FastAPI, Query, Depends
+from fastapi import FastAPI, Query, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from app.utils.cache import (
     cache_valid,
@@ -83,8 +85,7 @@ except Exception:
             "hidden_gems": [p for p in players or [] if p.get("hidden_gem")],
             "danger_creators": [p for p in players or [] if p.get("danger_creator")],
             "total_players": len(players or [])
-      }
-          
+        }
 
 
 try:
@@ -129,9 +130,20 @@ app.add_middleware(
 init_db()
 app.include_router(auth_router)
 app.include_router(payments_router)
+
+
 # =========================================================
-# BETA REQUESTS - V7.3
+# BETA REQUESTS - V7.6 MINI CRM SAFE
 # =========================================================
+
+VALID_LEAD_STATUSES = [
+    "Nuovo",
+    "Contattato",
+    "Interessato",
+    "Convertito",
+    "Scartato"
+]
+
 
 class BetaRequestPayload(BaseModel):
     name: str
@@ -141,8 +153,51 @@ class BetaRequestPayload(BaseModel):
     reason: Optional[str] = ""
 
 
+class BetaLeadUpdatePayload(BaseModel):
+    status: Optional[str] = None
+    internal_note: Optional[str] = None
+
+
 def get_database_url():
     return os.getenv("DATABASE_URL")
+
+
+def normalize_beta_row(row):
+    """
+    Mantiene compatibilità con admin-beta.html V7.5:
+    - requests[]
+    - plan
+    - reason
+
+    Aggiunge:
+    - status
+    - internal_note
+    - updated_at
+    """
+    if not row:
+        return {}
+
+    item = dict(row)
+
+    created_at = item.get("created_at")
+    updated_at = item.get("updated_at")
+
+    if hasattr(created_at, "isoformat"):
+        item["created_at"] = created_at.isoformat()
+
+    if hasattr(updated_at, "isoformat"):
+        item["updated_at"] = updated_at.isoformat()
+
+    item["status"] = item.get("status") or "Nuovo"
+    item["internal_note"] = item.get("internal_note") or ""
+
+    return item
+
+
+def validate_lead_status(status: str):
+    if status not in VALID_LEAD_STATUSES:
+        return False
+    return True
 
 
 def ensure_beta_requests_table():
@@ -172,6 +227,39 @@ def ensure_beta_requests_table():
         """)
 
         cur.execute("""
+            ALTER TABLE beta_requests
+            ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Nuovo';
+        """)
+
+        cur.execute("""
+            ALTER TABLE beta_requests
+            ADD COLUMN IF NOT EXISTS internal_note TEXT DEFAULT '';
+        """)
+
+        cur.execute("""
+            ALTER TABLE beta_requests
+            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+        """)
+
+        cur.execute("""
+            UPDATE beta_requests
+            SET status = 'Nuovo'
+            WHERE status IS NULL OR status = '';
+        """)
+
+        cur.execute("""
+            UPDATE beta_requests
+            SET internal_note = ''
+            WHERE internal_note IS NULL;
+        """)
+
+        cur.execute("""
+            UPDATE beta_requests
+            SET updated_at = created_at
+            WHERE updated_at IS NULL;
+        """)
+
+        cur.execute("""
             CREATE INDEX IF NOT EXISTS idx_beta_requests_email
             ON beta_requests(email);
         """)
@@ -181,14 +269,19 @@ def ensure_beta_requests_table():
             ON beta_requests(created_at DESC);
         """)
 
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_beta_requests_status
+            ON beta_requests(status);
+        """)
+
         conn.commit()
         cur.close()
 
-        logger.info("[BETA REQUEST] Tabella beta_requests pronta")
+        logger.info("[BETA REQUEST] Tabella beta_requests pronta V7.6 Mini CRM")
         return True
 
-    except Exception as e:
-        logger.exception("[BETA REQUEST] Errore creazione tabella")
+    except Exception:
+        logger.exception("[BETA REQUEST] Errore creazione/aggiornamento tabella")
         return False
 
     finally:
@@ -214,16 +307,28 @@ def save_beta_request_to_db(payload: BetaRequestPayload):
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
         cur.execute("""
-            INSERT INTO beta_requests (name, email, profile, plan, reason, source)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            RETURNING id, name, email, profile, plan, reason, source, created_at;
+            INSERT INTO beta_requests
+            (name, email, profile, plan, reason, source, status, internal_note, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Nuovo', '', NOW(), NOW())
+            RETURNING
+                id,
+                name,
+                email,
+                profile,
+                plan,
+                reason,
+                source,
+                status,
+                internal_note,
+                created_at,
+                updated_at;
         """, (
             payload.name.strip(),
             payload.email.strip().lower(),
             payload.profile.strip(),
             (payload.plan or "Beta gratuita").strip(),
             (payload.reason or "").strip(),
-            "matchiq_v73_beta_backend"
+            "matchiq_v76_mini_crm"
         ))
 
         row = cur.fetchone()
@@ -232,7 +337,7 @@ def save_beta_request_to_db(payload: BetaRequestPayload):
 
         return {
             "saved": True,
-            "request": dict(row)
+            "request": normalize_beta_row(row)
         }
 
     except Exception as e:
@@ -270,7 +375,8 @@ def create_beta_request(payload: BetaRequestPayload):
             "ok": True,
             "saved": True,
             "message": "Richiesta beta salvata nel database",
-            "data": result.get("request")
+            "data": result.get("request"),
+            "request": result.get("request")
         }
 
     return {
@@ -282,7 +388,14 @@ def create_beta_request(payload: BetaRequestPayload):
 
 
 @app.get("/api/beta-requests")
-def list_beta_requests(user=Depends(get_optional_user)):
+def list_beta_requests(
+    status: Optional[str] = Query(None),
+    profile: Optional[str] = Query(None),
+    plan: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(200, ge=1, le=1000),
+    user=Depends(get_optional_user)
+):
     if not is_owner_or_paid_user(user):
         enforce_premium_feature(user, "owner")
 
@@ -303,20 +416,78 @@ def list_beta_requests(user=Depends(get_optional_user)):
         conn = psycopg2.connect(database_url)
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        cur.execute("""
-            SELECT id, name, email, profile, plan, reason, source, created_at
+        where = []
+        params = []
+
+        if status and status not in ["all", "Tutti", "tutti"]:
+            if not validate_lead_status(status):
+                return {
+                    "ok": False,
+                    "requests": [],
+                    "message": f"Status non valido: {status}"
+                }
+            where.append("status = %s")
+            params.append(status)
+
+        if profile and profile not in ["all", "Tutti", "tutti"]:
+            where.append("profile = %s")
+            params.append(profile)
+
+        if plan and plan not in ["all", "Tutti", "tutti"]:
+            where.append("plan = %s")
+            params.append(plan)
+
+        if search:
+            q = f"%{search.strip()}%"
+            where.append("""
+                (
+                    name ILIKE %s OR
+                    email ILIKE %s OR
+                    profile ILIKE %s OR
+                    plan ILIKE %s OR
+                    COALESCE(reason, '') ILIKE %s OR
+                    COALESCE(internal_note, '') ILIKE %s
+                )
+            """)
+            params.extend([q, q, q, q, q, q])
+
+        where_sql = ""
+        if where:
+            where_sql = "WHERE " + " AND ".join(where)
+
+        params.append(limit)
+
+        cur.execute(f"""
+            SELECT
+                id,
+                name,
+                email,
+                profile,
+                plan,
+                reason,
+                source,
+                status,
+                internal_note,
+                created_at,
+                updated_at
             FROM beta_requests
+            {where_sql}
             ORDER BY created_at DESC
-            LIMIT 200;
-        """)
+            LIMIT %s;
+        """, params)
 
         rows = cur.fetchall()
         cur.close()
 
+        requests = [normalize_beta_row(r) for r in rows]
+
         return {
             "ok": True,
-            "count": len(rows),
-            "requests": [dict(r) for r in rows]
+            "count": len(requests),
+            "requests": requests,
+            "data": requests,
+            "items": requests,
+            "leads": requests
         }
 
     except Exception as e:
@@ -330,6 +501,369 @@ def list_beta_requests(user=Depends(get_optional_user)):
     finally:
         if conn:
             conn.close()
+
+
+@app.patch("/api/beta-requests/{lead_id}")
+def update_beta_request(
+    lead_id: int,
+    payload: BetaLeadUpdatePayload = Body(...),
+    user=Depends(get_optional_user)
+):
+    if not is_owner_or_paid_user(user):
+        enforce_premium_feature(user, "owner")
+
+    database_url = get_database_url()
+
+    if not database_url:
+        return {
+            "ok": False,
+            "message": "DATABASE_URL non configurato"
+        }
+
+    conn = None
+
+    try:
+        ensure_beta_requests_table()
+
+        fields = []
+        params = []
+
+        if payload.status is not None:
+            status = payload.status.strip()
+            if not validate_lead_status(status):
+                return {
+                    "ok": False,
+                    "message": f"Status non valido: {status}"
+                }
+            fields.append("status = %s")
+            params.append(status)
+
+        if payload.internal_note is not None:
+            fields.append("internal_note = %s")
+            params.append((payload.internal_note or "").strip())
+
+        if not fields:
+            return {
+                "ok": False,
+                "message": "Nessun campo da aggiornare"
+            }
+
+        fields.append("updated_at = NOW()")
+        params.append(lead_id)
+
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute(f"""
+            UPDATE beta_requests
+            SET {", ".join(fields)}
+            WHERE id = %s
+            RETURNING
+                id,
+                name,
+                email,
+                profile,
+                plan,
+                reason,
+                source,
+                status,
+                internal_note,
+                created_at,
+                updated_at;
+        """, params)
+
+        row = cur.fetchone()
+
+        if not row:
+            conn.rollback()
+            cur.close()
+            return {
+                "ok": False,
+                "message": "Lead non trovato"
+            }
+
+        conn.commit()
+        cur.close()
+
+        lead = normalize_beta_row(row)
+
+        return {
+            "ok": True,
+            "message": "Lead aggiornato",
+            "lead": lead,
+            "request": lead,
+            "data": lead
+        }
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        logger.exception("[BETA REQUEST] Errore aggiornamento lead")
+        return {
+            "ok": False,
+            "message": str(e)
+        }
+
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.put("/api/beta-requests/{lead_id}")
+def update_beta_request_put(
+    lead_id: int,
+    payload: BetaLeadUpdatePayload = Body(...),
+    user=Depends(get_optional_user)
+):
+    return update_beta_request(lead_id, payload, user)
+
+
+@app.get("/api/beta-requests-stats")
+def beta_requests_stats(user=Depends(get_optional_user)):
+    if not is_owner_or_paid_user(user):
+        enforce_premium_feature(user, "owner")
+
+    database_url = get_database_url()
+
+    if not database_url:
+        return {
+            "ok": False,
+            "message": "DATABASE_URL non configurato",
+            "total": 0,
+            "by_status": [],
+            "by_profile": [],
+            "by_plan": []
+        }
+
+    conn = None
+
+    try:
+        ensure_beta_requests_table()
+
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("SELECT COUNT(*) AS total FROM beta_requests;")
+        total = cur.fetchone()["total"]
+
+        cur.execute("""
+            SELECT COALESCE(status, 'Nuovo') AS status, COUNT(*) AS count
+            FROM beta_requests
+            GROUP BY COALESCE(status, 'Nuovo')
+            ORDER BY count DESC;
+        """)
+        by_status = [dict(r) for r in cur.fetchall()]
+
+        cur.execute("""
+            SELECT COALESCE(NULLIF(profile, ''), 'Non specificato') AS profile, COUNT(*) AS count
+            FROM beta_requests
+            GROUP BY COALESCE(NULLIF(profile, ''), 'Non specificato')
+            ORDER BY count DESC;
+        """)
+        by_profile = [dict(r) for r in cur.fetchall()]
+
+        cur.execute("""
+            SELECT COALESCE(NULLIF(plan, ''), 'Non specificato') AS plan, COUNT(*) AS count
+            FROM beta_requests
+            GROUP BY COALESCE(NULLIF(plan, ''), 'Non specificato')
+            ORDER BY count DESC;
+        """)
+        by_plan = [dict(r) for r in cur.fetchall()]
+
+        cur.execute("""
+            SELECT COUNT(*) AS today
+            FROM beta_requests
+            WHERE created_at::date = NOW()::date;
+        """)
+        today = cur.fetchone()["today"]
+
+        cur.execute("""
+            SELECT COUNT(*) AS last_7_days
+            FROM beta_requests
+            WHERE created_at >= NOW() - INTERVAL '7 days';
+        """)
+        last_7_days = cur.fetchone()["last_7_days"]
+
+        cur.close()
+
+        return {
+            "ok": True,
+            "total": total,
+            "today": today,
+            "last_7_days": last_7_days,
+            "statuses": VALID_LEAD_STATUSES,
+            "by_status": by_status,
+            "by_profile": by_profile,
+            "by_plan": by_plan
+        }
+
+    except Exception as e:
+        logger.exception("[BETA REQUEST] Errore statistiche")
+        return {
+            "ok": False,
+            "message": str(e),
+            "total": 0,
+            "by_status": [],
+            "by_profile": [],
+            "by_plan": []
+        }
+
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.get("/api/beta-stats")
+def beta_stats_alias(user=Depends(get_optional_user)):
+    return beta_requests_stats(user)
+
+
+@app.get("/api/beta-requests/export.csv")
+def export_beta_requests_csv(
+    status: Optional[str] = Query(None),
+    profile: Optional[str] = Query(None),
+    plan: Optional[str] = Query(None),
+    user=Depends(get_optional_user)
+):
+    if not is_owner_or_paid_user(user):
+        enforce_premium_feature(user, "owner")
+
+    database_url = get_database_url()
+
+    if not database_url:
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["error"])
+        writer.writerow(["DATABASE_URL non configurato"])
+        output.seek(0)
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=matchiq_beta_requests_error.csv"}
+        )
+
+    conn = None
+
+    try:
+        ensure_beta_requests_table()
+
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        where = []
+        params = []
+
+        if status and status not in ["all", "Tutti", "tutti"]:
+            if validate_lead_status(status):
+                where.append("status = %s")
+                params.append(status)
+
+        if profile and profile not in ["all", "Tutti", "tutti"]:
+            where.append("profile = %s")
+            params.append(profile)
+
+        if plan and plan not in ["all", "Tutti", "tutti"]:
+            where.append("plan = %s")
+            params.append(plan)
+
+        where_sql = ""
+        if where:
+            where_sql = "WHERE " + " AND ".join(where)
+
+        cur.execute(f"""
+            SELECT
+                id,
+                name,
+                email,
+                profile,
+                plan,
+                reason,
+                source,
+                status,
+                internal_note,
+                created_at,
+                updated_at
+            FROM beta_requests
+            {where_sql}
+            ORDER BY created_at DESC;
+        """, params)
+
+        rows = cur.fetchall()
+        cur.close()
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        writer.writerow([
+            "id",
+            "name",
+            "email",
+            "profile",
+            "plan",
+            "reason",
+            "source",
+            "status",
+            "internal_note",
+            "created_at",
+            "updated_at"
+        ])
+
+        for row in rows:
+            r = normalize_beta_row(row)
+            writer.writerow([
+                r.get("id", ""),
+                r.get("name", ""),
+                r.get("email", ""),
+                r.get("profile", ""),
+                r.get("plan", ""),
+                r.get("reason", ""),
+                r.get("source", ""),
+                r.get("status", "Nuovo"),
+                r.get("internal_note", ""),
+                r.get("created_at", ""),
+                r.get("updated_at", "")
+            ])
+
+        output.seek(0)
+
+        filename = f"matchiq_beta_requests_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+
+    except Exception as e:
+        logger.exception("[BETA REQUEST] Errore export CSV")
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["error"])
+        writer.writerow([str(e)])
+        output.seek(0)
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=matchiq_beta_requests_error.csv"}
+        )
+
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.get("/api/beta-requests/export")
+def export_beta_requests_csv_alias(
+    status: Optional[str] = Query(None),
+    profile: Optional[str] = Query(None),
+    plan: Optional[str] = Query(None),
+    user=Depends(get_optional_user)
+):
+    return export_beta_requests_csv(status, profile, plan, user)
+
 
 LIVE_MATCHES_CACHE = {}
 FULL_ANALYSIS_CACHE = {}
@@ -355,7 +889,6 @@ FINISHED_MATCH_CACHE = 600
 HALFTIME_CACHE = 60
 
 
-
 def get_dynamic_match_cache(match_data):
     if not isinstance(match_data, dict):
         return DEFAULT_MATCH_CACHE
@@ -375,17 +908,13 @@ def get_dynamic_match_cache(match_data):
     )
 
 
-
 def background_refresh_match(match_id):
-
     try:
-
         logger.info("[BACKGROUND REFRESH] %s", match_id)
 
         data = build_full_analysis(match_id)
 
         if "error" not in data:
-
             FULL_ANALYSIS_CACHE[match_id] = {
                 "timestamp": time.time(),
                 "data": data
@@ -393,18 +922,15 @@ def background_refresh_match(match_id):
 
             logger.info("[CACHE UPDATED] %s", match_id)
 
-    except Exception as e:
-
+    except Exception:
         logger.exception("BACKGROUND REFRESH ERROR")
 
 
 def launch_background_refresh(match_id):
-
     if not BACKGROUND_REFRESH_ENABLED:
         return
 
     try:
-
         thread = threading.Thread(
             target=background_refresh_match,
             args=(match_id,),
@@ -413,10 +939,8 @@ def launch_background_refresh(match_id):
 
         thread.start()
 
-    except Exception as e:
-
+    except Exception:
         logger.exception("THREAD ERROR")
-
 
 
 def safe_float(value, default=0.0):
@@ -444,26 +968,6 @@ def clamp(value, min_value=0, max_value=100):
         return min_value
 
 
-
-           
-
-
-
-
-
-
-
-
-
-        
- 
-
-
-
-
-
-
-
 def get_cached_full_analysis(match_id: int):
     cached = FULL_ANALYSIS_CACHE.get(match_id)
 
@@ -489,26 +993,26 @@ def get_cached_full_analysis(match_id: int):
 
     try:
         data = build_full_analysis(
-    match_id,
-    get_match_live_data_func=get_match_live_data,
-    analyze_match_tactical_func=analyze_match_tactical,
-    generate_live_engine_func=generate_live_engine,
-    analyze_pressure_func=analyze_pressure,
-    generate_xg_analysis_func=generate_xg_analysis,
-    generate_live_flow_func=generate_live_flow,
-    generate_tactical_coach_func=generate_tactical_coach,
-    generate_future_prediction_func=generate_future_prediction,
-    analyze_ai_core_func=analyze_ai_core,
-    generate_player_ratings_func=generate_player_ratings,
-    generate_win_probability_func=generate_win_probability,
-    generate_tactical_events_func=generate_tactical_events,
-    generate_live_alerts_func=generate_live_alerts,
-    build_live_events_func=build_live_events,
-    generate_ai_report_func=generate_ai_report,
-    generate_timeline_func=generate_timeline,
-    build_live_match_brain_func=build_live_match_brain,
-    live_match_brain_available=LIVE_MATCH_BRAIN_AVAILABLE
-)
+            match_id,
+            get_match_live_data_func=get_match_live_data,
+            analyze_match_tactical_func=analyze_match_tactical,
+            generate_live_engine_func=generate_live_engine,
+            analyze_pressure_func=analyze_pressure,
+            generate_xg_analysis_func=generate_xg_analysis,
+            generate_live_flow_func=generate_live_flow,
+            generate_tactical_coach_func=generate_tactical_coach,
+            generate_future_prediction_func=generate_future_prediction,
+            analyze_ai_core_func=analyze_ai_core,
+            generate_player_ratings_func=generate_player_ratings,
+            generate_win_probability_func=generate_win_probability,
+            generate_tactical_events_func=generate_tactical_events,
+            generate_live_alerts_func=generate_live_alerts,
+            build_live_events_func=build_live_events,
+            generate_ai_report_func=generate_ai_report,
+            generate_timeline_func=generate_timeline,
+            build_live_match_brain_func=build_live_match_brain,
+            live_match_brain_available=LIVE_MATCH_BRAIN_AVAILABLE
+        )
 
         if "error" not in data:
             FULL_ANALYSIS_CACHE[match_id] = {
@@ -535,9 +1039,6 @@ def get_cached_full_analysis(match_id: int):
             "match_id": match_id
         }
 
-       
-
-
 
 @app.get("/api")
 def api_home():
@@ -547,16 +1048,9 @@ def api_home():
         "version": "3.5.0",
         "auth": "enabled",
         "scout_mode": "real_players_only",
-        "api_safe": True
+        "api_safe": True,
+        "beta_crm": "v7.6"
     }
-
-
-
-
-
-
-
-
 
 
 SCOUT_PUBLIC_BETA = os.getenv("SCOUT_PUBLIC_BETA", "1") == "1"
@@ -613,14 +1107,14 @@ def api_scout_live(
         )
 
     return build_real_scout_response(
-    match_id=match_id,
-    scout_players_cache=SCOUT_PLAYERS_CACHE,
-    scout_players_cache_seconds=SCOUT_PLAYERS_CACHE_SECONDS,
-    get_match_live_data_func=get_match_live_data,
-    get_cached_full_analysis_func=get_cached_full_analysis,
-    build_live_scout_func=build_live_scout,
-    scout_engine_available=SCOUT_ENGINE_AVAILABLE
-)
+        match_id=match_id,
+        scout_players_cache=SCOUT_PLAYERS_CACHE,
+        scout_players_cache_seconds=SCOUT_PLAYERS_CACHE_SECONDS,
+        get_match_live_data_func=get_match_live_data,
+        get_cached_full_analysis_func=get_cached_full_analysis,
+        build_live_scout_func=build_live_scout,
+        scout_engine_available=SCOUT_ENGINE_AVAILABLE
+    )
 
 
 @app.get("/api/scout-live")
@@ -642,14 +1136,14 @@ def api_scout_live_alias(
         )
 
     return build_real_scout_response(
-    match_id=match_id,
-    scout_players_cache=SCOUT_PLAYERS_CACHE,
-    scout_players_cache_seconds=SCOUT_PLAYERS_CACHE_SECONDS,
-    get_match_live_data_func=get_match_live_data,
-    get_cached_full_analysis_func=get_cached_full_analysis,
-    build_live_scout_func=build_live_scout,
-    scout_engine_available=SCOUT_ENGINE_AVAILABLE
-)
+        match_id=match_id,
+        scout_players_cache=SCOUT_PLAYERS_CACHE,
+        scout_players_cache_seconds=SCOUT_PLAYERS_CACHE_SECONDS,
+        get_match_live_data_func=get_match_live_data,
+        get_cached_full_analysis_func=get_cached_full_analysis,
+        build_live_scout_func=build_live_scout,
+        scout_engine_available=SCOUT_ENGINE_AVAILABLE
+    )
 
 
 @app.get("/api/live-memory-status")
@@ -686,101 +1180,32 @@ def live_memory_status():
     }
 
 
-
-
 @app.get("/api/backend-status")
 def backend_status():
-
     return {
-
         "online": True,
-
         "version": "4.0 ONLINE READY",
-
         "api_safe": True,
-
+        "beta_crm": "V7.6 Mini CRM Safe",
         "background_refresh": BACKGROUND_REFRESH_ENABLED,
-
         "cache_system": {
-
-            "live_matches_seconds":
-                LIVE_MATCHES_CACHE_SECONDS,
-
+            "live_matches_seconds": LIVE_MATCHES_CACHE_SECONDS,
             "full_analysis_dynamic": True,
-
-            "finished_match_cache":
-                FINISHED_MATCH_CACHE,
-
-            "halftime_cache":
-                HALFTIME_CACHE,
-
-            "priority_leagues":
-                MATCH_PRIORITY
+            "finished_match_cache": FINISHED_MATCH_CACHE,
+            "halftime_cache": HALFTIME_CACHE,
+            "priority_leagues": MATCH_PRIORITY
         },
-
         "memory": {
-
-            "live_matches_cached":
-                len(LIVE_MATCHES_CACHE),
-
-            "full_analysis_cached":
-                len(FULL_ANALYSIS_CACHE),
-
-            "scout_cached":
-                len(SCOUT_PLAYERS_CACHE)
+            "live_matches_cached": len(LIVE_MATCHES_CACHE),
+            "full_analysis_cached": len(FULL_ANALYSIS_CACHE),
+            "scout_cached": len(SCOUT_PLAYERS_CACHE)
         }
     }
+
 
 @app.get("/api/account/limits")
 def account_limits(user=Depends(get_optional_user)):
     return build_account_limits_response(user)
-
-
-
-
-
-
-
-
-    data = get_cached_full_analysis(match_id)
-
-    return attach_usage_info(
-        response=data,
-        user=user,
-        feature="full_analysis"
-    )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # =========================================================
@@ -799,6 +1224,18 @@ if os.path.exists(FRONTEND_DIR):
     def serve_home():
         return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
+    @app.get("/index.html")
+    def serve_index_html():
+        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+    @app.get("/admin-beta.html")
+    def serve_admin_beta():
+        return FileResponse(os.path.join(FRONTEND_DIR, "admin-beta.html"))
+
+    @app.get("/admin")
+    def serve_admin_alias():
+        return FileResponse(os.path.join(FRONTEND_DIR, "admin-beta.html"))
+
     @app.get("/scout.html")
     def serve_scout():
         return FileResponse(os.path.join(FRONTEND_DIR, "scout.html"))
@@ -814,6 +1251,8 @@ if os.path.exists(FRONTEND_DIR):
     @app.get("/register.html")
     def serve_register():
         return FileResponse(os.path.join(FRONTEND_DIR, "register.html"))
+
+
 def get_services_status():
     return {
         "auth_system": "online",
@@ -840,6 +1279,7 @@ def get_services_status():
         "live_events_engine": "online",
         "live_memory": "online",
         "static_files": "online",
+        "beta_crm": "online",
     }
 
 
@@ -854,6 +1294,7 @@ system_router = create_system_router(
 )
 
 app.include_router(system_router)
+
 match_router = create_match_router(
     get_cached_full_analysis_func=get_cached_full_analysis,
     generate_match_pdf_func=generate_match_pdf,
@@ -866,6 +1307,7 @@ match_router = create_match_router(
 )
 
 app.include_router(match_router)
+
 live_router = create_live_router(
     get_live_matches_func=get_live_matches,
     live_matches_cache=LIVE_MATCHES_CACHE,
