@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MatchIQ Scout V6.7 Utils</title>
+  <title>MatchIQ Scout V6.8 Core</title>
 
   <link rel="stylesheet" href="css/scout.css">
 
@@ -15,13 +15,14 @@
   <script src="js/scout-render.js"></script>
   <script src="js/scout-modal.js"></script>
   <script src="js/scout-events.js"></script>
+  <script src="js/scout-core.js"></script>
 </head>
 
 <body>
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
-      <strong>Caricamento Scout V6.7 UTILS...</strong>
+      <strong>Caricamento Scout V6.8 CORE...</strong>
       <p style="color:var(--muted);margin-top:6px;font-size:13px;">Live sync dashboard · Metriche stabili · Release-ready</p>
     </div>
   </div>
@@ -29,14 +30,14 @@
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>MatchIQ Scout V6.7 UTILS</h1>
+        <h1>MatchIQ Scout V6.8 CORE</h1>
         <div class="subtitle">Real Players · Live Sync · Threat · Creativity · Pressure · Impact</div>
       </div>
 
       <div class="actions">
         <button class="btn" onclick="goDashboard()">← Dashboard</button>
         <div class="pill pill-live"><span class="dot"></span> REAL PLAYERS</div>
-        <div class="pill pill-clean">V6.7 UTILS</div>
+        <div class="pill pill-clean">V6.8 CORE</div>
         <div class="pill pill-api" id="apiSafePill">API SAFE</div>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
         <button class="btn btn-green" onclick="exportScoutReport()">Export report</button>
@@ -44,7 +45,7 @@
       </div>
     </header>
 
-    <div class="ticker" id="tickerText">MatchIQ Scout V6.7 · caricamento dati...</div>
+    <div class="ticker" id="tickerText">MatchIQ Scout V6.8 · caricamento dati...</div>
     <div class="notice" id="noticeBox"></div>
 
     <main class="layout">
@@ -174,7 +175,7 @@
         </div>
 
         <div class="pro-card">
-          <h3>Radar Performance <span>V6.7</span></h3>
+          <h3>Radar Performance <span>V6.8</span></h3>
           <div class="radar-wrap"><svg class="radar" viewBox="0 0 300 300" id="radarSvg"></svg></div>
         </div>
 
@@ -209,7 +210,7 @@
         </div>
 
         <div class="pro-card" style="grid-column:1/-1;">
-          <h3>Azioni Scout <span>V6.7 UTILS</span></h3>
+          <h3>Azioni Scout <span>V6.8 CORE</span></h3>
           <div class="actions">
             <button class="btn btn-green" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
             <button class="btn" onclick="exportOpenPlayerReport()">Export player report</button>
@@ -221,116 +222,5 @@
   </div>
 
   <div class="toast-area" id="toastArea"></div>
-
-<script>
-document.addEventListener("DOMContentLoaded", async () => {
-  bindFilters();
-  await init();
-  startTimers();
-  hideLoading();
-});
-
-function bindFilters(){
-  ["searchInput","roleFilter","signalFilter","scoreFilter"].forEach(id => {
-    document.getElementById(id).addEventListener("input", renderPlayers);
-  });
-
-  document.addEventListener("keydown", e => {
-    if(e.key === "Escape") closeModal();
-  });
-
-  document.getElementById("modalBg").addEventListener("click", e => {
-    if(e.target.id === "modalBg") closeModal();
-  });
-}
-
-async function init(){
-  state.watchlist = loadWatchlist();
-  state.selectedMatchId = getMatchIdFromUrl();
-
-  await loadLiveMatches(true);
-
-  if(!state.selectedMatchId){
-    state.selectedMatchId = state.matches[0]?.id || null;
-  }
-
-  await loadScoutData(true);
-  renderAll();
-}
-
-function getMatchIdFromUrl(){
-  const p = new URLSearchParams(window.location.search);
-  return p.get("match_id") || p.get("id") || p.get("fixture_id") || p.get("matchId");
-}
-
-const APP_VERSION = "10012";
-
-function versionedUrl(path){
-  const sep = path.includes("?") ? "&" : "?";
-  return `${path}${sep}v=${APP_VERSION}`;
-}
-
-function goDashboard(){
-  window.location.href = versionedUrl("/index.html");
-}
-
-async function selectMatch(id){
-  showLoading();
-  state.selectedMatchId = id;
-  state.events = [];
-  state.openPlayerId = null;
-
-  closeModal(false);
-
-  await loadScoutData(true);
-
-  renderAll();
-  hideLoading();
-  toast("Partita cambiata","Scout riallineato sul nuovo match live.");
-}
-
-async function manualRefresh(){
-  showLoading();
-
-  await loadLiveMatches(true);
-  await loadScoutData(true);
-
-  renderAll();
-  hideLoading();
-  toast("Refresh completato","Dati riallineati con la Live Dashboard.");
-}
-
-function startTimers(){
-  if(state.timers?.soft) clearInterval(state.timers.soft);
-  if(state.timers?.events) clearInterval(state.timers.events);
-
-  if(!state.timers){
-    state.timers = {soft:null,events:null};
-  }
-
-  state.timers.soft = setInterval(async () => {
-    state.tick++;
-
-    await loadLiveMatches(false);
-
-    const m = getMatch();
-    if(m && m.minute < 90){
-      m.minute += 1;
-    }
-
-    if(state.tick % 9 === 0){
-      await loadScoutData(false);
-    }
-
-    renderAll();
-  },10000);
-
-  state.timers.events = setInterval(() => {
-    if(state.hasRealPlayers && Math.random() > .5){
-      generateLocalEvent(false);
-    }
-  },API_SAFE.localEventMs);
-}
-</script>
 </body>
 </html>
