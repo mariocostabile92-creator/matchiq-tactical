@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Admin Beta Requests V7.6 Mini CRM</title>
+<title>MatchIQ Admin Beta Requests V7.7 Email Template</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -155,7 +155,7 @@ textarea{
 table{
     width:100%;
     border-collapse:collapse;
-    min-width:1450px;
+    min-width:1580px;
 }
 th,td{
     text-align:left;
@@ -177,7 +177,7 @@ td{color:#eaf0ff;font-size:14px}
     line-height:1.45;
 }
 .email{color:#00f5a0;font-weight:900}
-.profile-pill,.plan-pill,.status-pill{
+.profile-pill,.plan-pill,.status-pill,.template-pill{
     display:inline-block;
     padding:6px 10px;
     border-radius:999px;
@@ -196,6 +196,10 @@ td{color:#eaf0ff;font-size:14px}
 .status-interessato{background:rgba(0,245,160,.13);color:#00f5a0}
 .status-convertito{background:rgba(0,201,128,.22);color:#7dffca}
 .status-scartato{background:rgba(255,64,88,.13);color:#ff9aaa}
+.template-pill{
+    background:rgba(0,245,160,.10);
+    color:#00f5a0;
+}
 .row-actions{
     display:flex;
     gap:8px;
@@ -203,6 +207,9 @@ td{color:#eaf0ff;font-size:14px}
 }
 .crm-cell{
     min-width:260px;
+}
+.template-cell{
+    min-width:240px;
 }
 .crm-status{
     width:100%;
@@ -237,6 +244,12 @@ td{color:#eaf0ff;font-size:14px}
     font-size:11px;
     margin-top:6px;
 }
+.template-preview{
+    color:#aebee7;
+    font-size:12px;
+    line-height:1.45;
+    margin-top:8px;
+}
 @media(max-width:900px){
     .topbar{flex-direction:column;align-items:flex-start}
     .panel-head{flex-direction:column;align-items:flex-start}
@@ -249,7 +262,7 @@ td{color:#eaf0ff;font-size:14px}
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Admin</div>
-        <div class="subtitle">Beta Requests · V7.6 Mini CRM</div>
+        <div class="subtitle">Beta Requests · V7.7 Email Template</div>
     </div>
 
     <div class="actions">
@@ -264,17 +277,17 @@ td{color:#eaf0ff;font-size:14px}
     <div class="status-grid">
         <div class="status-card"><span class="dot"></span>ADMIN PANEL ACTIVE</div>
         <div class="status-card"><span class="dot"></span>BETA DATABASE CONNECTED</div>
-        <div class="status-card"><span class="dot"></span>V7.6 MINI CRM</div>
+        <div class="status-card"><span class="dot"></span>V7.7 EMAIL TEMPLATE</div>
         <div class="status-card"><span class="dot"></span><span id="requestTotal">0 RICHIESTE</span></div>
     </div>
 
     <div class="hero">
-        <span class="badge">V7.6 MINI CRM</span>
+        <span class="badge">V7.7 EMAIL TEMPLATE</span>
         <h1>Gestione richieste accesso Beta</h1>
         <p>
             Visualizza, filtra e gestisci i lead beta di MatchIQ Tactical.
             Ora puoi assegnare uno stato, scrivere note interne, copiare email,
-            aprire mail dirette ed esportare i contatti in CSV.
+            generare template automatici e aprire mail già pronte in base allo stato del lead.
         </p>
     </div>
 
@@ -367,7 +380,7 @@ td{color:#eaf0ff;font-size:14px}
 </div>
 
 <script>
-const APP_VERSION = "10020";
+const APP_VERSION = "10021";
 const VALID_STATUSES = ["Nuovo","Contattato","Interessato","Convertito","Scartato"];
 let betaRequests = [];
 
@@ -511,12 +524,15 @@ function renderRequests(){
                         <th>Stato</th>
                         <th>Motivo</th>
                         <th>CRM</th>
+                        <th>Template</th>
                         <th>Data</th>
                         <th>Azioni</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${list.map(r => `
+                    ${list.map(r => {
+                        const template = buildEmailTemplate(r);
+                        return `
                         <tr>
                             <td>${esc(r.id)}</td>
                             <td><strong>${esc(r.name)}</strong></td>
@@ -539,6 +555,12 @@ function renderRequests(){
                                     Aggiornato: ${formatDate(r.updated_at || r.created_at)}
                                 </div>
                             </td>
+                            <td class="template-cell">
+                                <span class="template-pill">${esc(template.label)}</span>
+                                <div class="template-preview">
+                                    ${esc(template.preview)}
+                                </div>
+                            </td>
                             <td>
                                 ${formatDate(r.created_at)}
                                 <div class="small">${esc(r.source || "")}</div>
@@ -546,13 +568,14 @@ function renderRequests(){
                             <td>
                                 <div class="row-actions">
                                     <button class="btn green small-btn" onclick="saveLeadCRM('${escAttr(r.id)}')">Salva CRM</button>
-                                    <button class="btn dark small-btn" onclick="copyEmail('${escAttr(r.email)}')">Copia</button>
-                                    <button class="btn gold small-btn" onclick="openMail('${escAttr(r.email)}','${escAttr(r.name)}','${escAttr(r.status)}')">Mail</button>
+                                    <button class="btn dark small-btn" onclick="copyEmail('${escAttr(r.email)}')">Copia email</button>
+                                    <button class="btn gold small-btn" onclick="openMailById('${escAttr(r.id)}')">Mail</button>
+                                    <button class="btn dark small-btn" onclick="copyTemplateById('${escAttr(r.id)}')">Copia template</button>
                                     <button class="btn dark small-btn" onclick="quickStatus('${escAttr(r.id)}','Contattato')">Contattato</button>
                                 </div>
                             </td>
                         </tr>
-                    `).join("")}
+                    `}).join("")}
                 </tbody>
             </table>
         </div>
@@ -612,6 +635,159 @@ function statusClass(status){
     if(s.includes("scartato")) return "status-scartato";
 
     return "status-nuovo";
+}
+
+function getLeadById(id){
+    return betaRequests.find(r => String(r.id) === String(id));
+}
+
+function getCurrentLeadState(id){
+    const lead = getLeadById(id);
+
+    if(!lead) return null;
+
+    const currentStatus = document.getElementById(`status_${id}`)?.value || lead.status || "Nuovo";
+    const currentNote = document.getElementById(`note_${id}`)?.value || lead.internal_note || "";
+
+    return {
+        ...lead,
+        status: currentStatus,
+        internal_note: currentNote
+    };
+}
+
+function buildEmailTemplate(lead){
+    const name = lead.name || "";
+    const profile = lead.profile || "utente";
+    const plan = lead.plan || "Beta gratuita";
+    const reason = lead.reason || "-";
+    const note = lead.internal_note || "-";
+    const status = lead.status || "Nuovo";
+
+    const cleanName = name || "ciao";
+
+    if(status === "Contattato"){
+        return {
+            label: "Follow-up",
+            subject: "Follow-up accesso Beta MatchIQ Tactical",
+            preview: "Ti ricontatto dopo il primo messaggio per capire come vuoi usare MatchIQ.",
+            body:
+`Ciao ${cleanName},
+
+ti ricontatto in merito alla tua richiesta di accesso alla beta di MatchIQ Tactical.
+
+Ho visto che hai indicato:
+- Profilo: ${profile}
+- Interesse: ${plan}
+- Motivo: ${reason}
+
+Mi farebbe piacere capire meglio come vorresti usare la piattaforma, così posso indirizzarti sulle funzioni più utili per te.
+
+Possiamo sentirci con una breve demo o posso mandarti qualche informazione in più.
+
+A presto,
+Mario
+MatchIQ Tactical`
+        };
+    }
+
+    if(status === "Interessato"){
+        return {
+            label: "Invito demo",
+            subject: "Demo MatchIQ Tactical - accesso Beta",
+            preview: "Lead caldo: proponi demo e piano Pro.",
+            body:
+`Ciao ${cleanName},
+
+ho visto il tuo interesse per MatchIQ Tactical e ti propongo una breve demo della piattaforma.
+
+Ti mostro in modo semplice:
+- Dashboard live
+- Scout Mode
+- Player signals
+- Watchlist
+- Report ed export
+- Possibili funzioni Pro
+
+L’obiettivo è capire se MatchIQ può esserti utile per analisi, scouting, contenuti sportivi o monitoraggio live.
+
+Dimmi pure quando ti farebbe comodo.
+
+A presto,
+Mario
+MatchIQ Tactical`
+        };
+    }
+
+    if(status === "Convertito"){
+        return {
+            label: "Accesso confermato",
+            subject: "Accesso MatchIQ Tactical confermato",
+            preview: "Conferma accesso e prossimi step.",
+            body:
+`Ciao ${cleanName},
+
+ti confermo i prossimi step per l’accesso a MatchIQ Tactical.
+
+Da qui potrai iniziare a testare:
+- Dashboard live
+- Scout Mode
+- Player cards
+- Watchlist
+- Report scout
+
+Nei prossimi aggiornamenti verranno aggiunte anche funzioni Free / Pro e accessi beta più controllati.
+
+Ti mando a breve le istruzioni operative.
+
+A presto,
+Mario
+MatchIQ Tactical`
+        };
+    }
+
+    if(status === "Scartato"){
+        return {
+            label: "Chiusura gentile",
+            subject: "Richiesta Beta MatchIQ Tactical",
+            preview: "Messaggio gentile per chiudere o rimandare il contatto.",
+            body:
+`Ciao ${cleanName},
+
+grazie per aver richiesto informazioni su MatchIQ Tactical.
+
+In questa fase sto dando priorità ad alcuni profili specifici per la beta, ma tengo comunque il tuo contatto per eventuali aperture successive.
+
+Ti ringrazio per l’interesse e ti aggiornerò in caso di nuove disponibilità.
+
+A presto,
+Mario
+MatchIQ Tactical`
+        };
+    }
+
+    return {
+        label: "Benvenuto Beta",
+        subject: "Accesso Beta MatchIQ Tactical",
+        preview: "Primo contatto per nuovo lead beta.",
+        body:
+`Ciao ${cleanName},
+
+grazie per aver richiesto accesso alla beta di MatchIQ Tactical.
+
+Ho ricevuto la tua richiesta con questi dati:
+- Profilo: ${profile}
+- Interesse: ${plan}
+- Motivo: ${reason}
+
+MatchIQ Tactical è una piattaforma di AI Football Intelligence pensata per leggere partite live, momentum, segnali tattici e player insights in tempo reale.
+
+Ti ricontatto per capire meglio come vorresti usarla e valutare l’accesso alla beta.
+
+A presto,
+Mario
+MatchIQ Tactical`
+    };
 }
 
 async function saveLeadCRM(id){
@@ -674,31 +850,43 @@ async function copyEmail(email){
     }
 }
 
-function openMail(email,name,status){
-    const subject = encodeURIComponent("Accesso Beta MatchIQ Tactical");
+function openMailById(id){
+    const lead = getCurrentLeadState(id);
 
-    let intro = "grazie per aver richiesto accesso alla beta di MatchIQ Tactical.";
-
-    if(status === "Interessato"){
-        intro = "ho visto il tuo interesse per MatchIQ Tactical e volevo proporti una breve demo.";
+    if(!lead){
+        showMessage("Lead non trovato.", "error");
+        return;
     }
 
-    if(status === "Convertito"){
-        intro = "ti scrivo per confermare i prossimi step del tuo accesso a MatchIQ Tactical.";
+    const template = buildEmailTemplate(lead);
+
+    const subject = encodeURIComponent(template.subject);
+    const body = encodeURIComponent(template.body);
+
+    window.location.href = `mailto:${lead.email}?subject=${subject}&body=${body}`;
+}
+
+async function copyTemplateById(id){
+    const lead = getCurrentLeadState(id);
+
+    if(!lead){
+        showMessage("Lead non trovato.", "error");
+        return;
     }
 
-    const body = encodeURIComponent(
-`Ciao ${name || ""},
+    const template = buildEmailTemplate(lead);
 
-${intro}
+    const fullText =
+`Oggetto: ${template.subject}
 
-Ti ricontatto per darti maggiori informazioni e capire come vuoi usare la piattaforma.
+${template.body}`;
 
-Mario
-MatchIQ Tactical`
-    );
-
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    try{
+        await navigator.clipboard.writeText(fullText);
+        showMessage(`Template "${esc(template.label)}" copiato per ${esc(lead.name || lead.email)}.`, "ok");
+    }catch(e){
+        showMessage("Copia template non riuscita.", "error");
+    }
 }
 
 function exportBetaCSV(){
