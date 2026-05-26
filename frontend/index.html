@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical V7.4 Admin Beta</title>
+<title>MatchIQ Tactical V7.5 Admin Actions</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -315,7 +315,7 @@ body{
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">AI Football Intelligence Platform · V7.4 Admin Beta</div>
+        <div class="subtitle">AI Football Intelligence Platform · V7.5 Admin Actions</div>
     </div>
 
     <div class="actions">
@@ -323,7 +323,7 @@ body{
         <button class="btn dark" onclick="loadMatches(false)">ALL LIVE</button>
         <button class="btn green" onclick="openScoutHome()">🧠 OPEN SCOUT BETA</button>
         <button class="btn gold" onclick="scrollToBetaForm()">RICHIEDI ACCESSO</button>
-        <button class="btn dark" onclick="openAdminBeta()">ADMIN BETA</button>
+        <button class="btn dark" onclick="openAdminBeta()">ADMIN ACTIONS</button>
 
         <div class="account">
             <div id="userEmail">mario.costabile92@outlook.it</div>
@@ -340,12 +340,12 @@ body{
         <div class="status-card"><span class="dot"></span>LIVE ENGINE ACTIVE</div>
         <div class="status-card"><span class="dot"></span>API FOOTBALL CONNECTED</div>
         <div class="status-card"><span class="dot"></span>AI TACTICAL ENGINE ONLINE</div>
-        <div class="status-card"><span class="dot"></span>ADMIN BETA ACTIVE</div>
+        <div class="status-card"><span class="dot"></span>ADMIN ACTIONS ACTIVE</div>
     </div>
 
     <div class="hero">
         <div class="card">
-            <span class="beta-badge">V7.4 ADMIN BETA</span>
+            <span class="beta-badge">V7.5 ADMIN ACTIONS</span>
             <h1>AI Football Intelligence per chi vuole leggere la partita prima degli altri</h1>
             <p>
                 MatchIQ analizza partite live, momentum, pressure engine, segnali tattici,
@@ -480,8 +480,8 @@ body{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10018";
-const SCOUT_VERSION_LABEL = "SCOUT V7.4 Admin Beta";
+const APP_VERSION = "10020";
+const SCOUT_VERSION_LABEL = "SCOUT V7.5 Admin Actions";
 const BETA_STORAGE_KEY = "matchiq_beta_requests_v72";
 
 function forceOwnerPro(){
@@ -691,7 +691,7 @@ function openAdminBeta(){
 }
 
 function setVersionLabels(){
-    document.title = "MatchIQ Tactical V7.4 Admin Beta";
+    document.title = "MatchIQ Tactical V7.5 Admin Actions";
 }
 
 forceOwnerPro();

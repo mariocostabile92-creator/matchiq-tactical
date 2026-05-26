@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Admin Beta Requests V7.4.1</title>
+<title>MatchIQ Admin Beta Requests V7.5</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -40,7 +40,12 @@ body{
 .btn.dark{background:rgba(255,255,255,.08)}
 .btn.green{background:linear-gradient(135deg,#00c980,#2f6bff)}
 .btn.gold{background:linear-gradient(135deg,#f7b733,#fc4a1a)}
-.main{max-width:1500px;margin:auto;padding:32px}
+.btn.small-btn{
+    padding:8px 10px;
+    border-radius:10px;
+    font-size:12px;
+}
+.main{max-width:1550px;margin:auto;padding:32px}
 .status-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -82,6 +87,29 @@ body{
 }
 .hero h1{font-size:38px;margin-bottom:10px}
 .hero p{color:#b7c7ef;line-height:1.7}
+.stats-mini{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:14px;
+    margin:0 0 24px;
+}
+.stat-box{
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    padding:18px;
+}
+.stat-box small{
+    color:#8fa3d7;
+    font-size:12px;
+    font-weight:1000;
+    text-transform:uppercase;
+}
+.stat-box strong{
+    display:block;
+    font-size:30px;
+    margin-top:8px;
+}
 .panel{
     background:rgba(255,255,255,.055);
     border:1px solid rgba(255,255,255,.09);
@@ -112,7 +140,7 @@ input,select{
     border-radius:20px;
     border:1px solid rgba(255,255,255,.08);
 }
-table{width:100%;border-collapse:collapse;min-width:980px}
+table{width:100%;border-collapse:collapse;min-width:1120px}
 th,td{
     text-align:left;
     padding:14px 16px;
@@ -133,17 +161,27 @@ td{color:#eaf0ff;font-size:14px}
     line-height:1.45;
 }
 .email{color:#00f5a0;font-weight:900}
-.profile-pill{
+.profile-pill,.plan-pill{
     display:inline-block;
     padding:6px 10px;
     border-radius:999px;
-    background:rgba(47,107,255,.16);
-    border:1px solid rgba(47,107,255,.30);
     font-size:12px;
     font-weight:1000;
+    border:1px solid rgba(255,255,255,.14);
+}
+.profile-scout{background:rgba(0,245,160,.13);color:#00f5a0}
+.profile-analista{background:rgba(47,107,255,.16);color:#8fb1ff}
+.profile-creator{background:rgba(247,183,51,.14);color:#ffe28a}
+.profile-better{background:rgba(255,64,88,.13);color:#ff9aaa}
+.profile-default{background:rgba(255,255,255,.08);color:#dbe6ff}
+.plan-pill{background:rgba(124,77,255,.15);color:#d8ccff}
+.row-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
 }
 .empty,.error,.ok{
-    padding:22px;
+    padding:18px;
     border-radius:18px;
     margin-top:12px;
 }
@@ -161,6 +199,7 @@ td{color:#eaf0ff;font-size:14px}
 .small{color:#8fa3d7;font-size:12px}
 @media(max-width:900px){
     .topbar{flex-direction:column;align-items:flex-start}
+    .panel-head{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -170,7 +209,7 @@ td{color:#eaf0ff;font-size:14px}
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Admin</div>
-        <div class="subtitle">Beta Requests · V7.4.1 Admin Fix</div>
+        <div class="subtitle">Beta Requests · V7.5 Admin Actions</div>
     </div>
 
     <div class="actions">
@@ -185,17 +224,36 @@ td{color:#eaf0ff;font-size:14px}
     <div class="status-grid">
         <div class="status-card"><span class="dot"></span>ADMIN PANEL ACTIVE</div>
         <div class="status-card"><span class="dot"></span>BETA DATABASE CONNECTED</div>
-        <div class="status-card"><span class="dot"></span>V7.4.1 ADMIN FIX</div>
+        <div class="status-card"><span class="dot"></span>V7.5 ADMIN ACTIONS</div>
         <div class="status-card"><span class="dot"></span><span id="requestTotal">0 RICHIESTE</span></div>
     </div>
 
     <div class="hero">
-        <span class="badge">V7.4.1 ADMIN FIX</span>
-        <h1>Richieste accesso Beta</h1>
+        <span class="badge">V7.5 ADMIN ACTIONS</span>
+        <h1>Gestione richieste accesso Beta</h1>
         <p>
-            Qui puoi vedere le richieste inviate dal form beta di MatchIQ Tactical.
-            I dati vengono letti dall’endpoint <strong>/api/beta-requests</strong>.
+            Visualizza, filtra e gestisci i lead beta di MatchIQ Tactical. Ora puoi copiare email,
+            aprire mail dirette ed esportare i contatti in CSV.
         </p>
+    </div>
+
+    <div class="stats-mini">
+        <div class="stat-box">
+            <small>Totale richieste</small>
+            <strong id="statTotal">0</strong>
+        </div>
+        <div class="stat-box">
+            <small>Scout</small>
+            <strong id="statScout">0</strong>
+        </div>
+        <div class="stat-box">
+            <small>Analisti</small>
+            <strong id="statAnalyst">0</strong>
+        </div>
+        <div class="stat-box">
+            <small>Creator</small>
+            <strong id="statCreator">0</strong>
+        </div>
     </div>
 
     <div class="panel">
@@ -204,6 +262,7 @@ td{color:#eaf0ff;font-size:14px}
 
             <div class="controls">
                 <input id="searchInput" placeholder="Cerca nome, email, profilo..." oninput="renderRequests()" />
+
                 <select id="profileFilter" onchange="renderRequests()">
                     <option value="all">Tutti i profili</option>
                     <option value="Scout">Scout</option>
@@ -212,6 +271,14 @@ td{color:#eaf0ff;font-size:14px}
                     <option value="Scommettitore evoluto">Scommettitore evoluto</option>
                     <option value="Appassionato">Appassionato</option>
                     <option value="Altro">Altro</option>
+                </select>
+
+                <select id="planFilter" onchange="renderRequests()">
+                    <option value="all">Tutti gli interessi</option>
+                    <option value="Beta gratuita">Beta gratuita</option>
+                    <option value="Piano Pro">Piano Pro</option>
+                    <option value="Collaborazione">Collaborazione</option>
+                    <option value="Test prodotto">Test prodotto</option>
                 </select>
             </div>
         </div>
@@ -223,8 +290,7 @@ td{color:#eaf0ff;font-size:14px}
 </div>
 
 <script>
-const APP_VERSION = "10019";
-const API_BASE = `${window.location.origin}/api`;
+const APP_VERSION = "10020";
 let betaRequests = [];
 
 function goDashboard(){
@@ -251,9 +317,7 @@ async function loadBetaRequests(){
     try{
         const res = await fetch(`/api/beta-requests?ts=${Date.now()}`, {
             method:"GET",
-            headers:{
-                "Accept":"application/json"
-            },
+            headers:{ "Accept":"application/json" },
             cache:"no-store"
         });
 
@@ -275,6 +339,7 @@ async function loadBetaRequests(){
         if(!res.ok || data.ok === false){
             betaRequests = [];
             updateTotal(0);
+            updateStats([]);
             tableBox.innerHTML = "";
             showMessage(data.message || data.reason || "Errore caricamento richieste beta.", "error");
             return;
@@ -282,6 +347,7 @@ async function loadBetaRequests(){
 
         betaRequests = requests;
         updateTotal(betaRequests.length);
+        updateStats(betaRequests);
 
         if(betaRequests.length){
             showMessage(`Richieste caricate correttamente: ${betaRequests.length}`, "ok");
@@ -292,6 +358,7 @@ async function loadBetaRequests(){
     }catch(e){
         betaRequests = [];
         updateTotal(0);
+        updateStats([]);
         tableBox.innerHTML = "";
         showMessage("Errore caricamento: " + e.message, "error");
     }
@@ -299,11 +366,9 @@ async function loadBetaRequests(){
 
 function renderRequests(){
     const tableBox = document.getElementById("tableBox");
-    const searchEl = document.getElementById("searchInput");
-    const profileEl = document.getElementById("profileFilter");
-
-    const q = (searchEl?.value || "").toLowerCase().trim();
-    const profile = profileEl?.value || "all";
+    const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
+    const profile = document.getElementById("profileFilter")?.value || "all";
+    const plan = document.getElementById("planFilter")?.value || "all";
 
     const list = betaRequests.filter(r => {
         const haystack = [
@@ -318,7 +383,8 @@ function renderRequests(){
         ].join(" ").toLowerCase();
 
         return (!q || haystack.includes(q)) &&
-               (profile === "all" || String(r.profile || "") === profile);
+               (profile === "all" || String(r.profile || "") === profile) &&
+               (plan === "all" || String(r.plan || "") === plan);
     });
 
     updateTotal(list.length);
@@ -340,6 +406,7 @@ function renderRequests(){
                         <th>Interesse</th>
                         <th>Motivo</th>
                         <th>Data</th>
+                        <th>Azioni</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -348,12 +415,18 @@ function renderRequests(){
                             <td>${esc(r.id)}</td>
                             <td><strong>${esc(r.name)}</strong></td>
                             <td class="email">${esc(r.email)}</td>
-                            <td><span class="profile-pill">${esc(r.profile)}</span></td>
-                            <td>${esc(r.plan || "-")}</td>
+                            <td><span class="profile-pill ${profileClass(r.profile)}">${esc(r.profile)}</span></td>
+                            <td><span class="plan-pill">${esc(r.plan || "-")}</span></td>
                             <td class="reason">${esc(r.reason || "-")}</td>
                             <td>
                                 ${formatDate(r.created_at)}
                                 <div class="small">${esc(r.source || "")}</div>
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="btn dark small-btn" onclick="copyEmail('${escAttr(r.email)}')">Copia</button>
+                                    <button class="btn green small-btn" onclick="openMail('${escAttr(r.email)}','${escAttr(r.name)}')">Mail</button>
+                                </div>
                             </td>
                         </tr>
                     `).join("")}
@@ -366,6 +439,59 @@ function renderRequests(){
 function updateTotal(value){
     const total = document.getElementById("requestTotal");
     if(total) total.textContent = `${value} RICHIESTE`;
+}
+
+function updateStats(list){
+    const total = list.length;
+    const scout = list.filter(r => String(r.profile || "") === "Scout").length;
+    const analyst = list.filter(r => String(r.profile || "") === "Analista").length;
+    const creator = list.filter(r => String(r.profile || "") === "Creator sportivo").length;
+
+    setText("statTotal",total);
+    setText("statScout",scout);
+    setText("statAnalyst",analyst);
+    setText("statCreator",creator);
+}
+
+function setText(id,value){
+    const el = document.getElementById(id);
+    if(el) el.textContent = value;
+}
+
+function profileClass(profile){
+    const p = String(profile || "").toLowerCase();
+
+    if(p.includes("scout")) return "profile-scout";
+    if(p.includes("analista")) return "profile-analista";
+    if(p.includes("creator")) return "profile-creator";
+    if(p.includes("scommettitore")) return "profile-better";
+
+    return "profile-default";
+}
+
+async function copyEmail(email){
+    try{
+        await navigator.clipboard.writeText(email);
+        showMessage(`Email copiata: ${esc(email)}`, "ok");
+    }catch(e){
+        showMessage(`Copia non riuscita. Email: ${esc(email)}`, "error");
+    }
+}
+
+function openMail(email,name){
+    const subject = encodeURIComponent("Accesso Beta MatchIQ Tactical");
+    const body = encodeURIComponent(
+`Ciao ${name || ""},
+
+grazie per aver richiesto accesso alla beta di MatchIQ Tactical.
+
+Ti ricontatto per darti maggiori informazioni e capire come vuoi usare la piattaforma.
+
+Mario
+MatchIQ Tactical`
+    );
+
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 }
 
 function exportBetaCSV(){
@@ -397,12 +523,13 @@ function exportBetaCSV(){
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "matchiq_beta_requests_v741.csv";
+    a.download = "matchiq_beta_requests_v75.csv";
     document.body.appendChild(a);
     a.click();
     a.remove();
 
     URL.revokeObjectURL(url);
+    showMessage("Export CSV completato.", "ok");
 }
 
 function formatDate(value){
@@ -422,6 +549,10 @@ function esc(v){
         .replaceAll(">","&gt;")
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
+}
+
+function escAttr(v){
+    return esc(v).replaceAll("\\","\\\\");
 }
 
 window.addEventListener("load", () => {
