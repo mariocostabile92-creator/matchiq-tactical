@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical Dashboard V6.8</title>
+<title>MatchIQ Tactical V7.0 Launch Beta</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -38,6 +38,7 @@ body{
     background:linear-gradient(135deg,#2f6bff,#7c4dff);
 }
 .btn.dark{background:rgba(255,255,255,.08)}
+.btn.green{background:linear-gradient(135deg,#00c980,#2f6bff)}
 .account{
     border:1px solid rgba(255,255,255,.1);
     background:rgba(255,255,255,.06);
@@ -89,6 +90,23 @@ body{
 }
 .hero h1{font-size:46px;margin-bottom:12px}
 .hero p{color:#b7c7ef;line-height:1.7}
+.hero-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:20px;
+}
+.beta-badge{
+    display:inline-block;
+    padding:8px 12px;
+    border-radius:999px;
+    background:rgba(0,245,160,.12);
+    border:1px solid rgba(0,245,160,.35);
+    color:#00f5a0;
+    font-size:12px;
+    font-weight:1000;
+    margin-bottom:14px;
+}
 .stat-number{font-size:44px;font-weight:1000;margin-top:12px}
 .section-title{
     font-size:28px;
@@ -152,6 +170,12 @@ body{
     background:rgba(255,70,70,.12);
     border:1px solid rgba(255,70,70,.25);
 }
+.launch-note{
+    color:#9fb2e7;
+    font-size:13px;
+    line-height:1.6;
+    margin-top:10px;
+}
 @media(max-width:900px){
     .hero{grid-template-columns:1fr}
     .topbar{flex-direction:column;align-items:flex-start;gap:16px}
@@ -164,13 +188,13 @@ body{
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">AI Tactical Analysis Platform · SCOUT V6.8 Core</div>
+        <div class="subtitle">AI Football Intelligence Platform · V7.0 Launch Beta</div>
     </div>
 
     <div class="actions">
         <button class="btn" onclick="loadMatches(true)">TOP LEAGUES</button>
         <button class="btn dark" onclick="loadMatches(false)">ALL LIVE</button>
-        <button class="btn" onclick="openScoutHome()">🧠 SCOUT V6.8</button>
+        <button class="btn green" onclick="openScoutHome()">🧠 OPEN SCOUT BETA</button>
 
         <div class="account">
             <div id="userEmail">mario.costabile92@outlook.it</div>
@@ -187,20 +211,31 @@ body{
         <div class="status-card"><span class="dot"></span>LIVE ENGINE ACTIVE</div>
         <div class="status-card"><span class="dot"></span>API FOOTBALL CONNECTED</div>
         <div class="status-card"><span class="dot"></span>AI TACTICAL ENGINE ONLINE</div>
-        <div class="status-card"><span class="dot"></span>SCOUT V6.8 CORE ENABLED</div>
+        <div class="status-card"><span class="dot"></span>LAUNCH BETA ACTIVE</div>
     </div>
 
     <div class="hero">
         <div class="card">
-            <h1>Live Tactical Dashboard</h1>
+            <span class="beta-badge">V7.0 LAUNCH BETA</span>
+            <h1>Live Tactical Intelligence for Football</h1>
             <p>
-                Monitora partite live, analisi tattiche AI, momentum, pressure engine,
-                player ratings e Scout Mode V6.8 Core con cache-buster automatico.
+                Analizza partite live, segnali tattici, momentum, pressure engine,
+                player ratings e Scout Mode in tempo reale. MatchIQ trasforma i dati live
+                in insight operativi per scouting, analisi e decisioni rapide.
             </p>
+
+            <div class="hero-actions">
+                <button class="btn green" onclick="openScoutHome()">Avvia Scout Beta</button>
+                <button class="btn dark" onclick="loadMatches(false)">Aggiorna partite live</button>
+            </div>
+
+            <div class="launch-note">
+                Versione beta privata: moduli live, watchlist, export report e schede player PRO attivi.
+            </div>
         </div>
 
         <div class="card">
-            <div class="league">PARTITE LIVE</div>
+            <div class="league">PARTITE LIVE MONITORATE</div>
             <div class="stat-number" id="liveCount">--</div>
             <p>Match disponibili in tempo reale.</p>
         </div>
@@ -217,8 +252,8 @@ body{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10013";
-const SCOUT_VERSION_LABEL = "SCOUT V6.8 Core";
+const APP_VERSION = "10014";
+const SCOUT_VERSION_LABEL = "SCOUT V7.0 Launch Beta";
 
 function forceOwnerPro(){
     const user = {
@@ -330,7 +365,7 @@ function openScoutHome(){
 }
 
 function setVersionLabels(){
-    document.title = "MatchIQ Tactical Dashboard V6.8";
+    document.title = "MatchIQ Tactical V7.0 Launch Beta";
 }
 
 forceOwnerPro();

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MatchIQ Scout V6.8 Core</title>
+  <title>MatchIQ Scout V7.0 Launch Beta</title>
 
   <link rel="stylesheet" href="css/scout.css">
 
@@ -22,22 +22,24 @@
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
-      <strong>Caricamento Scout V6.8 CORE...</strong>
-      <p style="color:var(--muted);margin-top:6px;font-size:13px;">Live sync dashboard · Metriche stabili · Release-ready</p>
+      <strong>Caricamento MatchIQ Scout V7.0 BETA...</strong>
+      <p style="color:var(--muted);margin-top:6px;font-size:13px;">
+        Live intelligence · Player scouting · Tactical signals · Launch Beta
+      </p>
     </div>
   </div>
 
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>MatchIQ Scout V6.8 CORE</h1>
-        <div class="subtitle">Real Players · Live Sync · Threat · Creativity · Pressure · Impact</div>
+        <h1>MatchIQ Scout V7.0 BETA</h1>
+        <div class="subtitle">Live Player Intelligence · Tactical Signals · Watchlist · Export Report</div>
       </div>
 
       <div class="actions">
         <button class="btn" onclick="goDashboard()">← Dashboard</button>
-        <div class="pill pill-live"><span class="dot"></span> REAL PLAYERS</div>
-        <div class="pill pill-clean">V6.8 CORE</div>
+        <div class="pill pill-live"><span class="dot"></span> LIVE DATA</div>
+        <div class="pill pill-clean">LAUNCH BETA</div>
         <div class="pill pill-api" id="apiSafePill">API SAFE</div>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
         <button class="btn btn-green" onclick="exportScoutReport()">Export report</button>
@@ -45,7 +47,7 @@
       </div>
     </header>
 
-    <div class="ticker" id="tickerText">MatchIQ Scout V6.8 · caricamento dati...</div>
+    <div class="ticker" id="tickerText">MatchIQ Scout V7.0 Beta · caricamento dati live...</div>
     <div class="notice" id="noticeBox"></div>
 
     <main class="layout">
@@ -107,7 +109,7 @@
         <div class="panel">
           <div class="panel-head">
             <h2>Player Live Cards</h2>
-            <small>clicca un player per Modal PRO</small>
+            <small>clicca un player per aprire la scheda PRO</small>
           </div>
           <div class="players" id="players"></div>
         </div>
@@ -175,7 +177,7 @@
         </div>
 
         <div class="pro-card">
-          <h3>Radar Performance <span>V6.8</span></h3>
+          <h3>Radar Performance <span>V7.0</span></h3>
           <div class="radar-wrap"><svg class="radar" viewBox="0 0 300 300" id="radarSvg"></svg></div>
         </div>
 
@@ -210,7 +212,7 @@
         </div>
 
         <div class="pro-card" style="grid-column:1/-1;">
-          <h3>Azioni Scout <span>V6.8 CORE</span></h3>
+          <h3>Azioni Scout <span>V7.0 BETA</span></h3>
           <div class="actions">
             <button class="btn btn-green" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
             <button class="btn" onclick="exportOpenPlayerReport()">Export player report</button>
