@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Admin Beta Requests V7.7 Email Template</title>
+<title>MatchIQ Admin Beta Requests V7.8 Beta Access Code</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -46,7 +46,7 @@ body{
     border-radius:10px;
     font-size:12px;
 }
-.main{max-width:1550px;margin:auto;padding:32px}
+.main{max-width:1650px;margin:auto;padding:32px}
 .status-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -90,7 +90,7 @@ body{
 .hero p{color:#b7c7ef;line-height:1.7}
 .stats-mini{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
     gap:14px;
     margin:0 0 24px;
 }
@@ -155,7 +155,7 @@ textarea{
 table{
     width:100%;
     border-collapse:collapse;
-    min-width:1580px;
+    min-width:1780px;
 }
 th,td{
     text-align:left;
@@ -172,12 +172,12 @@ th{
 td{color:#eaf0ff;font-size:14px}
 .reason{
     color:#aebee7;
-    max-width:320px;
+    max-width:300px;
     white-space:normal;
     line-height:1.45;
 }
 .email{color:#00f5a0;font-weight:900}
-.profile-pill,.plan-pill,.status-pill,.template-pill{
+.profile-pill,.plan-pill,.status-pill,.template-pill,.code-pill{
     display:inline-block;
     padding:6px 10px;
     border-radius:999px;
@@ -200,6 +200,21 @@ td{color:#eaf0ff;font-size:14px}
     background:rgba(0,245,160,.10);
     color:#00f5a0;
 }
+.code-pill{
+    background:rgba(247,183,51,.14);
+    color:#ffe28a;
+    font-family:Consolas,monospace;
+    letter-spacing:.4px;
+}
+.no-code{
+    display:inline-block;
+    padding:8px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.07);
+    color:#8fa3d7;
+    font-size:12px;
+    font-weight:1000;
+}
 .row-actions{
     display:flex;
     gap:8px;
@@ -210,6 +225,9 @@ td{color:#eaf0ff;font-size:14px}
 }
 .template-cell{
     min-width:240px;
+}
+.code-cell{
+    min-width:230px;
 }
 .crm-status{
     width:100%;
@@ -244,10 +262,16 @@ td{color:#eaf0ff;font-size:14px}
     font-size:11px;
     margin-top:6px;
 }
-.template-preview{
+.template-preview,.code-help{
     color:#aebee7;
     font-size:12px;
     line-height:1.45;
+    margin-top:8px;
+}
+.code-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
     margin-top:8px;
 }
 @media(max-width:900px){
@@ -262,7 +286,7 @@ td{color:#eaf0ff;font-size:14px}
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Admin</div>
-        <div class="subtitle">Beta Requests · V7.7 Email Template</div>
+        <div class="subtitle">Beta Requests · V7.8 Beta Access Code</div>
     </div>
 
     <div class="actions">
@@ -277,17 +301,17 @@ td{color:#eaf0ff;font-size:14px}
     <div class="status-grid">
         <div class="status-card"><span class="dot"></span>ADMIN PANEL ACTIVE</div>
         <div class="status-card"><span class="dot"></span>BETA DATABASE CONNECTED</div>
-        <div class="status-card"><span class="dot"></span>V7.7 EMAIL TEMPLATE</div>
+        <div class="status-card"><span class="dot"></span>V7.8 ACCESS CODE</div>
         <div class="status-card"><span class="dot"></span><span id="requestTotal">0 RICHIESTE</span></div>
     </div>
 
     <div class="hero">
-        <span class="badge">V7.7 EMAIL TEMPLATE</span>
+        <span class="badge">V7.8 BETA ACCESS CODE</span>
         <h1>Gestione richieste accesso Beta</h1>
         <p>
             Visualizza, filtra e gestisci i lead beta di MatchIQ Tactical.
-            Ora puoi assegnare uno stato, scrivere note interne, copiare email,
-            generare template automatici e aprire mail già pronte in base allo stato del lead.
+            Ora puoi assegnare uno stato, scrivere note interne, generare codici accesso beta,
+            copiare template email e inviare messaggi già pronti con codice incluso.
         </p>
     </div>
 
@@ -335,6 +359,10 @@ td{color:#eaf0ff;font-size:14px}
             <small>Lead caldi</small>
             <strong id="statHot">0</strong>
         </div>
+        <div class="stat-box">
+            <small>Codici generati</small>
+            <strong id="statCodes">0</strong>
+        </div>
     </div>
 
     <div class="panel">
@@ -342,7 +370,7 @@ td{color:#eaf0ff;font-size:14px}
             <h2>Lista richieste</h2>
 
             <div class="controls">
-                <input id="searchInput" placeholder="Cerca nome, email, profilo..." oninput="renderRequests()" />
+                <input id="searchInput" placeholder="Cerca nome, email, profilo, codice..." oninput="renderRequests()" />
 
                 <select id="statusFilter" onchange="renderRequests()">
                     <option value="all">Tutti gli stati</option>
@@ -380,7 +408,7 @@ td{color:#eaf0ff;font-size:14px}
 </div>
 
 <script>
-const APP_VERSION = "10021";
+const APP_VERSION = "10023";
 const VALID_STATUSES = ["Nuovo","Contattato","Interessato","Convertito","Scartato"];
 let betaRequests = [];
 
@@ -472,6 +500,7 @@ function normalizeRequest(r){
         source: r.source || "",
         status: VALID_STATUSES.includes(r.status) ? r.status : "Nuovo",
         internal_note: r.internal_note || "",
+        beta_code: r.beta_code || "",
         created_at: r.created_at || "",
         updated_at: r.updated_at || ""
     };
@@ -494,6 +523,7 @@ function renderRequests(){
             r.reason,
             r.status,
             r.internal_note,
+            r.beta_code,
             r.source,
             r.created_at
         ].join(" ").toLowerCase();
@@ -524,6 +554,7 @@ function renderRequests(){
                         <th>Stato</th>
                         <th>Motivo</th>
                         <th>CRM</th>
+                        <th>Codice Beta</th>
                         <th>Template</th>
                         <th>Data</th>
                         <th>Azioni</th>
@@ -553,6 +584,18 @@ function renderRequests(){
 
                                 <div class="updated">
                                     Aggiornato: ${formatDate(r.updated_at || r.created_at)}
+                                </div>
+                            </td>
+                            <td class="code-cell">
+                                ${r.beta_code
+                                    ? `<span class="code-pill">${esc(r.beta_code)}</span>
+                                       <div class="code-help">Codice personale già assegnato.</div>`
+                                    : `<span class="no-code">Nessun codice</span>
+                                       <div class="code-help">Genera un codice beta per questo lead.</div>`
+                                }
+                                <div class="code-actions">
+                                    <button class="btn green small-btn" onclick="generateBetaCode('${escAttr(r.id)}')">Genera codice</button>
+                                    <button class="btn dark small-btn" onclick="copyBetaCode('${escAttr(r.id)}')">Copia codice</button>
                                 </div>
                             </td>
                             <td class="template-cell">
@@ -595,6 +638,7 @@ function updateStats(list){
     const analyst = list.filter(r => String(r.profile || "") === "Analista").length;
     const creator = list.filter(r => String(r.profile || "") === "Creator sportivo").length;
     const hot = list.filter(r => ["Interessato","Convertito"].includes(String(r.status || ""))).length;
+    const codes = list.filter(r => String(r.beta_code || "").trim()).length;
 
     setText("statTotal", total);
     setText("statNuovo", countStatus("Nuovo"));
@@ -607,6 +651,7 @@ function updateStats(list){
     setText("statAnalyst", analyst);
     setText("statCreator", creator);
     setText("statHot", hot);
+    setText("statCodes", codes);
 }
 
 function setText(id,value){
@@ -661,16 +706,26 @@ function buildEmailTemplate(lead){
     const profile = lead.profile || "utente";
     const plan = lead.plan || "Beta gratuita";
     const reason = lead.reason || "-";
-    const note = lead.internal_note || "-";
     const status = lead.status || "Nuovo";
+    const betaCode = lead.beta_code || "";
 
     const cleanName = name || "ciao";
+    const codeBlock = betaCode
+        ? `
+
+Codice accesso beta:
+${betaCode}
+
+Conserva questo codice: sarà utile per identificare il tuo accesso beta.`
+        : `
+
+Il codice di accesso beta ti verrà inviato appena sarà generato dal pannello admin.`;
 
     if(status === "Contattato"){
         return {
             label: "Follow-up",
             subject: "Follow-up accesso Beta MatchIQ Tactical",
-            preview: "Ti ricontatto dopo il primo messaggio per capire come vuoi usare MatchIQ.",
+            preview: betaCode ? "Follow-up con codice beta incluso." : "Follow-up dopo primo contatto.",
             body:
 `Ciao ${cleanName},
 
@@ -679,7 +734,7 @@ ti ricontatto in merito alla tua richiesta di accesso alla beta di MatchIQ Tacti
 Ho visto che hai indicato:
 - Profilo: ${profile}
 - Interesse: ${plan}
-- Motivo: ${reason}
+- Motivo: ${reason}${codeBlock}
 
 Mi farebbe piacere capire meglio come vorresti usare la piattaforma, così posso indirizzarti sulle funzioni più utili per te.
 
@@ -695,7 +750,7 @@ MatchIQ Tactical`
         return {
             label: "Invito demo",
             subject: "Demo MatchIQ Tactical - accesso Beta",
-            preview: "Lead caldo: proponi demo e piano Pro.",
+            preview: betaCode ? "Lead caldo: demo + codice beta." : "Lead caldo: proponi demo e piano Pro.",
             body:
 `Ciao ${cleanName},
 
@@ -707,7 +762,7 @@ Ti mostro in modo semplice:
 - Player signals
 - Watchlist
 - Report ed export
-- Possibili funzioni Pro
+- Possibili funzioni Pro${codeBlock}
 
 L’obiettivo è capire se MatchIQ può esserti utile per analisi, scouting, contenuti sportivi o monitoraggio live.
 
@@ -723,11 +778,11 @@ MatchIQ Tactical`
         return {
             label: "Accesso confermato",
             subject: "Accesso MatchIQ Tactical confermato",
-            preview: "Conferma accesso e prossimi step.",
+            preview: betaCode ? "Conferma accesso con codice beta." : "Conferma accesso e prossimi step.",
             body:
 `Ciao ${cleanName},
 
-ti confermo i prossimi step per l’accesso a MatchIQ Tactical.
+ti confermo i prossimi step per l’accesso a MatchIQ Tactical.${codeBlock}
 
 Da qui potrai iniziare a testare:
 - Dashboard live
@@ -769,7 +824,7 @@ MatchIQ Tactical`
     return {
         label: "Benvenuto Beta",
         subject: "Accesso Beta MatchIQ Tactical",
-        preview: "Primo contatto per nuovo lead beta.",
+        preview: betaCode ? "Primo contatto con codice beta incluso." : "Primo contatto per nuovo lead beta.",
         body:
 `Ciao ${cleanName},
 
@@ -778,7 +833,7 @@ grazie per aver richiesto accesso alla beta di MatchIQ Tactical.
 Ho ricevuto la tua richiesta con questi dati:
 - Profilo: ${profile}
 - Interesse: ${plan}
-- Motivo: ${reason}
+- Motivo: ${reason}${codeBlock}
 
 MatchIQ Tactical è una piattaforma di AI Football Intelligence pensata per leggere partite live, momentum, segnali tattici e player insights in tempo reale.
 
@@ -835,6 +890,41 @@ async function saveLeadCRM(id){
     }
 }
 
+async function generateBetaCode(id){
+    showMessage(`Generazione codice beta per lead #${esc(id)}...`, "empty");
+
+    try{
+        const res = await fetch(`/api/beta-requests/${encodeURIComponent(id)}/generate-code`, {
+            method:"POST",
+            headers:{ "Accept":"application/json" }
+        });
+
+        const text = await res.text();
+
+        let data;
+        try{
+            data = JSON.parse(text);
+        }catch{
+            throw new Error("Risposta non JSON: " + text.slice(0,120));
+        }
+
+        if(!res.ok || data.ok === false){
+            throw new Error(data.message || data.detail || "Errore generazione codice");
+        }
+
+        const updated = normalizeRequest(data.request || data.lead || data.data || {});
+        betaRequests = betaRequests.map(r => String(r.id) === String(id) ? updated : r);
+
+        updateStats(betaRequests);
+        renderRequests();
+
+        showMessage(`Codice beta generato: ${esc(updated.beta_code || data.beta_code || "")}`, "ok");
+
+    }catch(e){
+        showMessage("Errore generazione codice beta: " + e.message, "error");
+    }
+}
+
 async function quickStatus(id,status){
     const select = document.getElementById(`status_${id}`);
     if(select) select.value = status;
@@ -847,6 +937,27 @@ async function copyEmail(email){
         showMessage(`Email copiata: ${esc(email)}`, "ok");
     }catch(e){
         showMessage(`Copia non riuscita. Email: ${esc(email)}`, "error");
+    }
+}
+
+async function copyBetaCode(id){
+    const lead = getLeadById(id);
+
+    if(!lead){
+        showMessage("Lead non trovato.", "error");
+        return;
+    }
+
+    if(!lead.beta_code){
+        showMessage("Questo lead non ha ancora un codice beta. Clicca prima su Genera codice.", "error");
+        return;
+    }
+
+    try{
+        await navigator.clipboard.writeText(lead.beta_code);
+        showMessage(`Codice copiato: ${esc(lead.beta_code)}`, "ok");
+    }catch(e){
+        showMessage("Copia codice non riuscita.", "error");
     }
 }
 
