@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical V7.5 Admin Actions</title>
+<title>MatchIQ Tactical V8.0.2 Free Pro UI</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -315,7 +315,7 @@ body{
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">AI Football Intelligence Platform · V7.5 Admin Actions</div>
+        <div class="subtitle">AI Football Intelligence Platform · V8.0.2 Free / Pro UI</div>
     </div>
 
     <div class="actions">
@@ -340,12 +340,12 @@ body{
         <div class="status-card"><span class="dot"></span>LIVE ENGINE ACTIVE</div>
         <div class="status-card"><span class="dot"></span>API FOOTBALL CONNECTED</div>
         <div class="status-card"><span class="dot"></span>AI TACTICAL ENGINE ONLINE</div>
-        <div class="status-card"><span class="dot"></span>ADMIN ACTIONS ACTIVE</div>
+        <div class="status-card"><span class="dot"></span>FREE / PRO LIMITS ACTIVE</div>
     </div>
 
     <div class="hero">
         <div class="card">
-            <span class="beta-badge">V7.5 ADMIN ACTIONS</span>
+            <span class="beta-badge">V8.0 FREE / PRO UI</span>
             <h1>AI Football Intelligence per chi vuole leggere la partita prima degli altri</h1>
             <p>
                 MatchIQ analizza partite live, momentum, pressure engine, segnali tattici,
@@ -480,19 +480,47 @@ body{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10020";
-const SCOUT_VERSION_LABEL = "SCOUT V7.5 Admin Actions";
+const APP_VERSION = "10026";
+const SCOUT_VERSION_LABEL = "SCOUT V8.0.2 Free Pro UI";
 const BETA_STORAGE_KEY = "matchiq_beta_requests_v72";
 
-function forceOwnerPro(){
-    const user = {
-        email: OWNER_EMAIL,
-        plan: "owner_pro"
-    };
+let ACCOUNT_LIMITS = {
+    plan: "guest",
+    label: "Guest",
+    limits: { max_live_matches: 3 },
+    features: {}
+};
 
-    localStorage.setItem("matchiq_auth_user", JSON.stringify(user));
-    document.getElementById("userEmail").textContent = user.email;
-    document.getElementById("userPlan").textContent = "OWNER PRO";
+async function loadAccountLimits(){
+    const emailEl = document.getElementById("userEmail");
+    const planEl = document.getElementById("userPlan");
+
+    try{
+        const res = await fetch(`${API_BASE}/account/limits?ts=${Date.now()}`, { cache:"no-store" });
+        const data = await res.json();
+
+        if(data && data.success){
+            ACCOUNT_LIMITS = data;
+        }
+    }catch(e){
+        ACCOUNT_LIMITS = { plan:"guest", label:"Guest", limits:{ max_live_matches:3 }, features:{} };
+    }
+
+    const plan = String(ACCOUNT_LIMITS.plan || "guest").toLowerCase();
+
+    if(plan === "guest"){
+        if(emailEl) emailEl.textContent = "Utente ospite";
+        if(planEl) planEl.textContent = "GUEST";
+        return;
+    }
+
+    let savedUser = null;
+    try{
+        savedUser = JSON.parse(localStorage.getItem("matchiq_auth_user") || "null");
+    }catch{}
+
+    if(emailEl) emailEl.textContent = savedUser?.email || "Account MatchIQ";
+    if(planEl) planEl.textContent = String(ACCOUNT_LIMITS.label || plan).toUpperCase();
 }
 
 function logout(){
@@ -624,6 +652,8 @@ async function loadMatches(topOnly=true){
         const data = await res.json();
 
         const matches = data.matches || [];
+        const maxVisible = Number(ACCOUNT_LIMITS?.limits?.max_live_matches || matches.length || 999);
+        const visibleMatches = matches.slice(0, maxVisible);
 
         document.getElementById("liveCount").textContent = matches.length;
 
@@ -632,7 +662,11 @@ async function loadMatches(topOnly=true){
             return;
         }
 
-        container.innerHTML = matches.map(match=>{
+        const limitNotice = matches.length > visibleMatches.length
+            ? `<div class="error" style="background:rgba(247,183,51,.12);border-color:rgba(247,183,51,.28);color:#ffe28a">Stai vedendo ${visibleMatches.length} partite su ${matches.length}. Passa a Pro per sbloccare tutto.</div>`
+            : "";
+
+        container.innerHTML = limitNotice + visibleMatches.map(match=>{
             const id = getMatchId(match);
             const score = formatScore(match);
 
@@ -691,13 +725,14 @@ function openAdminBeta(){
 }
 
 function setVersionLabels(){
-    document.title = "MatchIQ Tactical V7.5 Admin Actions";
+    document.title = "MatchIQ Tactical V8.0.2 Free Pro UI";
 }
 
-forceOwnerPro();
-setVersionLabels();
-loadMatches(false);
-setInterval(()=>loadMatches(false),60000);
+loadAccountLimits().finally(()=>{
+    setVersionLabels();
+    loadMatches(false);
+    setInterval(()=>loadMatches(false),60000);
+});
 </script>
 
 </body>
