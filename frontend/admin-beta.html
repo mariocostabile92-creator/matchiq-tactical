@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Admin Beta Requests V7.5</title>
+<title>MatchIQ Admin Beta Requests V7.6 Mini CRM</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -40,6 +40,7 @@ body{
 .btn.dark{background:rgba(255,255,255,.08)}
 .btn.green{background:linear-gradient(135deg,#00c980,#2f6bff)}
 .btn.gold{background:linear-gradient(135deg,#f7b733,#fc4a1a)}
+.btn.red{background:linear-gradient(135deg,#ff4058,#8b1d35)}
 .btn.small-btn{
     padding:8px 10px;
     border-radius:10px;
@@ -89,7 +90,7 @@ body{
 .hero p{color:#b7c7ef;line-height:1.7}
 .stats-mini{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
     gap:14px;
     margin:0 0 24px;
 }
@@ -124,8 +125,12 @@ body{
     margin-bottom:18px;
 }
 .panel-head h2{font-size:24px}
-.controls{display:flex;gap:12px;flex-wrap:wrap}
-input,select{
+.controls{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+input,select,textarea{
     border:1px solid rgba(255,255,255,.10);
     background:rgba(4,8,18,.85);
     color:#fff;
@@ -134,13 +139,24 @@ input,select{
     outline:none;
     font-weight:800;
 }
+textarea{
+    width:100%;
+    min-height:64px;
+    resize:vertical;
+    font-size:12px;
+    line-height:1.4;
+}
 .table-wrap{
     width:100%;
     overflow:auto;
     border-radius:20px;
     border:1px solid rgba(255,255,255,.08);
 }
-table{width:100%;border-collapse:collapse;min-width:1120px}
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1450px;
+}
 th,td{
     text-align:left;
     padding:14px 16px;
@@ -156,12 +172,12 @@ th{
 td{color:#eaf0ff;font-size:14px}
 .reason{
     color:#aebee7;
-    max-width:360px;
+    max-width:320px;
     white-space:normal;
     line-height:1.45;
 }
 .email{color:#00f5a0;font-weight:900}
-.profile-pill,.plan-pill{
+.profile-pill,.plan-pill,.status-pill{
     display:inline-block;
     padding:6px 10px;
     border-radius:999px;
@@ -175,10 +191,22 @@ td{color:#eaf0ff;font-size:14px}
 .profile-better{background:rgba(255,64,88,.13);color:#ff9aaa}
 .profile-default{background:rgba(255,255,255,.08);color:#dbe6ff}
 .plan-pill{background:rgba(124,77,255,.15);color:#d8ccff}
+.status-nuovo{background:rgba(47,107,255,.16);color:#8fb1ff}
+.status-contattato{background:rgba(247,183,51,.14);color:#ffe28a}
+.status-interessato{background:rgba(0,245,160,.13);color:#00f5a0}
+.status-convertito{background:rgba(0,201,128,.22);color:#7dffca}
+.status-scartato{background:rgba(255,64,88,.13);color:#ff9aaa}
 .row-actions{
     display:flex;
     gap:8px;
     flex-wrap:wrap;
+}
+.crm-cell{
+    min-width:260px;
+}
+.crm-status{
+    width:100%;
+    margin-bottom:8px;
 }
 .empty,.error,.ok{
     padding:18px;
@@ -197,6 +225,18 @@ td{color:#eaf0ff;font-size:14px}
     border:1px solid rgba(255,70,70,.25);
 }
 .small{color:#8fa3d7;font-size:12px}
+.note-label{
+    display:block;
+    color:#8fa3d7;
+    font-size:11px;
+    font-weight:1000;
+    margin:8px 0 6px;
+}
+.updated{
+    color:#8fa3d7;
+    font-size:11px;
+    margin-top:6px;
+}
 @media(max-width:900px){
     .topbar{flex-direction:column;align-items:flex-start}
     .panel-head{flex-direction:column;align-items:flex-start}
@@ -209,7 +249,7 @@ td{color:#eaf0ff;font-size:14px}
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Admin</div>
-        <div class="subtitle">Beta Requests · V7.5 Admin Actions</div>
+        <div class="subtitle">Beta Requests · V7.6 Mini CRM</div>
     </div>
 
     <div class="actions">
@@ -224,15 +264,16 @@ td{color:#eaf0ff;font-size:14px}
     <div class="status-grid">
         <div class="status-card"><span class="dot"></span>ADMIN PANEL ACTIVE</div>
         <div class="status-card"><span class="dot"></span>BETA DATABASE CONNECTED</div>
-        <div class="status-card"><span class="dot"></span>V7.5 ADMIN ACTIONS</div>
+        <div class="status-card"><span class="dot"></span>V7.6 MINI CRM</div>
         <div class="status-card"><span class="dot"></span><span id="requestTotal">0 RICHIESTE</span></div>
     </div>
 
     <div class="hero">
-        <span class="badge">V7.5 ADMIN ACTIONS</span>
+        <span class="badge">V7.6 MINI CRM</span>
         <h1>Gestione richieste accesso Beta</h1>
         <p>
-            Visualizza, filtra e gestisci i lead beta di MatchIQ Tactical. Ora puoi copiare email,
+            Visualizza, filtra e gestisci i lead beta di MatchIQ Tactical.
+            Ora puoi assegnare uno stato, scrivere note interne, copiare email,
             aprire mail dirette ed esportare i contatti in CSV.
         </p>
     </div>
@@ -242,6 +283,29 @@ td{color:#eaf0ff;font-size:14px}
             <small>Totale richieste</small>
             <strong id="statTotal">0</strong>
         </div>
+        <div class="stat-box">
+            <small>Nuovi</small>
+            <strong id="statNuovo">0</strong>
+        </div>
+        <div class="stat-box">
+            <small>Contattati</small>
+            <strong id="statContattato">0</strong>
+        </div>
+        <div class="stat-box">
+            <small>Interessati</small>
+            <strong id="statInteressato">0</strong>
+        </div>
+        <div class="stat-box">
+            <small>Convertiti</small>
+            <strong id="statConvertito">0</strong>
+        </div>
+        <div class="stat-box">
+            <small>Scartati</small>
+            <strong id="statScartato">0</strong>
+        </div>
+    </div>
+
+    <div class="stats-mini">
         <div class="stat-box">
             <small>Scout</small>
             <strong id="statScout">0</strong>
@@ -254,6 +318,10 @@ td{color:#eaf0ff;font-size:14px}
             <small>Creator</small>
             <strong id="statCreator">0</strong>
         </div>
+        <div class="stat-box">
+            <small>Lead caldi</small>
+            <strong id="statHot">0</strong>
+        </div>
     </div>
 
     <div class="panel">
@@ -262,6 +330,15 @@ td{color:#eaf0ff;font-size:14px}
 
             <div class="controls">
                 <input id="searchInput" placeholder="Cerca nome, email, profilo..." oninput="renderRequests()" />
+
+                <select id="statusFilter" onchange="renderRequests()">
+                    <option value="all">Tutti gli stati</option>
+                    <option value="Nuovo">Nuovo</option>
+                    <option value="Contattato">Contattato</option>
+                    <option value="Interessato">Interessato</option>
+                    <option value="Convertito">Convertito</option>
+                    <option value="Scartato">Scartato</option>
+                </select>
 
                 <select id="profileFilter" onchange="renderRequests()">
                     <option value="all">Tutti i profili</option>
@@ -291,6 +368,7 @@ td{color:#eaf0ff;font-size:14px}
 
 <script>
 const APP_VERSION = "10020";
+const VALID_STATUSES = ["Nuovo","Contattato","Interessato","Convertito","Scartato"];
 let betaRequests = [];
 
 function goDashboard(){
@@ -334,7 +412,11 @@ async function loadBetaRequests(){
             ? data.requests
             : Array.isArray(data.data)
                 ? data.data
-                : [];
+                : Array.isArray(data.items)
+                    ? data.items
+                    : Array.isArray(data.leads)
+                        ? data.leads
+                        : [];
 
         if(!res.ok || data.ok === false){
             betaRequests = [];
@@ -345,12 +427,14 @@ async function loadBetaRequests(){
             return;
         }
 
-        betaRequests = requests;
+        betaRequests = requests.map(normalizeRequest);
         updateTotal(betaRequests.length);
         updateStats(betaRequests);
 
         if(betaRequests.length){
             showMessage(`Richieste caricate correttamente: ${betaRequests.length}`, "ok");
+        }else{
+            showMessage("Nessuna richiesta beta presente.", "empty");
         }
 
         renderRequests();
@@ -364,9 +448,26 @@ async function loadBetaRequests(){
     }
 }
 
+function normalizeRequest(r){
+    return {
+        id: r.id,
+        name: r.name || "",
+        email: r.email || "",
+        profile: r.profile || "",
+        plan: r.plan || r.interest || "Beta gratuita",
+        reason: r.reason || r.message || "",
+        source: r.source || "",
+        status: VALID_STATUSES.includes(r.status) ? r.status : "Nuovo",
+        internal_note: r.internal_note || "",
+        created_at: r.created_at || "",
+        updated_at: r.updated_at || ""
+    };
+}
+
 function renderRequests(){
     const tableBox = document.getElementById("tableBox");
     const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
+    const status = document.getElementById("statusFilter")?.value || "all";
     const profile = document.getElementById("profileFilter")?.value || "all";
     const plan = document.getElementById("planFilter")?.value || "all";
 
@@ -378,11 +479,14 @@ function renderRequests(){
             r.profile,
             r.plan,
             r.reason,
+            r.status,
+            r.internal_note,
             r.source,
             r.created_at
         ].join(" ").toLowerCase();
 
         return (!q || haystack.includes(q)) &&
+               (status === "all" || String(r.status || "") === status) &&
                (profile === "all" || String(r.profile || "") === profile) &&
                (plan === "all" || String(r.plan || "") === plan);
     });
@@ -404,7 +508,9 @@ function renderRequests(){
                         <th>Email</th>
                         <th>Profilo</th>
                         <th>Interesse</th>
+                        <th>Stato</th>
                         <th>Motivo</th>
+                        <th>CRM</th>
                         <th>Data</th>
                         <th>Azioni</th>
                     </tr>
@@ -417,15 +523,32 @@ function renderRequests(){
                             <td class="email">${esc(r.email)}</td>
                             <td><span class="profile-pill ${profileClass(r.profile)}">${esc(r.profile)}</span></td>
                             <td><span class="plan-pill">${esc(r.plan || "-")}</span></td>
+                            <td><span class="status-pill ${statusClass(r.status)}">${esc(r.status)}</span></td>
                             <td class="reason">${esc(r.reason || "-")}</td>
+                            <td class="crm-cell">
+                                <select class="crm-status" id="status_${escAttr(r.id)}">
+                                    ${VALID_STATUSES.map(s => `
+                                        <option value="${escAttr(s)}" ${s === r.status ? "selected" : ""}>${esc(s)}</option>
+                                    `).join("")}
+                                </select>
+
+                                <label class="note-label">Nota interna</label>
+                                <textarea id="note_${escAttr(r.id)}" placeholder="Es. Da ricontattare, vuole demo, interessato Pro...">${esc(r.internal_note || "")}</textarea>
+
+                                <div class="updated">
+                                    Aggiornato: ${formatDate(r.updated_at || r.created_at)}
+                                </div>
+                            </td>
                             <td>
                                 ${formatDate(r.created_at)}
                                 <div class="small">${esc(r.source || "")}</div>
                             </td>
                             <td>
                                 <div class="row-actions">
+                                    <button class="btn green small-btn" onclick="saveLeadCRM('${escAttr(r.id)}')">Salva CRM</button>
                                     <button class="btn dark small-btn" onclick="copyEmail('${escAttr(r.email)}')">Copia</button>
-                                    <button class="btn green small-btn" onclick="openMail('${escAttr(r.email)}','${escAttr(r.name)}')">Mail</button>
+                                    <button class="btn gold small-btn" onclick="openMail('${escAttr(r.email)}','${escAttr(r.name)}','${escAttr(r.status)}')">Mail</button>
+                                    <button class="btn dark small-btn" onclick="quickStatus('${escAttr(r.id)}','Contattato')">Contattato</button>
                                 </div>
                             </td>
                         </tr>
@@ -443,14 +566,24 @@ function updateTotal(value){
 
 function updateStats(list){
     const total = list.length;
+
+    const countStatus = status => list.filter(r => String(r.status || "Nuovo") === status).length;
     const scout = list.filter(r => String(r.profile || "") === "Scout").length;
     const analyst = list.filter(r => String(r.profile || "") === "Analista").length;
     const creator = list.filter(r => String(r.profile || "") === "Creator sportivo").length;
+    const hot = list.filter(r => ["Interessato","Convertito"].includes(String(r.status || ""))).length;
 
-    setText("statTotal",total);
-    setText("statScout",scout);
-    setText("statAnalyst",analyst);
-    setText("statCreator",creator);
+    setText("statTotal", total);
+    setText("statNuovo", countStatus("Nuovo"));
+    setText("statContattato", countStatus("Contattato"));
+    setText("statInteressato", countStatus("Interessato"));
+    setText("statConvertito", countStatus("Convertito"));
+    setText("statScartato", countStatus("Scartato"));
+
+    setText("statScout", scout);
+    setText("statAnalyst", analyst);
+    setText("statCreator", creator);
+    setText("statHot", hot);
 }
 
 function setText(id,value){
@@ -469,6 +602,69 @@ function profileClass(profile){
     return "profile-default";
 }
 
+function statusClass(status){
+    const s = String(status || "Nuovo").toLowerCase();
+
+    if(s.includes("nuovo")) return "status-nuovo";
+    if(s.includes("contattato")) return "status-contattato";
+    if(s.includes("interessato")) return "status-interessato";
+    if(s.includes("convertito")) return "status-convertito";
+    if(s.includes("scartato")) return "status-scartato";
+
+    return "status-nuovo";
+}
+
+async function saveLeadCRM(id){
+    const status = document.getElementById(`status_${id}`)?.value || "Nuovo";
+    const internal_note = document.getElementById(`note_${id}`)?.value || "";
+
+    showMessage(`Salvataggio CRM lead #${esc(id)}...`, "empty");
+
+    try{
+        const res = await fetch(`/api/beta-requests/${encodeURIComponent(id)}`, {
+            method:"PATCH",
+            headers:{
+                "Accept":"application/json",
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                status,
+                internal_note
+            })
+        });
+
+        const text = await res.text();
+
+        let data;
+        try{
+            data = JSON.parse(text);
+        }catch{
+            throw new Error("Risposta non JSON: " + text.slice(0,120));
+        }
+
+        if(!res.ok || data.ok === false){
+            throw new Error(data.message || data.detail || "Errore salvataggio CRM");
+        }
+
+        const updated = normalizeRequest(data.request || data.lead || data.data || {});
+        betaRequests = betaRequests.map(r => String(r.id) === String(id) ? updated : r);
+
+        updateStats(betaRequests);
+        renderRequests();
+
+        showMessage(`Lead #${esc(id)} aggiornato correttamente.`, "ok");
+
+    }catch(e){
+        showMessage("Errore salvataggio CRM: " + e.message, "error");
+    }
+}
+
+async function quickStatus(id,status){
+    const select = document.getElementById(`status_${id}`);
+    if(select) select.value = status;
+    await saveLeadCRM(id);
+}
+
 async function copyEmail(email){
     try{
         await navigator.clipboard.writeText(email);
@@ -478,12 +674,23 @@ async function copyEmail(email){
     }
 }
 
-function openMail(email,name){
+function openMail(email,name,status){
     const subject = encodeURIComponent("Accesso Beta MatchIQ Tactical");
+
+    let intro = "grazie per aver richiesto accesso alla beta di MatchIQ Tactical.";
+
+    if(status === "Interessato"){
+        intro = "ho visto il tuo interesse per MatchIQ Tactical e volevo proporti una breve demo.";
+    }
+
+    if(status === "Convertito"){
+        intro = "ti scrivo per confermare i prossimi step del tuo accesso a MatchIQ Tactical.";
+    }
+
     const body = encodeURIComponent(
 `Ciao ${name || ""},
 
-grazie per aver richiesto accesso alla beta di MatchIQ Tactical.
+${intro}
 
 Ti ricontatto per darti maggiori informazioni e capire come vuoi usare la piattaforma.
 
@@ -495,55 +702,41 @@ MatchIQ Tactical`
 }
 
 function exportBetaCSV(){
-    if(!betaRequests.length){
-        showMessage("Nessuna richiesta da esportare.", "error");
-        return;
-    }
+    const status = document.getElementById("statusFilter")?.value || "all";
+    const profile = document.getElementById("profileFilter")?.value || "all";
+    const plan = document.getElementById("planFilter")?.value || "all";
 
-    const rows = [
-        ["id","name","email","profile","plan","reason","source","created_at"],
-        ...betaRequests.map(r => [
-            r.id,
-            r.name,
-            r.email,
-            r.profile,
-            r.plan,
-            r.reason,
-            r.source,
-            r.created_at
-        ])
-    ];
+    const params = new URLSearchParams();
 
-    const csv = rows
-        .map(row => row.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(","))
-        .join("\n");
+    if(status !== "all") params.set("status", status);
+    if(profile !== "all") params.set("profile", profile);
+    if(plan !== "all") params.set("plan", plan);
 
-    const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "matchiq_beta_requests_v75.csv";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    URL.revokeObjectURL(url);
-    showMessage("Export CSV completato.", "ok");
+    const query = params.toString();
+    window.location.href = `/api/beta-requests/export.csv${query ? "?" + query : ""}`;
 }
 
 function formatDate(value){
     if(!value) return "-";
 
     try{
-        return new Date(value).toLocaleString("it-IT");
+        const d = new Date(value);
+        if(Number.isNaN(d.getTime())) return value;
+
+        return d.toLocaleString("it-IT",{
+            day:"2-digit",
+            month:"2-digit",
+            year:"numeric",
+            hour:"2-digit",
+            minute:"2-digit"
+        });
     }catch{
         return value;
     }
 }
 
-function esc(v){
-    return String(v ?? "")
+function esc(value){
+    return String(value ?? "")
         .replaceAll("&","&amp;")
         .replaceAll("<","&lt;")
         .replaceAll(">","&gt;")
@@ -551,11 +744,11 @@ function esc(v){
         .replaceAll("'","&#039;");
 }
 
-function escAttr(v){
-    return esc(v).replaceAll("\\","\\\\");
+function escAttr(value){
+    return esc(value);
 }
 
-window.addEventListener("load", () => {
+document.addEventListener("DOMContentLoaded", () => {
     loadBetaRequests();
 });
 </script>
