@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MatchIQ Scout V6.6 Events</title>
+  <title>MatchIQ Scout V6.7 Utils</title>
 
   <link rel="stylesheet" href="css/scout.css">
 
   <script src="js/scout-state.js"></script>
+  <script src="js/scout-utils.js"></script>
   <script src="js/scout-normalizers.js"></script>
   <script src="js/scout-api.js"></script>
   <script src="js/scout-storage.js"></script>
@@ -20,7 +21,7 @@
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
-      <strong>Caricamento Scout V6.6 EVENTS...</strong>
+      <strong>Caricamento Scout V6.7 UTILS...</strong>
       <p style="color:var(--muted);margin-top:6px;font-size:13px;">Live sync dashboard · Metriche stabili · Release-ready</p>
     </div>
   </div>
@@ -28,14 +29,14 @@
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>MatchIQ Scout V6.6 EVENTS</h1>
+        <h1>MatchIQ Scout V6.7 UTILS</h1>
         <div class="subtitle">Real Players · Live Sync · Threat · Creativity · Pressure · Impact</div>
       </div>
 
       <div class="actions">
         <button class="btn" onclick="goDashboard()">← Dashboard</button>
         <div class="pill pill-live"><span class="dot"></span> REAL PLAYERS</div>
-        <div class="pill pill-clean">V6.6 EVENTS</div>
+        <div class="pill pill-clean">V6.7 UTILS</div>
         <div class="pill pill-api" id="apiSafePill">API SAFE</div>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
         <button class="btn btn-green" onclick="exportScoutReport()">Export report</button>
@@ -43,7 +44,7 @@
       </div>
     </header>
 
-    <div class="ticker" id="tickerText">MatchIQ Scout V6.6 · caricamento dati...</div>
+    <div class="ticker" id="tickerText">MatchIQ Scout V6.7 · caricamento dati...</div>
     <div class="notice" id="noticeBox"></div>
 
     <main class="layout">
@@ -173,7 +174,7 @@
         </div>
 
         <div class="pro-card">
-          <h3>Radar Performance <span>V6.6</span></h3>
+          <h3>Radar Performance <span>V6.7</span></h3>
           <div class="radar-wrap"><svg class="radar" viewBox="0 0 300 300" id="radarSvg"></svg></div>
         </div>
 
@@ -208,7 +209,7 @@
         </div>
 
         <div class="pro-card" style="grid-column:1/-1;">
-          <h3>Azioni Scout <span>V6.6 EVENTS</span></h3>
+          <h3>Azioni Scout <span>V6.7 UTILS</span></h3>
           <div class="actions">
             <button class="btn btn-green" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
             <button class="btn" onclick="exportOpenPlayerReport()">Export player report</button>
@@ -262,7 +263,7 @@ function getMatchIdFromUrl(){
   return p.get("match_id") || p.get("id") || p.get("fixture_id") || p.get("matchId");
 }
 
-const APP_VERSION = "10011";
+const APP_VERSION = "10012";
 
 function versionedUrl(path){
   const sep = path.includes("?") ? "&" : "?";
@@ -329,163 +330,6 @@ function startTimers(){
       generateLocalEvent(false);
     }
   },API_SAFE.localEventMs);
-}
-
-function updateCache(){
-  if(!state.selectedMatchId) return;
-
-  state.playerCache[state.selectedMatchId] = {
-    players:clone(state.players),
-    events:clone(state.events),
-    match:clone(state.currentMatch),
-    summary:clone(state.summary)
-  };
-}
-
-function flashCard(id){
-  requestAnimationFrame(() => {
-    const el = document.getElementById(`card-${CSS.escape(String(id))}`);
-    if(!el) return;
-
-    el.classList.remove("flash");
-    void el.offsetWidth;
-    el.classList.add("flash");
-
-    setTimeout(() => el.classList.remove("flash"),1000);
-  });
-}
-
-function getMatch(){
-  return state.currentMatch ||
-    state.matches.find(m => String(m.id) === String(state.selectedMatchId)) ||
-    state.matches[0];
-}
-
-function valuePct(v){
-  return Number.isFinite(Number(v)) ? Math.round(Number(v)) + "%" : "--";
-}
-
-function avgField(list,field){
-  if(!list.length) return 0;
-
-  return list.reduce((a,b) => a + Number(b[field] || 0),0) / list.length;
-}
-
-function cleanRole(v){
-  const r = String(v || "MID").toUpperCase();
-
-  if(["ATT","MID","DEF","GK"].includes(r)) return r;
-  if(r.includes("ATT") || r.includes("FORWARD") || r.includes("STRIKER")) return "ATT";
-  if(r.includes("MID")) return "MID";
-  if(r.includes("DEF") || r.includes("BACK")) return "DEF";
-  if(r.includes("KEEP") || r === "G") return "GK";
-
-  return "MID";
-}
-
-function intNum(v){
-  return Math.round(num(v,0));
-}
-
-function num(v,f=0){
-  const n = Number(v);
-  return Number.isFinite(n) ? n : f;
-}
-
-function clamp(v,min,max){
-  return Math.max(min,Math.min(max,Number(v) || 0));
-}
-
-function cleanText(v,f="Unknown"){
-  if(v === null || v === undefined || v === "") return f;
-  return String(v);
-}
-
-function clone(obj){
-  return JSON.parse(JSON.stringify(obj || {}));
-}
-
-function uid(){
-  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-}
-
-function esc(v){
-  return String(v ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-function escAttr(v){
-  return esc(v).replaceAll("\\","\\\\");
-}
-
-function updateLastRefresh(){
-  const now = new Date();
-  const el = document.getElementById("lastUpdate");
-
-  if(el){
-    el.textContent = "refresh " + now.toLocaleTimeString("it-IT",{
-      hour:"2-digit",
-      minute:"2-digit",
-      second:"2-digit"
-    });
-  }
-}
-
-function updateApiPill(){
-  const el = document.getElementById("apiSafePill");
-
-  if(el){
-    el.textContent = `API SAFE ${Math.round(API_SAFE.scoutRefreshMs/1000)}s`;
-  }
-}
-
-function showNotice(message){
-  const box = document.getElementById("noticeBox");
-  if(!box) return;
-
-  box.innerHTML = `<strong>Nota:</strong> ${esc(message)}`;
-  box.classList.add("show");
-}
-
-function clearNotice(){
-  const box = document.getElementById("noticeBox");
-  if(!box) return;
-
-  box.classList.remove("show");
-  box.innerHTML = "";
-}
-
-function showLoading(){
-  const loading = document.getElementById("loading");
-  if(loading) loading.classList.add("show");
-}
-
-function hideLoading(){
-  const loading = document.getElementById("loading");
-  if(loading) loading.classList.remove("show");
-}
-
-function toast(title,desc){
-  const area = document.getElementById("toastArea");
-  if(!area) return;
-
-  const el = document.createElement("div");
-  el.className = "toast";
-  el.innerHTML = `<strong>${esc(title)}</strong><span>${esc(desc)}</span>`;
-
-  area.appendChild(el);
-
-  setTimeout(() => {
-    el.style.opacity = "0";
-    el.style.transform = "translateY(8px)";
-    el.style.transition = ".2s";
-  },3500);
-
-  setTimeout(() => el.remove(),3900);
 }
 </script>
 </body>
