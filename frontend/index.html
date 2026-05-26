@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical V7.2 Beta Form</title>
+<title>MatchIQ Tactical V7.3 Beta Backend</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -315,7 +315,7 @@ body{
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">AI Football Intelligence Platform · V7.2 Beta Form</div>
+        <div class="subtitle">AI Football Intelligence Platform · V7.3 Beta Backend</div>
     </div>
 
     <div class="actions">
@@ -339,12 +339,12 @@ body{
         <div class="status-card"><span class="dot"></span>LIVE ENGINE ACTIVE</div>
         <div class="status-card"><span class="dot"></span>API FOOTBALL CONNECTED</div>
         <div class="status-card"><span class="dot"></span>AI TACTICAL ENGINE ONLINE</div>
-        <div class="status-card"><span class="dot"></span>BETA FORM ACTIVE</div>
+        <div class="status-card"><span class="dot"></span>BETA BACKEND ACTIVE</div>
     </div>
 
     <div class="hero">
         <div class="card">
-            <span class="beta-badge">V7.2 BETA FORM</span>
+            <span class="beta-badge">V7.3 BETA BACKEND</span>
             <h1>AI Football Intelligence per chi vuole leggere la partita prima degli altri</h1>
             <p>
                 MatchIQ analizza partite live, momentum, pressure engine, segnali tattici,
@@ -395,7 +395,7 @@ body{
         <div class="beta-card">
             <h3>📩 Accesso beta</h3>
             <p>
-                Compila il form, salva la richiesta e prepara una mail già pronta da inviare.
+                Compila il form: la richiesta viene salvata nel database, con fallback locale se il server non risponde.
             </p>
         </div>
     </div>
@@ -405,7 +405,7 @@ body{
             <h2>Richiedi accesso Beta</h2>
             <p>
                 Lascia i tuoi dati per entrare nella lista beta di MatchIQ Tactical.
-                Per ora la richiesta viene salvata nel browser e prepara una mail già compilata.
+                La richiesta viene inviata al backend e resta salvata nel browser come fallback.
             </p>
 
             <div class="form-grid">
@@ -479,9 +479,9 @@ body{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10016";
-const SCOUT_VERSION_LABEL = "SCOUT V7.2 Beta Form";
-const BETA_STORAGE_KEY = "matchiq_beta_requests_v72";
+const APP_VERSION = "10017";
+const SCOUT_VERSION_LABEL = "SCOUT V7.3 Beta Backend";
+const BETA_STORAGE_KEY = "matchiq_beta_requests_v73";
 
 function forceOwnerPro(){
     const user = {
@@ -506,7 +506,7 @@ function scrollToBetaForm(){
     });
 }
 
-function submitBetaRequest(){
+async function submitBetaRequest(){
     const name = document.getElementById("betaName").value.trim();
     const email = document.getElementById("betaEmail").value.trim();
     const profile = document.getElementById("betaProfile").value.trim();
@@ -537,8 +537,33 @@ function submitBetaRequest(){
     saved.unshift(request);
     localStorage.setItem(BETA_STORAGE_KEY, JSON.stringify(saved));
 
-    showBetaMessage("Richiesta salvata. Si apre la mail già compilata.", "ok");
+    try{
+        showBetaMessage("Invio richiesta al server...", "ok");
 
+        const res = await fetch(`${API_BASE}/beta-request`, {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({name,email,profile,plan,reason})
+        });
+
+        const data = await res.json();
+
+        if(res.ok && data.ok && data.saved){
+            showBetaMessage("Richiesta salvata nel database. Ti ricontatteremo presto.", "ok");
+            clearBetaForm();
+            return;
+        }
+
+        showBetaMessage("Backend non disponibile: richiesta salvata nel browser e mail pronta.", "err");
+        openBetaMail(name,email,profile,plan,reason);
+
+    }catch(e){
+        showBetaMessage("Errore rete: richiesta salvata nel browser e mail pronta.", "err");
+        openBetaMail(name,email,profile,plan,reason);
+    }
+}
+
+function openBetaMail(name,email,profile,plan,reason){
     const subject = encodeURIComponent("Richiesta accesso Beta MatchIQ Tactical");
     const body = encodeURIComponent(
 `Ciao Mario,
@@ -560,6 +585,14 @@ Data richiesta: ${new Date().toLocaleString("it-IT")}
     setTimeout(() => {
         window.location.href = `mailto:${OWNER_EMAIL}?subject=${subject}&body=${body}`;
     },700);
+}
+
+function clearBetaForm(){
+    document.getElementById("betaName").value = "";
+    document.getElementById("betaEmail").value = "";
+    document.getElementById("betaProfile").value = "";
+    document.getElementById("betaPlan").value = "Beta gratuita";
+    document.getElementById("betaReason").value = "";
 }
 
 function getSavedBetaRequests(){
@@ -686,7 +719,7 @@ function openScoutHome(){
 }
 
 function setVersionLabels(){
-    document.title = "MatchIQ Tactical V7.2 Beta Form";
+    document.title = "MatchIQ Tactical V7.3 Beta Backend";
 }
 
 forceOwnerPro();

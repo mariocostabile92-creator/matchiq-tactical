@@ -7,6 +7,10 @@ from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
 from datetime import datetime
 from app.routers.system import create_system_router
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from app.services.scout_service import (
     normalize_player_for_scout,
     extract_players_for_scout,
@@ -125,6 +129,207 @@ app.add_middleware(
 init_db()
 app.include_router(auth_router)
 app.include_router(payments_router)
+# =========================================================
+# BETA REQUESTS - V7.3
+# =========================================================
+
+class BetaRequestPayload(BaseModel):
+    name: str
+    email: EmailStr
+    profile: str
+    plan: Optional[str] = "Beta gratuita"
+    reason: Optional[str] = ""
+
+
+def get_database_url():
+    return os.getenv("DATABASE_URL")
+
+
+def ensure_beta_requests_table():
+    database_url = get_database_url()
+
+    if not database_url:
+        logger.warning("[BETA REQUEST] DATABASE_URL non configurato")
+        return False
+
+    conn = None
+
+    try:
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor()
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS beta_requests (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                profile TEXT NOT NULL,
+                plan TEXT DEFAULT 'Beta gratuita',
+                reason TEXT,
+                source TEXT DEFAULT 'matchiq_frontend',
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            );
+        """)
+
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_beta_requests_email
+            ON beta_requests(email);
+        """)
+
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_beta_requests_created_at
+            ON beta_requests(created_at DESC);
+        """)
+
+        conn.commit()
+        cur.close()
+
+        logger.info("[BETA REQUEST] Tabella beta_requests pronta")
+        return True
+
+    except Exception as e:
+        logger.exception("[BETA REQUEST] Errore creazione tabella")
+        return False
+
+    finally:
+        if conn:
+            conn.close()
+
+
+def save_beta_request_to_db(payload: BetaRequestPayload):
+    database_url = get_database_url()
+
+    if not database_url:
+        return {
+            "saved": False,
+            "reason": "DATABASE_URL non configurato"
+        }
+
+    conn = None
+
+    try:
+        ensure_beta_requests_table()
+
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("""
+            INSERT INTO beta_requests (name, email, profile, plan, reason, source)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id, name, email, profile, plan, reason, source, created_at;
+        """, (
+            payload.name.strip(),
+            payload.email.strip().lower(),
+            payload.profile.strip(),
+            (payload.plan or "Beta gratuita").strip(),
+            (payload.reason or "").strip(),
+            "matchiq_v73_beta_backend"
+        ))
+
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+
+        return {
+            "saved": True,
+            "request": dict(row)
+        }
+
+    except Exception as e:
+        logger.exception("[BETA REQUEST] Errore salvataggio")
+        return {
+            "saved": False,
+            "reason": str(e)
+        }
+
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.post("/api/beta-request")
+def create_beta_request(payload: BetaRequestPayload):
+    if not payload.name.strip():
+        return {
+            "ok": False,
+            "saved": False,
+            "message": "Nome obbligatorio"
+        }
+
+    if not payload.profile.strip():
+        return {
+            "ok": False,
+            "saved": False,
+            "message": "Profilo obbligatorio"
+        }
+
+    result = save_beta_request_to_db(payload)
+
+    if result.get("saved"):
+        return {
+            "ok": True,
+            "saved": True,
+            "message": "Richiesta beta salvata nel database",
+            "data": result.get("request")
+        }
+
+    return {
+        "ok": False,
+        "saved": False,
+        "message": "Database non disponibile, usa fallback frontend",
+        "reason": result.get("reason")
+    }
+
+
+@app.get("/api/beta-requests")
+def list_beta_requests(user=Depends(get_optional_user)):
+    if not is_owner_or_paid_user(user):
+        enforce_premium_feature(user, "owner")
+
+    database_url = get_database_url()
+
+    if not database_url:
+        return {
+            "ok": False,
+            "requests": [],
+            "message": "DATABASE_URL non configurato"
+        }
+
+    conn = None
+
+    try:
+        ensure_beta_requests_table()
+
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("""
+            SELECT id, name, email, profile, plan, reason, source, created_at
+            FROM beta_requests
+            ORDER BY created_at DESC
+            LIMIT 200;
+        """)
+
+        rows = cur.fetchall()
+        cur.close()
+
+        return {
+            "ok": True,
+            "count": len(rows),
+            "requests": [dict(r) for r in rows]
+        }
+
+    except Exception as e:
+        logger.exception("[BETA REQUEST] Errore lettura")
+        return {
+            "ok": False,
+            "requests": [],
+            "message": str(e)
+        }
+
+    finally:
+        if conn:
+            conn.close()
 
 LIVE_MATCHES_CACHE = {}
 FULL_ANALYSIS_CACHE = {}

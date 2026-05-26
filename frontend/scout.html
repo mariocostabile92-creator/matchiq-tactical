@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MatchIQ Scout V7.2 Beta Form</title>
+  <title>MatchIQ Scout V7.3 Beta Backend</title>
 
   <link rel="stylesheet" href="css/scout.css">
 
@@ -22,9 +22,9 @@
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
-      <strong>Caricamento MatchIQ Scout V7.2 BETA...</strong>
+      <strong>Caricamento MatchIQ Scout V7.3 BETA...</strong>
       <p style="color:var(--muted);margin-top:6px;font-size:13px;">
-        Beta Form · Live intelligence · Player scouting · Tactical signals
+        Beta Backend · Live intelligence · Player scouting · Tactical signals
       </p>
     </div>
   </div>
@@ -32,14 +32,14 @@
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>MatchIQ Scout V7.2 BETA</h1>
-        <div class="subtitle">Beta Form · Live Player Intelligence · Tactical Signals · Export Report</div>
+        <h1>MatchIQ Scout V7.3 BETA</h1>
+        <div class="subtitle">Beta Backend · Live Player Intelligence · Tactical Signals · Export Report</div>
       </div>
 
       <div class="actions">
         <button class="btn" onclick="goDashboard()">← Dashboard</button>
         <div class="pill pill-live"><span class="dot"></span> LIVE DATA</div>
-        <div class="pill pill-clean">BETA FORM</div>
+        <div class="pill pill-clean">BETA BACKEND</div>
         <div class="pill pill-api" id="apiSafePill">API SAFE</div>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
         <button class="btn btn-green" onclick="exportScoutReport()">Export report</button>
@@ -47,7 +47,7 @@
       </div>
     </header>
 
-    <div class="ticker" id="tickerText">MatchIQ Scout V7.2 Beta · caricamento dati live...</div>
+    <div class="ticker" id="tickerText">MatchIQ Scout V7.3 Beta · caricamento dati live...</div>
     <div class="notice" id="noticeBox"></div>
 
     <main class="layout">
@@ -177,7 +177,7 @@
         </div>
 
         <div class="pro-card">
-          <h3>Radar Performance <span>V7.2</span></h3>
+          <h3>Radar Performance <span>V7.3</span></h3>
           <div class="radar-wrap"><svg class="radar" viewBox="0 0 300 300" id="radarSvg"></svg></div>
         </div>
 
@@ -212,7 +212,7 @@
         </div>
 
         <div class="pro-card" style="grid-column:1/-1;">
-          <h3>Azioni Scout <span>V7.2 BETA FORM</span></h3>
+          <h3>Azioni Scout <span>V7.3 BETA BACKEND</span></h3>
           <div class="actions">
             <button class="btn btn-green" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
             <button class="btn" onclick="exportOpenPlayerReport()">Export player report</button>
