@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical Dashboard V6.3</title>
+<title>MatchIQ Tactical Dashboard V6.4</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -164,13 +164,13 @@ body{
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">AI Tactical Analysis Platform · SCOUT V6.3 Storage</div>
+        <div class="subtitle">AI Tactical Analysis Platform · SCOUT V6.4 Render</div>
     </div>
 
     <div class="actions">
         <button class="btn" onclick="loadMatches(true)">TOP LEAGUES</button>
         <button class="btn dark" onclick="loadMatches(false)">ALL LIVE</button>
-        <button class="btn" onclick="openScoutHome()">🧠 SCOUT V6.3</button>
+        <button class="btn" onclick="openScoutHome()">🧠 SCOUT V6.4</button>
 
         <div class="account">
             <div id="userEmail">mario.costabile92@outlook.it</div>
@@ -187,7 +187,7 @@ body{
         <div class="status-card"><span class="dot"></span>LIVE ENGINE ACTIVE</div>
         <div class="status-card"><span class="dot"></span>API FOOTBALL CONNECTED</div>
         <div class="status-card"><span class="dot"></span>AI TACTICAL ENGINE ONLINE</div>
-        <div class="status-card"><span class="dot"></span>SCOUT V6.3 STABLE ENABLED</div>
+        <div class="status-card"><span class="dot"></span>SCOUT V6.4 RENDER ENABLED</div>
     </div>
 
     <div class="hero">
@@ -195,7 +195,7 @@ body{
             <h1>Live Tactical Dashboard</h1>
             <p>
                 Monitora partite live, analisi tattiche AI, momentum, pressure engine,
-                player ratings e Scout Mode V6.3 con cache-buster automatico.
+                player ratings e Scout Mode V6.4 Render con cache-buster automatico.
             </p>
         </div>
 
@@ -217,8 +217,8 @@ body{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10008";
-const SCOUT_VERSION_LABEL = "SCOUT V6.3 Storage";
+const APP_VERSION = "10009";
+const SCOUT_VERSION_LABEL = "SCOUT V6.4 Render";
 
 function forceOwnerPro(){
     const user = {
@@ -330,7 +330,7 @@ function openScoutHome(){
 }
 
 function setVersionLabels(){
-    document.title = "MatchIQ Tactical Dashboard V6.3";
+    document.title = "MatchIQ Tactical Dashboard V6.4";
 }
 
 forceOwnerPro();
