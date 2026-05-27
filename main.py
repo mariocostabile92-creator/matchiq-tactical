@@ -1461,6 +1461,10 @@ if os.path.exists(FRONTEND_DIR):
     def serve_admin_alias():
         return FileResponse(os.path.join(FRONTEND_DIR, "admin-beta.html"))
 
+    @app.get("/admin-users.html")
+    def serve_admin_users():
+        return FileResponse(os.path.join(FRONTEND_DIR, "admin-users.html"))
+
     @app.get("/admin-analytics.html")
     def serve_admin_analytics():
         return FileResponse(os.path.join(FRONTEND_DIR, "admin-analytics.html"))
