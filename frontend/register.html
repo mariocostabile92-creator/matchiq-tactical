@@ -1,252 +1,277 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MatchIQ Tactical - Register V8.1</title>
 
-    <title>MatchIQ Tactical - Register</title>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
 
-    <script src="auth.js"></script>
+body{
+    background:
+        radial-gradient(circle at top left,#1f2bff22,transparent 40%),
+        radial-gradient(circle at bottom right,#ff00aa11,transparent 40%),
+        #030b26;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+}
 
-    <style>
+.register-container{
+    width:430px;
+    max-width:calc(100% - 28px);
+    background:linear-gradient(135deg,rgba(20,30,70,.95),rgba(10,15,40,.98));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    padding:40px;
+    box-shadow:0 0 40px rgba(0,0,0,.5),0 0 60px rgba(77,110,255,.12);
+    backdrop-filter:blur(10px);
+}
 
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:Arial, Helvetica, sans-serif;
-        }
+.logo{
+    text-align:center;
+    margin-bottom:30px;
+}
 
-        body{
-            background:
-                radial-gradient(circle at top left,#1f2bff22,transparent 40%),
-                radial-gradient(circle at bottom right,#ff00aa11,transparent 40%),
-                #030b26;
+.logo h1{
+    font-size:34px;
+    margin-bottom:8px;
+}
 
-            min-height:100vh;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:white;
-        }
+.logo p{
+    color:#8ea6ff;
+    font-size:14px;
+    line-height:1.5;
+}
 
-        .register-container{
-            width:420px;
+.input-group{
+    margin-bottom:20px;
+}
 
-            background:linear-gradient(
-                135deg,
-                rgba(20,30,70,.95),
-                rgba(10,15,40,.98)
-            );
+.input-group label{
+    display:block;
+    margin-bottom:8px;
+    color:#9eb0ff;
+    font-size:13px;
+    font-weight:800;
+}
 
-            border:1px solid rgba(255,255,255,.08);
+.input-group input{
+    width:100%;
+    padding:16px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.08);
+    background:#0b1438;
+    color:white;
+    outline:none;
+    transition:.2s;
+    font-weight:800;
+}
 
-            border-radius:24px;
+.input-group input:focus{
+    border-color:#00c896;
+    box-shadow:0 0 20px rgba(0,200,150,.2);
+}
 
-            padding:40px;
+.register-btn{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    background:linear-gradient(90deg,#00c896,#4d6eff);
+    color:white;
+    font-weight:900;
+    cursor:pointer;
+    transition:.2s;
+}
 
-            box-shadow:
-                0 0 40px rgba(0,0,0,.5),
-                0 0 60px rgba(77,110,255,.12);
+.register-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 25px rgba(0,200,150,.35);
+}
 
-            backdrop-filter:blur(10px);
-        }
+.register-btn:disabled{
+    opacity:.65;
+    cursor:not-allowed;
+    transform:none;
+}
 
-        .logo{
-            text-align:center;
-            margin-bottom:30px;
-        }
+.message{
+    margin-top:18px;
+    text-align:center;
+    font-size:14px;
+    line-height:1.5;
+}
 
-        .logo h1{
-            font-size:34px;
-            margin-bottom:8px;
-        }
+.error{color:#ff5f7d}
+.success{color:#00ff9d}
+.warn{color:#ffe28a}
 
-        .logo p{
-            color:#8ea6ff;
-            font-size:14px;
-        }
+.bottom-link{
+    margin-top:25px;
+    text-align:center;
+    font-size:14px;
+    color:#c7d4ff;
+}
 
-        .input-group{
-            margin-bottom:20px;
-        }
+.bottom-link a{
+    color:#7da2ff;
+    text-decoration:none;
+    font-weight:900;
+}
 
-        .input-group label{
-            display:block;
-            margin-bottom:8px;
-            color:#9eb0ff;
-            font-size:13px;
-        }
+.back-link{
+    margin-top:14px;
+    text-align:center;
+    font-size:13px;
+}
 
-        .input-group input{
-            width:100%;
-            padding:16px;
-
-            border-radius:14px;
-
-            border:1px solid rgba(255,255,255,.08);
-
-            background:#0b1438;
-            color:white;
-
-            outline:none;
-
-            transition:.2s;
-        }
-
-        .input-group input:focus{
-            border-color:#4d6eff;
-            box-shadow:0 0 20px rgba(77,110,255,.2);
-        }
-
-        .register-btn{
-            width:100%;
-            padding:16px;
-
-            border:none;
-            border-radius:14px;
-
-            background:linear-gradient(
-                90deg,
-                #00c896,
-                #4d6eff
-            );
-
-            color:white;
-
-            font-weight:700;
-            cursor:pointer;
-
-            transition:.2s;
-        }
-
-        .register-btn:hover{
-            transform:translateY(-2px);
-            box-shadow:0 0 25px rgba(0,200,150,.35);
-        }
-
-        .message{
-            margin-top:18px;
-            text-align:center;
-            font-size:14px;
-        }
-
-        .error{
-            color:#ff5f7d;
-        }
-
-        .success{
-            color:#00ff9d;
-        }
-
-        .bottom-link{
-            margin-top:25px;
-            text-align:center;
-            font-size:14px;
-        }
-
-        .bottom-link a{
-            color:#7da2ff;
-            text-decoration:none;
-        }
-
-    </style>
+.back-link a{
+    color:#8ea6ff;
+    text-decoration:none;
+}
+</style>
 </head>
+
 <body>
 
 <div class="register-container">
-
     <div class="logo">
         <h1>⚽ MatchIQ Tactical</h1>
-        <p>Create your AI Tactical account</p>
+        <p>Crea account · poi potrai attivare MatchIQ Pro</p>
     </div>
 
     <form id="registerForm">
-
         <div class="input-group">
             <label>Email</label>
-
-            <input
-                type="email"
-                id="email"
-                required
-                placeholder="Inserisci email"
-            >
+            <input type="email" id="email" required placeholder="Inserisci email" autocomplete="email">
         </div>
 
         <div class="input-group">
             <label>Password</label>
-
-            <input
-                type="password"
-                id="password"
-                required
-                placeholder="Minimo 6 caratteri"
-            >
+            <input type="password" id="password" required placeholder="Minimo 6 caratteri" autocomplete="new-password">
         </div>
 
-        <button type="submit" class="register-btn">
-            CREATE ACCOUNT
+        <button type="submit" class="register-btn" id="registerBtn">
+            CREA ACCOUNT
         </button>
-
     </form>
 
     <div id="message" class="message"></div>
 
     <div class="bottom-link">
         Hai già un account?
-        <a href="login.html">Login</a>
+        <a href="login.html?v=10050">Login</a>
     </div>
 
+    <div class="back-link">
+        <a href="index.html?v=10050">← Torna alla dashboard</a>
+    </div>
 </div>
 
 <script>
+const API_BASE = `${window.location.origin}/api`;
+const APP_VERSION = "10050";
 
-redirectIfLoggedIn();
+function saveAuth(token,user){
+    localStorage.setItem("matchiq_auth_token", token);
+    localStorage.setItem("matchiq_auth_user", JSON.stringify(user || {}));
 
-const form = document.getElementById("registerForm");
-const message = document.getElementById("message");
-
-form.addEventListener("submit", async (e) => {
-
-    e.preventDefault();
-
-    message.innerHTML = "";
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    try {
-
-        message.innerHTML = `
-            <span class="success">
-                Creazione account...
-            </span>
-        `;
-
-        await registerUser(email, password);
-
-        message.innerHTML = `
-            <span class="success">
-                Account creato!
-            </span>
-        `;
-
-        setTimeout(() => {
-            window.location.href = "index.html";
-        }, 1000);
-
-    } catch(err){
-
-        message.innerHTML = `
-            <span class="error">
-                ${err.message}
-            </span>
-        `;
+    if(user?.email){
+        localStorage.setItem("matchiq_user_email", user.email);
     }
 
-});
+    if(user?.plan){
+        localStorage.setItem("matchiq_user_plan", user.plan);
+    }
+}
 
+function clearOldAuth(){
+    localStorage.removeItem("matchiq_user");
+    sessionStorage.removeItem("matchiq_user");
+    sessionStorage.removeItem("matchiq_auth_user");
+    sessionStorage.removeItem("matchiq_auth_token");
+}
+
+function setMessage(text,type="success"){
+    const message = document.getElementById("message");
+    message.innerHTML = `<span class="${type}">${text}</span>`;
+}
+
+async function doRegister(email,password){
+    const res = await fetch(`${API_BASE}/auth/register`, {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json",
+            "Accept":"application/json"
+        },
+        body:JSON.stringify({
+            email,
+            password
+        })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if(!res.ok || data.success === false){
+        throw new Error(data.detail || data.message || "Registrazione non riuscita");
+    }
+
+    if(!data.token){
+        throw new Error("Token non ricevuto dal backend");
+    }
+
+    saveAuth(data.token, data.user || {});
+    return data;
+}
+
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const btn = document.getElementById("registerBtn");
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if(!email || !password){
+        setMessage("Inserisci email e password.", "error");
+        return;
+    }
+
+    if(password.length < 6){
+        setMessage("La password deve contenere almeno 6 caratteri.", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "CREAZIONE ACCOUNT...";
+
+    try{
+        clearOldAuth();
+        setMessage("Creazione account in corso...", "warn");
+
+        await doRegister(email,password);
+
+        setMessage("Account creato. Reindirizzamento...", "success");
+
+        setTimeout(() => {
+            window.location.href = `index.html?v=${APP_VERSION}`;
+        },600);
+
+    }catch(err){
+        setMessage(err.message || "Errore registrazione", "error");
+    }finally{
+        btn.disabled = false;
+        btn.textContent = "CREA ACCOUNT";
+    }
+});
 </script>
 
 </body>
