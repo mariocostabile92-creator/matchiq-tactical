@@ -1,29 +1,97 @@
-/* MatchIQ Scout - Core Module V8.0.3 Hotfix 6 Owner Override */
-const APP_VERSION = "10035";
+/* MatchIQ Scout - Core Module V8.0.3 Hotfix 7 Safe Runtime */
+const APP_VERSION = "10036";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  bindFilters();
-  await init();
-  startTimers();
-  hideLoading();
+  try{
+    bindFilters();
+    await init();
+    startTimers();
+  }catch(err){
+    console.error("MatchIQ Scout init error:", err);
+    safeToast("Errore Scout", "Lo Scout ha avuto un errore, ma la pagina resta utilizzabile.");
+  }finally{
+    if(typeof hideLoading === "function"){
+      hideLoading();
+    }else{
+      const loading = document.getElementById("loading");
+      if(loading) loading.classList.remove("show");
+    }
+  }
 });
 
 function bindFilters(){
   ["searchInput","roleFilter","signalFilter","scoreFilter"].forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.addEventListener("input", renderPlayers);
+    if(el && typeof renderPlayers === "function"){
+      el.addEventListener("input", renderPlayers);
+    }
   });
 
   document.addEventListener("keydown", e => {
-    if(e.key === "Escape") closeModal();
+    if(e.key === "Escape" && typeof closeModal === "function"){
+      closeModal();
+    }
   });
 
   const modalBg = document.getElementById("modalBg");
   if(modalBg){
     modalBg.addEventListener("click", e => {
-      if(e.target.id === "modalBg") closeModal();
+      if(e.target.id === "modalBg" && typeof closeModal === "function"){
+        closeModal();
+      }
     });
   }
+}
+
+/* =========================
+   ACCOUNT LIMITS SAFE
+========================= */
+
+function getDefaultAccountLimits(){
+  return {
+    plan: "guest",
+    label: "GUEST PREVIEW",
+    is_owner: false,
+    is_pro: false,
+    scout_enabled: false,
+    scout_preview: true,
+    scout_max_players: 4,
+    export_enabled: false,
+    watchlist_enabled: false,
+    simulate_enabled: false
+  };
+}
+
+function normalizeAccountLimits(data){
+  const raw = data || {};
+  const limits = raw.limits || raw.features || raw || {};
+
+  let plan = String(raw.plan || limits.plan || raw.piano || "guest").toLowerCase();
+
+  if(isLocalOwnerOverride()){
+    plan = "owner";
+  }
+
+  const isOwner = plan === "owner";
+  const isPro = plan === "pro" || isOwner;
+
+  return {
+    plan,
+    label: isOwner ? "OWNER PRO" : isPro ? "PRO" : "GUEST PREVIEW",
+    is_owner: isOwner,
+    is_pro: isPro,
+    scout_enabled: Boolean(isPro || limits.scout_enabled),
+    scout_preview: !isPro,
+    scout_max_players: Number(limits.scout_max_players ?? (isPro ? 999 : 4)),
+    export_enabled: Boolean(isPro || limits.export_enabled),
+    watchlist_enabled: Boolean(isPro || limits.watchlist_enabled),
+    simulate_enabled: Boolean(isPro || limits.simulate_enabled)
+  };
+}
+
+function safeApplyAccountLimits(data){
+  state.account = normalizeAccountLimits(data);
+  state.accountReady = true;
 }
 
 async function loadAccountLimits(){
@@ -43,29 +111,43 @@ async function loadAccountLimits(){
     if(!r.ok) throw new Error("limits not ok");
 
     const data = await r.json();
-    applyAccountLimits(data);
+    safeApplyAccountLimits(data);
   }catch(e){
-    applyAccountLimits(DEFAULT_ACCOUNT_LIMITS);
+    safeApplyAccountLimits(getDefaultAccountLimits());
   }
 
   forceScoutAccessUI();
 }
 
+/* =========================
+   INIT
+========================= */
+
 async function init(){
   await loadAccountLimits();
 
-  state.watchlist = canUseWatchlist() ? loadWatchlist() : [];
+  state.watchlist = scoutCanUseWatchlist() && typeof loadWatchlist === "function"
+    ? loadWatchlist()
+    : [];
+
   state.selectedMatchId = getMatchIdFromUrl();
 
-  await loadLiveMatches(true);
-
-  if(!state.selectedMatchId){
-    state.selectedMatchId = state.matches[0]?.id || null;
+  if(typeof loadLiveMatches === "function"){
+    await loadLiveMatches(true);
   }
 
-  await loadScoutData(true);
+  if(!state.selectedMatchId){
+    state.selectedMatchId = state.matches?.[0]?.id || null;
+  }
 
-  renderAll();
+  if(typeof loadScoutData === "function"){
+    await loadScoutData(true);
+  }
+
+  if(typeof renderAll === "function"){
+    renderAll();
+  }
+
   forceScoutAccessUI();
 }
 
@@ -84,66 +166,111 @@ function goDashboard(){
 }
 
 async function selectMatch(id){
-  showLoading();
+  if(typeof showLoading === "function") showLoading();
 
-  state.selectedMatchId = id;
-  state.events = [];
-  state.openPlayerId = null;
+  try{
+    state.selectedMatchId = id;
+    state.events = [];
+    state.openPlayerId = null;
 
-  closeModal(false);
+    if(typeof closeModal === "function") closeModal(false);
 
-  await loadScoutData(true);
+    if(typeof loadScoutData === "function"){
+      await loadScoutData(true);
+    }
 
-  renderAll();
-  forceScoutAccessUI();
+    if(typeof renderAll === "function"){
+      renderAll();
+    }
 
-  hideLoading();
-  toast("Partita cambiata","Scout riallineato sul nuovo match live.");
+    forceScoutAccessUI();
+    safeToast("Partita cambiata","Scout riallineato sul nuovo match live.");
+  }catch(err){
+    console.error("selectMatch error:", err);
+    safeToast("Errore cambio partita","Non sono riuscito a cambiare match.");
+  }finally{
+    if(typeof hideLoading === "function") hideLoading();
+  }
 }
 
 async function manualRefresh(){
-  showLoading();
+  if(typeof showLoading === "function") showLoading();
 
-  await loadAccountLimits();
-  await loadLiveMatches(true);
-  await loadScoutData(true);
+  try{
+    await loadAccountLimits();
 
-  renderAll();
-  forceScoutAccessUI();
+    if(typeof loadLiveMatches === "function"){
+      await loadLiveMatches(true);
+    }
 
-  hideLoading();
-  toast("Refresh completato","Dati riallineati con la Live Dashboard.");
+    if(typeof loadScoutData === "function"){
+      await loadScoutData(true);
+    }
+
+    if(typeof renderAll === "function"){
+      renderAll();
+    }
+
+    forceScoutAccessUI();
+    safeToast("Refresh completato","Dati riallineati con la Live Dashboard.");
+  }catch(err){
+    console.error("manualRefresh error:", err);
+    safeToast("Errore refresh","Non sono riuscito ad aggiornare i dati.");
+  }finally{
+    if(typeof hideLoading === "function") hideLoading();
+  }
 }
 
 function startTimers(){
   if(state.timers?.soft) clearInterval(state.timers.soft);
   if(state.timers?.events) clearInterval(state.timers.events);
 
+  if(!state.timers){
+    state.timers = {soft:null, events:null};
+  }
+
   state.timers.soft = setInterval(async () => {
-    state.tick++;
+    try{
+      state.tick++;
 
-    await loadLiveMatches(false);
+      if(typeof loadLiveMatches === "function"){
+        await loadLiveMatches(false);
+      }
 
-    const m = getMatch();
+      const m = typeof getMatch === "function" ? getMatch() : null;
 
-    if(m && num(m.minute,0) < 90){
-      m.minute = num(m.minute,0) + 1;
+      if(m && typeof num === "function" && num(m.minute,0) < 90){
+        m.minute = num(m.minute,0) + 1;
+      }
+
+      if(state.tick % 9 === 0){
+        await loadAccountLimits();
+
+        if(typeof loadScoutData === "function"){
+          await loadScoutData(false);
+        }
+      }
+
+      if(typeof renderAll === "function"){
+        renderAll();
+      }
+
+      forceScoutAccessUI();
+    }catch(err){
+      console.warn("Scout soft timer skipped:", err);
+      forceScoutAccessUI();
     }
-
-    if(state.tick % 9 === 0){
-      await loadAccountLimits();
-      await loadScoutData(false);
-    }
-
-    renderAll();
-    forceScoutAccessUI();
   },10000);
 
   state.timers.events = setInterval(() => {
-    if(canSimulateScout() && state.hasRealPlayers && Math.random() > .5){
-      generateLocalEvent(false);
+    try{
+      if(scoutCanSimulate() && state.hasRealPlayers && Math.random() > .5 && typeof generateLocalEvent === "function"){
+        generateLocalEvent(false);
+      }
+    }catch(err){
+      console.warn("Scout event timer skipped:", err);
     }
-  },API_SAFE.localEventMs);
+  },API_SAFE?.localEventMs || 7000);
 }
 
 /* =========================
@@ -220,6 +347,40 @@ function isScoutPro(){
   );
 }
 
+function scoutCanUseWatchlist(){
+  return Boolean(
+    isScoutPro() ||
+    state?.account?.watchlist_enabled === true
+  );
+}
+
+function scoutCanExport(){
+  return Boolean(
+    isScoutPro() ||
+    state?.account?.export_enabled === true
+  );
+}
+
+function scoutCanSimulate(){
+  return Boolean(
+    isScoutPro() ||
+    state?.account?.simulate_enabled === true
+  );
+}
+
+/* Compatibilità con altri moduli */
+function canUseWatchlist(){
+  return scoutCanUseWatchlist();
+}
+
+function canExportScout(){
+  return scoutCanExport();
+}
+
+function canSimulateScout(){
+  return scoutCanSimulate();
+}
+
 /* =========================
    UI LOCK / UNLOCK
 ========================= */
@@ -288,60 +449,14 @@ function forceScoutAccessUI(){
   });
 }
 
-/* Alias per compatibilità con eventuali vecchie chiamate */
 function applyScoutAccessUI(){
   forceScoutAccessUI();
 }
-/* =========================
-   ACCOUNT LIMITS FALLBACK
-   Evita crash se scout-state.js online non ha ancora applyAccountLimits()
-========================= */
 
-const DEFAULT_ACCOUNT_LIMITS_SAFE = {
-  plan: "guest",
-  label: "GUEST PREVIEW",
-  is_owner: false,
-  is_pro: false,
-  scout_enabled: false,
-  scout_preview: true,
-  scout_max_players: 4,
-  export_enabled: false,
-  watchlist_enabled: false,
-  simulate_enabled: false
-};
-
-if(typeof window.DEFAULT_ACCOUNT_LIMITS === "undefined"){
-  window.DEFAULT_ACCOUNT_LIMITS = DEFAULT_ACCOUNT_LIMITS_SAFE;
-}
-
-if(typeof window.applyAccountLimits !== "function"){
-  window.applyAccountLimits = function(data){
-    const raw = data || {};
-    const limits = raw.limits || raw.features || raw || {};
-
-    const plan = String(
-      raw.plan ||
-      limits.plan ||
-      raw.piano ||
-      "guest"
-    ).toLowerCase();
-
-    const isOwner = plan === "owner";
-    const isPro = plan === "pro" || isOwner;
-
-    state.account = {
-      plan: plan,
-      label: isOwner ? "OWNER PRO" : isPro ? "PRO" : "GUEST PREVIEW",
-      is_owner: isOwner,
-      is_pro: isPro,
-      scout_enabled: Boolean(isPro || limits.scout_enabled),
-      scout_preview: !isPro,
-      scout_max_players: Number(limits.scout_max_players ?? (isPro ? 999 : 4)),
-      export_enabled: Boolean(isPro || limits.export_enabled),
-      watchlist_enabled: Boolean(isPro || limits.watchlist_enabled),
-      simulate_enabled: Boolean(isPro || limits.simulate_enabled)
-    };
-
-    state.accountReady = true;
-  };
+function safeToast(title, message){
+  if(typeof toast === "function"){
+    toast(title, message);
+  }else{
+    console.log(title, message || "");
+  }
 }
