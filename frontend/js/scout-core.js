@@ -1,5 +1,5 @@
 /* MatchIQ Scout - Core Module V8.0.3 Hotfix 6 Owner Override */
-const APP_VERSION = "10034";
+const APP_VERSION = "10035";
 
 document.addEventListener("DOMContentLoaded", async () => {
   bindFilters();
@@ -291,4 +291,57 @@ function forceScoutAccessUI(){
 /* Alias per compatibilità con eventuali vecchie chiamate */
 function applyScoutAccessUI(){
   forceScoutAccessUI();
+}
+/* =========================
+   ACCOUNT LIMITS FALLBACK
+   Evita crash se scout-state.js online non ha ancora applyAccountLimits()
+========================= */
+
+const DEFAULT_ACCOUNT_LIMITS_SAFE = {
+  plan: "guest",
+  label: "GUEST PREVIEW",
+  is_owner: false,
+  is_pro: false,
+  scout_enabled: false,
+  scout_preview: true,
+  scout_max_players: 4,
+  export_enabled: false,
+  watchlist_enabled: false,
+  simulate_enabled: false
+};
+
+if(typeof window.DEFAULT_ACCOUNT_LIMITS === "undefined"){
+  window.DEFAULT_ACCOUNT_LIMITS = DEFAULT_ACCOUNT_LIMITS_SAFE;
+}
+
+if(typeof window.applyAccountLimits !== "function"){
+  window.applyAccountLimits = function(data){
+    const raw = data || {};
+    const limits = raw.limits || raw.features || raw || {};
+
+    const plan = String(
+      raw.plan ||
+      limits.plan ||
+      raw.piano ||
+      "guest"
+    ).toLowerCase();
+
+    const isOwner = plan === "owner";
+    const isPro = plan === "pro" || isOwner;
+
+    state.account = {
+      plan: plan,
+      label: isOwner ? "OWNER PRO" : isPro ? "PRO" : "GUEST PREVIEW",
+      is_owner: isOwner,
+      is_pro: isPro,
+      scout_enabled: Boolean(isPro || limits.scout_enabled),
+      scout_preview: !isPro,
+      scout_max_players: Number(limits.scout_max_players ?? (isPro ? 999 : 4)),
+      export_enabled: Boolean(isPro || limits.export_enabled),
+      watchlist_enabled: Boolean(isPro || limits.watchlist_enabled),
+      simulate_enabled: Boolean(isPro || limits.simulate_enabled)
+    };
+
+    state.accountReady = true;
+  };
 }
