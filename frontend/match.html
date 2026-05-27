@@ -2,8 +2,8 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MatchIQ Tactical - v1.5.0 Match State</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>MatchIQ Tactical - Match Analysis</title>
 
 <link rel="stylesheet" href="css/match.css">
 
@@ -37,7 +37,7 @@
 
         <button class="refresh-btn" onclick="manualRefresh()">↻ Refresh</button>
         <button class="pdf-btn" onclick="downloadPDFReport()">📄 Download PDF</button>
-        <button class="dashboard-btn" onclick="window.location.href='index.html'">Dashboard</button>
+        <button class="dashboard-btn" onclick="goBackToDashboard()">Dashboard</button>
     </div>
 </div>
 
@@ -53,17 +53,89 @@
 </div>
 
 <script>
-document.addEventListener("visibilitychange",()=>{
+function isMobileDevice(){
+    return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function goBackToDashboard(){
+    window.location.href = isMobileDevice() ? "/mobile.html" : "/index.html";
+}
+
+function getMatchIdFromPageUrl(){
+    const params = new URLSearchParams(window.location.search);
+    return (
+        params.get("id") ||
+        params.get("match_id") ||
+        params.get("fixture_id") ||
+        params.get("matchId") ||
+        ""
+    );
+}
+
+function renderMissingMatchId(){
+    const app = document.getElementById("app");
+
+    if(!app) return;
+
+    app.innerHTML = `
+        <div class="card">
+            <div class="section-content">
+                <div class="error-box" style="background:linear-gradient(135deg,rgba(255,49,92,.28),rgba(139,29,53,.22));border:1px solid rgba(255,49,92,.35);">
+                    ❌ ID partita mancante.
+                    <br><br>
+                    Apri l’analisi partendo da una partita live nella dashboard mobile o desktop.
+                    <br><br>
+                    <button class="dashboard-btn" onclick="goBackToDashboard()" style="margin-top:10px;">
+                        Torna alla Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+document.addEventListener("visibilitychange", () => {
     if(document.hidden){
-        if(refreshInterval)clearInterval(refreshInterval);
-        if(countdownInterval)clearInterval(countdownInterval);
+        if(typeof refreshInterval !== "undefined" && refreshInterval) clearInterval(refreshInterval);
+        if(typeof countdownInterval !== "undefined" && countdownInterval) clearInterval(countdownInterval);
     }else{
-        loadMatch({silent:true});
+        const matchId = getMatchIdFromPageUrl();
+
+        if(matchId && typeof loadMatch === "function"){
+            loadMatch({silent:true});
+        }
     }
 });
 
-renderCachedDataIfAvailable();
-loadMatch();
+(function bootMatchPage(){
+    const matchId = getMatchIdFromPageUrl();
+
+    if(!matchId){
+        renderMissingMatchId();
+        return;
+    }
+
+    if(typeof renderCachedDataIfAvailable === "function"){
+        renderCachedDataIfAvailable();
+    }
+
+    if(typeof loadMatch === "function"){
+        loadMatch();
+    }else{
+        const app = document.getElementById("app");
+        if(app){
+            app.innerHTML = `
+                <div class="card">
+                    <div class="section-content">
+                        <div class="error-box">
+                            Errore: motore analisi non disponibile.
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+})();
 </script>
 
 </body>
