@@ -1,10 +1,7 @@
-/*
-    MatchIQ Scout - Render Module
-    Rendering dashboard, player cards, timeline, watchlist e filtri.
-    V6.4 Render
-*/
+/* MatchIQ Scout - Render Module V8.1.2 SaaS Free/Pro */
 
 function renderAll(){
+  renderAccessUI();
   renderMatches();
   renderHero();
   renderMetrics();
@@ -14,6 +11,104 @@ function renderAll(){
   renderWatchlist();
   refreshModal();
   updateApiPill();
+  applyScoutAccessUI();
+}
+
+function renderAccessUI(){
+  const actions = document.querySelector(".topbar .actions");
+
+  if(actions){
+    actions.querySelectorAll(".mi-plan-pill").forEach(x => x.remove());
+
+    const label = state.account?.label || "FREE PREVIEW";
+    const isPro = typeof isScoutPro === "function" ? isScoutPro() : Boolean(state.account?.is_pro);
+    const isOwner = typeof isScoutOwner === "function" ? isScoutOwner() : Boolean(state.account?.is_owner);
+
+    actions.insertAdjacentHTML(
+      "afterbegin",
+      `<div class="pill mi-plan-pill ${isPro ? "pill-live" : "pill-clean"}">${esc(label)}</div>`
+    );
+
+    [...actions.children].forEach(el => {
+      const t = (el.textContent || "").toLowerCase();
+
+      if(t.includes("admin actions")){
+        el.style.display = isOwner ? "" : "none";
+      }
+
+      if(t.includes("export report")){
+        el.style.display = isPro ? "" : "none";
+      }
+
+      if(t.includes("simula evento")){
+        el.style.display = isPro ? "" : "none";
+      }
+    });
+  }
+
+  const sub = document.querySelector(".subtitle");
+
+  if(sub){
+    const isPro = typeof isScoutPro === "function" ? isScoutPro() : Boolean(state.account?.is_pro);
+
+    sub.textContent = isPro
+      ? "Scout completo · Live Player Intelligence · Tactical Signals · Export Report"
+      : "Scout Preview · player cards limitate · export, watchlist e simulazioni disponibili con Pro";
+  }
+}
+
+function goToProRequest(){
+  if(typeof openScoutProUpgrade === "function"){
+    openScoutProUpgrade();
+    return;
+  }
+
+  window.location.href = "/index.html#pricing";
+}
+
+function goToAccount(){
+  if(typeof goAccount === "function"){
+    goAccount();
+    return;
+  }
+
+  window.location.href = "/account.html";
+}
+
+function proCtaHtml(mode = "players"){
+  const textByMode = {
+    players: {
+      title: "🔒 Sblocca MatchIQ Scout Pro",
+      desc: "Stai vedendo una preview limitata. Con Pro sblocchi tutte le player cards, export report, watchlist, simulazione eventi e schede player complete."
+    },
+    hidden: {
+      title: "🔒 Player nascosti",
+      desc: "Altri giocatori sono disponibili solo con Scout Pro. Passa a Pro per vedere l’intera analisi live della partita."
+    },
+    watchlist: {
+      title: "🔒 Watchlist Pro",
+      desc: "La watchlist è disponibile solo per Pro/Owner. Salva i giocatori più interessanti e crea report scout più rapidi."
+    },
+    modal: {
+      title: "🔒 Scheda Player Pro",
+      desc: "La scheda completa include radar, AI coach commentary, probabilità live, tactical zone e report player esportabile."
+    }
+  };
+
+  const c = textByMode[mode] || textByMode.players;
+
+  return `
+    <div class="empty" style="grid-column:1/-1;border-color:#ffb020;background:rgba(255,176,32,.08);">
+      <strong>${c.title}</strong>
+      <br>
+      <span>${c.desc}</span>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px;">
+        <button class="btn btn-green" onclick="goToProRequest()">Passa a Pro</button>
+        <button class="btn" onclick="goToAccount()">Account</button>
+        <button class="btn" onclick="goDashboard()">Dashboard</button>
+      </div>
+    </div>
+  `;
 }
 
 function renderMatches(){
@@ -22,7 +117,12 @@ function renderMatches(){
   if(!box) return;
 
   if(!state.matches.length){
-    box.innerHTML = `<div class="empty"><strong>Nessuna partita live disponibile</strong>Uso il match_id dell'URL se presente.</div>`;
+    box.innerHTML = `
+      <div class="empty">
+        <strong>Nessuna partita live disponibile</strong>
+        Uso il match_id dell'URL se presente.
+      </div>
+    `;
     return;
   }
 
@@ -42,9 +142,11 @@ function renderMatches(){
 
 function renderHero(){
   const hero = document.getElementById("hero");
+
   if(!hero) return;
 
   const m = getMatch();
+  const isPro = typeof isScoutPro === "function" ? isScoutPro() : Boolean(state.account?.is_pro);
 
   if(!m){
     hero.innerHTML = `
@@ -65,6 +167,9 @@ function renderHero(){
     <div class="hero-score">
       <strong>${m.scoreHome} - ${m.scoreAway}</strong>
       <div>${m.minute}' · ${esc(m.status)}</div>
+      <div style="margin-top:8px;font-size:12px;color:${isPro ? "#00f5a0" : "#ffb020"};font-weight:900;">
+        ${isPro ? "Scout Pro completo" : "Scout Free Preview"}
+      </div>
     </div>
 
     <div style="text-align:right;">
@@ -77,32 +182,44 @@ function renderHero(){
 function renderMetrics(){
   const summary = state.summary || buildLocalSummary(state.players);
 
-  const momentum = document.getElementById("mMomentum");
-  const pressure = document.getElementById("mPressure");
-  const creativity = document.getElementById("mCreativity");
-  const threat = document.getElementById("mThreat");
+  const ids = {
+    mMomentum: summary.avg_momentum ?? avgField(state.players, "momentum"),
+    mPressure: summary.avg_pressure ?? avgField(state.players, "pressure"),
+    mCreativity: summary.avg_creativity ?? avgField(state.players, "creativity"),
+    mThreat: summary.avg_threat ?? avgField(state.players, "threat")
+  };
 
-  if(momentum) momentum.textContent = valuePct(summary.avg_momentum ?? avgField(state.players,"momentum"));
-  if(pressure) pressure.textContent = valuePct(summary.avg_pressure ?? avgField(state.players,"pressure"));
-  if(creativity) creativity.textContent = valuePct(summary.avg_creativity ?? avgField(state.players,"creativity"));
-  if(threat) threat.textContent = valuePct(summary.avg_threat ?? avgField(state.players,"threat"));
+  Object.entries(ids).forEach(([id, v]) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = valuePct(v);
+  });
 }
 
 function renderPlayers(){
   const box = document.getElementById("players");
+
   if(!box) return;
 
   if(!state.hasRealPlayers){
     box.innerHTML = `
       <div class="empty">
         <strong>Giocatori reali non disponibili</strong>
-        Scout V6.4 legge solo data.players dello schema clean.
+        Scout legge solo data.players dello schema clean.
       </div>
     `;
     return;
   }
 
-  const list = filteredPlayers();
+  let list = filteredPlayers();
+
+  const isPro = typeof isScoutPro === "function" ? isScoutPro() : Boolean(state.account?.is_pro);
+  const limited = !isPro;
+  const max = typeof scoutPlayerLimit === "function" ? scoutPlayerLimit() : Number(state.account?.scout_max_players || 4);
+  const total = list.length;
+
+  if(limited){
+    list = list.slice(0, max);
+  }
 
   if(!list.length){
     box.innerHTML = `
@@ -114,58 +231,71 @@ function renderPlayers(){
     return;
   }
 
-  box.innerHTML = list.map(p => {
-    const scoreClass = p.scout_score >= 82 ? "high" : p.scout_score >= 70 ? "mid" : "";
-    const cardClass = p.signal_type === "hot"
-      ? "hot"
-      : p.signal_type === "danger"
-        ? "danger"
-        : p.signal_type === "pressure"
-          ? "pressure"
-          : "";
+  box.innerHTML =
+    (limited ? proCtaHtml("players") : "") +
+    list.map(p => {
+      const scoreClass = p.scout_score >= 82 ? "high" : p.scout_score >= 70 ? "mid" : "";
 
-    const signalClass = p.signal_type === "hot"
-      ? "hot-signal"
-      : p.signal_type === "danger"
-        ? "alert"
-        : p.signal_type === "pressure"
-          ? "pressure-signal"
-          : "";
+      const cardClass = p.signal_type === "hot"
+        ? "hot"
+        : p.signal_type === "danger"
+          ? "danger"
+          : p.signal_type === "pressure"
+            ? "pressure"
+            : "";
 
-    const watched = isWatched(p.id);
+      const signalClass = p.signal_type === "hot"
+        ? "hot-signal"
+        : p.signal_type === "danger"
+          ? "alert"
+          : p.signal_type === "pressure"
+            ? "pressure-signal"
+            : "";
 
-    return `
-      <article class="player ${cardClass} ${watched ? "watch" : ""}" id="card-${escAttr(p.id)}">
-        <div onclick="openModal('${escAttr(p.id)}')">
-          <div class="player-head">
-            <div>
-              <div class="player-name">${esc(p.name)}</div>
-              <div class="player-sub">${esc(p.team)} · ${esc(p.role)} · ${esc(p.data_source)}</div>
+      const watched = isWatched(p.id);
+      const canWatch = typeof canUseWatchlist === "function" ? canUseWatchlist() : Boolean(state.account?.watchlist_enabled);
+
+      return `
+        <article class="player ${cardClass} ${watched ? "watch" : ""}" id="card-${escAttr(p.id)}">
+          <div onclick="openModal('${escAttr(p.id)}')">
+            <div class="player-head">
+              <div>
+                <div class="player-name">${esc(p.name)}</div>
+                <div class="player-sub">${esc(p.team)} · ${esc(p.role)} · ${esc(p.data_source)}</div>
+              </div>
+              <div class="score ${scoreClass}">${Math.round(num(p.scout_score,0))}</div>
             </div>
-            <div class="score ${scoreClass}">${Math.round(num(p.scout_score,0))}</div>
+
+            <div class="signal ${watched ? "watch-signal" : signalClass}">
+              ${watched ? "⭐ WATCHLIST" : "⚡ " + esc(p.signal)}
+            </div>
+
+            <div class="stats">
+              <div class="stat"><small>Threat</small><strong>${Math.round(num(p.threat,0))}</strong></div>
+              <div class="stat"><small>Creative</small><strong>${Math.round(num(p.creativity,0))}</strong></div>
+              <div class="stat"><small>Press</small><strong>${Math.round(num(p.pressure,0))}</strong></div>
+              <div class="stat"><small>Mom</small><strong>${Math.round(num(p.momentum,0))}</strong></div>
+            </div>
           </div>
 
-          <div class="signal ${watched ? "watch-signal" : signalClass}">
-            ${watched ? "⭐ WATCHLIST" : "⚡ " + esc(p.signal)}
+          <div class="player-actions">
+            <button class="btn" onclick="openModal('${escAttr(p.id)}')">
+              ${isPro ? "Analizza" : "Preview"}
+            </button>
+            <button class="btn btn-green" onclick="toggleWatchlistById('${escAttr(p.id)}')">
+              ${canWatch ? (watched ? "Salvato" : "Watch") : "PRO"}
+            </button>
           </div>
+        </article>
+      `;
+    }).join("") +
+    (
+      limited && total > max
+        ? proCtaHtml("hidden")
+        : ""
+    );
 
-          <div class="stats">
-            <div class="stat"><small>Threat</small><strong>${Math.round(num(p.threat,0))}</strong></div>
-            <div class="stat"><small>Creative</small><strong>${Math.round(num(p.creativity,0))}</strong></div>
-            <div class="stat"><small>Press</small><strong>${Math.round(num(p.pressure,0))}</strong></div>
-            <div class="stat"><small>Mom</small><strong>${Math.round(num(p.momentum,0))}</strong></div>
-          </div>
-        </div>
-
-        <div class="player-actions">
-          <button class="btn" onclick="openModal('${escAttr(p.id)}')">Analizza</button>
-          <button class="btn btn-green" onclick="toggleWatchlistById('${escAttr(p.id)}')">
-            ${watched ? "Salvato" : "Watch"}
-          </button>
-        </div>
-      </article>
-    `;
-  }).join("");
+  applyScoutAccessUI();
 }
 
 function renderTimeline(){
@@ -173,6 +303,7 @@ function renderTimeline(){
   const count = document.getElementById("eventCount");
 
   if(!box) return;
+
   if(count) count.textContent = `${state.events.length} eventi`;
 
   if(!state.events.length){
@@ -202,12 +333,14 @@ function renderTimeline(){
 
 function renderTicker(){
   const ticker = document.getElementById("tickerText");
+
   if(!ticker) return;
 
   const m = getMatch();
+  const isPro = typeof isScoutPro === "function" ? isScoutPro() : Boolean(state.account?.is_pro);
 
   if(!m){
-    ticker.textContent = "MatchIQ Scout V6.4 · nessuna partita live ricevuta";
+    ticker.textContent = "MatchIQ Scout V8.1.2 · nessuna partita live ricevuta";
     return;
   }
 
@@ -218,8 +351,9 @@ function renderTicker(){
 
   const top = [...state.players].sort((a,b) => num(b.scout_score,0) - num(a.scout_score,0))[0];
 
-  ticker.textContent =
-    `LIVE ${m.home} - ${m.away} · ${m.minute}' · Top Scout: ${top?.name || "--"} · Threat ${Math.round(num(top?.threat,0))} · Source ${top?.data_source || "--"}`;
+  ticker.textContent = isPro
+    ? `LIVE ${m.home} - ${m.away} · ${m.minute}' · PRO · Top Scout: ${top?.name || "--"} · Threat ${Math.round(num(top?.threat,0))} · Source ${top?.data_source || "--"}`
+    : `LIVE ${m.home} - ${m.away} · ${m.minute}' · FREE PREVIEW · ${state.players.length} player analizzati, preview limitata attiva`;
 }
 
 function renderWatchlist(){
@@ -227,7 +361,15 @@ function renderWatchlist(){
   const count = document.getElementById("watchCount");
 
   if(!box) return;
+
   if(count) count.textContent = `${state.watchlist.length} salvati`;
+
+  const canWatch = typeof canUseWatchlist === "function" ? canUseWatchlist() : Boolean(state.account?.watchlist_enabled);
+
+  if(!canWatch){
+    box.innerHTML = proCtaHtml("watchlist");
+    return;
+  }
 
   if(!state.watchlist.length){
     box.innerHTML = `
@@ -255,22 +397,19 @@ function renderWatchlist(){
 }
 
 function filteredPlayers(){
-  const searchInput = document.getElementById("searchInput");
-  const roleFilter = document.getElementById("roleFilter");
-  const signalFilter = document.getElementById("signalFilter");
-  const scoreFilter = document.getElementById("scoreFilter");
+  const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
+  const roleVal = document.getElementById("roleFilter")?.value || "all";
+  const signalVal = document.getElementById("signalFilter")?.value || "all";
+  const minScore = Number(document.getElementById("scoreFilter")?.value || 0);
 
-  const q = (searchInput?.value || "").toLowerCase().trim();
-  const roleVal = roleFilter?.value || "all";
-  const signalVal = signalFilter?.value || "all";
-  const minScore = Number(scoreFilter?.value || 0);
-
-  return state.players.filter(p =>
-    (!q || String(p.name || "").toLowerCase().includes(q) || String(p.team || "").toLowerCase().includes(q)) &&
-    (roleVal === "all" || p.role === roleVal) &&
-    (signalVal === "all" || p.signal_type === signalVal) &&
-    num(p.scout_score,0) >= minScore
-  ).sort((a,b) => num(b.scout_score,0) - num(a.scout_score,0));
+  return state.players
+    .filter(p =>
+      (!q || String(p.name || "").toLowerCase().includes(q) || String(p.team || "").toLowerCase().includes(q)) &&
+      (roleVal === "all" || p.role === roleVal) &&
+      (signalVal === "all" || p.signal_type === signalVal) &&
+      num(p.scout_score,0) >= minScore
+    )
+    .sort((a,b) => num(b.scout_score,0) - num(a.scout_score,0));
 }
 
 function resetFilters(){

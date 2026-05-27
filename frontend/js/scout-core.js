@@ -1,9 +1,10 @@
-/* MatchIQ Scout - Core Module V8.0.3 Hotfix 7 Safe Runtime */
-const APP_VERSION = "10036";
+/* MatchIQ Scout - Core Module V8.1.2 SaaS Free/Pro Runtime */
+const APP_VERSION = "10051";
 
 document.addEventListener("DOMContentLoaded", async () => {
   try{
     bindFilters();
+    injectScoutAccountButton();
     await init();
     startTimers();
   }catch(err){
@@ -44,6 +45,40 @@ function bindFilters(){
 }
 
 /* =========================
+   ACCOUNT BUTTON
+========================= */
+
+function injectScoutAccountButton(){
+  const actions = document.querySelector(".topbar .actions");
+  if(!actions) return;
+
+  if(document.getElementById("scoutAccountBtn")) return;
+
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.id = "scoutAccountBtn";
+  btn.textContent = "Account";
+  btn.onclick = goAccount;
+
+  const refreshBtn = [...actions.querySelectorAll("button")]
+    .find(b => (b.textContent || "").toLowerCase().includes("aggiorna"));
+
+  if(refreshBtn){
+    actions.insertBefore(btn, refreshBtn);
+  }else{
+    actions.appendChild(btn);
+  }
+}
+
+function goAccount(){
+  window.location.href = versionedUrl("/account.html");
+}
+
+function goPricing(){
+  window.location.href = versionedUrl("/index.html#pricing");
+}
+
+/* =========================
    ACCOUNT LIMITS SAFE
 ========================= */
 
@@ -72,12 +107,12 @@ function normalizeAccountLimits(data){
     plan = "owner";
   }
 
-  const isOwner = plan === "owner";
-  const isPro = plan === "pro" || isOwner;
+  const isOwner = plan === "owner" || plan === "admin" || plan === "owner_pro";
+  const isPro = plan === "pro" || plan === "scout" || isOwner;
 
   return {
-    plan,
-    label: isOwner ? "OWNER PRO" : isPro ? "PRO" : "GUEST PREVIEW",
+    plan: isOwner ? "owner" : isPro ? "pro" : plan,
+    label: isOwner ? "OWNER PRO" : isPro ? "PRO" : "FREE PREVIEW",
     is_owner: isOwner,
     is_pro: isPro,
     scout_enabled: Boolean(isPro || limits.scout_enabled),
@@ -103,7 +138,7 @@ async function loadAccountLimits(){
 
     const headers = token ? {"Authorization": `Bearer ${token}`} : {};
 
-    const r = await fetch(`${API_BASE}/api/account/limits`, {
+    const r = await fetch(`${API_BASE}/api/account/limits?ts=${Date.now()}`, {
       headers,
       cache: "no-store"
     });
@@ -318,6 +353,49 @@ function getStoredUserEmail(){
   return "";
 }
 
+function getStoredUserPlan(){
+  const keys = [
+    "matchiq_user_plan",
+    "matchiq_plan",
+    "user_plan",
+    "plan"
+  ];
+
+  for(const key of keys){
+    const value =
+      localStorage.getItem(key) ||
+      sessionStorage.getItem(key);
+
+    if(value && String(value).toLowerCase().trim()){
+      return String(value).toLowerCase().trim();
+    }
+  }
+
+  try{
+    const rawUser =
+      localStorage.getItem("matchiq_user") ||
+      localStorage.getItem("matchiq_auth_user") ||
+      sessionStorage.getItem("matchiq_user") ||
+      sessionStorage.getItem("matchiq_auth_user");
+
+    if(rawUser){
+      const parsed = JSON.parse(rawUser);
+      const plan =
+        parsed?.plan ||
+        parsed?.piano ||
+        parsed?.role ||
+        parsed?.user?.plan ||
+        parsed?.account?.plan;
+
+      if(plan){
+        return String(plan).toLowerCase().trim();
+      }
+    }
+  }catch(e){}
+
+  return "";
+}
+
 function isLocalOwnerOverride(){
   const email = getStoredUserEmail();
   return email === "mario.costabile92@outlook.it";
@@ -326,6 +404,16 @@ function isLocalOwnerOverride(){
 function getScoutPlan(){
   if(isLocalOwnerOverride()){
     return "owner";
+  }
+
+  const localPlan = getStoredUserPlan();
+
+  if(["owner","admin","owner_pro"].includes(localPlan)){
+    return "owner";
+  }
+
+  if(["pro","scout","pro_monthly","pro_yearly"].includes(localPlan)){
+    return "pro";
   }
 
   return String(state?.account?.plan || "guest").toLowerCase();
@@ -345,6 +433,11 @@ function isScoutPro(){
     state?.account?.is_pro === true ||
     getScoutPlan() === "pro"
   );
+}
+
+function scoutPlayerLimit(){
+  if(isScoutPro()) return 999;
+  return Number(state?.account?.scout_max_players || 4);
 }
 
 function scoutCanUseWatchlist(){
@@ -382,6 +475,69 @@ function canSimulateScout(){
 }
 
 /* =========================
+   PRO ACTIONS
+========================= */
+
+async function startScoutCheckout(plan="pro_monthly"){
+  const token =
+    localStorage.getItem("matchiq_auth_token") ||
+    sessionStorage.getItem("matchiq_auth_token") ||
+    "";
+
+  if(isScoutPro()){
+    safeToast("Piano Pro attivo","Hai già accesso completo a MatchIQ Scout.");
+    return;
+  }
+
+  if(!token){
+    safeToast("Login richiesto","Per attivare Pro devi prima fare login o registrarti.");
+    setTimeout(() => {
+      window.location.href = versionedUrl("/login.html");
+    },900);
+    return;
+  }
+
+  try{
+    const r = await fetch(`${API_BASE}/api/payments/create-checkout-session`, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer " + token
+      },
+      body:JSON.stringify({plan})
+    });
+
+    const data = await r.json();
+
+    if(r.status === 409){
+      safeToast("Piano già attivo", data?.detail?.message || "Il tuo piano Pro è già attivo.");
+      await loadAccountLimits();
+      if(typeof renderAll === "function") renderAll();
+      return;
+    }
+
+    if(!r.ok || data.success === false || data.ok === false){
+      const detail = data.detail;
+      throw new Error(typeof detail === "object" ? detail.message : detail || data.message || "Errore checkout");
+    }
+
+    const url = data.checkout_url || data.url;
+
+    if(!url) throw new Error("Checkout URL non ricevuto");
+
+    window.location.href = url;
+
+  }catch(e){
+    console.error(e);
+    safeToast("Errore Stripe", e.message || "Checkout non disponibile.");
+  }
+}
+
+function openScoutProUpgrade(){
+  startScoutCheckout("pro_monthly");
+}
+
+/* =========================
    UI LOCK / UNLOCK
 ========================= */
 
@@ -410,6 +566,12 @@ function forceScoutAccessUI(){
   setVisibleById("modalExportPlayerBtn", isPro);
   setVisibleById("modalRemoveWatchBtn", isPro);
 
+  const accountBtn = document.getElementById("scoutAccountBtn");
+  if(accountBtn){
+    accountBtn.style.display = "inline-flex";
+    accountBtn.textContent = isPro ? "Account Pro" : "Account";
+  }
+
   const apiPill = document.getElementById("apiSafePill");
   if(apiPill){
     if(isOwner){
@@ -417,7 +579,7 @@ function forceScoutAccessUI(){
     }else if(isPro){
       apiPill.textContent = "PRO";
     }else{
-      apiPill.textContent = "GUEST PREVIEW";
+      apiPill.textContent = "FREE PREVIEW";
     }
   }
 
@@ -425,19 +587,19 @@ function forceScoutAccessUI(){
   if(subtitle){
     subtitle.textContent = isPro
       ? "Scout completo · Live Player Intelligence · Tactical Signals · Export Report"
-      : "Scout Preview · Player Intelligence limitata · Funzioni PRO bloccate";
+      : "Scout Preview · player cards limitate · export, watchlist e simulazioni disponibili con Pro";
   }
 
   const loaderSubtitle = document.getElementById("loaderSubtitle");
   if(loaderSubtitle){
     loaderSubtitle.textContent = isPro
       ? "Live intelligence · Player scouting · Tactical signals"
-      : "Scout Preview · funzioni avanzate disponibili nei piani PRO";
+      : "Scout Preview · funzioni avanzate disponibili con MatchIQ Pro";
   }
 
   const ticker = document.getElementById("tickerText");
   if(ticker && !isPro){
-    ticker.textContent = "MatchIQ Scout Preview · funzioni PRO bloccate per questo account.";
+    ticker.textContent = "MatchIQ Scout Free Preview · passa a Pro per sbloccare player cards complete, watchlist, export e simulazioni.";
   }
 
   document.querySelectorAll("[data-pro-only]").forEach(el => {
