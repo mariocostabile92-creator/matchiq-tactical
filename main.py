@@ -1058,6 +1058,110 @@ def export_beta_requests_csv_alias(
     return export_beta_requests_csv(status, profile, plan, admin_ok)
 
 
+
+# =========================================================
+# ADMIN USERS - V8.2
+# =========================================================
+
+class AdminUserPlanPayload(BaseModel):
+    plan: str
+    deactivate: Optional[bool] = False
+
+
+def admin_users_summary(users):
+    total = len(users or [])
+    by_plan = {}
+    active = 0
+    inactive = 0
+    stripe_active = 0
+
+    for u in users or []:
+        plan = str(u.get("plan") or "free").lower()
+        by_plan[plan] = by_plan.get(plan, 0) + 1
+
+        if int(u.get("is_active") or 0) == 1:
+            active += 1
+        else:
+            inactive += 1
+
+        if str(u.get("subscription_status") or "").lower() == "active":
+            stripe_active += 1
+
+    return {
+        "total": total,
+        "active": active,
+        "inactive": inactive,
+        "stripe_active": stripe_active,
+        "by_plan": by_plan,
+    }
+
+
+@app.get("/api/admin/users")
+def api_admin_users(
+    plan: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(300, ge=1, le=1000),
+    admin_ok: bool = Depends(require_admin_token)
+):
+    try:
+        from database import get_admin_users
+
+        users = get_admin_users(
+            plan=plan or "",
+            status=status or "",
+            search=search or "",
+            limit=limit,
+        )
+
+        return {
+            "ok": True,
+            "success": True,
+            "count": len(users),
+            "summary": admin_users_summary(users),
+            "users": users,
+            "data": users,
+        }
+
+    except Exception as e:
+        logger.exception("[ADMIN USERS] Errore lista utenti")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.patch("/api/admin/users/{user_id}/plan")
+def api_admin_update_user_plan(
+    user_id: int,
+    payload: AdminUserPlanPayload = Body(...),
+    admin_ok: bool = Depends(require_admin_token)
+):
+    try:
+        from database import admin_update_user_plan
+
+        updated = admin_update_user_plan(
+            user_id=user_id,
+            plan=payload.plan,
+            deactivate=bool(payload.deactivate),
+        )
+
+        if not updated:
+            raise HTTPException(status_code=404, detail="Utente non trovato")
+
+        return {
+            "ok": True,
+            "success": True,
+            "message": "Piano utente aggiornato",
+            "user": updated,
+            "data": updated,
+        }
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("[ADMIN USERS] Errore update piano utente")
+        raise HTTPException(status_code=500, detail=str(e))
+
 LIVE_MATCHES_CACHE = {}
 FULL_ANALYSIS_CACHE = {}
 SCOUT_PLAYERS_CACHE = {}
@@ -1437,6 +1541,10 @@ if os.path.exists(FRONTEND_DIR):
     @app.get("/admin-beta.html")
     def serve_admin_beta():
         return FileResponse(os.path.join(FRONTEND_DIR, "admin-beta.html"))
+
+    @app.get("/admin-users.html")
+    def serve_admin_users():
+        return FileResponse(os.path.join(FRONTEND_DIR, "admin-users.html"))
 
     @app.get("/admin")
     def serve_admin_alias():

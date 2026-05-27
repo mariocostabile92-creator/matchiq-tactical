@@ -1,6 +1,6 @@
 """
 database.py
-MatchIQ Tactical - Database Layer V8.1 Stripe Ready
+MatchIQ Tactical - Database Layer V8.2 Admin Users Ready
 
 Compatibile con:
 - PostgreSQL Railway/Production
@@ -8,6 +8,7 @@ Compatibile con:
 - utenti free/pro/scout/owner
 - usage tracking
 - subscriptions Stripe/manual
+- Admin users panel
 
 Nota importante:
 usa query helper con placeholder corretti per SQLite (?) e PostgreSQL (%s).
@@ -77,6 +78,9 @@ PLAN_LIMITS = {
 }
 
 
+VALID_ADMIN_PLANS = {"free", "pro", "scout", "owner"}
+
+
 def get_plan_limits(plan: str):
     plan = (plan or "free").lower().strip()
     return PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
@@ -135,6 +139,42 @@ def get_last_insert_id(cur):
             return row.get("id")
         return row[0] if row else None
     return cur.lastrowid
+
+
+def normalize_admin_datetime(value):
+    if value is None:
+        return ""
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value)
+
+
+def normalize_admin_user_row(row):
+    if not row:
+        return {}
+
+    item = dict(row)
+
+    for key in [
+        "created_at",
+        "updated_at",
+        "subscription_created_at",
+        "subscription_updated_at",
+        "current_period_start",
+        "current_period_end",
+    ]:
+        if key in item:
+            item[key] = normalize_admin_datetime(item.get(key))
+
+    item["plan"] = (item.get("plan") or "free").lower().strip()
+    item["subscription_status"] = item.get("subscription_status") or ""
+    item["subscription_plan"] = item.get("subscription_plan") or ""
+    item["provider"] = item.get("provider") or ""
+    item["provider_customer_id"] = item.get("provider_customer_id") or item.get("stripe_customer_id") or ""
+    item["provider_subscription_id"] = item.get("provider_subscription_id") or ""
+    item["is_active"] = int(item.get("is_active") or 0)
+
+    return item
 
 
 # =========================================================
@@ -343,6 +383,16 @@ def init_db():
         ON subscriptions(provider_subscription_id)
     """)
 
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_users_plan
+        ON users(plan)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_users_email
+        ON users(email)
+    """)
+
     conn.commit()
     conn.close()
 
@@ -456,6 +506,316 @@ def deactivate_user(user_id: int):
     conn.commit()
     conn.close()
     return True
+
+
+# =========================================================
+# ADMIN USERS
+# =========================================================
+
+def get_admin_users(
+    plan: str = "",
+    search: str = "",
+    status: str = "",
+    limit: int = 300,
+):
+    """
+    Lista utenti per pannello admin.
+    Include ultima subscription attiva/recente se disponibile.
+    Non ritorna password_hash.
+    """
+
+    init_db()
+
+    limit = max(1, min(int(limit or 300), 1000))
+    plan = (plan or "").lower().strip()
+    status = (status or "").lower().strip()
+    search = (search or "").strip()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    where = []
+    params = []
+
+    if plan and plan not in ["all", "tutti"]:
+        where.append("LOWER(u.plan) = ?")
+        params.append(plan)
+
+    if status and status not in ["all", "tutti"]:
+        if status == "active":
+            where.append("u.is_active = 1")
+        elif status == "disabled":
+            where.append("u.is_active = 0")
+        elif status == "sub_active":
+            where.append("COALESCE(s.status, '') = 'active'")
+        elif status == "sub_missing":
+            where.append("(s.id IS NULL OR COALESCE(s.status, '') <> 'active')")
+
+    if search:
+        like = f"%{search}%"
+        where.append("""
+            (
+                u.email LIKE ?
+                OR COALESCE(u.stripe_customer_id, '') LIKE ?
+                OR COALESCE(s.provider_customer_id, '') LIKE ?
+                OR COALESCE(s.provider_subscription_id, '') LIKE ?
+            )
+        """)
+        params.extend([like, like, like, like])
+
+    where_sql = ""
+    if where:
+        where_sql = "WHERE " + " AND ".join(where)
+
+    params.append(limit)
+
+    if USE_POSTGRES:
+        sql = f"""
+            SELECT
+                u.id,
+                u.email,
+                u.plan,
+                u.is_active,
+                u.stripe_customer_id,
+                u.created_at,
+                u.updated_at,
+
+                s.id AS subscription_id,
+                s.plan AS subscription_plan,
+                s.status AS subscription_status,
+                s.provider,
+                s.provider_customer_id,
+                s.provider_subscription_id,
+                s.current_period_start,
+                s.current_period_end,
+                s.created_at AS subscription_created_at,
+                s.updated_at AS subscription_updated_at,
+
+                COALESCE(usage_today.total_usage_today, 0) AS total_usage_today
+
+            FROM users u
+
+            LEFT JOIN LATERAL (
+                SELECT *
+                FROM subscriptions s2
+                WHERE s2.user_id = u.id
+                ORDER BY
+                    CASE WHEN s2.status = 'active' THEN 0 ELSE 1 END,
+                    s2.created_at DESC
+                LIMIT 1
+            ) s ON TRUE
+
+            LEFT JOIN (
+                SELECT user_id, COALESCE(SUM(count), 0) AS total_usage_today
+                FROM api_usage
+                WHERE usage_date = %s
+                GROUP BY user_id
+            ) usage_today ON usage_today.user_id = u.id
+
+            {where_sql}
+            ORDER BY u.created_at DESC
+            LIMIT %s
+        """
+        final_params = [today_key()] + params
+        cur.execute(q(sql), final_params)
+    else:
+        sql = f"""
+            SELECT
+                u.id,
+                u.email,
+                u.plan,
+                u.is_active,
+                u.stripe_customer_id,
+                u.created_at,
+                u.updated_at,
+
+                s.id AS subscription_id,
+                s.plan AS subscription_plan,
+                s.status AS subscription_status,
+                s.provider,
+                s.provider_customer_id,
+                s.provider_subscription_id,
+                s.current_period_start,
+                s.current_period_end,
+                s.created_at AS subscription_created_at,
+                s.updated_at AS subscription_updated_at,
+
+                COALESCE(usage_today.total_usage_today, 0) AS total_usage_today
+
+            FROM users u
+
+            LEFT JOIN subscriptions s
+                ON s.id = (
+                    SELECT s2.id
+                    FROM subscriptions s2
+                    WHERE s2.user_id = u.id
+                    ORDER BY
+                        CASE WHEN s2.status = 'active' THEN 0 ELSE 1 END,
+                        s2.created_at DESC
+                    LIMIT 1
+                )
+
+            LEFT JOIN (
+                SELECT user_id, COALESCE(SUM(count), 0) AS total_usage_today
+                FROM api_usage
+                WHERE usage_date = ?
+                GROUP BY user_id
+            ) usage_today ON usage_today.user_id = u.id
+
+            {where_sql}
+            ORDER BY u.created_at DESC
+            LIMIT ?
+        """
+        final_params = [today_key()] + params
+        cur.execute(sql, final_params)
+
+    rows = fetchall(cur)
+    conn.close()
+
+    return [normalize_admin_user_row(r) for r in rows]
+
+
+def get_user_with_subscription_admin(user_id: int):
+    init_db()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if USE_POSTGRES:
+        cur.execute("""
+            SELECT
+                u.id,
+                u.email,
+                u.plan,
+                u.is_active,
+                u.stripe_customer_id,
+                u.created_at,
+                u.updated_at,
+
+                s.id AS subscription_id,
+                s.plan AS subscription_plan,
+                s.status AS subscription_status,
+                s.provider,
+                s.provider_customer_id,
+                s.provider_subscription_id,
+                s.current_period_start,
+                s.current_period_end,
+                s.created_at AS subscription_created_at,
+                s.updated_at AS subscription_updated_at
+
+            FROM users u
+
+            LEFT JOIN LATERAL (
+                SELECT *
+                FROM subscriptions s2
+                WHERE s2.user_id = u.id
+                ORDER BY
+                    CASE WHEN s2.status = 'active' THEN 0 ELSE 1 END,
+                    s2.created_at DESC
+                LIMIT 1
+            ) s ON TRUE
+
+            WHERE u.id = %s
+            LIMIT 1
+        """, (user_id,))
+    else:
+        cur.execute("""
+            SELECT
+                u.id,
+                u.email,
+                u.plan,
+                u.is_active,
+                u.stripe_customer_id,
+                u.created_at,
+                u.updated_at,
+
+                s.id AS subscription_id,
+                s.plan AS subscription_plan,
+                s.status AS subscription_status,
+                s.provider,
+                s.provider_customer_id,
+                s.provider_subscription_id,
+                s.current_period_start,
+                s.current_period_end,
+                s.created_at AS subscription_created_at,
+                s.updated_at AS subscription_updated_at
+
+            FROM users u
+
+            LEFT JOIN subscriptions s
+                ON s.id = (
+                    SELECT s2.id
+                    FROM subscriptions s2
+                    WHERE s2.user_id = u.id
+                    ORDER BY
+                        CASE WHEN s2.status = 'active' THEN 0 ELSE 1 END,
+                        s2.created_at DESC
+                    LIMIT 1
+                )
+
+            WHERE u.id = ?
+            LIMIT 1
+        """, (user_id,))
+
+    row = fetchone(cur)
+    conn.close()
+
+    return normalize_admin_user_row(row) if row else None
+
+
+def admin_update_user_plan(user_id: int, plan: str, deactivate: bool = False):
+    init_db()
+
+    plan = (plan or "free").lower().strip()
+
+    if plan not in VALID_ADMIN_PLANS:
+        raise ValueError(f"Piano non valido: {plan}")
+
+    now = utc_now()
+    is_active = 0 if deactivate else 1
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(q("""
+        UPDATE users
+        SET plan = ?, is_active = ?, updated_at = ?
+        WHERE id = ?
+    """), (plan, is_active, now, user_id))
+
+    if cur.rowcount == 0:
+        conn.rollback()
+        conn.close()
+        return None
+
+    if plan in ["pro", "scout", "owner"]:
+        cur.execute(q("""
+            INSERT INTO subscriptions (
+                user_id,
+                plan,
+                status,
+                provider,
+                provider_customer_id,
+                provider_subscription_id,
+                current_period_start,
+                current_period_end,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, 'active', 'manual_admin', '', '', ?, '', ?, ?)
+        """), (user_id, plan, now, now, now))
+
+    elif plan == "free":
+        cur.execute(q("""
+            UPDATE subscriptions
+            SET status = 'cancelled', updated_at = ?
+            WHERE user_id = ? AND status = 'active' AND provider = 'manual_admin'
+        """), (now, user_id))
+
+    conn.commit()
+    conn.close()
+
+    return get_user_with_subscription_admin(user_id)
 
 
 # =========================================================
