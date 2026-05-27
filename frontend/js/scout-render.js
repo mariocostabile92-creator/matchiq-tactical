@@ -1,4 +1,4 @@
-/* MatchIQ Scout - Render Module V8.1.2 SaaS Free/Pro */
+/* MatchIQ Scout - Render Module V8.1.3 SaaS Free/Pro + Free Match Limit */
 
 function renderAll(){
   renderAccessUI();
@@ -92,6 +92,10 @@ function proCtaHtml(mode = "players"){
     modal: {
       title: "🔒 Scheda Player Pro",
       desc: "La scheda completa include radar, AI coach commentary, probabilità live, tactical zone e report player esportabile."
+    },
+    matches: {
+      title: "🔒 Altre partite disponibili con Pro",
+      desc: "Con MatchIQ Free puoi usare Scout solo su 3 partite live. Con Pro sblocchi tutte le partite, player cards complete, watchlist, export e simulazioni."
     }
   };
 
@@ -106,6 +110,89 @@ function proCtaHtml(mode = "players"){
         <button class="btn btn-green" onclick="goToProRequest()">Passa a Pro</button>
         <button class="btn" onclick="goToAccount()">Account</button>
         <button class="btn" onclick="goDashboard()">Dashboard</button>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================
+   FREE / PRO MATCH LIMIT
+========================= */
+
+function getScoutMatchLimit(){
+  const isPro = typeof isScoutPro === "function"
+    ? isScoutPro()
+    : Boolean(state.account?.is_pro);
+
+  const isOwner = typeof isScoutOwner === "function"
+    ? isScoutOwner()
+    : Boolean(state.account?.is_owner);
+
+  if(isPro || isOwner){
+    return 999;
+  }
+
+  const apiLimit =
+    state.account?.limits?.max_live_matches ??
+    state.account?.max_live_matches ??
+    state.account?.scout_max_matches ??
+    3;
+
+  const n = Number(apiLimit);
+
+  if(!Number.isFinite(n) || n <= 0){
+    return 3;
+  }
+
+  return Math.min(n, 3);
+}
+
+function isScoutMatchAllowed(matchId, visibleMatches){
+  const isPro = typeof isScoutPro === "function"
+    ? isScoutPro()
+    : Boolean(state.account?.is_pro);
+
+  const isOwner = typeof isScoutOwner === "function"
+    ? isScoutOwner()
+    : Boolean(state.account?.is_owner);
+
+  if(isPro || isOwner){
+    return true;
+  }
+
+  return visibleMatches.some(m => String(m.id) === String(matchId));
+}
+
+function openScoutLockedMatch(){
+  if(typeof toast === "function"){
+    toast(
+      "Partita bloccata",
+      "Con il piano Free puoi usare Scout solo sulle prime 3 partite live. Passa a Pro per sbloccarle tutte."
+    );
+    return;
+  }
+
+  alert("Con il piano Free puoi usare Scout solo sulle prime 3 partite live. Passa a Pro per sbloccarle tutte.");
+}
+
+function scoutMatchesProLockHtml(total, visible){
+  const hidden = Math.max(total - visible, 0);
+
+  if(hidden <= 0){
+    return "";
+  }
+
+  return `
+    <div class="empty" style="border-color:#ffb020;background:rgba(255,176,32,.08);">
+      <strong>🔒 Altre ${hidden} partite disponibili con Pro</strong>
+      <br>
+      <span>
+        Con MatchIQ Free puoi selezionare massimo ${visible} partite live.
+        Con Pro sblocchi tutte le partite, Scout completo, player cards, watchlist, export e simulazioni.
+      </span>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px;">
+        <button class="btn btn-green" onclick="goToProRequest()">Passa a Pro</button>
+        <button class="btn" onclick="goToAccount()">Account</button>
       </div>
     </div>
   `;
@@ -126,7 +213,32 @@ function renderMatches(){
     return;
   }
 
-  box.innerHTML = state.matches.map(m => `
+  const limit = getScoutMatchLimit();
+  const total = state.matches.length;
+  const isLimited = limit < 999;
+  const visibleMatches = isLimited ? state.matches.slice(0, limit) : state.matches;
+
+  if(
+    isLimited &&
+    state.selectedMatchId &&
+    !isScoutMatchAllowed(state.selectedMatchId, visibleMatches)
+  ){
+    state.selectedMatchId = visibleMatches?.[0]?.id || null;
+
+    if(typeof loadScoutData === "function" && state.selectedMatchId){
+      setTimeout(() => {
+        loadScoutData(true)
+          .then(() => {
+            if(typeof renderAll === "function"){
+              renderAll();
+            }
+          })
+          .catch(() => {});
+      }, 50);
+    }
+  }
+
+  const matchHtml = visibleMatches.map(m => `
     <div class="match-card ${String(m.id) === String(state.selectedMatchId) ? "active" : ""}" onclick="selectMatch('${escAttr(m.id)}')">
       <div class="match-row">
         <span>${esc(m.home)}</span>
@@ -138,6 +250,8 @@ function renderMatches(){
       </div>
     </div>
   `).join("");
+
+  box.innerHTML = matchHtml + scoutMatchesProLockHtml(total, visibleMatches.length);
 }
 
 function renderHero(){
@@ -340,7 +454,7 @@ function renderTicker(){
   const isPro = typeof isScoutPro === "function" ? isScoutPro() : Boolean(state.account?.is_pro);
 
   if(!m){
-    ticker.textContent = "MatchIQ Scout V8.1.2 · nessuna partita live ricevuta";
+    ticker.textContent = "MatchIQ Scout V8.1.3 · nessuna partita live ricevuta";
     return;
   }
 
