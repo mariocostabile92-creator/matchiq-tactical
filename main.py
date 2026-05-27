@@ -1,6 +1,8 @@
 import os
 import time
 import threading
+import secrets
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import csv
 import io
@@ -9,7 +11,7 @@ import string
 from app.routers.live import create_live_router
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
-from datetime import datetime
+from datetime import datetime, timezone
 from app.routers.system import create_system_router
 from pydantic import BaseModel, EmailStr
 from typing import Optional
@@ -21,7 +23,7 @@ from app.services.scout_service import (
     build_real_scout_response
 )
 
-from fastapi import FastAPI, Query, Depends, Body
+from fastapi import FastAPI, Query, Depends, Body, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -81,7 +83,7 @@ except Exception:
             "available": False,
             "source": "fallback",
             "error": "scout_engine.py non disponibile",
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "players": players or [],
             "top_performer": players[0] if players else None,
             "hidden_gems": [p for p in players or [] if p.get("hidden_gem")],
@@ -211,6 +213,24 @@ def normalize_beta_row(row):
 
 def validate_lead_status(status: str):
     return status in VALID_LEAD_STATUSES
+
+
+def require_admin_token(x_admin_token: Optional[str] = Header(None)):
+    """Protezione temporanea per endpoint admin beta.
+    Configura ADMIN_API_TOKEN su Railway e invia lo stesso valore come header X-Admin-Token.
+    """
+    expected = os.getenv("ADMIN_API_TOKEN", "").strip()
+
+    if not expected:
+        logger.error("[ADMIN SECURITY] ADMIN_API_TOKEN non configurato")
+        raise HTTPException(status_code=503, detail="ADMIN_API_TOKEN non configurato")
+
+    supplied = (x_admin_token or "").strip()
+
+    if not supplied or not secrets.compare_digest(supplied, expected):
+        raise HTTPException(status_code=401, detail="Admin token non valido")
+
+    return True
 
 
 def ensure_beta_requests_table():
@@ -424,13 +444,8 @@ def list_beta_requests(
     plan: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     limit: int = Query(200, ge=1, le=1000),
-    user=Depends(get_optional_user)
+    admin_ok: bool = Depends(require_admin_token)
 ):
-    # V8.0.1 HOTFIX ADMIN ACCESS
-    # Durante la beta privata il pannello admin non invia ancora token Bearer.
-    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
-    # if not is_owner_or_paid_user(user):
-    #     enforce_premium_feature(user, "owner")
 
     database_url = get_database_url()
 
@@ -542,13 +557,8 @@ def list_beta_requests(
 def update_beta_request(
     lead_id: int,
     payload: BetaLeadUpdatePayload = Body(...),
-    user=Depends(get_optional_user)
+    admin_ok: bool = Depends(require_admin_token)
 ):
-    # V8.0.1 HOTFIX ADMIN ACCESS
-    # Durante la beta privata il pannello admin non invia ancora token Bearer.
-    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
-    # if not is_owner_or_paid_user(user):
-    #     enforce_premium_feature(user, "owner")
 
     database_url = get_database_url()
 
@@ -656,25 +666,20 @@ def update_beta_request(
 def update_beta_request_put(
     lead_id: int,
     payload: BetaLeadUpdatePayload = Body(...),
-    user=Depends(get_optional_user)
+    admin_ok: bool = Depends(require_admin_token)
 ):
-    return update_beta_request(lead_id, payload, user)
+    return update_beta_request(lead_id, payload, admin_ok)
 
 
 @app.post("/api/beta-requests/{lead_id}/generate-code")
 def generate_beta_code_for_lead(
     lead_id: int,
-    user=Depends(get_optional_user)
+    admin_ok: bool = Depends(require_admin_token)
 ):
     """
     Genera e salva codice beta per un lead.
     Se il lead ha già un codice, lo mantiene e lo restituisce.
     """
-    # V8.0.1 HOTFIX ADMIN ACCESS
-    # Durante la beta privata il pannello admin non invia ancora token Bearer.
-    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
-    # if not is_owner_or_paid_user(user):
-    #     enforce_premium_feature(user, "owner")
 
     database_url = get_database_url()
 
@@ -800,12 +805,7 @@ def generate_beta_code_for_lead(
 
 
 @app.get("/api/beta-requests-stats")
-def beta_requests_stats(user=Depends(get_optional_user)):
-    # V8.0.1 HOTFIX ADMIN ACCESS
-    # Durante la beta privata il pannello admin non invia ancora token Bearer.
-    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
-    # if not is_owner_or_paid_user(user):
-    #     enforce_premium_feature(user, "owner")
+def beta_requests_stats(admin_ok: bool = Depends(require_admin_token)):
 
     database_url = get_database_url()
 
@@ -906,8 +906,8 @@ def beta_requests_stats(user=Depends(get_optional_user)):
 
 
 @app.get("/api/beta-stats")
-def beta_stats_alias(user=Depends(get_optional_user)):
-    return beta_requests_stats(user)
+def beta_stats_alias(admin_ok: bool = Depends(require_admin_token)):
+    return beta_requests_stats(admin_ok)
 
 
 @app.get("/api/beta-requests/export.csv")
@@ -915,13 +915,8 @@ def export_beta_requests_csv(
     status: Optional[str] = Query(None),
     profile: Optional[str] = Query(None),
     plan: Optional[str] = Query(None),
-    user=Depends(get_optional_user)
+    admin_ok: bool = Depends(require_admin_token)
 ):
-    # V8.0.1 HOTFIX ADMIN ACCESS
-    # Durante la beta privata il pannello admin non invia ancora token Bearer.
-    # Quando aggiungiamo login admin reale, riattiviamo questo controllo.
-    # if not is_owner_or_paid_user(user):
-    #     enforce_premium_feature(user, "owner")
 
     database_url = get_database_url()
 
@@ -1025,7 +1020,7 @@ def export_beta_requests_csv(
 
         output.seek(0)
 
-        filename = f"matchiq_beta_requests_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+        filename = f"matchiq_beta_requests_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
 
         return StreamingResponse(
             iter([output.getvalue()]),
@@ -1058,9 +1053,9 @@ def export_beta_requests_csv_alias(
     status: Optional[str] = Query(None),
     profile: Optional[str] = Query(None),
     plan: Optional[str] = Query(None),
-    user=Depends(get_optional_user)
+    admin_ok: bool = Depends(require_admin_token)
 ):
-    return export_beta_requests_csv(status, profile, plan, user)
+    return export_beta_requests_csv(status, profile, plan, admin_ok)
 
 
 LIVE_MATCHES_CACHE = {}
@@ -1072,6 +1067,10 @@ FULL_ANALYSIS_CACHE_SECONDS = 30
 SCOUT_PLAYERS_CACHE_SECONDS = 1800
 
 BACKGROUND_REFRESH_ENABLED = True
+BACKGROUND_REFRESH_MAX_WORKERS = int(os.getenv("BACKGROUND_REFRESH_MAX_WORKERS", "10"))
+BACKGROUND_REFRESH_EXECUTOR = ThreadPoolExecutor(max_workers=BACKGROUND_REFRESH_MAX_WORKERS)
+BACKGROUND_REFRESH_IN_PROGRESS = set()
+BACKGROUND_REFRESH_LOCK = threading.Lock()
 
 MATCH_PRIORITY = {
     "Serie A": 15,
@@ -1110,7 +1109,27 @@ def background_refresh_match(match_id):
     try:
         logger.info("[BACKGROUND REFRESH] %s", match_id)
 
-        data = build_full_analysis(match_id)
+        data = build_full_analysis(
+            match_id,
+            get_match_live_data_func=get_match_live_data,
+            analyze_match_tactical_func=analyze_match_tactical,
+            generate_live_engine_func=generate_live_engine,
+            analyze_pressure_func=analyze_pressure,
+            generate_xg_analysis_func=generate_xg_analysis,
+            generate_live_flow_func=generate_live_flow,
+            generate_tactical_coach_func=generate_tactical_coach,
+            generate_future_prediction_func=generate_future_prediction,
+            analyze_ai_core_func=analyze_ai_core,
+            generate_player_ratings_func=generate_player_ratings,
+            generate_win_probability_func=generate_win_probability,
+            generate_tactical_events_func=generate_tactical_events,
+            generate_live_alerts_func=generate_live_alerts,
+            build_live_events_func=build_live_events,
+            generate_ai_report_func=generate_ai_report,
+            generate_timeline_func=generate_timeline,
+            build_live_match_brain_func=build_live_match_brain,
+            live_match_brain_available=LIVE_MATCH_BRAIN_AVAILABLE
+        )
 
         if "error" not in data:
             FULL_ANALYSIS_CACHE[match_id] = {
@@ -1123,48 +1142,31 @@ def background_refresh_match(match_id):
     except Exception:
         logger.exception("BACKGROUND REFRESH ERROR")
 
+    finally:
+        with BACKGROUND_REFRESH_LOCK:
+            BACKGROUND_REFRESH_IN_PROGRESS.discard(match_id)
+
 
 def launch_background_refresh(match_id):
     if not BACKGROUND_REFRESH_ENABLED:
-        return
+        return False
+
+    with BACKGROUND_REFRESH_LOCK:
+        if match_id in BACKGROUND_REFRESH_IN_PROGRESS:
+            logger.info("[BACKGROUND REFRESH SKIP] già in corso: %s", match_id)
+            return False
+
+        BACKGROUND_REFRESH_IN_PROGRESS.add(match_id)
 
     try:
-        thread = threading.Thread(
-            target=background_refresh_match,
-            args=(match_id,),
-            daemon=True
-        )
-
-        thread.start()
+        BACKGROUND_REFRESH_EXECUTOR.submit(background_refresh_match, match_id)
+        return True
 
     except Exception:
-        logger.exception("THREAD ERROR")
-
-
-def safe_float(value, default=0.0):
-    try:
-        if value is None or value == "":
-            return default
-        return float(value)
-    except Exception:
-        return default
-
-
-def safe_int(value, default=0):
-    try:
-        if value is None or value == "":
-            return default
-        return int(float(value))
-    except Exception:
-        return default
-
-
-def clamp(value, min_value=0, max_value=100):
-    try:
-        return max(min_value, min(max_value, int(value)))
-    except Exception:
-        return min_value
-
+        with BACKGROUND_REFRESH_LOCK:
+            BACKGROUND_REFRESH_IN_PROGRESS.discard(match_id)
+        logger.exception("THREAD POOL SUBMIT ERROR")
+        return False
 
 def get_cached_full_analysis(match_id: int):
     cached = FULL_ANALYSIS_CACHE.get(match_id)
@@ -1179,15 +1181,24 @@ def get_cached_full_analysis(match_id: int):
             pass
 
     if cache_valid(cached, dynamic_seconds):
-        try:
-            launch_background_refresh(match_id)
-        except Exception:
-            pass
-
         cached["data"]["cache"] = True
         cached["data"]["cache_seconds"] = dynamic_seconds
-
+        cached["data"]["cache_age"] = get_cache_age(cached)
+        cached["data"]["stale"] = False
         return cached["data"]
+
+    if cached:
+        try:
+            launched = launch_background_refresh(match_id)
+            cached["data"]["cache"] = True
+            cached["data"]["cache_seconds"] = dynamic_seconds
+            cached["data"]["cache_age"] = get_cache_age(cached)
+            cached["data"]["stale"] = True
+            cached["data"]["background_refresh"] = bool(launched)
+            return cached["data"]
+        except Exception as e:
+            cached["data"]["cache_warning"] = str(e)
+            return cached["data"]
 
     try:
         data = build_full_analysis(
@@ -1220,18 +1231,11 @@ def get_cached_full_analysis(match_id: int):
 
             data["cache"] = False
             data["cache_seconds"] = dynamic_seconds
-
-        elif cached:
-            cached["data"]["cache_warning"] = data.get("error")
-            return cached["data"]
+            data["stale"] = False
 
         return data
 
     except Exception as e:
-        if cached:
-            cached["data"]["cache_warning"] = str(e)
-            return cached["data"]
-
         return {
             "error": str(e),
             "match_id": match_id
@@ -1388,6 +1392,8 @@ def backend_status():
         "beta_crm": "V7.8 Beta Access Code",
         "beta_access_code": True,
         "background_refresh": BACKGROUND_REFRESH_ENABLED,
+        "background_refresh_max_workers": BACKGROUND_REFRESH_MAX_WORKERS,
+        "background_refresh_in_progress": len(BACKGROUND_REFRESH_IN_PROGRESS),
         "cache_system": {
             "live_matches_seconds": LIVE_MATCHES_CACHE_SECONDS,
             "full_analysis_dynamic": True,
