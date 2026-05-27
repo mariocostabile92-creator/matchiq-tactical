@@ -1,9 +1,10 @@
 """
 payments.py
-MatchIQ Tactical - Stripe Payments V8.1 Production
+MatchIQ Tactical - Stripe Payments V8.1.1 Production
 
 Gestisce:
 - Checkout Stripe per MatchIQ Pro mensile / annuale
+- Blocco checkout per utenti già Pro/Admin/Owner
 - Webhook Stripe sicuro
 - Upgrade automatico users.plan = 'pro'
 - Downgrade a free su cancellazione abbonamento
@@ -56,6 +57,19 @@ APP_BASE_URL = os.getenv(
     "https://matchiq-tactical-production.up.railway.app"
 ).rstrip("/")
 
+OWNER_EMAILS = {
+    "mario.costabile92@outlook.it",
+}
+
+PROTECTED_PLANS = {
+    "pro",
+    "admin",
+    "owner",
+    "scout",
+    "pro_monthly",
+    "pro_yearly",
+}
+
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
 
@@ -89,6 +103,44 @@ def validate_stripe_config():
             "[STRIPE] STRIPE_SECRET_KEY ha prefisso inatteso: %s",
             STRIPE_SECRET_KEY[:3]
         )
+
+
+def normalize_email(email: str) -> str:
+    return str(email or "").strip().lower()
+
+
+def normalize_user_plan(plan: str) -> str:
+    return str(plan or "").strip().lower()
+
+
+def is_owner_email(email: str) -> bool:
+    return normalize_email(email) in OWNER_EMAILS
+
+
+def user_already_has_paid_access(current_user: dict) -> tuple[bool, str]:
+    email = normalize_email(current_user.get("email"))
+    plan = normalize_user_plan(
+        current_user.get("plan")
+        or current_user.get("piano")
+        or ""
+    )
+
+    if is_owner_email(email):
+        return True, "Account owner/admin già abilitato a Pro."
+
+    if plan in PROTECTED_PLANS:
+        return True, "Hai già un piano Pro attivo."
+
+    try:
+        user_id = current_user.get("id")
+        if user_id:
+            active_subscription = get_active_subscription(user_id)
+            if active_subscription:
+                return True, "Hai già un abbonamento attivo."
+    except Exception:
+        logger.exception("[STRIPE] Impossibile verificare subscription attiva")
+
+    return False, ""
 
 
 def normalize_checkout_plan(plan: str) -> str:
@@ -273,6 +325,21 @@ def create_checkout_session(
 
     if not user_id or not email:
         raise HTTPException(status_code=401, detail="Utente non valido")
+
+    already_paid, already_paid_message = user_already_has_paid_access(current_user)
+
+    if already_paid:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "success": False,
+                "ok": False,
+                "already_pro": True,
+                "message": already_paid_message,
+                "plan": current_user.get("plan") or current_user.get("piano") or "pro",
+                "email": normalize_email(email)
+            }
+        )
 
     checkout_plan = normalize_checkout_plan(data.plan)
     public_plan = get_public_plan_from_checkout_plan(checkout_plan)
