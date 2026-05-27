@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>MatchIQ Mobile</title>
+<style>
+:root{--bg:#060a14;--card:#10182b;--muted:#92a2bf;--line:rgba(255,255,255,.1);--green:#18f08b;--blue:#38a9ff;--gold:#ffd166;--red:#ff416c}*{box-sizing:border-box}html,body{margin:0;min-height:100%;overflow-x:hidden}body{font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at 20% 0,rgba(24,240,139,.18),transparent 28%),linear-gradient(180deg,#071226,#050811);color:#fff}.app{width:min(720px,100%);margin:auto;padding:18px 14px 92px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.brand{display:flex;align-items:center;gap:10px;min-width:0}.brand img{width:42px;height:42px;border-radius:12px;object-fit:contain}.brand h1{font-size:22px;line-height:1;margin:0}.brand p{margin:4px 0 0;color:var(--muted);font-size:12px}.pill{border:1px solid var(--line);border-radius:999px;padding:8px 10px;color:var(--gold);font-weight:900;font-size:12px;background:rgba(255,255,255,.05)}.hero{background:linear-gradient(135deg,rgba(24,240,139,.13),rgba(56,169,255,.09));border:1px solid var(--line);border-radius:24px;padding:18px;margin-bottom:14px}.hero h2{font-size:26px;letter-spacing:-.8px;margin:0 0 8px}.hero p{margin:0;color:#c9d7ef;line-height:1.45;font-size:14px}.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.btn{border:0;border-radius:16px;padding:15px 12px;background:#172136;color:white;font-weight:1000;text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center;min-height:52px}.btn.primary{background:linear-gradient(135deg,var(--green),var(--blue));color:#06101b}.btn.gold{background:linear-gradient(135deg,#ffd166,#ff7a18);color:#111}.btn.red{background:linear-gradient(135deg,#ff416c,#8b1d35)}.section-title{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 10px}.section-title h3{margin:0;font-size:18px}.section-title button{border:1px solid var(--line);background:rgba(255,255,255,.06);color:white;border-radius:12px;padding:9px 10px;font-weight:900}.status{display:grid;grid-template-columns:1fr 1fr;gap:10px}.status-card,.match{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:20px;padding:14px}.status-card b{display:block;font-size:13px}.status-card span{color:var(--green);font-weight:1000;font-size:18px}.matches{display:grid;gap:12px}.league{font-size:11px;color:#7db4ff;font-weight:900;text-transform:uppercase;margin-bottom:10px}.teams{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}.team{text-align:center;min-width:0}.team img{width:38px;height:38px;object-fit:contain}.team-name{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.score{font-size:24px;font-weight:1000;text-align:center}.min{font-size:11px;color:#fff;background:var(--red);border-radius:999px;padding:4px 7px;display:inline-block;margin-top:4px}.match-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.match-actions .btn{min-height:42px;padding:11px 8px;font-size:12px;border-radius:13px}.empty{color:var(--muted);padding:20px;text-align:center;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:18px}.bottom-nav{position:fixed;left:0;right:0;bottom:0;background:rgba(6,10,20,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.bottom-nav a{color:white;text-decoration:none;text-align:center;font-weight:900;font-size:12px;padding:10px 6px;border-radius:14px;background:rgba(255,255,255,.055)}@media(max-width:380px){.quick{grid-template-columns:1fr}.hero h2{font-size:23px}.brand h1{font-size:19px}.status{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><img src="/assets/matchiq-logo.png" onerror="this.style.display='none'" alt="MatchIQ"><div><h1>MatchIQ</h1><p>Mobile Tactical</p></div></div>
+    <div class="pill" id="planPill">GUEST</div>
+  </header>
+  <section class="hero"><h2>Leggi la partita prima degli altri.</h2><p>Dashboard mobile leggera per live match, analisi e Scout Mode senza scroll infinito.</p></section>
+  <div class="quick">
+    <button class="btn primary" onclick="loadMatches(true)">Top Leagues</button>
+    <button class="btn" onclick="loadMatches(false)">All Live</button>
+    <a class="btn gold" href="/scout.html">Scout Mode</a>
+    <a class="btn" href="/account.html">Account</a>
+  </div>
+  <div class="status">
+    <div class="status-card"><b>Live matches</b><span id="liveCount">--</span></div>
+    <div class="status-card"><b>Engine</b><span>ONLINE</span></div>
+  </div>
+  <div class="section-title"><h3>Partite live</h3><button onclick="loadMatches(false)">Refresh</button></div>
+  <div class="matches" id="matches"><div class="empty">Caricamento partite...</div></div>
+</div>
+<nav class="bottom-nav"><a href="/mobile.html">Home</a><a href="/scout.html">Scout</a><a href="/account.html">Account</a><a href="/index.html?desktop=1">Desktop</a></nav>
+<script>
+const API_BASE = window.location.origin + '/api';
+const OWNER_EMAIL='mario.costabile92@outlook.it';
+function token(){return localStorage.getItem('matchiq_auth_token')||sessionStorage.getItem('matchiq_auth_token')||''}
+function user(){try{return JSON.parse(localStorage.getItem('matchiq_auth_user')||sessionStorage.getItem('matchiq_auth_user')||'null')}catch{return null}}
+function safe(v,d='--'){return v===undefined||v===null||v===''?d:v}
+function matchId(m){return m.match_id||m.fixture_id||m.id}
+function score(m){if(typeof m.score==='string')return m.score;if(m.score&&typeof m.score==='object')return `${safe(m.score.home,0)}-${safe(m.score.away,0)}`;return `${safe(m.home_goals,0)}-${safe(m.away_goals,0)}`}
+async function loadPlan(){const u=user();let label=u?.plan||u?.piano||(u?.email===OWNER_EMAIL?'OWNER':'GUEST');try{const t=token();if(t){const r=await fetch(API_BASE+'/account/limits?ts='+Date.now(),{headers:{Authorization:'Bearer '+t},cache:'no-store'});const d=await r.json();if(d?.plan)label=d.plan}}catch{}document.getElementById('planPill').textContent=String(label).toUpperCase()}
+async function loadMatches(topOnly=false){const box=document.getElementById('matches');box.innerHTML='<div class="empty">Caricamento partite...</div>';try{const r=await fetch(`${API_BASE}/live-matches?top_only=${topOnly?'true':'false'}`,{cache:'no-store'});const d=await r.json();const matches=d.matches||[];document.getElementById('liveCount').textContent=matches.length;if(!matches.length){box.innerHTML='<div class="empty">Nessuna partita live ora.</div>';return}box.innerHTML=matches.slice(0,20).map(m=>{const id=matchId(m);return `<article class="match"><div class="league">${safe(m.league,'Live')}</div><div class="teams"><div class="team"><img src="${safe(m.home_logo,'')}" onerror="this.style.display='none'"><div class="team-name">${safe(m.home)}</div></div><div><div class="score">${score(m)}</div><div class="min">${safe(m.minute,0)}'</div></div><div class="team"><img src="${safe(m.away_logo,'')}" onerror="this.style.display='none'"><div class="team-name">${safe(m.away)}</div></div></div><div class="match-actions"><a class="btn primary" href="/match.html?id=${encodeURIComponent(id)}">Analisi</a><a class="btn" href="/scout.html?match_id=${encodeURIComponent(id)}">Scout</a></div></article>`}).join('')}catch(e){box.innerHTML='<div class="empty">Errore live: '+e.message+'</div>'}}
+loadPlan();loadMatches(false);setInterval(()=>loadMatches(false),60000);
+</script>
+</body>
+</html>
