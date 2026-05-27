@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical V8.0.2 Owner Admin Fix</title>
+<title>MatchIQ Tactical V8.1 Stripe Login Fix</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -36,10 +36,21 @@ body{
     font-weight:1000;
     cursor:pointer;
     background:linear-gradient(135deg,#2f6bff,#7c4dff);
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
 }
 .btn.dark{background:rgba(255,255,255,.08)}
 .btn.green{background:linear-gradient(135deg,#00c980,#2f6bff)}
 .btn.gold{background:linear-gradient(135deg,#f7b733,#fc4a1a)}
+.btn.red{background:linear-gradient(135deg,#ff4058,#8b1d35)}
+.btn.pro{background:linear-gradient(135deg,#ffe28a,#fc4a1a);color:#07101f}
+.btn:disabled{
+    opacity:.65;
+    cursor:not-allowed;
+}
 .account{
     border:1px solid rgba(255,255,255,.1);
     background:rgba(255,255,255,.06);
@@ -47,6 +58,7 @@ body{
     border-radius:18px;
     font-size:12px;
     font-weight:900;
+    min-width:145px;
 }
 .plan{
     display:inline-block;
@@ -108,6 +120,17 @@ body{
     font-weight:1000;
     margin-bottom:14px;
 }
+.pro-badge{
+    display:inline-block;
+    padding:8px 12px;
+    border-radius:999px;
+    background:rgba(247,183,51,.14);
+    border:1px solid rgba(247,183,51,.35);
+    color:#ffe28a;
+    font-size:12px;
+    font-weight:1000;
+    margin-bottom:14px;
+}
 .stat-number{font-size:44px;font-weight:1000;margin-top:12px}
 .section-title{
     font-size:28px;
@@ -119,6 +142,30 @@ body{
     font-size:13px;
     line-height:1.6;
     margin-top:10px;
+}
+.notice{
+    padding:14px 16px;
+    border-radius:18px;
+    margin:18px 0;
+    font-size:13px;
+    font-weight:900;
+    display:none;
+}
+.notice.show{display:block}
+.notice.ok{
+    color:#00f5a0;
+    background:rgba(0,245,160,.10);
+    border:1px solid rgba(0,245,160,.25);
+}
+.notice.err{
+    color:#ffb8b8;
+    background:rgba(255,70,70,.10);
+    border:1px solid rgba(255,70,70,.25);
+}
+.notice.warn{
+    color:#ffe28a;
+    background:rgba(247,183,51,.10);
+    border:1px solid rgba(247,183,51,.25);
 }
 .beta-grid{
     display:grid;
@@ -141,8 +188,33 @@ body{
     line-height:1.6;
     font-size:14px;
 }
-.beta-card strong{
-    color:#fff;
+.beta-card strong{color:#fff}
+.pricing-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:18px;
+    margin:24px 0 34px;
+}
+.price-card{
+    background:linear-gradient(145deg,rgba(255,226,138,.10),rgba(47,107,255,.06));
+    border:1px solid rgba(255,226,138,.25);
+    border-radius:28px;
+    padding:26px;
+}
+.price-card h3{font-size:24px;margin-bottom:8px}
+.price{
+    font-size:42px;
+    font-weight:1000;
+    margin:10px 0;
+}
+.price small{font-size:15px;color:#b7c7ef}
+.price-card ul{
+    list-style:none;
+    display:grid;
+    gap:10px;
+    margin:18px 0;
+    color:#dbe6ff;
+    line-height:1.45;
 }
 .beta-form-wrap{
     display:grid;
@@ -175,9 +247,7 @@ body{
     flex-direction:column;
     gap:7px;
 }
-.form-field.full{
-    grid-column:1/-1;
-}
+.form-field.full{grid-column:1/-1}
 .form-field label{
     color:#8fa3d7;
     font-size:12px;
@@ -207,9 +277,7 @@ body{
     font-size:13px;
     font-weight:900;
 }
-.form-message.show{
-    display:block;
-}
+.form-message.show{display:block}
 .form-message.ok{
     color:#00f5a0;
     background:rgba(0,245,160,.10);
@@ -306,6 +374,8 @@ body{
 }
 @media(max-width:700px){
     .form-grid{grid-template-columns:1fr}
+    .actions{width:100%}
+    .btn{width:100%}
 }
 </style>
 </head>
@@ -315,7 +385,7 @@ body{
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">AI Football Intelligence Platform · V8.0.2 Owner Admin Fix</div>
+        <div class="subtitle">AI Football Intelligence Platform · V8.1 Stripe Login Fix</div>
     </div>
 
     <div class="actions">
@@ -323,29 +393,36 @@ body{
         <button class="btn dark" onclick="loadMatches(false)">ALL LIVE</button>
         <button class="btn green" onclick="openScoutHome()">🧠 OPEN SCOUT BETA</button>
         <button class="btn gold" onclick="scrollToBetaForm()">RICHIEDI ACCESSO</button>
+
+        <button class="btn pro" id="upgradeBtnTop" onclick="startCheckout('pro_monthly')">PASSA A PRO</button>
+        <button class="btn dark" id="loginBtn" onclick="goLogin()">LOGIN</button>
+        <button class="btn green" id="registerBtn" onclick="goRegister()">REGISTRATI</button>
+
         <button class="btn dark" id="adminActionsBtn" onclick="openAdminBeta()" style="display:none">ADMIN ACTIONS</button>
 
         <div class="account">
-            <div id="userEmail">mario.costabile92@outlook.it</div>
-            <div class="plan" id="userPlan">OWNER PRO</div>
+            <div id="userEmail">Utente ospite</div>
+            <div class="plan" id="userPlan">GUEST</div>
         </div>
 
-        <button class="btn" onclick="logout()">Logout</button>
+        <button class="btn red" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
     </div>
 </div>
 
 <div class="main">
 
+    <div id="pageNotice" class="notice"></div>
+
     <div class="status-grid">
         <div class="status-card"><span class="dot"></span>LIVE ENGINE ACTIVE</div>
         <div class="status-card"><span class="dot"></span>API FOOTBALL CONNECTED</div>
         <div class="status-card"><span class="dot"></span>AI TACTICAL ENGINE ONLINE</div>
-        <div class="status-card"><span class="dot"></span>ADMIN ACTIONS ACTIVE</div>
+        <div class="status-card"><span class="dot"></span><span id="statusPlanLabel">FREE / PRO LIMITS ACTIVE</span></div>
     </div>
 
     <div class="hero">
         <div class="card">
-            <span class="beta-badge">V7.5 ADMIN ACTIONS</span>
+            <span class="beta-badge">V8.1 STRIPE READY</span>
             <h1>AI Football Intelligence per chi vuole leggere la partita prima degli altri</h1>
             <p>
                 MatchIQ analizza partite live, momentum, pressure engine, segnali tattici,
@@ -355,12 +432,13 @@ body{
 
             <div class="hero-actions">
                 <button class="btn green" onclick="openScoutHome()">Avvia Scout Beta</button>
+                <button class="btn pro" onclick="startCheckout('pro_monthly')">Passa a Pro mensile</button>
                 <button class="btn gold" onclick="scrollToBetaForm()">Compila richiesta Beta</button>
                 <button class="btn dark" onclick="loadMatches(false)">Aggiorna partite live</button>
             </div>
 
-            <div class="launch-note">
-                Beta privata attiva: moduli live, watchlist, export report e schede player PRO già disponibili.
+            <div class="launch-note" id="launchNote">
+                Beta privata attiva: moduli live, watchlist, export report e schede player PRO disponibili.
             </div>
         </div>
 
@@ -371,33 +449,52 @@ body{
         </div>
     </div>
 
+    <div class="pricing-grid" id="pricing">
+        <div class="price-card">
+            <span class="pro-badge">MATCHIQ PRO MENSILE</span>
+            <h3>Pro Mensile</h3>
+            <div class="price">9,99€ <small>/ mese</small></div>
+            <ul>
+                <li>✅ Scout Mode completo</li>
+                <li>✅ Tutte le player cards</li>
+                <li>✅ Watchlist</li>
+                <li>✅ Export report</li>
+                <li>✅ Funzioni live avanzate</li>
+            </ul>
+            <button class="btn pro" onclick="startCheckout('pro_monthly')">Attiva Pro mensile</button>
+        </div>
+
+        <div class="price-card">
+            <span class="pro-badge">RISPARMIO ANNUALE</span>
+            <h3>Pro Annuale</h3>
+            <div class="price">79,99€ <small>/ anno</small></div>
+            <ul>
+                <li>✅ Tutto il piano mensile</li>
+                <li>✅ Prezzo più conveniente</li>
+                <li>✅ Accesso Pro continuativo</li>
+                <li>✅ Ideale per scout e creator</li>
+                <li>✅ Base pronta per nuove funzioni</li>
+            </ul>
+            <button class="btn pro" onclick="startCheckout('pro_yearly')">Attiva Pro annuale</button>
+        </div>
+    </div>
+
     <div class="beta-grid">
         <div class="beta-card">
             <h3>🎯 Per analisti e scout</h3>
-            <p>
-                Monitora player, segnali AI, impatto live, threat e creativity in un’unica dashboard.
-            </p>
+            <p>Monitora player, segnali AI, impatto live, threat e creativity in un’unica dashboard.</p>
         </div>
-
         <div class="beta-card">
             <h3>📊 Per creator sportivi</h3>
-            <p>
-                Trova insight rapidi per contenuti, live reaction, analisi pre/post match e report.
-            </p>
+            <p>Trova insight rapidi per contenuti, live reaction, analisi pre/post match e report.</p>
         </div>
-
         <div class="beta-card">
-            <h3>🚀 Free / Pro in arrivo</h3>
-            <p>
-                La beta prepara i futuri piani <strong>Free</strong> e <strong>Pro</strong> con funzioni avanzate.
-            </p>
+            <h3>🚀 Free / Pro</h3>
+            <p>Usa la preview gratuita e passa a <strong>Pro</strong> per sbloccare funzioni avanzate.</p>
         </div>
-
         <div class="beta-card">
             <h3>📩 Accesso beta</h3>
-            <p>
-                Compila il form, salva la richiesta e prepara una mail già pronta da inviare.
-            </p>
+            <p>Compila il form, salva la richiesta e prepara una mail già pronta da inviare.</p>
         </div>
     </div>
 
@@ -406,7 +503,7 @@ body{
             <h2>Richiedi accesso Beta</h2>
             <p>
                 Lascia i tuoi dati per entrare nella lista beta di MatchIQ Tactical.
-                Per ora la richiesta viene salvata nel browser e prepara una mail già compilata.
+                La richiesta viene salvata nel database e gestita dal pannello admin.
             </p>
 
             <div class="form-grid">
@@ -480,9 +577,8 @@ body{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10027";
-const SCOUT_VERSION_LABEL = "SCOUT V8.0.2 Owner Admin Fix";
-const BETA_STORAGE_KEY = "matchiq_beta_requests_v72";
+const APP_VERSION = "10050";
+const BETA_STORAGE_KEY = "matchiq_beta_requests_v81";
 
 let accountPlan = {
     plan: "guest",
@@ -497,9 +593,24 @@ let accountPlan = {
     features: {}
 };
 
+function getAuthToken(){
+    return localStorage.getItem("matchiq_auth_token") || sessionStorage.getItem("matchiq_auth_token") || "";
+}
+
+function setAuthToken(token){
+    if(token){
+        localStorage.setItem("matchiq_auth_token", token);
+    }
+}
+
 function getLocalUser(){
     try{
-        const raw = localStorage.getItem("matchiq_auth_user");
+        const raw =
+            localStorage.getItem("matchiq_auth_user") ||
+            localStorage.getItem("matchiq_user") ||
+            sessionStorage.getItem("matchiq_auth_user") ||
+            sessionStorage.getItem("matchiq_user");
+
         const user = JSON.parse(raw || "null");
         return user && typeof user === "object" ? user : null;
     }catch{
@@ -507,18 +618,60 @@ function getLocalUser(){
     }
 }
 
+function isLoggedIn(){
+    return Boolean(getAuthToken());
+}
+
 function isOwnerLocalUser(user){
     if(!user) return false;
+
     const email = String(user.email || "").toLowerCase().trim();
     const plan = String(user.plan || user.piano || user.role || "").toLowerCase().trim();
+
     return email === OWNER_EMAIL || ["owner","owner_pro","admin"].includes(plan);
+}
+
+function isProPlan(){
+    const p = String(accountPlan.plan || "").toLowerCase();
+    return ["pro","scout","owner"].includes(p);
+}
+
+function showNotice(message,type="ok"){
+    const el = document.getElementById("pageNotice");
+    if(!el) return;
+    el.textContent = message;
+    el.className = `notice show ${type}`;
+
+    setTimeout(() => {
+        el.className = "notice";
+    },7000);
+}
+
+function readPaymentParams(){
+    const p = new URLSearchParams(window.location.search);
+    const payment = p.get("payment");
+
+    if(payment === "success"){
+        showNotice("Pagamento completato. Se il piano non si aggiorna subito, attendi qualche secondo e ricarica.", "ok");
+    }
+
+    if(payment === "cancel"){
+        showNotice("Pagamento annullato. Puoi riprovare quando vuoi.", "warn");
+    }
 }
 
 function applyAccountUI(){
     const user = getLocalUser();
+
     const emailEl = document.getElementById("userEmail");
     const planEl = document.getElementById("userPlan");
     const adminBtn = document.getElementById("adminActionsBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const upgradeTop = document.getElementById("upgradeBtnTop");
+    const statusPlanLabel = document.getElementById("statusPlanLabel");
+    const launchNote = document.getElementById("launchNote");
 
     const isOwner = isOwnerLocalUser(user) || accountPlan.plan === "owner";
 
@@ -536,27 +689,55 @@ function applyAccountUI(){
 
         if(emailEl) emailEl.textContent = user?.email || OWNER_EMAIL;
         if(planEl) planEl.textContent = "OWNER PRO";
-        if(adminBtn) adminBtn.style.display = "inline-block";
+        if(adminBtn) adminBtn.style.display = "inline-flex";
+        if(logoutBtn) logoutBtn.style.display = "inline-flex";
+        if(loginBtn) loginBtn.style.display = "none";
+        if(registerBtn) registerBtn.style.display = "none";
+        if(upgradeTop) upgradeTop.style.display = "none";
+        if(statusPlanLabel) statusPlanLabel.textContent = "ADMIN ACTIONS ACTIVE";
+        if(launchNote) launchNote.textContent = "Owner attivo: dashboard, Scout, export e Admin Actions sbloccati.";
         return;
     }
 
-    if(accountPlan.plan === "guest"){
+    if(accountPlan.plan === "guest" || !isLoggedIn()){
         if(emailEl) emailEl.textContent = "Utente ospite";
         if(planEl) planEl.textContent = "GUEST";
         if(adminBtn) adminBtn.style.display = "none";
+        if(logoutBtn) logoutBtn.style.display = "none";
+        if(loginBtn) loginBtn.style.display = "inline-flex";
+        if(registerBtn) registerBtn.style.display = "inline-flex";
+        if(upgradeTop) upgradeTop.style.display = "inline-flex";
+        if(statusPlanLabel) statusPlanLabel.textContent = "FREE / PRO LIMITS ACTIVE";
+        if(launchNote) launchNote.textContent = "Se vuoi attivare Pro, effettua prima il login o registrati.";
         return;
     }
 
     if(emailEl) emailEl.textContent = user?.email || "Utente";
     if(planEl) planEl.textContent = String(accountPlan.label || accountPlan.plan || "FREE").toUpperCase();
     if(adminBtn) adminBtn.style.display = "none";
+    if(logoutBtn) logoutBtn.style.display = "inline-flex";
+    if(loginBtn) loginBtn.style.display = "none";
+    if(registerBtn) registerBtn.style.display = "none";
+    if(upgradeTop) upgradeTop.style.display = isProPlan() ? "none" : "inline-flex";
+    if(statusPlanLabel) statusPlanLabel.textContent = isProPlan() ? "PRO PLAN ACTIVE" : "FREE PLAN ACTIVE";
+    if(launchNote) launchNote.textContent = isProPlan()
+        ? "Piano Pro attivo: funzioni avanzate sbloccate."
+        : "Piano Free attivo: passa a Pro per sbloccare Scout completo, export e watchlist.";
 }
 
 async function loadAccountLimits(){
     try{
-        const res = await fetch(`${API_BASE}/account/limits?ts=${Date.now()}`, {cache:"no-store"});
+        const token = getAuthToken();
+        const headers = token ? {"Authorization": "Bearer " + token} : {};
+
+        const res = await fetch(`${API_BASE}/account/limits?ts=${Date.now()}`, {
+            headers,
+            cache:"no-store"
+        });
+
         const data = await res.json();
-        if(data && data.success){
+
+        if(data && (data.success || data.ok || data.plan)){
             accountPlan = {
                 plan: data.plan || "guest",
                 label: data.label || data.plan || "Guest",
@@ -571,9 +752,86 @@ async function loadAccountLimits(){
     applyAccountUI();
 }
 
+function goLogin(){
+    window.location.href = `/login.html?v=${APP_VERSION}`;
+}
+
+function goRegister(){
+    window.location.href = `/register.html?v=${APP_VERSION}`;
+}
+
 function logout(){
     localStorage.removeItem("matchiq_auth_user");
-    location.href = "login.html";
+    localStorage.removeItem("matchiq_user");
+    localStorage.removeItem("matchiq_auth_token");
+    localStorage.removeItem("matchiq_user_email");
+    localStorage.removeItem("matchiq_user_plan");
+    sessionStorage.removeItem("matchiq_auth_user");
+    sessionStorage.removeItem("matchiq_user");
+    sessionStorage.removeItem("matchiq_auth_token");
+
+    accountPlan = {
+        plan: "guest",
+        label: "Guest",
+        limits: {
+            max_live_matches: 3,
+            scout_enabled: false,
+            scout_preview: true,
+            export_enabled: false,
+            pdf_enabled: false
+        },
+        features: {}
+    };
+
+    applyAccountUI();
+    loadMatches(false);
+    showNotice("Logout completato. Ora sei in modalità Guest.", "ok");
+}
+
+async function startCheckout(plan="pro_monthly"){
+    const token = getAuthToken();
+
+    if(!token){
+        showNotice("Per attivare Pro devi prima fare login o registrarti.", "warn");
+        setTimeout(() => {
+            goLogin();
+        },900);
+        return;
+    }
+
+    const buttons = document.querySelectorAll(".btn.pro");
+    buttons.forEach(b => b.disabled = true);
+
+    try{
+        const res = await fetch(`${API_BASE}/payments/create-checkout-session`, {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":"Bearer " + token
+            },
+            body:JSON.stringify({plan})
+        });
+
+        const data = await res.json();
+
+        if(!res.ok || data.success === false || data.ok === false){
+            throw new Error(data.detail || data.message || "Errore creazione checkout Stripe");
+        }
+
+        const checkoutUrl = data.checkout_url || data.url;
+
+        if(!checkoutUrl){
+            throw new Error("Checkout URL non ricevuto dal backend");
+        }
+
+        window.location.href = checkoutUrl;
+
+    }catch(e){
+        console.error(e);
+        showNotice("Errore Stripe: " + e.message, "err");
+    }finally{
+        buttons.forEach(b => b.disabled = false);
+    }
 }
 
 function scrollToBetaForm(){
@@ -583,7 +841,7 @@ function scrollToBetaForm(){
     });
 }
 
-function submitBetaRequest(){
+async function submitBetaRequest(){
     const name = document.getElementById("betaName").value.trim();
     const email = document.getElementById("betaEmail").value.trim();
     const profile = document.getElementById("betaProfile").value.trim();
@@ -601,42 +859,52 @@ function submitBetaRequest(){
     }
 
     const request = {
-        id:`beta_${Date.now()}`,
         name,
         email,
         profile,
         plan,
-        reason,
-        created_at:new Date().toISOString()
+        reason
     };
 
+    try{
+        const res = await fetch(`${API_BASE}/beta-request`, {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "Accept":"application/json"
+            },
+            body:JSON.stringify(request)
+        });
+
+        const data = await res.json();
+
+        if(!res.ok || data.ok === false){
+            throw new Error(data.message || data.reason || "Errore salvataggio richiesta beta");
+        }
+
+        saveBetaRequestLocal({
+            ...request,
+            id: data?.request?.id || `beta_${Date.now()}`,
+            created_at: new Date().toISOString()
+        });
+
+        showBetaMessage("Richiesta beta inviata correttamente. Ti ricontatteremo presto.", "ok");
+
+    }catch(e){
+        saveBetaRequestLocal({
+            ...request,
+            id:`beta_${Date.now()}`,
+            created_at:new Date().toISOString()
+        });
+
+        showBetaMessage("Richiesta salvata localmente. Errore server: " + e.message, "err");
+    }
+}
+
+function saveBetaRequestLocal(request){
     const saved = getSavedBetaRequests();
     saved.unshift(request);
     localStorage.setItem(BETA_STORAGE_KEY, JSON.stringify(saved));
-
-    showBetaMessage("Richiesta salvata. Si apre la mail già compilata.", "ok");
-
-    const subject = encodeURIComponent("Richiesta accesso Beta MatchIQ Tactical");
-    const body = encodeURIComponent(
-`Ciao Mario,
-
-vorrei richiedere accesso alla beta di MatchIQ Tactical.
-
-Nome: ${name}
-Email: ${email}
-Profilo: ${profile}
-Interesse: ${plan}
-
-Motivo richiesta:
-${reason || "-"}
-
-Data richiesta: ${new Date().toLocaleString("it-IT")}
-`
-    );
-
-    setTimeout(() => {
-        window.location.href = `mailto:${OWNER_EMAIL}?subject=${subject}&body=${body}`;
-    },700);
 }
 
 function getSavedBetaRequests(){
@@ -689,6 +957,8 @@ function formatScore(match){
 
 async function loadMatches(topOnly=true){
     const container = document.getElementById("matchesContainer");
+    if(!container) return;
+
     container.innerHTML = `<div class="loading">Caricamento partite live...</div>`;
 
     try{
@@ -696,7 +966,7 @@ async function loadMatches(topOnly=true){
             ? `${API_BASE}/live-matches?top_only=true`
             : `${API_BASE}/live-matches?top_only=false`;
 
-        const res = await fetch(url);
+        const res = await fetch(url, {cache:"no-store"});
         const data = await res.json();
 
         const matches = data.matches || [];
@@ -711,8 +981,20 @@ async function loadMatches(topOnly=true){
         }
 
         let limitNotice = "";
+
         if(visibleMatches.length < matches.length){
-            limitNotice = `<div class="match-card" style="border-color:rgba(247,183,51,.45);background:rgba(247,183,51,.08)"><div class="league" style="color:#ffe28a">PIANO FREE / GUEST</div><p style="color:#ffe28a;font-weight:900;line-height:1.5">Stai vedendo ${visibleMatches.length} partite su ${matches.length}. Passa a Pro per sbloccare tutte le partite, Scout completo, export e PDF.</p></div>`;
+            limitNotice = `
+                <div class="match-card" style="border-color:rgba(247,183,51,.45);background:rgba(247,183,51,.08)">
+                    <div class="league" style="color:#ffe28a">PIANO FREE / GUEST</div>
+                    <p style="color:#ffe28a;font-weight:900;line-height:1.5">
+                        Stai vedendo ${visibleMatches.length} partite su ${matches.length}.
+                        Passa a Pro per sbloccare tutte le partite, Scout completo, export e PDF.
+                    </p>
+                    <div class="hero-actions">
+                        <button class="btn pro" onclick="startCheckout('pro_monthly')">Passa a Pro</button>
+                    </div>
+                </div>
+            `;
         }
 
         container.innerHTML = limitNotice + visibleMatches.map(match=>{
@@ -774,10 +1056,12 @@ function openAdminBeta(){
 }
 
 function setVersionLabels(){
-    document.title = "MatchIQ Tactical V8.0.2 Owner Admin Fix";
+    document.title = "MatchIQ Tactical V8.1 Stripe Login Fix";
 }
 
 setVersionLabels();
+readPaymentParams();
+
 loadAccountLimits().then(()=>loadMatches(false));
 setInterval(()=>loadMatches(false),60000);
 </script>
