@@ -33,13 +33,46 @@
 const API_BASE = window.location.origin + '/api';
 const OWNER_EMAIL='mario.costabile92@outlook.it';
 function token(){return localStorage.getItem('matchiq_auth_token')||sessionStorage.getItem('matchiq_auth_token')||''}
+let CURRENT_PLAN='guest';
+let CURRENT_LIMITS={max_live_matches:3};
 function user(){try{return JSON.parse(localStorage.getItem('matchiq_auth_user')||sessionStorage.getItem('matchiq_auth_user')||'null')}catch{return null}}
+function isOwnerEmail(email){return String(email||'').toLowerCase().trim()===OWNER_EMAIL}
+function isProLike(plan){return ['pro','scout','owner','owner_pro','admin'].includes(String(plan||'').toLowerCase().trim())}
+function isFreeLike(plan){return !isProLike(plan)}
 function safe(v,d='--'){return v===undefined||v===null||v===''?d:v}
 function matchId(m){return m.match_id||m.fixture_id||m.id}
 function score(m){if(typeof m.score==='string')return m.score;if(m.score&&typeof m.score==='object')return `${safe(m.score.home,0)}-${safe(m.score.away,0)}`;return `${safe(m.home_goals,0)}-${safe(m.away_goals,0)}`}
-async function loadPlan(){const u=user();let label=u?.plan||u?.piano||(u?.email===OWNER_EMAIL?'OWNER':'GUEST');try{const t=token();if(t){const r=await fetch(API_BASE+'/account/limits?ts='+Date.now(),{headers:{Authorization:'Bearer '+t},cache:'no-store'});const d=await r.json();if(d?.plan)label=d.plan}}catch{}document.getElementById('planPill').textContent=String(label).toUpperCase()}
-async function loadMatches(topOnly=false){const box=document.getElementById('matches');box.innerHTML='<div class="empty">Caricamento partite...</div>';try{const r=await fetch(`${API_BASE}/live-matches?top_only=${topOnly?'true':'false'}`,{cache:'no-store'});const d=await r.json();const matches=d.matches||[];document.getElementById('liveCount').textContent=matches.length;if(!matches.length){box.innerHTML='<div class="empty">Nessuna partita live ora.</div>';return}box.innerHTML=matches.slice(0,20).map(m=>{const id=matchId(m);return `<article class="match"><div class="league">${safe(m.league,'Live')}</div><div class="teams"><div class="team"><img src="${safe(m.home_logo,'')}" onerror="this.style.display='none'"><div class="team-name">${safe(m.home)}</div></div><div><div class="score">${score(m)}</div><div class="min">${safe(m.minute,0)}'</div></div><div class="team"><img src="${safe(m.away_logo,'')}" onerror="this.style.display='none'"><div class="team-name">${safe(m.away)}</div></div></div><div class="match-actions"><a class="btn primary" href="/match.html?id=${encodeURIComponent(id)}">Analisi</a><a class="btn" href="/scout.html?match_id=${encodeURIComponent(id)}">Scout</a></div></article>`}).join('')}catch(e){box.innerHTML='<div class="empty">Errore live: '+e.message+'</div>'}}
-loadPlan();loadMatches(false);setInterval(()=>loadMatches(false),60000);
+async function loadPlan(){
+  const u=user();
+  let label=isOwnerEmail(u?.email)?'owner':(u?.plan||u?.piano||'guest');
+  CURRENT_PLAN=String(label||'guest').toLowerCase();
+  CURRENT_LIMITS={max_live_matches:isProLike(CURRENT_PLAN)?999:3};
+  try{
+    const t=token();
+    if(t){
+      const r=await fetch(API_BASE+'/account/limits?ts='+Date.now(),{headers:{Authorization:'Bearer '+t},cache:'no-store'});
+      const d=await r.json();
+      if(d?.plan){
+        label=d.plan;
+        CURRENT_PLAN=String(d.plan||'guest').toLowerCase();
+      }
+      if(d?.limits) CURRENT_LIMITS=d.limits;
+    }
+  }catch{}
+  if(isOwnerEmail(u?.email)){CURRENT_PLAN='owner'; label='owner'; CURRENT_LIMITS={...(CURRENT_LIMITS||{}),max_live_matches:999};}
+  if(isFreeLike(CURRENT_PLAN)) CURRENT_LIMITS={...(CURRENT_LIMITS||{}),max_live_matches:3};
+  document.getElementById('planPill').textContent=String(label).toUpperCase();
+}
+async function loadMatches(topOnly=false){const box=document.getElementById('matches');box.innerHTML='<div class="empty">Caricamento partite...</div>';try{const r=await fetch(`${API_BASE}/live-matches?top_only=${topOnly?'true':'false'}`,{cache:'no-store'});const d=await r.json();const matches=d.matches||[];document.getElementById('liveCount').textContent=matches.length;if(!matches.length){box.innerHTML='<div class="empty">Nessuna partita live ora.</div>';return}const max=Number(CURRENT_LIMITS?.max_live_matches||3);
+const isUnlocked=isProLike(CURRENT_PLAN)||max>=999;
+const visible=isUnlocked?matches:matches.slice(0,Math.min(max,3));
+document.getElementById('liveCount').textContent=isUnlocked?String(matches.length):`${visible.length}/${matches.length}`;
+let html=visible.map(m=>{const id=matchId(m);return `<article class="match"><div class="league">${safe(m.league,'Live')}</div><div class="teams"><div class="team"><img src="${safe(m.home_logo,'')}" onerror="this.style.display='none'"><div class="team-name">${safe(m.home)}</div></div><div><div class="score">${score(m)}</div><div class="min">${safe(m.minute,0)}'</div></div><div class="team"><img src="${safe(m.away_logo,'')}" onerror="this.style.display='none'"><div class="team-name">${safe(m.away)}</div></div></div><div class="match-actions"><a class="btn primary" href="/match.html?id=${encodeURIComponent(id)}">Analisi</a><a class="btn" href="/scout.html?match_id=${encodeURIComponent(id)}">Scout</a></div></article>`}).join('');
+if(!isUnlocked && matches.length>visible.length){
+  html+=`<article class="match" style="border-color:rgba(255,209,102,.45);background:rgba(255,209,102,.08)"><div class="league" style="color:var(--gold)">PIANO FREE</div><h3 style="margin:0 0 8px;font-size:20px">🔒 Sblocca tutte le partite live</h3><p style="color:#dbe6ff;line-height:1.45;margin:0 0 14px">Stai vedendo ${visible.length} partite su ${matches.length}. Con MatchIQ Pro sblocchi tutte le partite, Scout completo, report ed export.</p><a class="btn gold" href="/account.html">Passa a Pro</a></article>`;
+}
+box.innerHTML=html}catch(e){box.innerHTML='<div class="empty">Errore live: '+e.message+'</div>'}}
+loadPlan().then(()=>loadMatches(false));setInterval(()=>loadMatches(false),60000);
 </script>
 </body>
 </html>
