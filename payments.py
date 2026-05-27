@@ -1,10 +1,11 @@
 """
 payments.py
-MatchIQ Tactical - Stripe Payments V8.1.1 Production
+MatchIQ Tactical - Stripe Payments V8.1.2 Production
 
 Gestisce:
 - Checkout Stripe per MatchIQ Pro mensile / annuale
 - Blocco checkout per utenti già Pro/Admin/Owner
+- Stripe Customer Portal per gestione abbonamento
 - Webhook Stripe sicuro
 - Upgrade automatico users.plan = 'pro'
 - Downgrade a free su cancellazione abbonamento
@@ -117,30 +118,8 @@ def is_owner_email(email: str) -> bool:
     return normalize_email(email) in OWNER_EMAILS
 
 
-def user_already_has_paid_access(current_user: dict) -> tuple[bool, str]:
-    email = normalize_email(current_user.get("email"))
-    plan = normalize_user_plan(
-        current_user.get("plan")
-        or current_user.get("piano")
-        or ""
-    )
-
-    if is_owner_email(email):
-        return True, "Account owner/admin già abilitato a Pro."
-
-    if plan in PROTECTED_PLANS:
-        return True, "Hai già un piano Pro attivo."
-
-    try:
-        user_id = current_user.get("id")
-        if user_id:
-            active_subscription = get_active_subscription(user_id)
-            if active_subscription:
-                return True, "Hai già un abbonamento attivo."
-    except Exception:
-        logger.exception("[STRIPE] Impossibile verificare subscription attiva")
-
-    return False, ""
+def is_paid_plan(plan: str) -> bool:
+    return normalize_user_plan(plan) in PROTECTED_PLANS
 
 
 def normalize_checkout_plan(plan: str) -> str:
@@ -234,6 +213,76 @@ def extract_subscription_period(subscription) -> tuple[str, str]:
     )
 
 
+def get_user_id_from_metadata(metadata) -> Optional[int]:
+    if not metadata:
+        return None
+
+    raw = metadata.get("user_id")
+
+    if not raw:
+        return None
+
+    try:
+        return int(raw)
+    except Exception:
+        return None
+
+
+def get_subscription_first_price_id(subscription) -> str:
+    try:
+        items = subscription.get("items", {}).get("data", [])
+        if not items:
+            return ""
+
+        price = items[0].get("price", {}) or {}
+        return price.get("id") or ""
+    except Exception:
+        return ""
+
+
+def get_subscription_customer_id(subscription: dict) -> str:
+    if not subscription:
+        return ""
+
+    return (
+        subscription.get("provider_customer_id")
+        or subscription.get("stripe_customer_id")
+        or subscription.get("customer_id")
+        or subscription.get("customer")
+        or ""
+    )
+
+
+def get_current_user_plan(current_user: dict) -> str:
+    return normalize_user_plan(
+        current_user.get("plan")
+        or current_user.get("piano")
+        or "free"
+    )
+
+
+def user_already_has_paid_access(current_user: dict) -> tuple[bool, str]:
+    email = normalize_email(current_user.get("email"))
+    plan = get_current_user_plan(current_user)
+
+    if is_owner_email(email):
+        return True, "Account owner/admin già abilitato a Pro."
+
+    if is_paid_plan(plan):
+        return True, "Hai già un piano Pro attivo."
+
+    try:
+        user_id = current_user.get("id")
+        if user_id:
+            active_subscription = get_active_subscription(user_id)
+            if active_subscription:
+                return True, "Hai già un abbonamento attivo."
+    except Exception:
+        logger.exception("[STRIPE] Impossibile verificare subscription attiva")
+
+    return False, ""
+
+
 def upsert_subscription_safe(
     user_id: int,
     plan: str,
@@ -277,33 +326,6 @@ def upsert_subscription_safe(
     except Exception:
         logger.exception("[STRIPE] create_subscription failed")
         return None
-
-
-def get_user_id_from_metadata(metadata) -> Optional[int]:
-    if not metadata:
-        return None
-
-    raw = metadata.get("user_id")
-
-    if not raw:
-        return None
-
-    try:
-        return int(raw)
-    except Exception:
-        return None
-
-
-def get_subscription_first_price_id(subscription) -> str:
-    try:
-        items = subscription.get("items", {}).get("data", [])
-        if not items:
-            return ""
-
-        price = items[0].get("price", {}) or {}
-        return price.get("id") or ""
-    except Exception:
-        return ""
 
 
 # =========================================================
@@ -356,14 +378,14 @@ def create_checkout_session(
         f"?payment=success"
         f"&plan={checkout_plan}"
         f"&session_id={{CHECKOUT_SESSION_ID}}"
-        f"&v=10050"
+        f"&v=10051"
     )
 
     cancel_url = (
         f"{APP_BASE_URL}/index.html"
         f"?payment=cancel"
         f"&plan={checkout_plan}"
-        f"&v=10050"
+        f"&v=10051"
     )
 
     try:
@@ -429,13 +451,96 @@ def create_checkout_session(
         )
 
 
-# Compatibilità con eventuali vecchi frontend
 @router.post("/checkout")
 def create_checkout_session_alias(
     data: CheckoutRequest,
     current_user=Depends(get_current_user)
 ):
     return create_checkout_session(data, current_user)
+
+
+# =========================================================
+# CUSTOMER PORTAL
+# =========================================================
+
+@router.post("/create-portal-session")
+def create_portal_session(current_user=Depends(get_current_user)):
+    validate_stripe_config()
+
+    if not isinstance(current_user, dict):
+        raise HTTPException(status_code=401, detail="Utente non autenticato")
+
+    user_id = current_user.get("id")
+    email = normalize_email(current_user.get("email"))
+    plan = get_current_user_plan(current_user)
+
+    if not user_id or not email:
+        raise HTTPException(status_code=401, detail="Utente non valido")
+
+    if is_owner_email(email):
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "success": False,
+                "ok": False,
+                "owner": True,
+                "message": "Account owner/admin: non hai un abbonamento Stripe da gestire.",
+                "plan": "owner",
+                "email": email
+            }
+        )
+
+    active_subscription = None
+
+    try:
+        active_subscription = get_active_subscription(user_id)
+    except Exception:
+        logger.exception("[STRIPE] get_active_subscription failed in customer portal")
+
+    customer_id = get_subscription_customer_id(active_subscription or {})
+
+    if not customer_id:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "success": False,
+                "ok": False,
+                "no_subscription": True,
+                "message": "Nessun abbonamento Stripe attivo trovato per questo account.",
+                "plan": plan,
+                "email": email
+            }
+        )
+
+    return_url = f"{APP_BASE_URL}/account.html?portal=return&v=10051"
+
+    try:
+        session = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=return_url
+        )
+
+        return {
+            "success": True,
+            "ok": True,
+            "portal_url": session.url,
+            "url": session.url,
+            "customer_id": customer_id
+        }
+
+    except stripe.error.StripeError as e:
+        logger.exception("[STRIPE] Customer portal error")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Stripe portal error: {str(e)}"
+        )
+
+    except Exception as e:
+        logger.exception("[STRIPE] Customer portal generic error")
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 # =========================================================
@@ -453,6 +558,8 @@ def current_subscription(current_user=Depends(get_current_user)):
         "success": True,
         "ok": True,
         "plan": current_user.get("plan") or current_user.get("piano") or "free",
+        "is_owner": is_owner_email(current_user.get("email")),
+        "email": normalize_email(current_user.get("email")),
         "subscription": subscription
     }
 
@@ -470,7 +577,8 @@ def stripe_status():
         "webhook_secret_configured": bool(STRIPE_WEBHOOK_SECRET),
         "price_pro_monthly_configured": bool(STRIPE_PRICE_PRO_MONTHLY),
         "price_pro_yearly_configured": bool(STRIPE_PRICE_PRO_YEARLY),
-        "app_base_url": APP_BASE_URL
+        "app_base_url": APP_BASE_URL,
+        "customer_portal_endpoint": "/api/payments/create-portal-session"
     }
 
 

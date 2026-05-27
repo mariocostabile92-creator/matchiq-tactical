@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MatchIQ Tactical - Account V8.1.2</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Inter,Arial,sans-serif;
+    background:radial-gradient(circle at top,#152343,#070b16 55%,#03050b);
+    color:#fff;
+    min-height:100vh;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:18px;
+    padding:24px 34px;
+    background:rgba(9,15,32,.94);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    position:sticky;
+    top:0;
+    z-index:50;
+    backdrop-filter:blur(14px);
+}
+
+.logo{
+    font-size:28px;
+    font-weight:1000;
+}
+
+.subtitle{
+    font-size:13px;
+    color:#8fa3d7;
+    margin-top:4px;
+}
+
+.actions{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    border:0;
+    border-radius:15px;
+    padding:13px 18px;
+    color:white;
+    font-weight:1000;
+    cursor:pointer;
+    background:linear-gradient(135deg,#2f6bff,#7c4dff);
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:.18s ease;
+}
+
+.btn:hover{
+    transform:translateY(-1px);
+    filter:brightness(1.06);
+}
+
+.btn.dark{
+    background:rgba(255,255,255,.08);
+}
+
+.btn.green{
+    background:linear-gradient(135deg,#00c980,#2f6bff);
+}
+
+.btn.gold{
+    background:linear-gradient(135deg,#f7b733,#fc4a1a);
+    color:#06111c;
+}
+
+.btn.red{
+    background:linear-gradient(135deg,#ff4058,#8b1d35);
+}
+
+.btn:disabled{
+    opacity:.65;
+    cursor:not-allowed;
+    transform:none;
+    filter:none;
+}
+
+.main{
+    max-width:1180px;
+    margin:0 auto;
+    padding:34px;
+}
+
+.notice{
+    padding:14px 16px;
+    border-radius:18px;
+    margin:0 0 20px;
+    font-size:13px;
+    font-weight:900;
+    display:none;
+}
+
+.notice.show{
+    display:block;
+}
+
+.notice.ok{
+    color:#00f5a0;
+    background:rgba(0,245,160,.10);
+    border:1px solid rgba(0,245,160,.25);
+}
+
+.notice.err{
+    color:#ffb8b8;
+    background:rgba(255,70,70,.10);
+    border:1px solid rgba(255,70,70,.25);
+}
+
+.notice.warn{
+    color:#ffe28a;
+    background:rgba(247,183,51,.10);
+    border:1px solid rgba(247,183,51,.25);
+}
+
+.hero{
+    display:grid;
+    grid-template-columns:1.25fr .75fr;
+    gap:22px;
+    margin-bottom:22px;
+}
+
+.card{
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:30px;
+    padding:28px;
+    box-shadow:0 25px 80px rgba(0,0,0,.25);
+}
+
+.badge{
+    display:inline-block;
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:1000;
+    margin-bottom:14px;
+}
+
+.badge.free{
+    background:rgba(143,163,215,.14);
+    border:1px solid rgba(143,163,215,.35);
+    color:#cfe0ff;
+}
+
+.badge.pro{
+    background:rgba(0,245,160,.14);
+    border:1px solid rgba(0,245,160,.35);
+    color:#00f5a0;
+}
+
+.badge.owner{
+    background:rgba(255,226,138,.16);
+    border:1px solid rgba(255,226,138,.35);
+    color:#ffe28a;
+}
+
+.badge.warn{
+    background:rgba(247,183,51,.14);
+    border:1px solid rgba(247,183,51,.35);
+    color:#ffe28a;
+}
+
+h1{
+    font-size:42px;
+    margin-bottom:12px;
+}
+
+h2{
+    font-size:24px;
+    margin-bottom:16px;
+}
+
+p{
+    color:#b7c7ef;
+    line-height:1.7;
+}
+
+.account-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:16px;
+    margin-top:22px;
+}
+
+.info-box{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    padding:18px;
+}
+
+.info-label{
+    font-size:12px;
+    color:#8fa3d7;
+    font-weight:900;
+    margin-bottom:8px;
+}
+
+.info-value{
+    font-size:18px;
+    font-weight:1000;
+    word-break:break-word;
+}
+
+.plan-value{
+    color:#ffe28a;
+}
+
+.status-value{
+    color:#00f5a0;
+}
+
+.section{
+    margin-top:22px;
+}
+
+.subscription-box{
+    display:grid;
+    gap:12px;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.row:last-child{
+    border-bottom:0;
+}
+
+.row span:first-child{
+    color:#8fa3d7;
+    font-weight:900;
+    font-size:13px;
+}
+
+.row span:last-child{
+    color:#fff;
+    font-weight:1000;
+    text-align:right;
+    word-break:break-word;
+}
+
+.cta-panel{
+    background:linear-gradient(145deg,rgba(255,226,138,.12),rgba(47,107,255,.08));
+    border:1px solid rgba(255,226,138,.25);
+    border-radius:28px;
+    padding:26px;
+}
+
+.cta-panel h2{
+    font-size:28px;
+}
+
+.cta-panel ul{
+    list-style:none;
+    display:grid;
+    gap:10px;
+    margin:18px 0;
+    color:#dbe6ff;
+    line-height:1.45;
+}
+
+.footer-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:20px;
+}
+
+.loading{
+    color:#9fb2e7;
+    padding:20px 0;
+    font-weight:900;
+}
+
+.small{
+    font-size:12px;
+    color:#8fa3d7;
+    margin-top:12px;
+}
+
+@media(max-width:900px){
+    .hero{
+        grid-template-columns:1fr;
+    }
+
+    .topbar{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .actions{
+        width:100%;
+    }
+
+    .btn{
+        width:100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <div>
+        <div class="logo">⚽ MatchIQ Tactical</div>
+        <div class="subtitle">Account e abbonamento · V8.1.2</div>
+    </div>
+
+    <div class="actions">
+        <button class="btn dark" onclick="goDashboard()">Dashboard</button>
+        <button class="btn green" onclick="goScout()">Scout Pro</button>
+        <button class="btn red" id="logoutBtn" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<div class="main">
+
+    <div id="pageNotice" class="notice"></div>
+
+    <div class="hero">
+        <div class="card">
+            <span class="badge free" id="planBadge">CARICAMENTO</span>
+
+            <h1>Il tuo account</h1>
+
+            <p id="accountIntro">
+                Qui puoi controllare il tuo piano MatchIQ, lo stato dell’abbonamento e gestire il portale Stripe.
+            </p>
+
+            <div class="account-grid">
+                <div class="info-box">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" id="emailValue">--</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Piano</div>
+                    <div class="info-value plan-value" id="planValue">--</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Stato</div>
+                    <div class="info-value status-value" id="statusValue">--</div>
+                </div>
+            </div>
+
+            <div class="footer-actions">
+                <button class="btn green" id="portalBtn" onclick="openCustomerPortal()">
+                    Gestisci abbonamento
+                </button>
+
+                <button class="btn gold" id="upgradeMonthlyBtn" onclick="startCheckout('pro_monthly')">
+                    Passa a Pro mensile
+                </button>
+
+                <button class="btn gold" id="upgradeYearlyBtn" onclick="startCheckout('pro_yearly')">
+                    Passa a Pro annuale
+                </button>
+            </div>
+
+            <div class="small" id="smallNote">
+                I pagamenti e la gestione dell’abbonamento sono gestiti in sicurezza tramite Stripe.
+            </div>
+        </div>
+
+        <div class="cta-panel" id="ctaPanel">
+            <h2>MatchIQ Pro</h2>
+            <p>Sblocca le funzioni avanzate per usare MatchIQ come piattaforma di football intelligence.</p>
+
+            <ul>
+                <li>✅ Scout Mode completo</li>
+                <li>✅ Player cards complete</li>
+                <li>✅ Watchlist</li>
+                <li>✅ Export report</li>
+                <li>✅ Moduli live avanzati</li>
+            </ul>
+
+            <div class="footer-actions">
+                <button class="btn gold" onclick="startCheckout('pro_monthly')">9,99€ / mese</button>
+                <button class="btn gold" onclick="startCheckout('pro_yearly')">79,99€ / anno</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card section">
+        <h2>Dettagli abbonamento</h2>
+
+        <div id="subscriptionContent" class="subscription-box">
+            <div class="loading">Caricamento dati abbonamento...</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const API_BASE = `${window.location.origin}/api`;
+const APP_VERSION = "10051";
+const OWNER_EMAIL = "mario.costabile92@outlook.it";
+
+let accountState = {
+    email: "",
+    plan: "guest",
+    is_owner: false,
+    subscription: null
+};
+
+function getAuthToken(){
+    return localStorage.getItem("matchiq_auth_token") || sessionStorage.getItem("matchiq_auth_token") || "";
+}
+
+function getLocalUser(){
+    try{
+        const raw =
+            localStorage.getItem("matchiq_auth_user") ||
+            localStorage.getItem("matchiq_user") ||
+            sessionStorage.getItem("matchiq_auth_user") ||
+            sessionStorage.getItem("matchiq_user");
+
+        const user = JSON.parse(raw || "null");
+        return user && typeof user === "object" ? user : null;
+    }catch{
+        return null;
+    }
+}
+
+function saveLocalUser(user){
+    if(!user || typeof user !== "object") return;
+
+    localStorage.setItem("matchiq_auth_user", JSON.stringify(user));
+
+    if(user.email){
+        localStorage.setItem("matchiq_user_email", user.email);
+    }
+
+    if(user.plan || user.piano){
+        localStorage.setItem("matchiq_user_plan", user.plan || user.piano);
+    }
+}
+
+function normalizePlan(plan){
+    return String(plan || "free").toLowerCase().trim();
+}
+
+function isProLike(plan){
+    return ["pro","owner","admin","scout","owner_pro","pro_monthly","pro_yearly"].includes(normalizePlan(plan));
+}
+
+function isOwnerEmail(email){
+    return String(email || "").toLowerCase().trim() === OWNER_EMAIL;
+}
+
+function showNotice(message,type="ok",timeout=7000){
+    const el = document.getElementById("pageNotice");
+    if(!el) return;
+
+    el.textContent = message;
+    el.className = `notice show ${type}`;
+
+    if(timeout){
+        setTimeout(() => {
+            el.className = "notice";
+        },timeout);
+    }
+}
+
+function goDashboard(){
+    window.location.href = `/index.html?v=${APP_VERSION}`;
+}
+
+function goScout(){
+    window.location.href = `/scout.html?v=${APP_VERSION}`;
+}
+
+function goLogin(){
+    window.location.href = `/login.html?v=${APP_VERSION}`;
+}
+
+function logout(){
+    localStorage.removeItem("matchiq_auth_user");
+    localStorage.removeItem("matchiq_user");
+    localStorage.removeItem("matchiq_auth_token");
+    localStorage.removeItem("matchiq_user_email");
+    localStorage.removeItem("matchiq_user_plan");
+    sessionStorage.removeItem("matchiq_auth_user");
+    sessionStorage.removeItem("matchiq_user");
+    sessionStorage.removeItem("matchiq_auth_token");
+
+    window.location.href = `/index.html?v=${APP_VERSION}`;
+}
+
+function formatDate(value){
+    if(!value) return "--";
+
+    try{
+        const d = new Date(value);
+        if(Number.isNaN(d.getTime())) return String(value);
+        return d.toLocaleDateString("it-IT", {
+            year:"numeric",
+            month:"long",
+            day:"2-digit"
+        });
+    }catch{
+        return String(value);
+    }
+}
+
+function getSubscriptionField(subscription, keys, fallback="--"){
+    if(!subscription) return fallback;
+
+    for(const key of keys){
+        if(subscription[key] !== undefined && subscription[key] !== null && subscription[key] !== ""){
+            return subscription[key];
+        }
+    }
+
+    return fallback;
+}
+
+function renderAccount(){
+    const email = accountState.email || getLocalUser()?.email || "Utente";
+    const plan = normalizePlan(accountState.plan);
+    const isOwner = accountState.is_owner || isOwnerEmail(email);
+    const isPro = isOwner || isProLike(plan);
+
+    const planBadge = document.getElementById("planBadge");
+    const emailValue = document.getElementById("emailValue");
+    const planValue = document.getElementById("planValue");
+    const statusValue = document.getElementById("statusValue");
+    const accountIntro = document.getElementById("accountIntro");
+    const portalBtn = document.getElementById("portalBtn");
+    const upgradeMonthlyBtn = document.getElementById("upgradeMonthlyBtn");
+    const upgradeYearlyBtn = document.getElementById("upgradeYearlyBtn");
+    const ctaPanel = document.getElementById("ctaPanel");
+    const smallNote = document.getElementById("smallNote");
+
+    if(emailValue) emailValue.textContent = email;
+    if(planValue) planValue.textContent = isOwner ? "OWNER PRO" : plan.toUpperCase();
+
+    if(statusValue){
+        statusValue.textContent = isPro ? "ATTIVO" : "FREE";
+    }
+
+    if(planBadge){
+        planBadge.className = isOwner ? "badge owner" : isPro ? "badge pro" : "badge free";
+        planBadge.textContent = isOwner ? "OWNER PRO" : isPro ? "PIANO PRO ATTIVO" : "PIANO FREE";
+    }
+
+    if(accountIntro){
+        accountIntro.textContent = isOwner
+            ? "Account owner attivo: hai già accesso completo a MatchIQ Pro."
+            : isPro
+                ? "Il tuo piano Pro è attivo. Puoi gestire abbonamento, metodo di pagamento e fatture tramite Stripe."
+                : "Il tuo account è Free. Puoi passare a Pro per sbloccare Scout completo, watchlist ed export report.";
+    }
+
+    if(portalBtn){
+        portalBtn.style.display = isPro && !isOwner ? "inline-flex" : "none";
+    }
+
+    if(upgradeMonthlyBtn){
+        upgradeMonthlyBtn.style.display = isPro ? "none" : "inline-flex";
+    }
+
+    if(upgradeYearlyBtn){
+        upgradeYearlyBtn.style.display = isPro ? "none" : "inline-flex";
+    }
+
+    if(ctaPanel){
+        ctaPanel.style.display = isPro ? "none" : "block";
+    }
+
+    if(smallNote){
+        smallNote.textContent = isOwner
+            ? "Account owner: nessun abbonamento Stripe da gestire."
+            : isPro
+                ? "Puoi gestire abbonamento, carta e fatture dal portale Stripe."
+                : "I pagamenti e la gestione dell’abbonamento sono gestiti in sicurezza tramite Stripe.";
+    }
+
+    renderSubscription();
+}
+
+function renderSubscription(){
+    const box = document.getElementById("subscriptionContent");
+    if(!box) return;
+
+    const email = accountState.email || getLocalUser()?.email || "";
+    const plan = normalizePlan(accountState.plan);
+    const isOwner = accountState.is_owner || isOwnerEmail(email);
+    const subscription = accountState.subscription;
+
+    if(isOwner){
+        box.innerHTML = `
+            <div class="row">
+                <span>Tipo account</span>
+                <span>Owner / Admin</span>
+            </div>
+            <div class="row">
+                <span>Abbonamento Stripe</span>
+                <span>Non necessario</span>
+            </div>
+            <div class="row">
+                <span>Accesso</span>
+                <span>Completo</span>
+            </div>
+        `;
+        return;
+    }
+
+    if(!subscription){
+        box.innerHTML = `
+            <div class="row">
+                <span>Piano attuale</span>
+                <span>${plan.toUpperCase()}</span>
+            </div>
+            <div class="row">
+                <span>Abbonamento</span>
+                <span>Nessun abbonamento attivo trovato</span>
+            </div>
+            <div class="row">
+                <span>Upgrade</span>
+                <span>Disponibile</span>
+            </div>
+        `;
+        return;
+    }
+
+    const subPlan = getSubscriptionField(subscription, ["plan"], plan);
+    const status = getSubscriptionField(subscription, ["status"], "active");
+    const provider = getSubscriptionField(subscription, ["provider"], "stripe");
+    const customerId = getSubscriptionField(subscription, ["provider_customer_id","stripe_customer_id","customer_id"], "--");
+    const subscriptionId = getSubscriptionField(subscription, ["provider_subscription_id","stripe_subscription_id","subscription_id"], "--");
+    const start = getSubscriptionField(subscription, ["current_period_start","period_start"], "");
+    const end = getSubscriptionField(subscription, ["current_period_end","period_end"], "");
+
+    box.innerHTML = `
+        <div class="row">
+            <span>Piano</span>
+            <span>${String(subPlan).toUpperCase()}</span>
+        </div>
+        <div class="row">
+            <span>Stato</span>
+            <span>${String(status).toUpperCase()}</span>
+        </div>
+        <div class="row">
+            <span>Provider</span>
+            <span>${String(provider).toUpperCase()}</span>
+        </div>
+        <div class="row">
+            <span>Periodo corrente</span>
+            <span>${formatDate(start)} → ${formatDate(end)}</span>
+        </div>
+        <div class="row">
+            <span>Customer ID</span>
+            <span>${customerId}</span>
+        </div>
+        <div class="row">
+            <span>Subscription ID</span>
+            <span>${subscriptionId}</span>
+        </div>
+    `;
+}
+
+async function loadSubscription(){
+    const token = getAuthToken();
+
+    if(!token){
+        showNotice("Devi effettuare il login per accedere alla pagina account.", "warn", 3000);
+        setTimeout(goLogin, 900);
+        return;
+    }
+
+    try{
+        const res = await fetch(`${API_BASE}/payments/subscription?ts=${Date.now()}`, {
+            headers:{
+                "Authorization":"Bearer " + token
+            },
+            cache:"no-store"
+        });
+
+        const data = await res.json();
+
+        if(!res.ok || data.success === false || data.ok === false){
+            throw new Error(data.detail || data.message || "Errore caricamento account");
+        }
+
+        const localUser = getLocalUser() || {};
+
+        accountState = {
+            email: data.email || localUser.email || localStorage.getItem("matchiq_user_email") || "",
+            plan: data.plan || localUser.plan || localStorage.getItem("matchiq_user_plan") || "free",
+            is_owner: Boolean(data.is_owner),
+            subscription: data.subscription || null
+        };
+
+        localUser.email = accountState.email || localUser.email;
+        localUser.plan = accountState.plan;
+        saveLocalUser(localUser);
+
+        renderAccount();
+
+        const params = new URLSearchParams(window.location.search);
+
+        if(params.get("portal") === "return"){
+            showNotice("Sei tornato dal portale Stripe. Dati account aggiornati.", "ok");
+        }
+
+    }catch(e){
+        console.error(e);
+        showNotice("Errore account: " + e.message, "err", 9000);
+
+        const localUser = getLocalUser();
+
+        accountState = {
+            email: localUser?.email || localStorage.getItem("matchiq_user_email") || "",
+            plan: localUser?.plan || localStorage.getItem("matchiq_user_plan") || "free",
+            is_owner: isOwnerEmail(localUser?.email),
+            subscription: null
+        };
+
+        renderAccount();
+    }
+}
+
+async function openCustomerPortal(){
+    const token = getAuthToken();
+
+    if(!token){
+        showNotice("Devi fare login per gestire l’abbonamento.", "warn");
+        setTimeout(goLogin, 900);
+        return;
+    }
+
+    const btn = document.getElementById("portalBtn");
+    if(btn){
+        btn.disabled = true;
+        btn.textContent = "Apertura portale...";
+    }
+
+    try{
+        const res = await fetch(`${API_BASE}/payments/create-portal-session`, {
+            method:"POST",
+            headers:{
+                "Authorization":"Bearer " + token
+            }
+        });
+
+        const data = await res.json();
+
+        if(!res.ok || data.success === false || data.ok === false){
+            const detail = data.detail;
+
+            if(typeof detail === "object" && detail.message){
+                throw new Error(detail.message);
+            }
+
+            throw new Error(detail || data.message || "Errore apertura portale Stripe");
+        }
+
+        const portalUrl = data.portal_url || data.url;
+
+        if(!portalUrl){
+            throw new Error("Portal URL non ricevuto dal backend");
+        }
+
+        window.location.href = portalUrl;
+
+    }catch(e){
+        console.error(e);
+        showNotice("Errore portale Stripe: " + e.message, "err", 9000);
+    }finally{
+        if(btn){
+            btn.disabled = false;
+            btn.textContent = "Gestisci abbonamento";
+        }
+    }
+}
+
+async function startCheckout(plan="pro_monthly"){
+    const token = getAuthToken();
+
+    if(!token){
+        showNotice("Per attivare Pro devi prima fare login o registrarti.", "warn");
+        setTimeout(goLogin, 900);
+        return;
+    }
+
+    if(isProLike(accountState.plan) || accountState.is_owner){
+        showNotice("Il tuo piano Pro è già attivo. Non devi acquistare un altro abbonamento.", "ok");
+        return;
+    }
+
+    const buttons = [
+        document.getElementById("upgradeMonthlyBtn"),
+        document.getElementById("upgradeYearlyBtn")
+    ].filter(Boolean);
+
+    buttons.forEach(b => b.disabled = true);
+
+    try{
+        const res = await fetch(`${API_BASE}/payments/create-checkout-session`, {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":"Bearer " + token
+            },
+            body:JSON.stringify({plan})
+        });
+
+        const data = await res.json();
+
+        if(res.status === 409){
+            const detail = data.detail || {};
+            showNotice(detail.message || "Hai già un piano Pro attivo.", "ok");
+            accountState.plan = "pro";
+            renderAccount();
+            return;
+        }
+
+        if(!res.ok || data.success === false || data.ok === false){
+            const detail = data.detail;
+
+            if(typeof detail === "object" && detail.message){
+                throw new Error(detail.message);
+            }
+
+            throw new Error(detail || data.message || "Errore creazione checkout Stripe");
+        }
+
+        const checkoutUrl = data.checkout_url || data.url;
+
+        if(!checkoutUrl){
+            throw new Error("Checkout URL non ricevuto dal backend");
+        }
+
+        window.location.href = checkoutUrl;
+
+    }catch(e){
+        console.error(e);
+        showNotice("Errore Stripe: " + e.message, "err");
+    }finally{
+        buttons.forEach(b => b.disabled = false);
+    }
+}
+
+renderAccount();
+loadSubscription();
+</script>
+
+</body>
+</html>

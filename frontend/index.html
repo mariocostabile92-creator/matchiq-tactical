@@ -557,6 +557,7 @@ body{
         <button class="btn dark" id="loginBtn" onclick="goLogin()">LOGIN</button>
         <button class="btn green" id="registerBtn" onclick="goRegister()">REGISTRATI</button>
 
+        <button class="btn dark" id="accountBtn" onclick="openAccount()" style="display:none">ACCOUNT</button>
         <button class="btn dark" id="adminActionsBtn" onclick="openAdminBeta()" style="display:none">ADMIN ACTIONS</button>
 
         <div class="account">
@@ -978,6 +979,7 @@ function applyAccountUI(){
 
         if(emailEl) emailEl.textContent = user?.email || OWNER_EMAIL;
         if(planEl) planEl.textContent = "OWNER PRO";
+        if(accountBtn) accountBtn.style.display = "inline-flex";
         if(adminBtn) adminBtn.style.display = "inline-flex";
         if(logoutBtn) logoutBtn.style.display = "inline-flex";
         if(loginBtn) loginBtn.style.display = "none";
@@ -994,6 +996,7 @@ function applyAccountUI(){
     if(accountPlan.plan === "guest" || !isLoggedIn()){
         if(emailEl) emailEl.textContent = "Utente ospite";
         if(planEl) planEl.textContent = "GUEST";
+        if(accountBtn) accountBtn.style.display = "none";
         if(adminBtn) adminBtn.style.display = "none";
         if(logoutBtn) logoutBtn.style.display = "none";
         if(loginBtn) loginBtn.style.display = "inline-flex";
@@ -1009,6 +1012,7 @@ function applyAccountUI(){
 
     if(emailEl) emailEl.textContent = user?.email || "Utente";
     if(planEl) planEl.textContent = String(accountPlan.label || accountPlan.plan || "FREE").toUpperCase();
+    if(accountBtn) accountBtn.style.display = "inline-flex";
     if(adminBtn) adminBtn.style.display = "none";
     if(logoutBtn) logoutBtn.style.display = "inline-flex";
     if(loginBtn) loginBtn.style.display = "none";
@@ -1396,6 +1400,10 @@ function openScout(matchId){
 
 function openScoutHome(){
     window.location.href = `scout.html?v=${APP_VERSION}`;
+}
+
+function openAccount(){
+    window.location.href = `account.html?v=${APP_VERSION}`;
 }
 
 function openAdminBeta(){
