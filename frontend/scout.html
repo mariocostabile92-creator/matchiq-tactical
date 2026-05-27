@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MatchIQ Scout V7.5 Admin Actions</title>
+  <title>MatchIQ Scout V8.0.3</title>
 
   <link rel="stylesheet" href="css/scout.css">
 
@@ -22,9 +22,9 @@
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
-      <strong>Caricamento MatchIQ Scout V7.5 BETA...</strong>
-      <p style="color:var(--muted);margin-top:6px;font-size:13px;">
-        Admin Actions · Live intelligence · Player scouting · Tactical signals
+      <strong>Caricamento MatchIQ Scout V8.0.3...</strong>
+      <p id="loaderSubtitle" style="color:var(--muted);margin-top:6px;font-size:13px;">
+        Live intelligence · Player scouting · Tactical signals
       </p>
     </div>
   </div>
@@ -32,22 +32,22 @@
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>MatchIQ Scout V7.5 BETA</h1>
-        <div class="subtitle">Admin Actions · Live Player Intelligence · Tactical Signals · Export Report</div>
+        <h1>MatchIQ Scout V8.0.3</h1>
+        <div class="subtitle" id="scoutSubtitle">Live Player Intelligence · Tactical Signals · Export Report</div>
       </div>
 
       <div class="actions">
         <button class="btn" onclick="goDashboard()">← Dashboard</button>
         <div class="pill pill-live"><span class="dot"></span> LIVE DATA</div>
-        <div class="pill pill-clean">ADMIN ACTIONS</div>
+        <div class="pill pill-clean" id="adminActionsPill">ADMIN ACTIONS</div>
         <div class="pill pill-api" id="apiSafePill">API SAFE</div>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
-        <button class="btn btn-green" onclick="exportScoutReport()">Export report</button>
-        <button class="btn btn-primary" onclick="simulateHighImpactEvent()">Simula evento</button>
+        <button class="btn btn-green" id="exportScoutBtn" onclick="exportScoutReport()">Export report</button>
+        <button class="btn btn-primary" id="simulateEventBtn" onclick="simulateHighImpactEvent()">Simula evento</button>
       </div>
     </header>
 
-    <div class="ticker" id="tickerText">MatchIQ Scout V7.5 Beta · caricamento dati live...</div>
+    <div class="ticker" id="tickerText">MatchIQ Scout V8.0.3 · caricamento dati live...</div>
     <div class="notice" id="noticeBox"></div>
 
     <main class="layout">
@@ -89,8 +89,8 @@
 
         <div class="side-actions">
           <button class="btn" onclick="resetFilters()">Reset filtri</button>
-          <button class="btn btn-green" onclick="exportWatchlist()">Export watchlist</button>
-          <button class="btn btn-red" onclick="clearWatchlist()">Svuota watchlist</button>
+          <button class="btn btn-green" id="exportWatchlistBtn" onclick="exportWatchlist()">Export watchlist</button>
+          <button class="btn btn-red" id="clearWatchlistBtn" onclick="clearWatchlist()">Svuota watchlist</button>
         </div>
 
         <div class="match-list" id="matchList"></div>
@@ -211,12 +211,12 @@
           <div class="modal-events" id="modalEvents"></div>
         </div>
 
-        <div class="pro-card" style="grid-column:1/-1;">
-          <h3>Azioni Scout <span>V7.5 ADMIN ACTIONS</span></h3>
+        <div class="pro-card" id="modalScoutActionsCard" style="grid-column:1/-1;">
+          <h3>Azioni Scout <span>PRO ACTIONS</span></h3>
           <div class="actions">
-            <button class="btn btn-green" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
-            <button class="btn" onclick="exportOpenPlayerReport()">Export player report</button>
-            <button class="btn btn-red" onclick="removeOpenPlayerFromWatchlist()">Rimuovi da watchlist</button>
+            <button class="btn btn-green" id="modalAddWatchBtn" onclick="addOpenPlayerToWatchlist()">Aggiungi a watchlist</button>
+            <button class="btn" id="modalExportPlayerBtn" onclick="exportOpenPlayerReport()">Export player report</button>
+            <button class="btn btn-red" id="modalRemoveWatchBtn" onclick="removeOpenPlayerFromWatchlist()">Rimuovi da watchlist</button>
           </div>
         </div>
       </div>
