@@ -60,7 +60,7 @@ from app.services.full_analysis_service import (
     build_full_analysis
 )
 from auth import router as auth_router
-from database import init_db, get_admin_analytics
+from database import init_db, get_admin_analytics, get_admin_users, admin_update_user_plan
 from usage_guard import (
     get_optional_user,
     enforce_guest_or_user_limit,
@@ -1416,6 +1416,76 @@ def account_limits(user=Depends(get_optional_user)):
 
 
 
+
+
+# =========================================================
+# ADMIN USERS - V8.3 HOTFIX
+# =========================================================
+
+class AdminUserPlanPayload(BaseModel):
+    plan: str
+    deactivate: Optional[bool] = False
+
+
+@app.get("/api/admin/users")
+def admin_list_users(
+    plan: Optional[str] = Query("all"),
+    search: Optional[str] = Query(""),
+    status: Optional[str] = Query("all"),
+    limit: int = Query(300, ge=1, le=1000),
+    admin_ok: bool = Depends(require_admin_token)
+):
+    try:
+        users = get_admin_users(
+            plan=plan or "all",
+            search=search or "",
+            status=status or "all",
+            limit=limit
+        )
+
+        return {
+            "ok": True,
+            "count": len(users),
+            "users": users,
+            "data": users
+        }
+
+    except Exception as e:
+        logger.exception("[ADMIN USERS] Errore caricamento utenti")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.patch("/api/admin/users/{user_id}/plan")
+def admin_patch_user_plan(
+    user_id: int,
+    payload: AdminUserPlanPayload = Body(...),
+    admin_ok: bool = Depends(require_admin_token)
+):
+    try:
+        updated = admin_update_user_plan(
+            user_id=user_id,
+            plan=payload.plan,
+            deactivate=bool(payload.deactivate)
+        )
+
+        if not updated:
+            raise HTTPException(status_code=404, detail="Utente non trovato")
+
+        return {
+            "ok": True,
+            "message": "Utente aggiornato",
+            "user": updated,
+            "data": updated
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        logger.exception("[ADMIN USERS] Errore aggiornamento piano")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # =========================================================
 # ADMIN ANALYTICS - V8.3
 # =========================================================
@@ -1460,6 +1530,11 @@ if os.path.exists(FRONTEND_DIR):
     @app.get("/admin")
     def serve_admin_alias():
         return FileResponse(os.path.join(FRONTEND_DIR, "admin-beta.html"))
+
+
+    @app.get("/admin-users.html")
+    def serve_admin_users():
+        return FileResponse(os.path.join(FRONTEND_DIR, "admin-users.html"))
 
     @app.get("/admin-analytics.html")
     def serve_admin_analytics():
