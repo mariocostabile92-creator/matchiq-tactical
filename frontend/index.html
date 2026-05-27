@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical V8.1.4 Dashboard UX Polish</title>
+<title>MatchIQ Tactical V8.1.5 Dashboard Admin Analytics</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -65,6 +65,7 @@ body{
 .btn.red{background:linear-gradient(135deg,#ff4058,#8b1d35)}
 .btn.pro{background:linear-gradient(135deg,#ffe28a,#fc4a1a);color:#07101f}
 .btn.ok{background:linear-gradient(135deg,#00f5a0,#2f6bff);color:#06111c}
+.btn.analytics{background:linear-gradient(135deg,#8b5cf6,#00d4ff)}
 
 .btn:disabled{
     opacity:.70;
@@ -295,7 +296,8 @@ body{
     line-height:1.45;
 }
 
-.pro-active-panel{
+.pro-active-panel,
+.owner-control-panel{
     display:none;
     background:linear-gradient(145deg,rgba(0,245,160,.12),rgba(47,107,255,.07));
     border:1px solid rgba(0,245,160,.28);
@@ -304,16 +306,24 @@ body{
     margin:24px 0 34px;
 }
 
-.pro-active-panel.show{
+.owner-control-panel{
+    background:linear-gradient(145deg,rgba(139,92,246,.14),rgba(0,212,255,.07));
+    border-color:rgba(139,92,246,.34);
+}
+
+.pro-active-panel.show,
+.owner-control-panel.show{
     display:block;
 }
 
-.pro-active-panel h2{
+.pro-active-panel h2,
+.owner-control-panel h2{
     font-size:28px;
     margin-bottom:10px;
 }
 
-.pro-active-panel p{
+.pro-active-panel p,
+.owner-control-panel p{
     color:#c8d8ff;
     line-height:1.6;
 }
@@ -544,7 +554,7 @@ body{
 <div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">AI Football Intelligence Platform · V8.1.4 Dashboard UX Polish</div>
+        <div class="subtitle">AI Football Intelligence Platform · V8.1.5 Admin Analytics</div>
     </div>
 
     <div class="actions">
@@ -560,6 +570,7 @@ body{
         <button class="btn dark" id="accountBtn" onclick="openAccount()" style="display:none">ACCOUNT</button>
         <button class="btn dark" id="adminActionsBtn" onclick="openAdminBeta()" style="display:none">ADMIN ACTIONS</button>
         <button class="btn dark" id="adminUsersBtn" onclick="openAdminUsers()" style="display:none">ADMIN USERS</button>
+        <button class="btn analytics" id="adminAnalyticsBtn" onclick="openAdminAnalytics()" style="display:none">ADMIN ANALYTICS</button>
 
         <div class="account">
             <div id="userEmail">Utente ospite</div>
@@ -583,7 +594,7 @@ body{
 
     <div class="hero">
         <div class="card">
-            <span class="beta-badge" id="heroBadge">V8.1.4 BUSINESS READY</span>
+            <span class="beta-badge" id="heroBadge">V8.1.5 ANALYTICS READY</span>
 
             <h1>AI Football Intelligence per chi vuole leggere la partita prima degli altri</h1>
 
@@ -627,17 +638,19 @@ body{
         </div>
     </div>
 
-
-
-    <div class="pro-active-panel show" id="ownerQuickPanel" style="display:none;">
+    <div class="owner-control-panel" id="ownerControlPanel">
         <span class="active-badge">🛡️ OWNER CONTROL CENTER</span>
         <h2>Console rapida amministratore</h2>
-        <p>Gestisci beta, utenti, piani e accessi senza uscire dalla dashboard principale.</p>
+        <p>
+            Gestisci beta, utenti, piani, subscription e metriche business da un unico punto.
+        </p>
+
         <div class="hero-actions">
             <button class="btn dark" onclick="openAdminBeta()">Admin Beta</button>
             <button class="btn dark" onclick="openAdminUsers()">Admin Users</button>
+            <button class="btn analytics" onclick="openAdminAnalytics()">Admin Analytics</button>
             <button class="btn green" onclick="openAccount()">Account</button>
-            <button class="btn green" onclick="openScoutHome()">Scout Pro</button>
+            <button class="btn" onclick="openScoutHome()">Scout Pro</button>
         </div>
     </div>
 
@@ -685,8 +698,8 @@ body{
             <p>Usa la preview gratuita e passa a <strong>Pro</strong> per sbloccare funzioni avanzate.</p>
         </div>
         <div class="beta-card">
-            <h3>📩 Accesso beta</h3>
-            <p>Compila il form, salva la richiesta e prepara una mail già pronta da inviare.</p>
+            <h3>📈 Admin Analytics</h3>
+            <p>Monitora utenti, lead beta, piani, subscription e usage dalla dashboard admin.</p>
         </div>
     </div>
 
@@ -753,7 +766,7 @@ body{
                 <li>✅ Scout Mode con player cards e segnali AI</li>
                 <li>✅ Watchlist locale per monitorare giocatori</li>
                 <li>✅ Export report scout e player report</li>
-                <li>✅ Base pronta per piani Free / Pro</li>
+                <li>✅ Admin analytics per metriche SaaS</li>
             </ul>
         </div>
     </div>
@@ -769,8 +782,8 @@ body{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10053";
-const BETA_STORAGE_KEY = "matchiq_beta_requests_v814";
+const APP_VERSION = "10055";
+const BETA_STORAGE_KEY = "matchiq_beta_requests_v815";
 
 let accountPlan = {
     plan: "guest",
@@ -953,8 +966,10 @@ function updateProButtons(){
 function updatePricingVisibility(){
     const pricing = document.getElementById("pricing");
     const panel = document.getElementById("proActivePanel");
+    const ownerPanel = document.getElementById("ownerControlPanel");
 
     const alreadyPro = isProPlan() || isOwnerAccount();
+    const owner = isOwnerAccount();
 
     if(pricing){
         pricing.style.display = alreadyPro ? "none" : "grid";
@@ -962,6 +977,10 @@ function updatePricingVisibility(){
 
     if(panel){
         panel.className = alreadyPro ? "pro-active-panel show" : "pro-active-panel";
+    }
+
+    if(ownerPanel){
+        ownerPanel.className = owner ? "owner-control-panel show" : "owner-control-panel";
     }
 }
 
@@ -972,13 +991,14 @@ function applyAccountUI(){
     const planEl = document.getElementById("userPlan");
     const adminBtn = document.getElementById("adminActionsBtn");
     const adminUsersBtn = document.getElementById("adminUsersBtn");
+    const adminAnalyticsBtn = document.getElementById("adminAnalyticsBtn");
+    const accountBtn = document.getElementById("accountBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const loginBtn = document.getElementById("loginBtn");
     const registerBtn = document.getElementById("registerBtn");
     const statusPlanLabel = document.getElementById("statusPlanLabel");
     const launchNote = document.getElementById("launchNote");
     const heroBadge = document.getElementById("heroBadge");
-    const ownerQuickPanel = document.getElementById("ownerQuickPanel");
 
     const isOwner = isOwnerLocalUser(user) || String(accountPlan.plan || "").toLowerCase() === "owner";
 
@@ -999,13 +1019,13 @@ function applyAccountUI(){
         if(accountBtn) accountBtn.style.display = "inline-flex";
         if(adminBtn) adminBtn.style.display = "inline-flex";
         if(adminUsersBtn) adminUsersBtn.style.display = "inline-flex";
+        if(adminAnalyticsBtn) adminAnalyticsBtn.style.display = "inline-flex";
         if(logoutBtn) logoutBtn.style.display = "inline-flex";
         if(loginBtn) loginBtn.style.display = "none";
         if(registerBtn) registerBtn.style.display = "none";
         if(statusPlanLabel) statusPlanLabel.textContent = "OWNER PRO ACTIVE";
-        if(launchNote) launchNote.textContent = "Owner attivo: dashboard, Scout, export e Admin Actions sbloccati.";
+        if(launchNote) launchNote.textContent = "Owner attivo: dashboard, Scout, export, Admin Actions, Admin Users e Analytics sbloccati.";
         if(heroBadge) heroBadge.textContent = "OWNER PRO ACTIVE";
-        if(ownerQuickPanel) ownerQuickPanel.style.display = "block";
 
         updateProButtons();
         updatePricingVisibility();
@@ -1018,13 +1038,13 @@ function applyAccountUI(){
         if(accountBtn) accountBtn.style.display = "none";
         if(adminBtn) adminBtn.style.display = "none";
         if(adminUsersBtn) adminUsersBtn.style.display = "none";
+        if(adminAnalyticsBtn) adminAnalyticsBtn.style.display = "none";
         if(logoutBtn) logoutBtn.style.display = "none";
         if(loginBtn) loginBtn.style.display = "inline-flex";
         if(registerBtn) registerBtn.style.display = "inline-flex";
         if(statusPlanLabel) statusPlanLabel.textContent = "FREE / PRO LIMITS ACTIVE";
         if(launchNote) launchNote.textContent = "Se vuoi attivare Pro, effettua prima il login o registrati.";
         if(heroBadge) heroBadge.textContent = "GUEST PREVIEW";
-        if(ownerQuickPanel) ownerQuickPanel.style.display = "none";
 
         updateProButtons();
         updatePricingVisibility();
@@ -1035,7 +1055,8 @@ function applyAccountUI(){
     if(planEl) planEl.textContent = String(accountPlan.label || accountPlan.plan || "FREE").toUpperCase();
     if(accountBtn) accountBtn.style.display = "inline-flex";
     if(adminBtn) adminBtn.style.display = "none";
-        if(adminUsersBtn) adminUsersBtn.style.display = "none";
+    if(adminUsersBtn) adminUsersBtn.style.display = "none";
+    if(adminAnalyticsBtn) adminAnalyticsBtn.style.display = "none";
     if(logoutBtn) logoutBtn.style.display = "inline-flex";
     if(loginBtn) loginBtn.style.display = "none";
     if(registerBtn) registerBtn.style.display = "none";
@@ -1053,8 +1074,6 @@ function applyAccountUI(){
     if(heroBadge){
         heroBadge.textContent = isProPlan() ? "PRO PLAN ACTIVE" : "FREE PLAN ACTIVE";
     }
-
-    if(ownerQuickPanel) ownerQuickPanel.style.display = "none";
 
     updateProButtons();
     updatePricingVisibility();
@@ -1438,8 +1457,12 @@ function openAdminUsers(){
     window.location.href = `admin-users.html?v=${APP_VERSION}`;
 }
 
+function openAdminAnalytics(){
+    window.location.href = `admin-analytics.html?v=${APP_VERSION}`;
+}
+
 function setVersionLabels(){
-    document.title = "MatchIQ Tactical V8.1.4 Dashboard UX Polish";
+    document.title = "MatchIQ Tactical V8.1.5 Dashboard Admin Analytics";
 }
 
 setVersionLabels();
