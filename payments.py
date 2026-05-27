@@ -1,17 +1,20 @@
 """
 payments.py
-MatchIQ Tactical - Stripe Payments V1
+MatchIQ Tactical - Stripe Payments V8.1 Production
 
 Gestisce:
-- creazione checkout Stripe
-- piani Pro / Scout
-- webhook Stripe
-- upgrade automatico piano utente
+- Checkout Stripe per MatchIQ Pro mensile / annuale
+- Webhook Stripe sicuro
+- Upgrade automatico users.plan = 'pro'
+- Downgrade a free su cancellazione abbonamento
+- Compatibilità con database.py V8.1
 """
 
 import os
-import stripe
+import logging
+from typing import Optional
 
+import stripe
 from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 
@@ -20,35 +23,41 @@ from auth import get_current_user
 from database import (
     update_user_plan,
     create_subscription,
-    get_active_subscription
+    get_active_subscription,
 )
+
+try:
+    from database import (
+        update_user_stripe_customer,
+        upsert_subscription_by_provider,
+    )
+except Exception:
+    update_user_stripe_customer = None
+    upsert_subscription_by_provider = None
+
+
+logger = logging.getLogger("matchiq.payments")
+
+router = APIRouter(prefix="/api/payments", tags=["Payments"])
 
 
 # =========================================================
 # STRIPE CONFIG
 # =========================================================
 
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "").strip()
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
 
-STRIPE_PRICE_PRO_MONTHLY = os.getenv("STRIPE_PRICE_PRO_MONTHLY", "")
-STRIPE_PRICE_SCOUT_MONTHLY = os.getenv("STRIPE_PRICE_SCOUT_MONTHLY", "")
+STRIPE_PRICE_PRO_MONTHLY = os.getenv("STRIPE_PRICE_PRO_MONTHLY", "").strip()
+STRIPE_PRICE_PRO_YEARLY = os.getenv("STRIPE_PRICE_PRO_YEARLY", "").strip()
 
-FRONTEND_SUCCESS_URL = os.getenv(
-    "FRONTEND_SUCCESS_URL",
-    "http://127.0.0.1:8000/success.html"
-)
-
-FRONTEND_CANCEL_URL = os.getenv(
-    "FRONTEND_CANCEL_URL",
-    "http://127.0.0.1:8000/pricing.html"
-)
+APP_BASE_URL = os.getenv(
+    "APP_BASE_URL",
+    "https://matchiq-tactical-production.up.railway.app"
+).rstrip("/")
 
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
-
-
-router = APIRouter(prefix="/api/payments", tags=["Payments"])
 
 
 # =========================================================
@@ -56,24 +65,12 @@ router = APIRouter(prefix="/api/payments", tags=["Payments"])
 # =========================================================
 
 class CheckoutRequest(BaseModel):
-    plan: str
+    plan: str = "pro_monthly"
 
 
 # =========================================================
 # HELPERS
 # =========================================================
-
-def get_price_id_for_plan(plan: str):
-    plan = (plan or "").lower().strip()
-
-    if plan == "pro":
-        return STRIPE_PRICE_PRO_MONTHLY
-
-    if plan == "scout":
-        return STRIPE_PRICE_SCOUT_MONTHLY
-
-    return None
-
 
 def validate_stripe_config():
     if not STRIPE_SECRET_KEY:
@@ -82,15 +79,179 @@ def validate_stripe_config():
             detail="STRIPE_SECRET_KEY non configurata"
         )
 
+    if not (
+        STRIPE_SECRET_KEY.startswith("sk_live_")
+        or STRIPE_SECRET_KEY.startswith("sk_test_")
+        or STRIPE_SECRET_KEY.startswith("rk_live_")
+        or STRIPE_SECRET_KEY.startswith("rk_test_")
+    ):
+        logger.warning(
+            "[STRIPE] STRIPE_SECRET_KEY ha prefisso inatteso: %s",
+            STRIPE_SECRET_KEY[:3]
+        )
 
-def get_plan_from_price(price_id: str):
-    if price_id == STRIPE_PRICE_PRO_MONTHLY:
+
+def normalize_checkout_plan(plan: str) -> str:
+    value = (plan or "").lower().strip()
+
+    aliases = {
+        "pro": "pro_monthly",
+        "monthly": "pro_monthly",
+        "mensile": "pro_monthly",
+        "pro_mensile": "pro_monthly",
+        "pro_monthly": "pro_monthly",
+
+        "yearly": "pro_yearly",
+        "annual": "pro_yearly",
+        "annuale": "pro_yearly",
+        "pro_annuale": "pro_yearly",
+        "pro_yearly": "pro_yearly",
+    }
+
+    return aliases.get(value, "pro_monthly")
+
+
+def get_price_id_for_checkout_plan(plan: str) -> Optional[str]:
+    normalized = normalize_checkout_plan(plan)
+
+    if normalized == "pro_monthly":
+        return STRIPE_PRICE_PRO_MONTHLY
+
+    if normalized == "pro_yearly":
+        return STRIPE_PRICE_PRO_YEARLY
+
+    return None
+
+
+def get_public_plan_from_checkout_plan(plan: str) -> str:
+    normalized = normalize_checkout_plan(plan)
+
+    if normalized in ["pro_monthly", "pro_yearly"]:
         return "pro"
 
-    if price_id == STRIPE_PRICE_SCOUT_MONTHLY:
-        return "scout"
+    return "free"
+
+
+def get_plan_from_price(price_id: str) -> str:
+    if price_id and price_id == STRIPE_PRICE_PRO_MONTHLY:
+        return "pro"
+
+    if price_id and price_id == STRIPE_PRICE_PRO_YEARLY:
+        return "pro"
 
     return "free"
+
+
+def get_billing_interval_from_price(price_id: str) -> str:
+    if price_id and price_id == STRIPE_PRICE_PRO_YEARLY:
+        return "yearly"
+
+    if price_id and price_id == STRIPE_PRICE_PRO_MONTHLY:
+        return "monthly"
+
+    return ""
+
+
+def safe_int(value, default: int = 0) -> int:
+    try:
+        if value is None or value == "":
+            return default
+        return int(value)
+    except Exception:
+        return default
+
+
+def ts_to_iso(value) -> str:
+    if not value:
+        return ""
+
+    try:
+        from datetime import datetime, timezone
+        return datetime.fromtimestamp(int(value), tz=timezone.utc).isoformat()
+    except Exception:
+        return ""
+
+
+def extract_subscription_period(subscription) -> tuple[str, str]:
+    current_period_start = subscription.get("current_period_start") or ""
+    current_period_end = subscription.get("current_period_end") or ""
+
+    return (
+        ts_to_iso(current_period_start),
+        ts_to_iso(current_period_end),
+    )
+
+
+def upsert_subscription_safe(
+    user_id: int,
+    plan: str,
+    customer_id: str,
+    subscription_id: str,
+    status: str = "active",
+    current_period_start: str = "",
+    current_period_end: str = "",
+):
+    if update_user_stripe_customer and customer_id:
+        try:
+            update_user_stripe_customer(user_id, customer_id)
+        except Exception:
+            logger.exception("[STRIPE] update_user_stripe_customer failed")
+
+    if upsert_subscription_by_provider and subscription_id:
+        try:
+            return upsert_subscription_by_provider(
+                user_id=user_id,
+                plan=plan,
+                status=status,
+                provider="stripe",
+                provider_customer_id=customer_id or "",
+                provider_subscription_id=subscription_id or "",
+                current_period_start=current_period_start or "",
+                current_period_end=current_period_end or "",
+            )
+        except Exception:
+            logger.exception("[STRIPE] upsert_subscription_by_provider failed, fallback create_subscription")
+
+    try:
+        return create_subscription(
+            user_id=user_id,
+            plan=plan,
+            provider="stripe",
+            provider_customer_id=customer_id or "",
+            provider_subscription_id=subscription_id or "",
+            current_period_start=current_period_start or "",
+            current_period_end=current_period_end or "",
+        )
+    except Exception:
+        logger.exception("[STRIPE] create_subscription failed")
+        return None
+
+
+def get_user_id_from_metadata(metadata) -> Optional[int]:
+    if not metadata:
+        return None
+
+    raw = metadata.get("user_id")
+
+    if not raw:
+        return None
+
+    try:
+        return int(raw)
+    except Exception:
+        return None
+
+
+def get_subscription_first_price_id(subscription) -> str:
+    try:
+        items = subscription.get("items", {}).get("data", [])
+        if not items:
+            return ""
+
+        price = items[0].get("price", {}) or {}
+        return price.get("id") or ""
+    except Exception:
+        return ""
 
 
 # =========================================================
@@ -104,52 +265,110 @@ def create_checkout_session(
 ):
     validate_stripe_config()
 
-    plan = data.plan.lower().strip()
-    price_id = get_price_id_for_plan(plan)
+    if not isinstance(current_user, dict):
+        raise HTTPException(status_code=401, detail="Utente non autenticato")
+
+    user_id = current_user.get("id")
+    email = current_user.get("email")
+
+    if not user_id or not email:
+        raise HTTPException(status_code=401, detail="Utente non valido")
+
+    checkout_plan = normalize_checkout_plan(data.plan)
+    public_plan = get_public_plan_from_checkout_plan(checkout_plan)
+    price_id = get_price_id_for_checkout_plan(checkout_plan)
 
     if not price_id:
         raise HTTPException(
-            status_code=400,
-            detail="Piano non valido o PRICE_ID mancante"
+            status_code=500,
+            detail=f"Price ID mancante per piano {checkout_plan}"
         )
+
+    success_url = (
+        f"{APP_BASE_URL}/index.html"
+        f"?payment=success"
+        f"&plan={checkout_plan}"
+        f"&session_id={{CHECKOUT_SESSION_ID}}"
+        f"&v=10050"
+    )
+
+    cancel_url = (
+        f"{APP_BASE_URL}/index.html"
+        f"?payment=cancel"
+        f"&plan={checkout_plan}"
+        f"&v=10050"
+    )
 
     try:
         session = stripe.checkout.Session.create(
             mode="subscription",
             payment_method_types=["card"],
-            customer_email=current_user["email"],
+            customer_email=str(email).lower().strip(),
             line_items=[
                 {
                     "price": price_id,
                     "quantity": 1
                 }
             ],
-            success_url=FRONTEND_SUCCESS_URL + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=FRONTEND_CANCEL_URL,
+            success_url=success_url,
+            cancel_url=cancel_url,
             metadata={
-                "user_id": str(current_user["id"]),
-                "plan": plan
+                "user_id": str(user_id),
+                "plan": public_plan,
+                "checkout_plan": checkout_plan,
+                "billing_interval": get_billing_interval_from_price(price_id)
             },
             subscription_data={
                 "metadata": {
-                    "user_id": str(current_user["id"]),
-                    "plan": plan
+                    "user_id": str(user_id),
+                    "plan": public_plan,
+                    "checkout_plan": checkout_plan,
+                    "billing_interval": get_billing_interval_from_price(price_id)
                 }
-            }
+            },
+            allow_promotion_codes=True
         )
 
         return {
             "success": True,
+            "ok": True,
             "checkout_url": session.url,
+            "url": session.url,
             "session_id": session.id,
-            "plan": plan
+            "plan": public_plan,
+            "checkout_plan": checkout_plan,
+            "price_id": price_id
         }
 
+    except stripe.error.AuthenticationError as e:
+        logger.exception("[STRIPE] Authentication error")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Stripe authentication error: {str(e)}"
+        )
+
+    except stripe.error.StripeError as e:
+        logger.exception("[STRIPE] Stripe error")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Stripe error: {str(e)}"
+        )
+
     except Exception as e:
+        logger.exception("[STRIPE] Checkout session error")
         raise HTTPException(
             status_code=500,
             detail=str(e)
         )
+
+
+# Compatibilità con eventuali vecchi frontend
+@router.post("/checkout")
+def create_checkout_session_alias(
+    data: CheckoutRequest,
+    current_user=Depends(get_current_user)
+):
+    return create_checkout_session(data, current_user)
 
 
 # =========================================================
@@ -158,12 +377,33 @@ def create_checkout_session(
 
 @router.get("/subscription")
 def current_subscription(current_user=Depends(get_current_user)):
+    if not isinstance(current_user, dict):
+        raise HTTPException(status_code=401, detail="Utente non autenticato")
+
     subscription = get_active_subscription(current_user["id"])
 
     return {
         "success": True,
-        "plan": current_user.get("plan", "free"),
+        "ok": True,
+        "plan": current_user.get("plan") or current_user.get("piano") or "free",
         "subscription": subscription
+    }
+
+
+# =========================================================
+# STRIPE HEALTH
+# =========================================================
+
+@router.get("/stripe-status")
+def stripe_status():
+    return {
+        "ok": True,
+        "stripe_secret_configured": bool(STRIPE_SECRET_KEY),
+        "stripe_secret_prefix": STRIPE_SECRET_KEY[:7] + "..." if STRIPE_SECRET_KEY else "",
+        "webhook_secret_configured": bool(STRIPE_WEBHOOK_SECRET),
+        "price_pro_monthly_configured": bool(STRIPE_PRICE_PRO_MONTHLY),
+        "price_pro_yearly_configured": bool(STRIPE_PRICE_PRO_YEARLY),
+        "app_base_url": APP_BASE_URL
     }
 
 
@@ -175,6 +415,9 @@ def current_subscription(current_user=Depends(get_current_user)):
 async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
+
+    if not STRIPE_WEBHOOK_SECRET:
+        logger.warning("[STRIPE] STRIPE_WEBHOOK_SECRET non configurato")
 
     try:
         if STRIPE_WEBHOOK_SECRET:
@@ -190,6 +433,7 @@ async def stripe_webhook(request: Request):
             )
 
     except Exception as e:
+        logger.exception("[STRIPE] Webhook invalid")
         raise HTTPException(
             status_code=400,
             detail=f"Webhook non valido: {str(e)}"
@@ -198,20 +442,34 @@ async def stripe_webhook(request: Request):
     event_type = event["type"]
     obj = event["data"]["object"]
 
-    if event_type == "checkout.session.completed":
-        handle_checkout_completed(obj)
+    logger.info("[STRIPE WEBHOOK] %s", event_type)
 
-    elif event_type == "customer.subscription.updated":
-        handle_subscription_updated(obj)
+    try:
+        if event_type == "checkout.session.completed":
+            handle_checkout_completed(obj)
 
-    elif event_type == "customer.subscription.deleted":
-        handle_subscription_deleted(obj)
+        elif event_type == "customer.subscription.created":
+            handle_subscription_updated(obj)
 
-    elif event_type == "invoice.payment_failed":
-        handle_payment_failed(obj)
+        elif event_type == "customer.subscription.updated":
+            handle_subscription_updated(obj)
+
+        elif event_type == "customer.subscription.deleted":
+            handle_subscription_deleted(obj)
+
+        elif event_type == "invoice.payment_failed":
+            handle_payment_failed(obj)
+
+        elif event_type == "invoice.payment_succeeded":
+            handle_payment_succeeded(obj)
+
+    except Exception:
+        logger.exception("[STRIPE WEBHOOK] Handler failed")
+        raise HTTPException(status_code=500, detail="Errore gestione webhook")
 
     return {
         "received": True,
+        "ok": True,
         "type": event_type
     }
 
@@ -223,79 +481,135 @@ async def stripe_webhook(request: Request):
 def handle_checkout_completed(session):
     metadata = session.get("metadata", {}) or {}
 
-    user_id = metadata.get("user_id")
-    plan = metadata.get("plan", "pro")
+    user_id = get_user_id_from_metadata(metadata)
+    public_plan = metadata.get("plan") or "pro"
 
     if not user_id:
+        logger.warning("[STRIPE] checkout.session.completed senza user_id")
         return
 
-    try:
-        user_id = int(user_id)
-    except Exception:
-        return
+    subscription_id = session.get("subscription") or ""
+    customer_id = session.get("customer") or ""
 
-    subscription_id = session.get("subscription")
-    customer_id = session.get("customer")
+    period_start = ""
+    period_end = ""
 
-    update_user_plan(user_id, plan)
+    if subscription_id:
+        try:
+            subscription = stripe.Subscription.retrieve(subscription_id)
+            period_start, period_end = extract_subscription_period(subscription)
+        except Exception:
+            logger.exception("[STRIPE] impossibile recuperare subscription period")
 
-    create_subscription(
+    update_user_plan(user_id, public_plan)
+
+    upsert_subscription_safe(
         user_id=user_id,
-        plan=plan,
-        provider="stripe",
-        provider_customer_id=customer_id or "",
-        provider_subscription_id=subscription_id or "",
-        current_period_start="",
-        current_period_end=""
+        plan=public_plan,
+        customer_id=customer_id,
+        subscription_id=subscription_id,
+        status="active",
+        current_period_start=period_start,
+        current_period_end=period_end
     )
+
+    logger.info("[STRIPE] User %s upgraded to %s", user_id, public_plan)
 
 
 def handle_subscription_updated(subscription):
     metadata = subscription.get("metadata", {}) or {}
 
-    user_id = metadata.get("user_id")
-    plan = metadata.get("plan")
+    user_id = get_user_id_from_metadata(metadata)
 
     if not user_id:
+        logger.warning("[STRIPE] subscription.updated senza user_id metadata")
         return
 
-    try:
-        user_id = int(user_id)
-    except Exception:
-        return
+    price_id = get_subscription_first_price_id(subscription)
+    plan = metadata.get("plan") or get_plan_from_price(price_id) or "pro"
 
-    if not plan:
-        items = subscription.get("items", {}).get("data", [])
-        if items:
-            price_id = items[0].get("price", {}).get("id")
-            plan = get_plan_from_price(price_id)
+    status = subscription.get("status") or ""
+    customer_id = subscription.get("customer") or ""
+    subscription_id = subscription.get("id") or ""
 
-    status = subscription.get("status", "")
+    period_start, period_end = extract_subscription_period(subscription)
 
     if status in ["active", "trialing"]:
-        update_user_plan(user_id, plan or "pro")
-    else:
+        update_user_plan(user_id, plan)
+
+        upsert_subscription_safe(
+            user_id=user_id,
+            plan=plan,
+            customer_id=customer_id,
+            subscription_id=subscription_id,
+            status="active",
+            current_period_start=period_start,
+            current_period_end=period_end
+        )
+
+        logger.info("[STRIPE] Subscription active user=%s plan=%s", user_id, plan)
+
+    elif status in ["past_due", "unpaid", "incomplete", "incomplete_expired", "canceled"]:
         update_user_plan(user_id, "free")
+
+        upsert_subscription_safe(
+            user_id=user_id,
+            plan="free",
+            customer_id=customer_id,
+            subscription_id=subscription_id,
+            status=status,
+            current_period_start=period_start,
+            current_period_end=period_end
+        )
+
+        logger.info("[STRIPE] Subscription inactive user=%s status=%s", user_id, status)
 
 
 def handle_subscription_deleted(subscription):
     metadata = subscription.get("metadata", {}) or {}
-    user_id = metadata.get("user_id")
+
+    user_id = get_user_id_from_metadata(metadata)
 
     if not user_id:
+        logger.warning("[STRIPE] subscription.deleted senza user_id metadata")
         return
 
-    try:
-        user_id = int(user_id)
-    except Exception:
-        return
+    customer_id = subscription.get("customer") or ""
+    subscription_id = subscription.get("id") or ""
+    period_start, period_end = extract_subscription_period(subscription)
 
     update_user_plan(user_id, "free")
 
+    upsert_subscription_safe(
+        user_id=user_id,
+        plan="free",
+        customer_id=customer_id,
+        subscription_id=subscription_id,
+        status="cancelled",
+        current_period_start=period_start,
+        current_period_end=period_end
+    )
+
+    logger.info("[STRIPE] Subscription deleted user=%s downgraded free", user_id)
+
 
 def handle_payment_failed(invoice):
-    subscription_id = invoice.get("subscription")
+    subscription_id = invoice.get("subscription") or ""
+    customer_id = invoice.get("customer") or ""
 
-    # Per ora non retrocediamo subito a free.
-    # Lo farà Stripe con subscription.deleted se il pagamento fallisce definitivamente.
-    print("Pagamento fallito:", subscription_id)
+    logger.warning(
+        "[STRIPE] Pagamento fallito subscription=%s customer=%s",
+        subscription_id,
+        customer_id
+    )
+
+
+def handle_payment_succeeded(invoice):
+    subscription_id = invoice.get("subscription") or ""
+    customer_id = invoice.get("customer") or ""
+
+    logger.info(
+        "[STRIPE] Pagamento riuscito subscription=%s customer=%s",
+        subscription_id,
+        customer_id
+    )
