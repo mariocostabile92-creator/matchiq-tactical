@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchIQ Tactical | AI Football Intelligence</title>
+  <meta name="description" content="MatchIQ Tactical è una piattaforma AI per analisi calcistica live, Scout Mode, player intelligence, watchlist e report." />
+  <style>
+    :root{
+      --bg:#05070d; --panel:#0b1020; --panel2:#0f172a; --text:#eef6ff; --muted:#93a4bd;
+      --green:#20ff8a; --blue:#38bdf8; --line:rgba(255,255,255,.12); --danger:#ff477e;
+      --shadow:0 24px 80px rgba(0,0,0,.45); --radius:26px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at 15% 10%,rgba(32,255,138,.16),transparent 30%),radial-gradient(circle at 85% 15%,rgba(56,189,248,.18),transparent 32%),linear-gradient(180deg,#05070d,#070b16 55%,#05070d);color:var(--text)}
+    a{color:inherit;text-decoration:none}.wrap{width:min(1160px,92%);margin:auto}.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}.brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.4px}.brand img{width:48px;height:48px;object-fit:contain}.pill{border:1px solid var(--line);background:rgba(255,255,255,.05);padding:10px 14px;border-radius:999px;color:var(--muted);font-size:14px}.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:38px;align-items:center;padding:54px 0 40px}.eyebrow{display:inline-flex;gap:10px;align-items:center;border:1px solid rgba(32,255,138,.28);background:rgba(32,255,138,.08);color:var(--green);border-radius:999px;padding:9px 14px;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.6px}h1{font-size:clamp(42px,6vw,78px);line-height:.92;margin:22px 0 18px;letter-spacing:-3px}.grad{background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}.lead{font-size:20px;line-height:1.65;color:#cbd7ea;max-width:650px}.cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:30px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 20px;border-radius:16px;font-weight:900;border:1px solid var(--line);transition:.2s}.btn.primary{background:linear-gradient(135deg,var(--green),var(--blue));color:#031018;border:0;box-shadow:0 18px 40px rgba(32,255,138,.18)}.btn.secondary{background:rgba(255,255,255,.06)}.btn:hover{transform:translateY(-2px)}.hero-card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035));border:1px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);overflow:hidden}.hero-card:before{content:"";position:absolute;inset:-2px;background:linear-gradient(135deg,rgba(32,255,138,.25),transparent 35%,rgba(56,189,248,.22));pointer-events:none}.logo-box{position:relative;display:grid;place-items:center;padding:18px}.logo-box img{width:min(360px,80%);filter:drop-shadow(0 28px 55px rgba(32,255,138,.18))}.mock{position:relative;margin-top:18px;background:rgba(5,8,16,.82);border:1px solid var(--line);border-radius:22px;padding:16px}.mock-top{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:14px}.bar{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:12px 0}.bar span{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:999px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:38px 0}.card{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:22px;padding:22px}.card b{display:block;font-size:18px;margin-bottom:10px}.card p{color:var(--muted);line-height:1.55;margin:0}.section{padding:50px 0}.section h2{font-size:38px;letter-spacing:-1.4px;margin:0 0 16px}.features{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.feature{display:flex;gap:14px;align-items:flex-start;background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:20px;padding:18px}.ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:rgba(32,255,138,.10);color:var(--green);font-weight:900;flex:none}.feature p{margin:3px 0 0;color:var(--muted);line-height:1.5}.final{margin:50px 0 70px;padding:34px;border-radius:var(--radius);background:linear-gradient(135deg,rgba(32,255,138,.12),rgba(56,189,248,.10));border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:space-between;gap:20px}.final h2{margin:0;font-size:34px}.final p{color:#cbd7ea;margin:10px 0 0;line-height:1.5}.foot{border-top:1px solid var(--line);padding:24px 0;color:var(--muted);font-size:14px}@media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:28px}.grid,.features{grid-template-columns:1fr}.final{flex-direction:column;align-items:flex-start}h1{letter-spacing:-2px}.nav{gap:14px}.pill{display:none}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <nav class="nav">
+      <a class="brand" href="/"><img src="assets/matchiq-logo.png" alt="MatchIQ logo"><span>MatchIQ Tactical</span></a>
+      <a class="pill" href="/login.html">Accedi / Registrati</a>
+    </nav>
+    <section class="hero">
+      <div>
+        <div class="eyebrow">AI Football Intelligence</div>
+        <h1>Leggi la partita <span class="grad">prima degli altri.</span></h1>
+        <p class="lead">MatchIQ Tactical trasforma dati live, momentum, pressione e segnali dei giocatori in insight chiari per scouting, analisi calcistica e contenuti sportivi.</p>
+        <div class="cta">
+          <a class="btn primary" href="/index.html">Apri la demo live</a>
+          <a class="btn secondary" href="/scout.html">Entra in Scout Mode</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="logo-box"><img src="assets/matchiq-logo.png" alt="MatchIQ Tactical"></div>
+        <div class="mock">
+          <div class="mock-top"><b>Live Intelligence</b><span>Match signals</span></div>
+          <div class="bar"><span style="width:84%"></span></div>
+          <div class="bar"><span style="width:66%"></span></div>
+          <div class="bar"><span style="width:73%"></span></div>
+        </div>
+      </div>
+    </section>
+    <section class="grid">
+      <div class="card"><b>Per scout</b><p>Player cards, segnali live, watchlist e report per individuare profili interessanti durante la partita.</p></div>
+      <div class="card"><b>Per analisti</b><p>Momentum, pressione, indicatori tattici e dati trasformati in lettura operativa.</p></div>
+      <div class="card"><b>Per creator sportivi</b><p>Insight rapidi e contenuti più intelligenti per raccontare la partita con un taglio diverso.</p></div>
+    </section>
+    <section class="section">
+      <h2>Cosa trovi dentro MatchIQ</h2>
+      <div class="features">
+        <div class="feature"><div class="ico">01</div><div><b>Dashboard live</b><p>Panoramica delle partite con segnali, stati e indicatori sintetici.</p></div></div>
+        <div class="feature"><div class="ico">02</div><div><b>Scout Mode</b><p>Modalità dedicata ai giocatori con score, trend, ruolo e potenziale attenzione.</p></div></div>
+        <div class="feature"><div class="ico">03</div><div><b>Watchlist</b><p>Salva i profili più interessanti e costruisci una lista da monitorare.</p></div></div>
+        <div class="feature"><div class="ico">04</div><div><b>Report ed export</b><p>Genera una lettura più chiara dei segnali raccolti durante la sessione.</p></div></div>
+      </div>
+    </section>
+    <section class="final">
+      <div><h2>Prova MatchIQ Tactical</h2><p>Il prodotto è online. Sto raccogliendo feedback da chi segue calcio, scouting, dati e sport tech.</p></div>
+      <a class="btn primary" href="/index.html">Apri l’app</a>
+    </section>
+  </main>
+  <footer class="wrap foot">© MatchIQ Tactical · AI Football Intelligence Platform</footer>
+</body>
+</html>
