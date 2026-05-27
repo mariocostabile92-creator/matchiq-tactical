@@ -1,251 +1,302 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MatchIQ Tactical - Login V8.1</title>
 
-    <title>MatchIQ Tactical - Login</title>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
 
-    <script src="auth.js"></script>
+body{
+    background:
+        radial-gradient(circle at top left,#1f2bff22,transparent 40%),
+        radial-gradient(circle at bottom right,#ff00aa11,transparent 40%),
+        #030b26;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+}
 
-    <style>
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:Arial, Helvetica, sans-serif;
-        }
+.login-container{
+    width:430px;
+    max-width:calc(100% - 28px);
+    background:linear-gradient(135deg,rgba(20,30,70,.95),rgba(10,15,40,.98));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    padding:40px;
+    box-shadow:0 0 40px rgba(0,0,0,.5),0 0 60px rgba(77,110,255,.12);
+    backdrop-filter:blur(10px);
+}
 
-        body{
-            background:
-                radial-gradient(circle at top left,#1f2bff22,transparent 40%),
-                radial-gradient(circle at bottom right,#ff00aa11,transparent 40%),
-                #030b26;
+.logo{
+    text-align:center;
+    margin-bottom:30px;
+}
 
-            min-height:100vh;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:white;
-        }
+.logo h1{
+    font-size:34px;
+    margin-bottom:8px;
+}
 
-        .login-container{
-            width:420px;
+.logo p{
+    color:#8ea6ff;
+    font-size:14px;
+    line-height:1.5;
+}
 
-            background:linear-gradient(
-                135deg,
-                rgba(20,30,70,.95),
-                rgba(10,15,40,.98)
-            );
+.input-group{
+    margin-bottom:20px;
+}
 
-            border:1px solid rgba(255,255,255,.08);
+.input-group label{
+    display:block;
+    margin-bottom:8px;
+    color:#9eb0ff;
+    font-size:13px;
+    font-weight:800;
+}
 
-            border-radius:24px;
+.input-group input{
+    width:100%;
+    padding:16px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.08);
+    background:#0b1438;
+    color:white;
+    outline:none;
+    transition:.2s;
+    font-weight:800;
+}
 
-            padding:40px;
+.input-group input:focus{
+    border-color:#4d6eff;
+    box-shadow:0 0 20px rgba(77,110,255,.2);
+}
 
-            box-shadow:
-                0 0 40px rgba(0,0,0,.5),
-                0 0 60px rgba(77,110,255,.12);
+.login-btn{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    background:linear-gradient(90deg,#4d6eff,#7d4dff);
+    color:white;
+    font-weight:900;
+    cursor:pointer;
+    transition:.2s;
+}
 
-            backdrop-filter:blur(10px);
-        }
+.login-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 25px rgba(77,110,255,.4);
+}
 
-        .logo{
-            text-align:center;
-            margin-bottom:30px;
-        }
+.login-btn:disabled{
+    opacity:.65;
+    cursor:not-allowed;
+    transform:none;
+}
 
-        .logo h1{
-            font-size:34px;
-            margin-bottom:8px;
-        }
+.message{
+    margin-top:18px;
+    text-align:center;
+    font-size:14px;
+    line-height:1.5;
+}
 
-        .logo p{
-            color:#8ea6ff;
-            font-size:14px;
-        }
+.error{color:#ff5f7d}
+.success{color:#00ff9d}
+.warn{color:#ffe28a}
 
-        .input-group{
-            margin-bottom:20px;
-        }
+.bottom-link{
+    margin-top:25px;
+    text-align:center;
+    font-size:14px;
+    color:#c7d4ff;
+}
 
-        .input-group label{
-            display:block;
-            margin-bottom:8px;
-            color:#9eb0ff;
-            font-size:13px;
-        }
+.bottom-link a{
+    color:#7da2ff;
+    text-decoration:none;
+    font-weight:900;
+}
 
-        .input-group input{
-            width:100%;
-            padding:16px;
+.back-link{
+    margin-top:14px;
+    text-align:center;
+    font-size:13px;
+}
 
-            border-radius:14px;
-
-            border:1px solid rgba(255,255,255,.08);
-
-            background:#0b1438;
-            color:white;
-
-            outline:none;
-
-            transition:.2s;
-        }
-
-        .input-group input:focus{
-            border-color:#4d6eff;
-            box-shadow:0 0 20px rgba(77,110,255,.2);
-        }
-
-        .login-btn{
-            width:100%;
-            padding:16px;
-
-            border:none;
-            border-radius:14px;
-
-            background:linear-gradient(
-                90deg,
-                #4d6eff,
-                #7d4dff
-            );
-
-            color:white;
-
-            font-weight:700;
-            cursor:pointer;
-
-            transition:.2s;
-        }
-
-        .login-btn:hover{
-            transform:translateY(-2px);
-            box-shadow:0 0 25px rgba(77,110,255,.4);
-        }
-
-        .message{
-            margin-top:18px;
-            text-align:center;
-            font-size:14px;
-        }
-
-        .error{
-            color:#ff5f7d;
-        }
-
-        .success{
-            color:#00ff9d;
-        }
-
-        .bottom-link{
-            margin-top:25px;
-            text-align:center;
-            font-size:14px;
-        }
-
-        .bottom-link a{
-            color:#7da2ff;
-            text-decoration:none;
-        }
-
-    </style>
+.back-link a{
+    color:#8ea6ff;
+    text-decoration:none;
+}
+</style>
 </head>
+
 <body>
 
 <div class="login-container">
-
     <div class="logo">
         <h1>⚽ MatchIQ Tactical</h1>
-        <p>AI Tactical Analysis Platform</p>
+        <p>Login account · necessario per attivare MatchIQ Pro</p>
     </div>
 
     <form id="loginForm">
-
         <div class="input-group">
             <label>Email</label>
-
-            <input
-                type="email"
-                id="email"
-                required
-                placeholder="Inserisci email"
-            >
+            <input type="email" id="email" required placeholder="Inserisci email" autocomplete="email">
         </div>
 
         <div class="input-group">
             <label>Password</label>
-
-            <input
-                type="password"
-                id="password"
-                required
-                placeholder="Inserisci password"
-            >
+            <input type="password" id="password" required placeholder="Inserisci password" autocomplete="current-password">
         </div>
 
-        <button type="submit" class="login-btn">
+        <button type="submit" class="login-btn" id="loginBtn">
             LOGIN
         </button>
-
     </form>
 
     <div id="message" class="message"></div>
 
     <div class="bottom-link">
         Non hai un account?
-        <a href="register.html">Registrati</a>
+        <a href="register.html?v=10050">Registrati</a>
     </div>
 
+    <div class="back-link">
+        <a href="index.html?v=10050">← Torna alla dashboard</a>
+    </div>
 </div>
 
 <script>
+const API_BASE = `${window.location.origin}/api`;
+const APP_VERSION = "10050";
 
-redirectIfLoggedIn();
+function getToken(){
+    return localStorage.getItem("matchiq_auth_token") || "";
+}
 
-const form = document.getElementById("loginForm");
-const message = document.getElementById("message");
+function saveAuth(token,user){
+    localStorage.setItem("matchiq_auth_token", token);
+    localStorage.setItem("matchiq_auth_user", JSON.stringify(user || {}));
 
-form.addEventListener("submit", async (e) => {
-
-    e.preventDefault();
-
-    message.innerHTML = "";
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    try {
-
-        message.innerHTML = `
-            <span class="success">
-                Login in corso...
-            </span>
-        `;
-
-        await loginUser(email, password);
-
-        message.innerHTML = `
-            <span class="success">
-                Login completato!
-            </span>
-        `;
-
-        setTimeout(() => {
-            window.location.href = "index.html";
-        }, 800);
-
-    } catch(err){
-
-        message.innerHTML = `
-            <span class="error">
-                ${err.message}
-            </span>
-        `;
+    if(user?.email){
+        localStorage.setItem("matchiq_user_email", user.email);
     }
 
+    if(user?.plan){
+        localStorage.setItem("matchiq_user_plan", user.plan);
+    }
+}
+
+function clearOldAuth(){
+    localStorage.removeItem("matchiq_user");
+    sessionStorage.removeItem("matchiq_user");
+    sessionStorage.removeItem("matchiq_auth_user");
+    sessionStorage.removeItem("matchiq_auth_token");
+}
+
+async function verifyExistingToken(){
+    const token = getToken();
+
+    if(!token) return;
+
+    try{
+        const res = await fetch(`${API_BASE}/auth/me`, {
+            headers:{
+                "Authorization":"Bearer " + token
+            },
+            cache:"no-store"
+        });
+
+        const data = await res.json();
+
+        if(res.ok && data.success && data.user){
+            saveAuth(token, data.user);
+            window.location.href = `index.html?v=${APP_VERSION}`;
+        }
+    }catch(e){
+        console.warn("Token esistente non verificato", e);
+    }
+}
+
+function setMessage(text,type="success"){
+    const message = document.getElementById("message");
+    message.innerHTML = `<span class="${type}">${text}</span>`;
+}
+
+async function doLogin(email,password){
+    const res = await fetch(`${API_BASE}/auth/login`, {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json",
+            "Accept":"application/json"
+        },
+        body:JSON.stringify({
+            email,
+            password
+        })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if(!res.ok || data.success === false){
+        throw new Error(data.detail || data.message || "Login non riuscito");
+    }
+
+    if(!data.token){
+        throw new Error("Token non ricevuto dal backend");
+    }
+
+    saveAuth(data.token, data.user || {});
+    return data;
+}
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const btn = document.getElementById("loginBtn");
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if(!email || !password){
+        setMessage("Inserisci email e password.", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "LOGIN IN CORSO...";
+
+    try{
+        clearOldAuth();
+        setMessage("Login in corso...", "warn");
+
+        await doLogin(email,password);
+
+        setMessage("Login completato. Reindirizzamento...", "success");
+
+        setTimeout(() => {
+            window.location.href = `index.html?v=${APP_VERSION}`;
+        },600);
+
+    }catch(err){
+        setMessage(err.message || "Errore login", "error");
+    }finally{
+        btn.disabled = false;
+        btn.textContent = "LOGIN";
+    }
 });
 
+verifyExistingToken();
 </script>
 
 </body>
