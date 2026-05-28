@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical V8.2.2 · Home Unica Responsive</title>
+<title>MatchIQ Tactical V8.2.3 · Home Unica Responsive</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
 <meta name="mobile-web-app-capable" content="yes">
@@ -991,17 +991,25 @@ a{
     }
 }
 
-/* V8.2.2 mobile polish */
+/* V8.2.3 mobile header clean */
 @media(max-width:860px){
+    body{
+        padding-bottom:104px;
+    }
+
     .topbar{
         position:relative;
         padding:calc(10px + env(safe-area-inset-top)) 14px 12px;
         gap:10px;
+        align-items:flex-start;
+        flex-direction:column;
     }
 
     .brand{
         gap:10px;
         align-items:center;
+        min-width:0;
+        width:100%;
     }
 
     .brand-img{
@@ -1010,20 +1018,44 @@ a{
         border-radius:14px;
     }
 
+    .logo{
+        font-size:21px;
+        line-height:1.05;
+    }
+
+    .subtitle{
+        font-size:11px;
+        line-height:1.25;
+    }
+
     .nav-actions{
-        grid-template-columns:1fr 1fr;
-        gap:8px;
+        display:flex;
+        width:100%;
+        gap:0;
     }
 
-    .nav-actions .btn{
-        min-height:42px;
-        border-radius:14px;
-    }
-
-    #loginBtn,
-    #registerBtn,
-    #logoutBtn{
+    .nav-actions .btn,
+    .nav-actions #adminActionsBtn,
+    .nav-actions #adminUsersBtn,
+    .nav-actions #adminAnalyticsBtn,
+    .nav-actions #loginBtn,
+    .nav-actions #registerBtn,
+    .nav-actions #logoutBtn,
+    .nav-actions #accountBtn,
+    .nav-actions #upgradeBtnTop{
         display:none !important;
+    }
+
+    .account-pill{
+        display:flex !important;
+        width:100%;
+        min-width:0;
+        justify-content:space-between;
+        align-items:center;
+        padding:10px 14px;
+        border-radius:18px;
+        margin-top:6px;
+        font-size:12px;
     }
 
     .main{
@@ -1051,6 +1083,15 @@ a{
         line-height:1.55;
     }
 
+    .hero-actions{
+        display:grid;
+        grid-template-columns:1fr;
+    }
+
+    .hero-actions .btn{
+        width:100%;
+    }
+
     .badge{
         font-size:10px;
         padding:7px 10px;
@@ -1063,9 +1104,20 @@ a{
     .status-grid{
         grid-template-columns:1fr 1fr;
         margin:14px 0;
+        gap:10px;
+    }
+
+    .status-card{
+        padding:14px;
+        border-radius:18px;
+    }
+
+    .status-value{
+        font-size:17px;
     }
 
     .features-grid{
+        grid-template-columns:1fr;
         gap:12px;
     }
 
@@ -1088,6 +1140,7 @@ a{
     }
 
     .pricing-grid{
+        grid-template-columns:1fr;
         gap:14px;
     }
 
@@ -1100,16 +1153,50 @@ a{
         font-size:42px;
     }
 
+    .section-head{
+        align-items:flex-start;
+        flex-direction:column;
+        margin-top:28px;
+    }
+
+    .section-title{
+        font-size:25px;
+    }
+
+    .live-toolbar{
+        width:100%;
+        display:grid;
+        grid-template-columns:1fr 1fr;
+    }
+
+    .live-toolbar .btn{
+        width:100%;
+    }
+
+    .matches-grid{
+        grid-template-columns:1fr;
+    }
+
+    .match-card{
+        padding:18px;
+        border-radius:22px;
+    }
+
+    .team img{
+        width:52px;
+        height:52px;
+    }
+
+    .score-num{
+        font-size:34px;
+    }
+
     .beta-form-wrap{
         display:none !important;
     }
 }
 
 @media(max-width:420px){
-    .nav-actions{
-        grid-template-columns:1fr;
-    }
-
     .brand-img{
         width:42px;
         height:42px;
@@ -1129,6 +1216,14 @@ a{
 
     .section-title{
         font-size:25px;
+    }
+
+    .match-actions{
+        flex-direction:column;
+    }
+
+    .status-grid{
+        grid-template-columns:1fr;
     }
 }
 
@@ -1162,7 +1257,7 @@ a{
   <div id="pageNotice" class="notice"></div>
   <section class="hero" id="home">
     <div class="card hero-card">
-      <div class="badge-row"><span class="badge green" id="heroBadge">MATCHIQ V8.2.2</span><span class="badge blue">Home unica responsive</span><span class="badge gold">Coach Free Trial</span></div>
+      <div class="badge-row"><span class="badge green" id="heroBadge">MATCHIQ V8.2.3</span><span class="badge blue">Home unica responsive</span><span class="badge gold">Coach Free Trial</span></div>
       <h1>Leggi la partita, trova segnali live e crea report da campo.</h1>
       <p><strong>MatchIQ Tactical</strong> unisce analisi live, Scout Mode e Coach Mode in una sola webapp. Da desktop lavori comodo, da telefono la installi come PWA e la usi direttamente al campo.</p>
       <div class="hero-actions"><button class="btn green" onclick="openCoach()">Crea report Coach</button><button class="btn" onclick="scrollToLive()">Analizza live</button><button class="btn dark" onclick="openScoutHome()">Apri Scout</button><button class="btn pro" id="heroProBtn" onclick="startCheckout('pro_monthly')">Sblocca Pro</button></div>
@@ -1206,7 +1301,7 @@ a{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10260";
+const APP_VERSION = "10280";
 const BETA_STORAGE_KEY = "matchiq_beta_requests_v821";
 let accountPlan = {plan:"guest",label:"Guest",limits:{max_live_matches:3,scout_enabled:true,scout_preview:true,export_enabled:false,pdf_enabled:false},features:{}};
 function getAuthToken(){return localStorage.getItem("matchiq_auth_token")||sessionStorage.getItem("matchiq_auth_token")||"";}
@@ -1221,7 +1316,7 @@ function scrollToHome(){document.getElementById("home")?.scrollIntoView({behavio
 function scrollToLive(){document.getElementById("liveSection")?.scrollIntoView({behavior:"smooth",block:"start"});}
 function updateProButtons(){const proButtons=[document.getElementById("upgradeBtnTop"),document.getElementById("heroProBtn"),...document.querySelectorAll(".pricing-pro-btn")].filter(Boolean);const alreadyPro=isProPlan()||isOwnerAccount();proButtons.forEach(btn=>{btn.style.display="inline-flex";if(alreadyPro){btn.textContent=isOwnerAccount()?"Owner Pro attivo":"Piano Pro attivo";btn.disabled=true;btn.classList.remove("pro");btn.classList.add("ok");}else{btn.disabled=false;btn.classList.remove("ok");btn.classList.add("pro");if(btn.id==="upgradeBtnTop")btn.textContent="Passa a Pro";else if(btn.id==="heroProBtn")btn.textContent="Sblocca Pro";}});}
 function updatePricingVisibility(){const pricing=document.getElementById("pricing");const panel=document.getElementById("proActivePanel");const ownerPanel=document.getElementById("ownerControlPanel");const alreadyPro=isProPlan()||isOwnerAccount();const owner=isOwnerAccount();if(pricing)pricing.style.display=alreadyPro?"none":"block";if(panel)panel.className=alreadyPro?"pro-active-panel show":"pro-active-panel";if(ownerPanel)ownerPanel.className=owner?"owner-control-panel show":"owner-control-panel";}
-function applyAccountUI(){const user=getLocalUser();const emailEl=document.getElementById("userEmail"),planEl=document.getElementById("userPlan"),adminBtn=document.getElementById("adminActionsBtn"),adminUsersBtn=document.getElementById("adminUsersBtn"),adminAnalyticsBtn=document.getElementById("adminAnalyticsBtn"),accountBtn=document.getElementById("accountBtn"),logoutBtn=document.getElementById("logoutBtn"),loginBtn=document.getElementById("loginBtn"),registerBtn=document.getElementById("registerBtn"),statusPlanLabel=document.getElementById("statusPlanLabel"),launchNote=document.getElementById("launchNote"),heroBadge=document.getElementById("heroBadge");const owner=isOwnerLocalUser(user)||String(accountPlan.plan||"").toLowerCase()==="owner";if(owner){accountPlan.plan="owner";accountPlan.label="Owner";accountPlan.limits={...(accountPlan.limits||{}),max_live_matches:999,scout_enabled:true,scout_preview:false,export_enabled:true,pdf_enabled:true};if(emailEl)emailEl.textContent=user?.email||OWNER_EMAIL;if(planEl)planEl.textContent="OWNER PRO";[accountBtn,adminBtn,adminUsersBtn,adminAnalyticsBtn,logoutBtn].forEach(x=>{if(x)x.style.display="inline-flex";});[loginBtn,registerBtn].forEach(x=>{if(x)x.style.display="none";});if(statusPlanLabel)statusPlanLabel.textContent="Owner Pro";if(launchNote)launchNote.textContent="Owner attivo: analisi, Scout, Coach, Admin e Pro sbloccati.";if(heroBadge)heroBadge.textContent="OWNER PRO ACTIVE";updateProButtons();updatePricingVisibility();return;}if(accountPlan.plan==="guest"||!isLoggedIn()){if(emailEl)emailEl.textContent="Utente ospite";if(planEl)planEl.textContent="GUEST";[accountBtn,adminBtn,adminUsersBtn,adminAnalyticsBtn,logoutBtn].forEach(x=>{if(x)x.style.display="none";});[loginBtn,registerBtn].forEach(x=>{if(x)x.style.display="inline-flex";});if(statusPlanLabel)statusPlanLabel.textContent="Guest";if(launchNote)launchNote.textContent="Puoi provare MatchIQ anche senza account. Per salvare piano e Pro, effettua login o registrati.";if(heroBadge)heroBadge.textContent="MATCHIQ V8.2.2";updateProButtons();updatePricingVisibility();return;}if(emailEl)emailEl.textContent=user?.email||"Utente";if(planEl)planEl.textContent=String(accountPlan.label||accountPlan.plan||"FREE").toUpperCase();if(accountBtn)accountBtn.style.display="inline-flex";if(logoutBtn)logoutBtn.style.display="inline-flex";if(loginBtn)loginBtn.style.display="none";if(registerBtn)registerBtn.style.display="none";if(statusPlanLabel)statusPlanLabel.textContent=isProPlan()?"Pro attivo":"Free attivo";if(launchNote)launchNote.textContent=isProPlan()?"Piano Pro attivo: limiti estesi e funzioni avanzate disponibili.":"Piano Free attivo: prova Coach, Scout e analisi live. Passa a Pro per uso continuativo.";if(heroBadge)heroBadge.textContent=isProPlan()?"PRO PLAN ACTIVE":"FREE PLAN ACTIVE";updateProButtons();updatePricingVisibility();}
+function applyAccountUI(){const user=getLocalUser();const emailEl=document.getElementById("userEmail"),planEl=document.getElementById("userPlan"),adminBtn=document.getElementById("adminActionsBtn"),adminUsersBtn=document.getElementById("adminUsersBtn"),adminAnalyticsBtn=document.getElementById("adminAnalyticsBtn"),accountBtn=document.getElementById("accountBtn"),logoutBtn=document.getElementById("logoutBtn"),loginBtn=document.getElementById("loginBtn"),registerBtn=document.getElementById("registerBtn"),statusPlanLabel=document.getElementById("statusPlanLabel"),launchNote=document.getElementById("launchNote"),heroBadge=document.getElementById("heroBadge");const owner=isOwnerLocalUser(user)||String(accountPlan.plan||"").toLowerCase()==="owner";if(owner){accountPlan.plan="owner";accountPlan.label="Owner";accountPlan.limits={...(accountPlan.limits||{}),max_live_matches:999,scout_enabled:true,scout_preview:false,export_enabled:true,pdf_enabled:true};if(emailEl)emailEl.textContent=user?.email||OWNER_EMAIL;if(planEl)planEl.textContent="OWNER PRO";[accountBtn,adminBtn,adminUsersBtn,adminAnalyticsBtn,logoutBtn].forEach(x=>{if(x)x.style.display="inline-flex";});[loginBtn,registerBtn].forEach(x=>{if(x)x.style.display="none";});if(statusPlanLabel)statusPlanLabel.textContent="Owner Pro";if(launchNote)launchNote.textContent="Owner attivo: analisi, Scout, Coach, Admin e Pro sbloccati.";if(heroBadge)heroBadge.textContent="OWNER PRO ACTIVE";updateProButtons();updatePricingVisibility();return;}if(accountPlan.plan==="guest"||!isLoggedIn()){if(emailEl)emailEl.textContent="Utente ospite";if(planEl)planEl.textContent="GUEST";[accountBtn,adminBtn,adminUsersBtn,adminAnalyticsBtn,logoutBtn].forEach(x=>{if(x)x.style.display="none";});[loginBtn,registerBtn].forEach(x=>{if(x)x.style.display="inline-flex";});if(statusPlanLabel)statusPlanLabel.textContent="Guest";if(launchNote)launchNote.textContent="Puoi provare MatchIQ anche senza account. Per salvare piano e Pro, effettua login o registrati.";if(heroBadge)heroBadge.textContent="MATCHIQ V8.2.3";updateProButtons();updatePricingVisibility();return;}if(emailEl)emailEl.textContent=user?.email||"Utente";if(planEl)planEl.textContent=String(accountPlan.label||accountPlan.plan||"FREE").toUpperCase();if(accountBtn)accountBtn.style.display="inline-flex";if(logoutBtn)logoutBtn.style.display="inline-flex";if(loginBtn)loginBtn.style.display="none";if(registerBtn)registerBtn.style.display="none";if(statusPlanLabel)statusPlanLabel.textContent=isProPlan()?"Pro attivo":"Free attivo";if(launchNote)launchNote.textContent=isProPlan()?"Piano Pro attivo: limiti estesi e funzioni avanzate disponibili.":"Piano Free attivo: prova Coach, Scout e analisi live. Passa a Pro per uso continuativo.";if(heroBadge)heroBadge.textContent=isProPlan()?"PRO PLAN ACTIVE":"FREE PLAN ACTIVE";updateProButtons();updatePricingVisibility();}
 async function loadAccountLimits(){try{const token=getAuthToken();const headers=token?{"Authorization":"Bearer "+token}:{};const res=await fetch(`${API_BASE}/account/limits?ts=${Date.now()}`,{headers,cache:"no-store"});const data=await res.json();if(data&&(data.success||data.ok||data.plan)){accountPlan={plan:data.plan||"guest",label:data.label||data.plan||"Guest",limits:data.limits||accountPlan.limits,features:data.features||{}};const user=getLocalUser();if(user&&data.plan){user.plan=data.plan;saveLocalUser(user);}}}catch(e){console.warn("Account limits non disponibili",e);}applyAccountUI();}
 async function refreshSubscriptionState(){const token=getAuthToken();if(!token)return null;try{const res=await fetch(`${API_BASE}/payments/subscription?ts=${Date.now()}`,{headers:{"Authorization":"Bearer "+token},cache:"no-store"});const data=await res.json();if(data&&data.plan){accountPlan.plan=data.plan;accountPlan.label=data.plan;const user=getLocalUser()||{};user.plan=data.plan;saveLocalUser(user);applyAccountUI();}return data;}catch(e){console.warn("Subscription state non disponibile",e);return null;}}
 function goLogin(){window.location.href=`/login.html?v=${APP_VERSION}`;}
@@ -1245,7 +1340,7 @@ function openAccount(){window.location.href=`account.html?v=${APP_VERSION}`;}
 function openAdminBeta(){window.location.href=`admin-beta.html?v=${APP_VERSION}`;}
 function openAdminUsers(){window.location.href=`admin-users.html?v=${APP_VERSION}`;}
 function openAdminAnalytics(){window.location.href=`admin-analytics.html?v=${APP_VERSION}`;}
-function bootHome(){document.title="MatchIQ Tactical V8.2.2 · Home Unica Responsive";loadAccountLimits().catch(e=>{console.warn(e);applyAccountUI();}).then(()=>refreshSubscriptionState()).catch(e=>console.warn(e)).then(()=>loadMatches(false)).catch(e=>console.warn(e));setInterval(()=>loadMatches(false),60000);}
+function bootHome(){document.title="MatchIQ Tactical V8.2.3 · Home Unica Responsive";loadAccountLimits().catch(e=>{console.warn(e);applyAccountUI();}).then(()=>refreshSubscriptionState()).catch(e=>console.warn(e)).then(()=>loadMatches(false)).catch(e=>console.warn(e));setInterval(()=>loadMatches(false),60000);}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bootHome);else bootHome();
 </script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/service-worker.js").catch(err=>console.warn("Service Worker non registrato:",err));});}</script>
