@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical - Account Pro V1.5</title>
+<title>MatchIQ Tactical - Account Pro V1.6</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -833,6 +833,10 @@ p{
                 <button class="btn gold" id="upgradeYearlyBtn" onclick="startCheckout('pro_yearly')">
                     Attiva Pro annuale
                 </button>
+
+                <button class="btn red" id="logoutPageBtn" onclick="logout()" style="display:none">
+                    Esci dall’account
+                </button>
             </div>
 
             <div class="small" id="smallNote">
@@ -1029,7 +1033,7 @@ p{
 </nav>
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10290";
+const APP_VERSION = "10320";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
@@ -1194,6 +1198,7 @@ function renderAccount(){
     const loginBtn = document.getElementById("loginBtn");
     const loginTopBtn = document.getElementById("loginTopBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const logoutPageBtn = document.getElementById("logoutPageBtn");
     const upgradeMonthlyBtn = document.getElementById("upgradeMonthlyBtn");
     const upgradeYearlyBtn = document.getElementById("upgradeYearlyBtn");
     const ctaPanel = document.getElementById("ctaPanel");
@@ -1246,6 +1251,10 @@ function renderAccount(){
 
     if(logoutBtn){
         logoutBtn.style.display = logged ? "inline-flex" : "none";
+    }
+
+    if(logoutPageBtn){
+        logoutPageBtn.style.display = logged ? "inline-flex" : "none";
     }
 
     if(upgradeMonthlyBtn){
