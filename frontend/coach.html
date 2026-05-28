@@ -1114,6 +1114,24 @@ select option{
         grid-template-columns:1fr 1fr;
     }
 }
+
+/* ======================================================
+   MATCHIQ COACH MODE - PAGELLE V1.1 FIX
+====================================================== */
+.ratings-list{display:grid;gap:10px;max-height:420px;overflow:auto;padding-right:5px}
+.ratings-list::-webkit-scrollbar{width:7px}
+.ratings-list::-webkit-scrollbar-thumb{background:rgba(255,209,102,.45);border-radius:999px}
+.rating-card{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:flex-start;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:15px;box-shadow:0 12px 32px rgba(0,0,0,.14)}
+.rating-player{font-size:16px;font-weight:1000;margin-bottom:5px}
+.rating-meta{color:var(--muted);font-size:12px;font-weight:850;line-height:1.4}
+.rating-note{margin-top:8px;color:#dbe6ff;font-size:13px;line-height:1.45}
+.rating-vote{min-width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:1000;color:#06111c;background:linear-gradient(135deg,var(--gold),var(--orange));box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.rating-vote.high{background:linear-gradient(135deg,var(--green),var(--blue))}
+.rating-vote.low{background:linear-gradient(135deg,var(--red),#8b1d35);color:white}
+.rating-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.rating-remove{border:0;background:rgba(255,65,108,.14);color:#ffc3cf;border-radius:12px;padding:8px 11px;cursor:pointer;font-weight:1000}
+@media(max-width:900px){.ratings-list{max-height:390px}.rating-card{border-radius:19px;padding:15px}.rating-player{font-size:15px}.rating-vote{min-width:52px;height:52px;border-radius:17px}}
+
 </style>
 </head>
 
@@ -1212,7 +1230,6 @@ select option{
             </div>
         </div>
     </div>
-
     <div class="grid section">
         <div class="panel">
             <span class="badge blue">1. CREA PARTITA</span>
@@ -1360,7 +1377,84 @@ select option{
 
     <div class="grid section">
         <div class="panel">
-            <span class="badge blue">3. TIMELINE</span>
+            <span class="badge gold">3. PAGELLE</span>
+
+            <h2>Pagelle giocatori</h2>
+
+            <p>
+                Inserisci una valutazione rapida dei giocatori più importanti.
+                MatchIQ Coach userà queste pagelle nel report finale.
+            </p>
+
+            <div class="form-grid" style="margin-top:16px;">
+                <div class="field">
+                    <label>Nome giocatore</label>
+                    <input id="ratingPlayerInput" type="text" placeholder="Es. N.10 Rossi" />
+                </div>
+
+                <div class="field">
+                    <label>Squadra</label>
+                    <select id="ratingTeamInput">
+                        <option value="home">Casa</option>
+                        <option value="away">Trasferta</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Ruolo</label>
+                    <select id="ratingRoleInput">
+                        <option value="Portiere">Portiere</option>
+                        <option value="Difensore">Difensore</option>
+                        <option value="Centrocampista">Centrocampista</option>
+                        <option value="Esterno">Esterno</option>
+                        <option value="Attaccante">Attaccante</option>
+                        <option value="Jolly">Jolly</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Voto</label>
+                    <select id="ratingVoteInput">
+                        <option value="6">6</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7">7</option>
+                        <option value="7.5">7.5</option>
+                        <option value="8">8</option>
+                        <option value="8.5">8.5</option>
+                        <option value="9">9</option>
+                        <option value="5.5">5.5</option>
+                        <option value="5">5</option>
+                        <option value="4.5">4.5</option>
+                    </select>
+                </div>
+
+                <div class="field full">
+                    <label>Nota pagella</label>
+                    <textarea id="ratingNoteInput" placeholder="Es. Ottimo pressing, buona intensità, deve migliorare l’ultimo passaggio..."></textarea>
+                </div>
+            </div>
+
+            <div class="micro-row">
+                <button class="btn green" onclick="addPlayerRating()">Aggiungi pagella</button>
+                <button class="btn dark" onclick="clearRatingForm()">Pulisci campi</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <span class="badge blue">LISTA PAGELLE</span>
+
+            <h2>Giocatori valutati</h2>
+
+            <div id="ratingsList" class="ratings-list">
+                <div class="empty">
+                    Nessuna pagella inserita. Aggiungi almeno un giocatore per arricchire il report.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="grid section">
+        <div class="panel">
+            <span class="badge blue">4. TIMELINE</span>
 
             <h2>Eventi partita</h2>
 
@@ -1372,7 +1466,7 @@ select option{
         </div>
 
         <div class="panel">
-            <span class="badge green">4. REPORT</span>
+            <span class="badge green">5. REPORT</span>
 
             <h2>Report tecnico automatico</h2>
 
@@ -1402,6 +1496,7 @@ const STORAGE_KEY = "matchiq_coach_v1";
 let coachState = {
     match: null,
     events: [],
+    ratings: [],
     report: ""
 };
 
@@ -1473,6 +1568,7 @@ function loadState(){
         coachState = {
             match: data.match || null,
             events: Array.isArray(data.events) ? data.events : [],
+            ratings: Array.isArray(data.ratings) ? data.ratings : [],
             report: data.report || ""
         };
     }catch(e){
@@ -1539,6 +1635,7 @@ function clearCurrentMatch(){
     coachState = {
         match: null,
         events: [],
+        ratings: [],
         report: ""
     };
 
@@ -1749,6 +1846,87 @@ function buildTrainingAdvice(){
     return "Allenamento consigliato: seduta mista su intensità, transizioni, finalizzazione e gestione dei momenti della partita.";
 }
 
+
+function clearRatingForm(){
+    setInputValue("ratingPlayerInput","");
+    setInputValue("ratingNoteInput","");
+    setInputValue("ratingVoteInput","6");
+    setInputValue("ratingRoleInput","Portiere");
+    setInputValue("ratingTeamInput","home");
+}
+
+function addPlayerRating(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+    const player = getInputValue("ratingPlayerInput","");
+    const side = getInputValue("ratingTeamInput","home");
+    const role = getInputValue("ratingRoleInput","Jolly");
+    const vote = Number(getInputValue("ratingVoteInput","6"));
+    const note = getInputValue("ratingNoteInput","");
+    if(!player){
+        showNotice("Inserisci il nome del giocatore.", "warn");
+        return;
+    }
+    const rating = {id: Date.now() + Math.random(), player, side, team: getTeamName(side), role, vote: Number.isFinite(vote) ? vote : 6, note, createdAt: new Date().toISOString()};
+    coachState.ratings.unshift(rating);
+    saveState();
+    clearRatingForm();
+    renderAll();
+    showNotice(`Pagella aggiunta: ${player} (${rating.vote}).`, "ok", 2500);
+}
+
+function deleteRating(ratingId){
+    coachState.ratings = coachState.ratings.filter(r => String(r.id) !== String(ratingId));
+    saveState();
+    renderAll();
+}
+
+function getBestRating(){
+    if(!coachState.ratings.length) return null;
+    return [...coachState.ratings].sort((a,b) => Number(b.vote || 0) - Number(a.vote || 0))[0];
+}
+
+function renderRatings(){
+    const box = document.getElementById("ratingsList");
+    if(!box) return;
+    if(!coachState.ratings.length){
+        box.innerHTML = `<div class="empty">Nessuna pagella inserita. Aggiungi almeno un giocatore per arricchire il report.</div>`;
+        return;
+    }
+    box.innerHTML = coachState.ratings.map(r => {
+        const vote = Number(r.vote || 0);
+        const voteClass = vote >= 7 ? "high" : vote < 6 ? "low" : "";
+        return `
+            <div class="rating-card">
+                <div>
+                    <div class="rating-player">${esc(r.player)}</div>
+                    <div class="rating-meta">${esc(r.team)} · ${esc(r.role)}</div>
+                    ${r.note ? `<div class="rating-note">${esc(r.note)}</div>` : ""}
+                    <div class="rating-actions"><button class="rating-remove" onclick="deleteRating('${esc(r.id)}')">Elimina</button></div>
+                </div>
+                <div class="rating-vote ${voteClass}">${esc(r.vote)}</div>
+            </div>`;
+    }).join("");
+}
+
+function buildRatingsReportText(){
+    if(!coachState.ratings.length) return "Nessuna pagella giocatore inserita.";
+    const best = getBestRating();
+    const positives = coachState.ratings.filter(r => Number(r.vote || 0) >= 7);
+    const improve = coachState.ratings.filter(r => Number(r.vote || 0) < 6);
+    const list = [...coachState.ratings].sort((a,b) => Number(b.vote || 0) - Number(a.vote || 0)).map(r => `- ${r.player} (${r.team}, ${r.role}) — voto ${r.vote}${r.note ? ": " + r.note : ""}`).join("\n");
+    return `
+Migliore in campo: ${best ? `${best.player} (${best.team}) con voto ${best.vote}` : "--"}.
+Giocatori positivi: ${positives.length ? positives.map(r => `${r.player} ${r.vote}`).join(", ") : "nessun voto sopra il 7 registrato"}.
+Giocatori da migliorare: ${improve.length ? improve.map(r => `${r.player} ${r.vote}`).join(", ") : "nessuna insufficienza registrata"}.
+
+Pagelle complete:
+${list}
+`.trim();
+}
+
 function generateCoachReport(){
     if(!coachState.match){
         showNotice("Prima crea una partita manuale.", "warn");
@@ -1809,6 +1987,9 @@ ${match.awayTeam}: ${recoveriesAway} recuperi registrati.
 
 <strong>Momenti chiave</strong>
 ${keyMoments}
+
+<strong>Pagelle giocatori</strong>
+${buildRatingsReportText()}
 
 <strong>Allenamento consigliato</strong>
 ${buildTrainingAdvice()}
@@ -1880,6 +2061,7 @@ function renderAll(){
     fillFormFromState();
     renderStatus();
     renderTimeline();
+    renderRatings();
     renderReport();
 }
 
