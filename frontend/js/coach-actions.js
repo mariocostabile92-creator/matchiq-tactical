@@ -1,0 +1,147 @@
+function createManualMatch(){
+    const homeTeam = getInputValue("homeTeamInput");
+    const awayTeam = getInputValue("awayTeamInput");
+
+    if(!homeTeam || !awayTeam){
+        showNotice("Inserisci squadra casa e squadra trasferta.", "warn");
+        return;
+    }
+
+    coachState.match = {
+        id: Date.now(),
+        homeTeam,
+        awayTeam,
+        category: getInputValue("categoryInput","Dilettanti"),
+        date: getInputValue("matchDateInput", todayISO()),
+        homeShape: getInputValue("homeShapeInput",""),
+        awayShape: getInputValue("awayShapeInput",""),
+        preNotes: getInputValue("preNotesInput","")
+    };
+
+    saveState();
+    renderAll();
+
+    showNotice("Partita Coach Mode creata/aggiornata.", "ok");
+}
+
+function clearCurrentMatch(){
+    if(!confirm("Vuoi resettare partita, eventi e report Coach Mode?")) return;
+
+    coachState = {
+        match: null,
+        events: [],
+        ratings: [],
+        report: ""
+    };
+
+    localStorage.removeItem(STORAGE_KEY);
+
+    setInputValue("homeTeamInput","");
+    setInputValue("awayTeamInput","");
+    setInputValue("categoryInput","Dilettanti");
+    setInputValue("matchDateInput",todayISO());
+    setInputValue("homeShapeInput","");
+    setInputValue("awayShapeInput","");
+    setInputValue("preNotesInput","");
+    setInputValue("eventMinuteInput","");
+    setInputValue("eventPlayerInput","");
+    setInputValue("eventNoteInput","");
+
+    renderAll();
+    showNotice("Partita resettata.", "ok");
+}
+
+function addQuickEvent(type,label,icon){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+
+    const minuteRaw = getInputValue("eventMinuteInput","");
+    const minute = minuteRaw === "" ? "--" : Math.max(0, Math.min(130, Number(minuteRaw) || 0));
+    const side = getInputValue("eventTeamInput","home");
+    const player = getInputValue("eventPlayerInput","");
+    const note = getInputValue("eventNoteInput","");
+
+    const event = {
+        id: Date.now() + Math.random(),
+        type,
+        label,
+        icon,
+        minute,
+        side,
+        team: getTeamName(side),
+        player,
+        note,
+        createdAt: new Date().toISOString()
+    };
+
+    coachState.events.unshift(event);
+
+    setInputValue("eventNoteInput","");
+    setInputValue("eventPlayerInput","");
+
+    saveState();
+    renderAll();
+
+    showNotice(`${label} registrato per ${event.team}.`, "ok", 2500);
+}
+
+function deleteEvent(eventId){
+    coachState.events = coachState.events.filter(e => String(e.id) !== String(eventId));
+    saveState();
+    renderAll();
+}
+
+function fillFormFromState(){
+    if(!coachState.match) return;
+
+    setInputValue("homeTeamInput", coachState.match.homeTeam);
+    setInputValue("awayTeamInput", coachState.match.awayTeam);
+    setInputValue("categoryInput", coachState.match.category || "Dilettanti");
+    setInputValue("matchDateInput", coachState.match.date || todayISO());
+    setInputValue("homeShapeInput", coachState.match.homeShape);
+    setInputValue("awayShapeInput", coachState.match.awayShape);
+    setInputValue("preNotesInput", coachState.match.preNotes);
+}
+
+function clearRatingForm(){
+    setInputValue("ratingPlayerInput","");
+    setInputValue("ratingNoteInput","");
+    setInputValue("ratingVoteInput","6");
+    setInputValue("ratingRoleInput","Portiere");
+    setInputValue("ratingTeamInput","home");
+}
+
+function addPlayerRating(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+    const player = getInputValue("ratingPlayerInput","");
+    const side = getInputValue("ratingTeamInput","home");
+    const role = getInputValue("ratingRoleInput","Jolly");
+    const vote = Number(getInputValue("ratingVoteInput","6"));
+    const note = getInputValue("ratingNoteInput","");
+    if(!player){
+        showNotice("Inserisci il nome del giocatore.", "warn");
+        return;
+    }
+    const rating = {id: Date.now() + Math.random(), player, side, team: getTeamName(side), role, vote: Number.isFinite(vote) ? vote : 6, note, createdAt: new Date().toISOString()};
+    coachState.ratings.unshift(rating);
+    saveState();
+    clearRatingForm();
+    renderAll();
+    showNotice(`Pagella aggiunta: ${player} (${rating.vote}).`, "ok", 2500);
+}
+
+function deleteRating(ratingId){
+    coachState.ratings = coachState.ratings.filter(r => String(r.id) !== String(ratingId));
+    saveState();
+    renderAll();
+}
+
+function getBestRating(){
+    if(!coachState.ratings.length) return null;
+    return [...coachState.ratings].sort((a,b) => Number(b.vote || 0) - Number(a.vote || 0))[0];
+}
