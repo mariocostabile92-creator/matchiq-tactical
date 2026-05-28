@@ -177,5 +177,9 @@ function goCoachUpgrade(){
 }
 
 function showCoachProNotice(feature){
-    showNotice(`${feature} è una funzione Pro. Vai su Account / Pro per sbloccarla.`, "warn", 6000);
+    showNotice(
+        `🔒 ${feature} è inclusa in MatchIQ Pro. Passa a Pro per sbloccarla in modo illimitato.`,
+        "warn",
+        7000
+    );
 }
