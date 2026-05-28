@@ -2,21 +2,55 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical - Account V8.1.2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>MatchIQ Tactical - Account V8.1.3</title>
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00f5a0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MatchIQ">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
 <style>
+:root{
+    --bg:#050811;
+    --panel:#0d1426;
+    --panel2:#101a31;
+    --line:rgba(255,255,255,.10);
+    --text:#ffffff;
+    --muted:#9fb2d8;
+    --soft:#c7d7f2;
+    --green:#18f08b;
+    --blue:#38a9ff;
+    --gold:#ffd166;
+    --orange:#ff8a18;
+    --red:#ff416c;
+}
+
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
 }
 
+html,body{
+    min-height:100%;
+    overflow-x:hidden;
+}
+
 body{
     font-family:Inter,Arial,sans-serif;
-    background:radial-gradient(circle at top,#152343,#070b16 55%,#03050b);
-    color:#fff;
-    min-height:100vh;
+    background:
+        radial-gradient(circle at 15% 0,rgba(24,240,139,.18),transparent 30%),
+        radial-gradient(circle at 85% 10%,rgba(56,169,255,.15),transparent 32%),
+        linear-gradient(180deg,#071226,#050811 65%,#03050b);
+    color:var(--text);
+}
+
+a{
+    color:inherit;
+    text-decoration:none;
 }
 
 .topbar{
@@ -24,36 +58,51 @@ body{
     justify-content:space-between;
     align-items:center;
     gap:18px;
-    padding:24px 34px;
-    background:rgba(9,15,32,.94);
-    border-bottom:1px solid rgba(255,255,255,.08);
+    padding:22px 34px;
+    background:rgba(6,10,20,.86);
+    border-bottom:1px solid var(--line);
     position:sticky;
     top:0;
     z-index:50;
-    backdrop-filter:blur(14px);
+    backdrop-filter:blur(16px);
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+}
+
+.brand img{
+    width:48px;
+    height:48px;
+    object-fit:contain;
+    border-radius:14px;
 }
 
 .logo{
-    font-size:28px;
+    font-size:27px;
     font-weight:1000;
+    letter-spacing:-.5px;
 }
 
 .subtitle{
     font-size:13px;
-    color:#8fa3d7;
+    color:var(--muted);
     margin-top:4px;
 }
 
 .actions{
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:10px;
     flex-wrap:wrap;
 }
 
 .btn{
     border:0;
-    border-radius:15px;
+    border-radius:16px;
     padding:13px 18px;
     color:white;
     font-weight:1000;
@@ -65,6 +114,8 @@ body{
     justify-content:center;
     gap:8px;
     transition:.18s ease;
+    min-height:46px;
+    text-align:center;
 }
 
 .btn:hover{
@@ -74,19 +125,26 @@ body{
 
 .btn.dark{
     background:rgba(255,255,255,.08);
+    border:1px solid var(--line);
 }
 
 .btn.green{
-    background:linear-gradient(135deg,#00c980,#2f6bff);
+    background:linear-gradient(135deg,var(--green),var(--blue));
+    color:#06111c;
 }
 
 .btn.gold{
-    background:linear-gradient(135deg,#f7b733,#fc4a1a);
+    background:linear-gradient(135deg,var(--gold),var(--orange));
     color:#06111c;
 }
 
 .btn.red{
-    background:linear-gradient(135deg,#ff4058,#8b1d35);
+    background:linear-gradient(135deg,var(--red),#8b1d35);
+}
+
+.btn.soft{
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--line);
 }
 
 .btn:disabled{
@@ -99,7 +157,7 @@ body{
 .main{
     max-width:1180px;
     margin:0 auto;
-    padding:34px;
+    padding:30px 28px 96px;
 }
 
 .notice{
@@ -116,7 +174,7 @@ body{
 }
 
 .notice.ok{
-    color:#00f5a0;
+    color:var(--green);
     background:rgba(0,245,160,.10);
     border:1px solid rgba(0,245,160,.25);
 }
@@ -128,21 +186,22 @@ body{
 }
 
 .notice.warn{
-    color:#ffe28a;
+    color:var(--gold);
     background:rgba(247,183,51,.10);
     border:1px solid rgba(247,183,51,.25);
 }
 
 .hero{
     display:grid;
-    grid-template-columns:1.25fr .75fr;
+    grid-template-columns:1.18fr .82fr;
     gap:22px;
     margin-bottom:22px;
 }
 
-.card{
-    background:rgba(255,255,255,.055);
-    border:1px solid rgba(255,255,255,.09);
+.card,
+.cta-panel{
+    background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+    border:1px solid var(--line);
     border-radius:30px;
     padding:28px;
     box-shadow:0 25px 80px rgba(0,0,0,.25);
@@ -166,40 +225,43 @@ body{
 .badge.pro{
     background:rgba(0,245,160,.14);
     border:1px solid rgba(0,245,160,.35);
-    color:#00f5a0;
+    color:var(--green);
 }
 
 .badge.owner{
     background:rgba(255,226,138,.16);
     border:1px solid rgba(255,226,138,.35);
-    color:#ffe28a;
+    color:var(--gold);
 }
 
-.badge.warn{
-    background:rgba(247,183,51,.14);
-    border:1px solid rgba(247,183,51,.35);
-    color:#ffe28a;
+.badge.guest{
+    background:rgba(56,169,255,.12);
+    border:1px solid rgba(56,169,255,.30);
+    color:#9fd7ff;
 }
 
 h1{
     font-size:42px;
+    line-height:1.02;
     margin-bottom:12px;
+    letter-spacing:-1.2px;
 }
 
 h2{
     font-size:24px;
     margin-bottom:16px;
+    letter-spacing:-.4px;
 }
 
 p{
-    color:#b7c7ef;
+    color:var(--soft);
     line-height:1.7;
 }
 
 .account-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-    gap:16px;
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:14px;
     margin-top:22px;
 }
 
@@ -212,7 +274,7 @@ p{
 
 .info-label{
     font-size:12px;
-    color:#8fa3d7;
+    color:var(--muted);
     font-weight:900;
     margin-bottom:8px;
 }
@@ -224,11 +286,11 @@ p{
 }
 
 .plan-value{
-    color:#ffe28a;
+    color:var(--gold);
 }
 
 .status-value{
-    color:#00f5a0;
+    color:var(--green);
 }
 
 .section{
@@ -254,7 +316,7 @@ p{
 }
 
 .row span:first-child{
-    color:#8fa3d7;
+    color:var(--muted);
     font-weight:900;
     font-size:13px;
 }
@@ -267,17 +329,29 @@ p{
 }
 
 .cta-panel{
-    background:linear-gradient(145deg,rgba(255,226,138,.12),rgba(47,107,255,.08));
+    background:linear-gradient(145deg,rgba(255,226,138,.13),rgba(47,107,255,.08));
     border:1px solid rgba(255,226,138,.25);
-    border-radius:28px;
-    padding:26px;
 }
 
 .cta-panel h2{
-    font-size:28px;
+    font-size:30px;
+    margin-bottom:10px;
 }
 
-.cta-panel ul{
+.price{
+    font-size:42px;
+    font-weight:1000;
+    margin:16px 0 6px;
+    color:#fff;
+}
+
+.price small{
+    font-size:15px;
+    color:var(--muted);
+}
+
+.cta-panel ul,
+.compare-list{
     list-style:none;
     display:grid;
     gap:10px;
@@ -294,33 +368,185 @@ p{
 }
 
 .loading{
-    color:#9fb2e7;
+    color:var(--muted);
     padding:20px 0;
     font-weight:900;
 }
 
 .small{
     font-size:12px;
-    color:#8fa3d7;
+    color:var(--muted);
     margin-top:12px;
 }
 
+.compare-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+
+.compare-card{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    padding:22px;
+}
+
+.compare-card.pro{
+    background:linear-gradient(145deg,rgba(0,245,160,.10),rgba(56,169,255,.06));
+    border-color:rgba(0,245,160,.25);
+}
+
+.compare-card h3{
+    font-size:22px;
+    margin-bottom:12px;
+}
+
+.compare-card p{
+    font-size:14px;
+}
+
+.owner-panel{
+    display:none;
+    background:linear-gradient(145deg,rgba(255,226,138,.12),rgba(139,92,246,.08));
+    border:1px solid rgba(255,226,138,.25);
+    border-radius:28px;
+    padding:26px;
+    margin-top:22px;
+}
+
+.owner-panel.show{
+    display:block;
+}
+
+.bottom-nav{
+    display:none;
+}
+
 @media(max-width:900px){
-    .hero{
-        grid-template-columns:1fr;
+    .topbar{
+        padding:16px 14px;
+        align-items:center;
     }
 
-    .topbar{
-        flex-direction:column;
-        align-items:flex-start;
+    .brand img{
+        width:42px;
+        height:42px;
+    }
+
+    .logo{
+        font-size:22px;
+    }
+
+    .subtitle{
+        font-size:12px;
     }
 
     .actions{
-        width:100%;
+        display:none;
+    }
+
+    .main{
+        padding:20px 14px 108px;
+        max-width:720px;
+    }
+
+    .hero{
+        grid-template-columns:1fr;
+        gap:14px;
+    }
+
+    .card,
+    .cta-panel{
+        border-radius:24px;
+        padding:20px;
+    }
+
+    h1{
+        font-size:34px;
+    }
+
+    h2{
+        font-size:22px;
+    }
+
+    .account-grid{
+        grid-template-columns:1fr;
+        gap:10px;
+    }
+
+    .footer-actions{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
     }
 
     .btn{
         width:100%;
+        min-height:52px;
+    }
+
+    .compare-grid{
+        grid-template-columns:1fr;
+    }
+
+    .row{
+        align-items:flex-start;
+        flex-direction:column;
+        gap:6px;
+    }
+
+    .row span:last-child{
+        text-align:left;
+    }
+
+    .bottom-nav{
+        position:fixed;
+        left:0;
+        right:0;
+        bottom:0;
+        background:rgba(6,10,20,.94);
+        backdrop-filter:blur(16px);
+        border-top:1px solid var(--line);
+        padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+        display:grid;
+        grid-template-columns:repeat(4,1fr);
+        gap:8px;
+        z-index:80;
+    }
+
+    .bottom-nav a{
+        color:white;
+        text-decoration:none;
+        text-align:center;
+        font-weight:900;
+        font-size:12px;
+        padding:11px 6px;
+        border-radius:14px;
+        background:rgba(255,255,255,.055);
+    }
+
+    .bottom-nav a.active{
+        background:linear-gradient(135deg,var(--green),var(--blue));
+        color:#06111c;
+    }
+}
+
+@media(max-width:380px){
+    .logo{
+        font-size:19px;
+    }
+
+    .brand{
+        gap:9px;
+    }
+
+    h1{
+        font-size:30px;
+    }
+
+    .price{
+        font-size:36px;
     }
 }
 </style>
@@ -329,15 +555,19 @@ p{
 <body>
 
 <div class="topbar">
-    <div>
-        <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">Account e abbonamento · V8.1.2</div>
+    <div class="brand">
+        <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
+        <div>
+            <div class="logo">MatchIQ</div>
+            <div class="subtitle">Account e piano Pro</div>
+        </div>
     </div>
 
     <div class="actions">
         <button class="btn dark" onclick="goDashboard()">Dashboard</button>
-        <button class="btn green" onclick="goScout()">Scout Pro</button>
-        <button class="btn red" id="logoutBtn" onclick="logout()">Logout</button>
+        <button class="btn green" onclick="goScout()">Scout</button>
+        <button class="btn soft" id="loginTopBtn" onclick="goLogin()">Login</button>
+        <button class="btn red" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
     </div>
 </div>
 
@@ -347,33 +577,37 @@ p{
 
     <div class="hero">
         <div class="card">
-            <span class="badge free" id="planBadge">CARICAMENTO</span>
+            <span class="badge guest" id="planBadge">CARICAMENTO</span>
 
-            <h1>Il tuo account</h1>
+            <h1 id="accountTitle">Il tuo account MatchIQ</h1>
 
             <p id="accountIntro">
-                Qui puoi controllare il tuo piano MatchIQ, lo stato dell’abbonamento e gestire il portale Stripe.
+                Qui puoi controllare il tuo piano, attivare Pro e gestire il tuo abbonamento.
             </p>
 
             <div class="account-grid">
                 <div class="info-box">
                     <div class="info-label">Email</div>
-                    <div class="info-value" id="emailValue">--</div>
+                    <div class="info-value" id="emailValue">Guest</div>
                 </div>
 
                 <div class="info-box">
                     <div class="info-label">Piano</div>
-                    <div class="info-value plan-value" id="planValue">--</div>
+                    <div class="info-value plan-value" id="planValue">GUEST</div>
                 </div>
 
                 <div class="info-box">
                     <div class="info-label">Stato</div>
-                    <div class="info-value status-value" id="statusValue">--</div>
+                    <div class="info-value status-value" id="statusValue">PREVIEW</div>
                 </div>
             </div>
 
             <div class="footer-actions">
-                <button class="btn green" id="portalBtn" onclick="openCustomerPortal()">
+                <button class="btn green" id="loginBtn" onclick="goLogin()">
+                    Accedi / Registrati
+                </button>
+
+                <button class="btn green" id="portalBtn" onclick="openCustomerPortal()" style="display:none">
                     Gestisci abbonamento
                 </button>
 
@@ -393,9 +627,13 @@ p{
 
         <div class="cta-panel" id="ctaPanel">
             <h2>MatchIQ Pro</h2>
-            <p>Sblocca le funzioni avanzate per usare MatchIQ come piattaforma di football intelligence.</p>
+            <p>Sblocca tutte le partite, Scout Mode completo, watchlist ed export report.</p>
+
+            <div class="price">9,99€ <small>/ mese</small></div>
+            <p class="small">Oppure 79,99€ / anno.</p>
 
             <ul>
+                <li>✅ Tutte le partite live</li>
                 <li>✅ Scout Mode completo</li>
                 <li>✅ Player cards complete</li>
                 <li>✅ Watchlist</li>
@@ -404,8 +642,54 @@ p{
             </ul>
 
             <div class="footer-actions">
-                <button class="btn gold" onclick="startCheckout('pro_monthly')">9,99€ / mese</button>
-                <button class="btn gold" onclick="startCheckout('pro_yearly')">79,99€ / anno</button>
+                <button class="btn gold" onclick="startCheckout('pro_monthly')">Attiva mensile</button>
+                <button class="btn gold" onclick="startCheckout('pro_yearly')">Attiva annuale</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="owner-panel" id="ownerPanel">
+        <span class="badge owner">OWNER CONTROL</span>
+        <h2>Accesso owner attivo</h2>
+        <p>
+            Hai accesso completo a MatchIQ: Scout Pro, tutte le partite, export,
+            admin users e analytics.
+        </p>
+
+        <div class="footer-actions">
+            <button class="btn green" onclick="goScout()">Apri Scout</button>
+            <button class="btn dark" onclick="goDashboard()">Dashboard</button>
+            <button class="btn dark" onclick="window.location.href='/admin-users.html'">Admin Users</button>
+            <button class="btn dark" onclick="window.location.href='/admin-analytics.html'">Analytics</button>
+        </div>
+    </div>
+
+    <div class="card section">
+        <h2>Free vs Pro</h2>
+
+        <div class="compare-grid">
+            <div class="compare-card">
+                <h3>Piano Free</h3>
+                <p>Ideale per provare MatchIQ e capire il valore della piattaforma.</p>
+                <ul class="compare-list">
+                    <li>✅ Preview partite live</li>
+                    <li>✅ Accesso base alla dashboard</li>
+                    <li>✅ Scout preview</li>
+                    <li>🔒 Limite partite live</li>
+                    <li>🔒 Export bloccato</li>
+                </ul>
+            </div>
+
+            <div class="compare-card pro">
+                <h3>Piano Pro</h3>
+                <p>Per usare MatchIQ come vera piattaforma di football intelligence.</p>
+                <ul class="compare-list">
+                    <li>✅ Tutte le partite live</li>
+                    <li>✅ Scout Mode completo</li>
+                    <li>✅ Player cards complete</li>
+                    <li>✅ Watchlist</li>
+                    <li>✅ Export report</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -420,16 +704,24 @@ p{
 
 </div>
 
+<nav class="bottom-nav">
+    <a href="/mobile.html">Home</a>
+    <a href="/scout.html">Scout</a>
+    <a class="active" href="/account.html">Pro</a>
+    <a href="/account.html">Account</a>
+</nav>
+
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10051";
+const APP_VERSION = "10058";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
     email: "",
     plan: "guest",
     is_owner: false,
-    subscription: null
+    subscription: null,
+    logged: false
 };
 
 function getAuthToken(){
@@ -466,7 +758,7 @@ function saveLocalUser(user){
 }
 
 function normalizePlan(plan){
-    return String(plan || "free").toLowerCase().trim();
+    return String(plan || "guest").toLowerCase().trim();
 }
 
 function isProLike(plan){
@@ -475,6 +767,10 @@ function isProLike(plan){
 
 function isOwnerEmail(email){
     return String(email || "").toLowerCase().trim() === OWNER_EMAIL;
+}
+
+function isMobileDevice(){
+    return window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
 }
 
 function showNotice(message,type="ok",timeout=7000){
@@ -492,7 +788,9 @@ function showNotice(message,type="ok",timeout=7000){
 }
 
 function goDashboard(){
-    window.location.href = `/index.html?v=${APP_VERSION}`;
+    window.location.href = isMobileDevice()
+        ? `/mobile.html?v=${APP_VERSION}`
+        : `/index.html?v=${APP_VERSION}`;
 }
 
 function goScout(){
@@ -513,7 +811,9 @@ function logout(){
     sessionStorage.removeItem("matchiq_user");
     sessionStorage.removeItem("matchiq_auth_token");
 
-    window.location.href = `/index.html?v=${APP_VERSION}`;
+    window.location.href = isMobileDevice()
+        ? `/mobile.html?v=${APP_VERSION}`
+        : `/index.html?v=${APP_VERSION}`;
 }
 
 function formatDate(value){
@@ -544,9 +844,29 @@ function getSubscriptionField(subscription, keys, fallback="--"){
     return fallback;
 }
 
+function getDisplayEmail(){
+    const localUser = getLocalUser();
+    return (
+        accountState.email ||
+        localUser?.email ||
+        localStorage.getItem("matchiq_user_email") ||
+        ""
+    );
+}
+
 function renderAccount(){
-    const email = accountState.email || getLocalUser()?.email || "Utente";
-    const plan = normalizePlan(accountState.plan);
+    const token = getAuthToken();
+    const localUser = getLocalUser();
+    const email = getDisplayEmail();
+    const logged = Boolean(token);
+    const rawPlan =
+        accountState.plan ||
+        localUser?.plan ||
+        localUser?.piano ||
+        localStorage.getItem("matchiq_user_plan") ||
+        "guest";
+
+    const plan = normalizePlan(rawPlan);
     const isOwner = accountState.is_owner || isOwnerEmail(email);
     const isPro = isOwner || isProLike(plan);
 
@@ -555,34 +875,63 @@ function renderAccount(){
     const planValue = document.getElementById("planValue");
     const statusValue = document.getElementById("statusValue");
     const accountIntro = document.getElementById("accountIntro");
+    const accountTitle = document.getElementById("accountTitle");
     const portalBtn = document.getElementById("portalBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginTopBtn = document.getElementById("loginTopBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
     const upgradeMonthlyBtn = document.getElementById("upgradeMonthlyBtn");
     const upgradeYearlyBtn = document.getElementById("upgradeYearlyBtn");
     const ctaPanel = document.getElementById("ctaPanel");
     const smallNote = document.getElementById("smallNote");
+    const ownerPanel = document.getElementById("ownerPanel");
 
-    if(emailValue) emailValue.textContent = email;
-    if(planValue) planValue.textContent = isOwner ? "OWNER PRO" : plan.toUpperCase();
+    if(emailValue) emailValue.textContent = logged ? (email || "Utente") : "Guest";
+    if(planValue) planValue.textContent = isOwner ? "OWNER PRO" : logged ? plan.toUpperCase() : "GUEST";
 
     if(statusValue){
-        statusValue.textContent = isPro ? "ATTIVO" : "FREE";
+        statusValue.textContent = isOwner ? "COMPLETO" : isPro ? "ATTIVO" : logged ? "FREE" : "PREVIEW";
     }
 
     if(planBadge){
-        planBadge.className = isOwner ? "badge owner" : isPro ? "badge pro" : "badge free";
-        planBadge.textContent = isOwner ? "OWNER PRO" : isPro ? "PIANO PRO ATTIVO" : "PIANO FREE";
+        planBadge.className = isOwner ? "badge owner" : isPro ? "badge pro" : logged ? "badge free" : "badge guest";
+        planBadge.textContent = isOwner ? "OWNER PRO" : isPro ? "PIANO PRO ATTIVO" : logged ? "PIANO FREE" : "GUEST PREVIEW";
+    }
+
+    if(accountTitle){
+        accountTitle.textContent = isOwner
+            ? "Owner Pro attivo"
+            : isPro
+                ? "Piano Pro attivo"
+                : logged
+                    ? "Passa a MatchIQ Pro"
+                    : "Accedi e sblocca MatchIQ";
     }
 
     if(accountIntro){
         accountIntro.textContent = isOwner
-            ? "Account owner attivo: hai già accesso completo a MatchIQ Pro."
+            ? "Hai accesso completo a MatchIQ: Scout, tutte le partite, export, admin e analytics."
             : isPro
                 ? "Il tuo piano Pro è attivo. Puoi gestire abbonamento, metodo di pagamento e fatture tramite Stripe."
-                : "Il tuo account è Free. Puoi passare a Pro per sbloccare Scout completo, watchlist ed export report.";
+                : logged
+                    ? "Il tuo account è Free. Puoi passare a Pro per sbloccare tutte le partite, Scout completo, watchlist ed export report."
+                    : "Stai usando MatchIQ come Guest. Accedi o registrati per salvare il piano e attivare Pro.";
     }
 
     if(portalBtn){
-        portalBtn.style.display = isPro && !isOwner ? "inline-flex" : "none";
+        portalBtn.style.display = isPro && !isOwner && logged ? "inline-flex" : "none";
+    }
+
+    if(loginBtn){
+        loginBtn.style.display = logged ? "none" : "inline-flex";
+    }
+
+    if(loginTopBtn){
+        loginTopBtn.style.display = logged ? "none" : "inline-flex";
+    }
+
+    if(logoutBtn){
+        logoutBtn.style.display = logged ? "inline-flex" : "none";
     }
 
     if(upgradeMonthlyBtn){
@@ -597,12 +946,18 @@ function renderAccount(){
         ctaPanel.style.display = isPro ? "none" : "block";
     }
 
+    if(ownerPanel){
+        ownerPanel.className = isOwner ? "owner-panel show" : "owner-panel";
+    }
+
     if(smallNote){
         smallNote.textContent = isOwner
             ? "Account owner: nessun abbonamento Stripe da gestire."
             : isPro
                 ? "Puoi gestire abbonamento, carta e fatture dal portale Stripe."
-                : "I pagamenti e la gestione dell’abbonamento sono gestiti in sicurezza tramite Stripe.";
+                : logged
+                    ? "I pagamenti e la gestione dell’abbonamento sono gestiti in sicurezza tramite Stripe."
+                    : "Per attivare Pro devi prima accedere o registrarti.";
     }
 
     renderSubscription();
@@ -612,10 +967,30 @@ function renderSubscription(){
     const box = document.getElementById("subscriptionContent");
     if(!box) return;
 
-    const email = accountState.email || getLocalUser()?.email || "";
-    const plan = normalizePlan(accountState.plan);
+    const token = getAuthToken();
+    const email = getDisplayEmail();
+    const logged = Boolean(token);
+    const plan = normalizePlan(accountState.plan || localStorage.getItem("matchiq_user_plan") || "guest");
     const isOwner = accountState.is_owner || isOwnerEmail(email);
     const subscription = accountState.subscription;
+
+    if(!logged){
+        box.innerHTML = `
+            <div class="row">
+                <span>Accesso</span>
+                <span>Guest</span>
+            </div>
+            <div class="row">
+                <span>Account</span>
+                <span>Accedi o registrati per gestire il piano</span>
+            </div>
+            <div class="row">
+                <span>Upgrade Pro</span>
+                <span>Disponibile dopo login</span>
+            </div>
+        `;
+        return;
+    }
 
     if(isOwner){
         box.innerHTML = `
@@ -693,8 +1068,15 @@ async function loadSubscription(){
     const token = getAuthToken();
 
     if(!token){
-        showNotice("Devi effettuare il login per accedere alla pagina account.", "warn", 3000);
-        setTimeout(goLogin, 900);
+        accountState = {
+            email:"",
+            plan:"guest",
+            is_owner:false,
+            subscription:null,
+            logged:false
+        };
+
+        renderAccount();
         return;
     }
 
@@ -718,7 +1100,8 @@ async function loadSubscription(){
             email: data.email || localUser.email || localStorage.getItem("matchiq_user_email") || "",
             plan: data.plan || localUser.plan || localStorage.getItem("matchiq_user_plan") || "free",
             is_owner: Boolean(data.is_owner),
-            subscription: data.subscription || null
+            subscription: data.subscription || null,
+            logged:true
         };
 
         localUser.email = accountState.email || localUser.email;
@@ -735,7 +1118,6 @@ async function loadSubscription(){
 
     }catch(e){
         console.error(e);
-        showNotice("Errore account: " + e.message, "err", 9000);
 
         const localUser = getLocalUser();
 
@@ -743,10 +1125,12 @@ async function loadSubscription(){
             email: localUser?.email || localStorage.getItem("matchiq_user_email") || "",
             plan: localUser?.plan || localStorage.getItem("matchiq_user_plan") || "free",
             is_owner: isOwnerEmail(localUser?.email),
-            subscription: null
+            subscription: null,
+            logged:true
         };
 
         renderAccount();
+        showNotice("Account caricato in modalità locale. Server account non disponibile: " + e.message, "warn", 9000);
     }
 }
 
@@ -873,6 +1257,13 @@ async function startCheckout(plan="pro_monthly"){
 
 renderAccount();
 loadSubscription();
+
+if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js")
+            .catch(err => console.warn("Service Worker non registrato:", err));
+    });
+}
 </script>
 
 </body>
