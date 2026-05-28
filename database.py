@@ -158,6 +158,18 @@ def init_db():
                 updated_at TEXT NOT NULL
             )
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT UNIQUE NOT NULL,
+                expires_at TEXT NOT NULL,
+                used INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                used_at TEXT,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
 
         cur.execute("""
             ALTER TABLE users
@@ -318,6 +330,19 @@ def init_db():
             )
         """)
 
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT UNIQUE NOT NULL,
+                expires_at TEXT NOT NULL,
+                used INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                used_at TEXT,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_api_usage_user_feature_date
         ON api_usage(user_id, feature, usage_date)
@@ -341,6 +366,21 @@ def init_db():
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_subscriptions_provider_subscription
         ON subscriptions(provider_subscription_id)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user
+        ON password_reset_tokens(user_id)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_hash
+        ON password_reset_tokens(token_hash)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires
+        ON password_reset_tokens(expires_at)
     """)
 
     conn.commit()
@@ -1149,4 +1189,116 @@ def cancel_subscription(user_id: int):
     conn.commit()
     conn.close()
     update_user_plan(user_id, "free")
+    return True
+
+
+
+# =========================================================
+# PASSWORD RESET
+# =========================================================
+
+def create_password_reset_token(user_id: int, token_hash: str, expires_at: str):
+    """
+    Salva un token di reset password già hashato.
+    Per sicurezza invalidiamo prima eventuali token precedenti non usati.
+    """
+    now = utc_now()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(q("""
+        UPDATE password_reset_tokens
+        SET used = 1, used_at = ?
+        WHERE user_id = ? AND used = 0
+    """), (now, user_id))
+
+    if USE_POSTGRES:
+        cur.execute("""
+            INSERT INTO password_reset_tokens (
+                user_id,
+                token_hash,
+                expires_at,
+                used,
+                created_at,
+                used_at
+            )
+            VALUES (%s, %s, %s, 0, %s, NULL)
+            RETURNING id
+        """, (user_id, token_hash, expires_at, now))
+        token_id = get_last_insert_id(cur)
+    else:
+        cur.execute("""
+            INSERT INTO password_reset_tokens (
+                user_id,
+                token_hash,
+                expires_at,
+                used,
+                created_at,
+                used_at
+            )
+            VALUES (?, ?, ?, 0, ?, NULL)
+        """, (user_id, token_hash, expires_at, now))
+        token_id = cur.lastrowid
+
+    conn.commit()
+    conn.close()
+    return token_id
+
+
+def get_valid_password_reset_token(token_hash: str):
+    """
+    Recupera un token reset non usato.
+    Il controllo scadenza preciso lo facciamo lato auth.py.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(q("""
+        SELECT
+            prt.*,
+            u.email,
+            u.is_active
+        FROM password_reset_tokens prt
+        JOIN users u ON u.id = prt.user_id
+        WHERE prt.token_hash = ?
+          AND prt.used = 0
+        LIMIT 1
+    """), (token_hash,))
+
+    row = fetchone(cur)
+    conn.close()
+    return row
+
+
+def mark_password_reset_token_used(token_id: int):
+    now = utc_now()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(q("""
+        UPDATE password_reset_tokens
+        SET used = 1,
+            used_at = ?
+        WHERE id = ?
+    """), (now, token_id))
+
+    conn.commit()
+    conn.close()
+    return True
+
+
+def update_user_password(user_id: int, password_hash: str):
+    now = utc_now()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(q("""
+        UPDATE users
+        SET password_hash = ?,
+            updated_at = ?
+        WHERE id = ?
+    """), (password_hash, now, user_id))
+
+    conn.commit()
+    conn.close()
     return True
