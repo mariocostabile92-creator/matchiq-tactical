@@ -480,7 +480,35 @@ def get_admin_analytics():
         "estimated_mrr": 0.0,
         "plans": [],
         "beta_by_status": [],
+        "coach": {
+            "today_total": 0,
+            "last_7_days_total": 0,
+            "active_users_today": 0,
+            "active_users_last_7_days": 0,
+            "reports_today": 0,
+            "pdf_today": 0,
+            "whatsapp_today": 0,
+            "pagelle_today": 0,
+            "history_today": 0,
+            "features_today": [],
+            "features_last_7_days": [],
+            "top_users_today": [],
+            "top_users_last_7_days": [],
+            "free_users_near_limit": 0,
+        },
+        "usage_by_feature_today": [],
+        "usage_by_feature_last_7_days": [],
     }
+
+    coach_features = [
+        "coach",
+        "coach_report",
+        "coach_pdf",
+        "coach_whatsapp",
+        "coach_pagelle",
+        "coach_history",
+        "coach_storico",
+    ]
 
     try:
         cur.execute("SELECT COUNT(*) AS total FROM users")
@@ -508,10 +536,179 @@ def get_admin_analytics():
         cur.execute(q("SELECT COALESCE(SUM(count),0) AS total FROM api_usage WHERE usage_date = ?"), (today_key(),))
         data["usage_today"] = int((fetchone(cur) or {}).get("total") or 0)
 
-        # Stima MRR: 9.99 per utente pro/scout con subscription attiva o plan pro/scout. Owner escluso.
         cur.execute("SELECT COUNT(*) AS total FROM users WHERE LOWER(COALESCE(plan,'free')) IN ('pro','scout')")
         paid_users = int((fetchone(cur) or {}).get("total") or 0)
         data["estimated_mrr"] = round(paid_users * 9.99, 2)
+
+        cur.execute(q("""
+            SELECT feature, COALESCE(SUM(count),0) AS total
+            FROM api_usage
+            WHERE usage_date = ?
+            GROUP BY feature
+            ORDER BY total DESC
+        """), (today_key(),))
+        data["usage_by_feature_today"] = fetchall(cur)
+
+        if USE_POSTGRES:
+            cur.execute("""
+                SELECT feature, COALESCE(SUM(count),0) AS total
+                FROM api_usage
+                WHERE usage_date::date >= CURRENT_DATE - INTERVAL '7 days'
+                GROUP BY feature
+                ORDER BY total DESC
+            """)
+        else:
+            cur.execute("""
+                SELECT feature, COALESCE(SUM(count),0) AS total
+                FROM api_usage
+                WHERE date(usage_date) >= date('now','-7 days')
+                GROUP BY feature
+                ORDER BY total DESC
+            """)
+        data["usage_by_feature_last_7_days"] = fetchall(cur)
+
+        placeholders = ",".join(["?"] * len(coach_features))
+
+        cur.execute(q(f"""
+            SELECT COALESCE(SUM(count),0) AS total
+            FROM api_usage
+            WHERE usage_date = ? AND feature IN ({placeholders})
+        """), [today_key(), *coach_features])
+        data["coach"]["today_total"] = int((fetchone(cur) or {}).get("total") or 0)
+
+        if USE_POSTGRES:
+            cur.execute(f"""
+                SELECT COALESCE(SUM(count),0) AS total
+                FROM api_usage
+                WHERE usage_date::date >= CURRENT_DATE - INTERVAL '7 days'
+                  AND feature IN ({','.join(['%s'] * len(coach_features))})
+            """, coach_features)
+        else:
+            cur.execute(f"""
+                SELECT COALESCE(SUM(count),0) AS total
+                FROM api_usage
+                WHERE date(usage_date) >= date('now','-7 days')
+                  AND feature IN ({placeholders})
+            """, coach_features)
+        data["coach"]["last_7_days_total"] = int((fetchone(cur) or {}).get("total") or 0)
+
+        cur.execute(q(f"""
+            SELECT COUNT(DISTINCT user_id) AS total
+            FROM api_usage
+            WHERE usage_date = ? AND feature IN ({placeholders}) AND user_id IS NOT NULL
+        """), [today_key(), *coach_features])
+        data["coach"]["active_users_today"] = int((fetchone(cur) or {}).get("total") or 0)
+
+        if USE_POSTGRES:
+            cur.execute(f"""
+                SELECT COUNT(DISTINCT user_id) AS total
+                FROM api_usage
+                WHERE usage_date::date >= CURRENT_DATE - INTERVAL '7 days'
+                  AND feature IN ({','.join(['%s'] * len(coach_features))})
+                  AND user_id IS NOT NULL
+            """, coach_features)
+        else:
+            cur.execute(f"""
+                SELECT COUNT(DISTINCT user_id) AS total
+                FROM api_usage
+                WHERE date(usage_date) >= date('now','-7 days')
+                  AND feature IN ({placeholders})
+                  AND user_id IS NOT NULL
+            """, coach_features)
+        data["coach"]["active_users_last_7_days"] = int((fetchone(cur) or {}).get("total") or 0)
+
+        def feature_today(feature_name):
+            cur.execute(q("""
+                SELECT COALESCE(SUM(count),0) AS total
+                FROM api_usage
+                WHERE usage_date = ? AND feature = ?
+            """), (today_key(), feature_name))
+            return int((fetchone(cur) or {}).get("total") or 0)
+
+        data["coach"]["reports_today"] = feature_today("coach_report") + feature_today("coach")
+        data["coach"]["pdf_today"] = feature_today("coach_pdf")
+        data["coach"]["whatsapp_today"] = feature_today("coach_whatsapp")
+        data["coach"]["pagelle_today"] = feature_today("coach_pagelle")
+        data["coach"]["history_today"] = feature_today("coach_history") + feature_today("coach_storico")
+
+        cur.execute(q(f"""
+            SELECT feature, COALESCE(SUM(count),0) AS total
+            FROM api_usage
+            WHERE usage_date = ? AND feature IN ({placeholders})
+            GROUP BY feature
+            ORDER BY total DESC
+        """), [today_key(), *coach_features])
+        data["coach"]["features_today"] = fetchall(cur)
+
+        if USE_POSTGRES:
+            cur.execute(f"""
+                SELECT feature, COALESCE(SUM(count),0) AS total
+                FROM api_usage
+                WHERE usage_date::date >= CURRENT_DATE - INTERVAL '7 days'
+                  AND feature IN ({','.join(['%s'] * len(coach_features))})
+                GROUP BY feature
+                ORDER BY total DESC
+            """, coach_features)
+        else:
+            cur.execute(f"""
+                SELECT feature, COALESCE(SUM(count),0) AS total
+                FROM api_usage
+                WHERE date(usage_date) >= date('now','-7 days')
+                  AND feature IN ({placeholders})
+                GROUP BY feature
+                ORDER BY total DESC
+            """, coach_features)
+        data["coach"]["features_last_7_days"] = fetchall(cur)
+
+        cur.execute(q(f"""
+            SELECT u.email, LOWER(COALESCE(u.plan,'free')) AS plan, COALESCE(SUM(a.count),0) AS total
+            FROM api_usage a
+            LEFT JOIN users u ON u.id = a.user_id
+            WHERE a.usage_date = ? AND a.feature IN ({placeholders})
+            GROUP BY u.email, LOWER(COALESCE(u.plan,'free'))
+            ORDER BY total DESC
+            LIMIT 8
+        """), [today_key(), *coach_features])
+        data["coach"]["top_users_today"] = fetchall(cur)
+
+        if USE_POSTGRES:
+            cur.execute(f"""
+                SELECT u.email, LOWER(COALESCE(u.plan,'free')) AS plan, COALESCE(SUM(a.count),0) AS total
+                FROM api_usage a
+                LEFT JOIN users u ON u.id = a.user_id
+                WHERE a.usage_date::date >= CURRENT_DATE - INTERVAL '7 days'
+                  AND a.feature IN ({','.join(['%s'] * len(coach_features))})
+                GROUP BY u.email, LOWER(COALESCE(u.plan,'free'))
+                ORDER BY total DESC
+                LIMIT 8
+            """, coach_features)
+        else:
+            cur.execute(f"""
+                SELECT u.email, LOWER(COALESCE(u.plan,'free')) AS plan, COALESCE(SUM(a.count),0) AS total
+                FROM api_usage a
+                LEFT JOIN users u ON u.id = a.user_id
+                WHERE date(a.usage_date) >= date('now','-7 days')
+                  AND a.feature IN ({placeholders})
+                GROUP BY u.email, LOWER(COALESCE(u.plan,'free'))
+                ORDER BY total DESC
+                LIMIT 8
+            """, coach_features)
+        data["coach"]["top_users_last_7_days"] = fetchall(cur)
+
+        cur.execute(q("""
+            SELECT COUNT(*) AS total
+            FROM (
+                SELECT u.id, COALESCE(SUM(a.count),0) AS total_usage
+                FROM users u
+                LEFT JOIN api_usage a ON a.user_id = u.id
+                    AND a.usage_date = ?
+                    AND a.feature IN ('coach_pdf','coach_whatsapp','coach_pagelle','coach_history','coach_storico')
+                WHERE LOWER(COALESCE(u.plan,'free')) = 'free'
+                GROUP BY u.id
+                HAVING COALESCE(SUM(a.count),0) >= 1
+            ) t
+        """), (today_key(),))
+        data["coach"]["free_users_near_limit"] = int((fetchone(cur) or {}).get("total") or 0)
 
         try:
             cur.execute("SELECT COUNT(*) AS total FROM beta_requests")
