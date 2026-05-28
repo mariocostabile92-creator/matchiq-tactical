@@ -1,6 +1,7 @@
 /*
     MatchIQ - Match Render Blocks Module
     Blocchi di rendering UI per card, sezioni, grafici e pannelli della pagina match.
+    Copy polish: testi più puliti, meno tecnici, più italiani.
 */
 
 function renderLiveFlowVisual(flow){
@@ -9,17 +10,17 @@ function renderLiveFlowVisual(flow){
         <div class="live-flow-inner">
             <div class="match-status-row">
                 <div class="status-main">
-                    <div class="status-kicker">LIVE MATCH STATUS</div>
+                    <div class="status-kicker">STATO LIVE PARTITA</div>
                     <div class="status-title">${flow.status}</div>
                     <div class="status-subtitle">${flow.subtitle}</div>
                 </div>
                 <div class="status-chip">
-                    <div class="status-chip-label">DOMINANT FLOW</div>
+                    <div class="status-chip-label">FLUSSO DOMINANTE</div>
                     <div class="status-chip-value">${flow.dominant}</div>
-                    <div class="status-chip-small">pressione, danger e momentum</div>
+                    <div class="status-chip-small">pressione, pericolo e momentum</div>
                 </div>
                 <div class="status-chip">
-                    <div class="status-chip-label">MATCH CHAOS</div>
+                    <div class="status-chip-label">INTENSITÀ MATCH</div>
                     <div class="status-chip-value">${Math.round(flow.chaosIndex)}</div>
                     <div class="status-chip-small">${flow.chaosLabel}</div>
                 </div>
@@ -27,7 +28,7 @@ function renderLiveFlowVisual(flow){
 
             <div class="chaos-wrapper">
                 <div class="chaos-top">
-                    <div class="chaos-label">CHAOS INDEX VISIVO</div>
+                    <div class="chaos-label">INDICE INTENSITÀ</div>
                     <div class="chaos-value">${Math.round(flow.chaosIndex)} / 100</div>
                 </div>
                 <div class="chaos-track">
@@ -44,7 +45,7 @@ function renderLiveFlowVisual(flow){
             </div>
 
             <div class="story-box">
-                <div class="story-title">LIVE STORYTELLING AI</div>
+                <div class="story-title">LETTURA LIVE</div>
                 <div class="story-text">${flow.story}</div>
             </div>
         </div>
@@ -55,37 +56,37 @@ function renderPsychologicalEngine(flow,home,away){
     return`
     <div class="psych-grid">
         <div class="psych-card">
-            <div class="psych-label">${home} CONFIDENCE</div>
+            <div class="psych-label">FIDUCIA ${home}</div>
             <div class="psych-value">${Math.round(flow.confidenceHome)}%</div>
             <div class="psych-bar"><div class="psych-fill" style="width:${flow.confidenceHome}%"></div></div>
         </div>
 
         <div class="psych-card">
-            <div class="psych-label">${away} CONFIDENCE</div>
+            <div class="psych-label">FIDUCIA ${away}</div>
             <div class="psych-value">${Math.round(flow.confidenceAway)}%</div>
             <div class="psych-bar"><div class="psych-fill" style="width:${flow.confidenceAway}%"></div></div>
         </div>
 
         <div class="psych-card">
-            <div class="psych-label">${home} PANIC LEVEL</div>
+            <div class="psych-label">STRESS ${home}</div>
             <div class="psych-value">${Math.round(flow.panicHome)}%</div>
             <div class="psych-bar"><div class="psych-fill danger" style="width:${flow.panicHome}%"></div></div>
         </div>
 
         <div class="psych-card">
-            <div class="psych-label">${away} PANIC LEVEL</div>
+            <div class="psych-label">STRESS ${away}</div>
             <div class="psych-value">${Math.round(flow.panicAway)}%</div>
             <div class="psych-bar"><div class="psych-fill danger" style="width:${flow.panicAway}%"></div></div>
         </div>
 
         <div class="psych-card">
-            <div class="psych-label">FATIGUE PRESSURE</div>
+            <div class="psych-label">PRESSIONE FISICA</div>
             <div class="psych-value">${Math.round(flow.fatiguePressure)}%</div>
             <div class="psych-bar"><div class="psych-fill danger" style="width:${flow.fatiguePressure}%"></div></div>
         </div>
 
         <div class="psych-card">
-            <div class="psych-label">EMOTIONAL CONTROL</div>
+            <div class="psych-label">CONTROLLO EMOTIVO</div>
             <div class="psych-value">${Math.round(flow.emotionalControl)}%</div>
             <div class="psych-bar"><div class="psych-fill" style="width:${flow.emotionalControl}%"></div></div>
         </div>
@@ -96,38 +97,38 @@ function renderMatchSimulation(sim){
     return`
     <div class="simulation-grid">
         <div class="sim-card">
-            <div class="sim-label">NEXT 5 MIN ATTACK</div>
+            <div class="sim-label">PROSSIMO ATTACCO</div>
             <div class="sim-value">${sim.attackingTeam}</div>
             <div class="sim-desc">Squadra più probabile a generare pressione offensiva.</div>
         </div>
 
         <div class="sim-card">
-            <div class="sim-label">SHOT PROBABILITY</div>
+            <div class="sim-label">PROBABILITÀ TIRO</div>
             <div class="sim-value">${Math.round(sim.shotProbability)}%</div>
             <div class="sim-bar"><div class="sim-fill" style="width:${sim.shotProbability}%"></div></div>
         </div>
 
         <div class="sim-card">
-            <div class="sim-label">GOAL PROBABILITY</div>
+            <div class="sim-label">PROBABILITÀ GOL</div>
             <div class="sim-value">${Math.round(sim.goalProbability)}%</div>
             <div class="sim-bar"><div class="sim-fill danger" style="width:${sim.goalProbability}%"></div></div>
         </div>
 
         <div class="sim-card">
-            <div class="sim-label">PRESSURE WAVE</div>
+            <div class="sim-label">ONDA DI PRESSIONE</div>
             <div class="sim-value">${Math.round(sim.pressureWave)}%</div>
             <div class="sim-bar"><div class="sim-fill" style="width:${sim.pressureWave}%"></div></div>
         </div>
 
         <div class="sim-card">
-            <div class="sim-label">COLLAPSE RISK</div>
+            <div class="sim-label">RISCHIO CROLLO</div>
             <div class="sim-value">${Math.round(sim.collapseRisk)}%</div>
             <div class="sim-bar"><div class="sim-fill danger" style="width:${sim.collapseRisk}%"></div></div>
         </div>
 
         <div class="sim-card sim-main-card">
-            <div class="sim-label">AI SCENARIO</div>
-            <div class="sim-value">Next 5 Minutes</div>
+            <div class="sim-label">SCENARIO</div>
+            <div class="sim-value">Prossimi 5 minuti</div>
             <div class="sim-desc">${sim.scenario}</div>
         </div>
     </div>`;
@@ -137,7 +138,7 @@ function renderTacticalIdentity(identity){
     const card=(id)=>`
     <div class="identity-card">
         <div class="identity-team">${id.teamName}</div>
-        <div class="identity-label">TACTICAL IDENTITY</div>
+        <div class="identity-label">IDENTITÀ TATTICA</div>
         <div class="identity-value">${id.icon} ${id.style}</div>
         <div class="identity-desc">${id.desc}</div>
         <div class="identity-bar">
@@ -151,15 +152,15 @@ function renderTacticalIdentity(identity){
     return`
     <div class="identity-grid">
         <div class="identity-card identity-card-main">
-            <div class="identity-label">MATCH TACTICAL DNA</div>
+            <div class="identity-label">DNA TATTICO PARTITA</div>
             <div class="identity-value">${identity.matchDNA}</div>
             <div class="identity-desc">
-                Identità live calcolata da pressione, danger, momentum, panic, confidence e xG già presenti nella pagina.
+                Identità live calcolata da pressione, pericolo, momentum, stress, fiducia e xG già presenti nella pagina.
             </div>
             <div class="identity-tags">
-                <span class="identity-tag">ZERO NEW API</span>
-                <span class="identity-tag">LIVE INTERPRETATION</span>
-                <span class="identity-tag">TACTICAL AI</span>
+                <span class="identity-tag">DATI LIVE</span>
+                <span class="identity-tag">LETTURA TATTICA</span>
+                <span class="identity-tag">MATCHIQ</span>
             </div>
         </div>
         ${card(identity.homeId)}
@@ -171,49 +172,48 @@ function renderAttackPrediction(a){
     return`
     <div class="attack-wrapper">
         <div class="attack-map">
-            <div class="attack-zone zone-left ${a.lane==="left"?"active":""}">LEFT SIDE<br>Fascia sinistra</div>
-            <div class="attack-zone zone-center ${a.lane==="center"?"active":""}">CENTRAL<br>Zona centrale</div>
-            <div class="attack-zone zone-right ${a.lane==="right"?"active":""}">RIGHT SIDE<br>Fascia destra</div>
+            <div class="attack-zone zone-left ${a.lane==="left"?"active":""}">FASCIA SINISTRA<br>Zona laterale</div>
+            <div class="attack-zone zone-center ${a.lane==="center"?"active":""}">ZONA CENTRALE<br>Rifinitura</div>
+            <div class="attack-zone zone-right ${a.lane==="right"?"active":""}">FASCIA DESTRA<br>Zona laterale</div>
             <div class="attack-arrow arrow-${a.lane}"></div>
         </div>
 
         <div class="attack-side-panel">
             <div class="attack-card">
-                <div class="attack-label">ATTACK FLOW</div>
+                <div class="attack-label">FLUSSO OFFENSIVO</div>
                 <div class="attack-value">${a.label}</div>
                 <div class="attack-desc">${a.desc}</div>
                 <div class="attack-tags">
-                    <span class="attack-tag">TEAM: ${a.team}</span>
-                    <span class="attack-tag">ZERO NEW API</span>
+                    <span class="attack-tag">SQUADRA: ${a.team}</span>
+                    <span class="attack-tag">DATI LIVE</span>
                 </div>
             </div>
 
             <div class="attack-card">
-                <div class="attack-label">OFFENSIVE INTENSITY</div>
+                <div class="attack-label">INTENSITÀ OFFENSIVA</div>
                 <div class="attack-value">${Math.round(a.power)}%</div>
                 <div class="attack-bar"><div class="attack-fill" style="width:${a.power}%"></div></div>
             </div>
 
             <div class="attack-card">
-                <div class="attack-label">BOX ENTRY RISK</div>
+                <div class="attack-label">RISCHIO INGRESSO AREA</div>
                 <div class="attack-value">${Math.round(a.box)}%</div>
                 <div class="attack-bar"><div class="attack-fill danger" style="width:${a.box}%"></div></div>
             </div>
 
             <div class="attack-card">
-                <div class="attack-label">OVERLOAD PROBABILITY</div>
+                <div class="attack-label">PROBABILITÀ SOVRACCARICO</div>
                 <div class="attack-value">${Math.round(a.overload)}%</div>
                 <div class="attack-bar"><div class="attack-fill" style="width:${a.overload}%"></div></div>
             </div>
         </div>
     </div>`;
 }
-
 function renderCinematicEvents(){
     if(!cinematicEvents.length){
         return`
         <div class="event-card info">
-            <div class="event-label">AI EVENT FEED</div>
+            <div class="event-label">FEED EVENTI LIVE</div>
             <div class="event-value">Monitoraggio attivo</div>
             <div class="event-desc">Nessuno shock live rilevato nell’ultimo aggiornamento.</div>
         </div>`;
@@ -235,7 +235,7 @@ function renderMomentumCinematic(momentum){
     const heatClass=momentum.temperature>=65?"hot":"cold";
     const spikeLevel=momentum.dangerPulse>=70?"critical":momentum.pressurePulse>=60?"warning":"";
     const spikeText=momentum.dangerPulse>=70
-        ? "Danger spike attivo"
+        ? "Picco di pericolo attivo"
         : momentum.pressurePulse>=60
             ? "Pressione in crescita"
             : "Flusso stabile";
@@ -245,9 +245,9 @@ function renderMomentumCinematic(momentum){
         <div class="momentum-panel">
             <div class="momentum-pro-header">
                 <div>
-                    <div class="momentum-pro-title">📈 Live Momentum Graph PRO</div>
+                    <div class="momentum-pro-title">📈 Grafico momentum live</div>
                     <div class="momentum-pro-subtitle">
-                        Grafico dinamico basato su momentum, pressione, danger pulse e temperatura partita. Nessuna API extra.
+                        Grafico dinamico basato su momentum, pressione, pericolo live e temperatura partita.
                     </div>
                 </div>
                 <div class="momentum-pro-badges">
@@ -260,7 +260,7 @@ function renderMomentumCinematic(momentum){
             <div class="momentum-temp">
                 <div class="temp-top">
                     <div>
-                        <div class="temp-label">MATCH TEMPERATURE</div>
+                        <div class="temp-label">TEMPERATURA MATCH</div>
                         <div class="temp-status">${momentum.tempLabel}</div>
                     </div>
                     <div class="temp-status">${Math.round(momentum.temperature)} / 100</div>
@@ -277,19 +277,19 @@ function renderMomentumCinematic(momentum){
 
             <div class="momentum-live-strip">
                 <div class="momentum-live-chip">
-                    <div class="momentum-live-label">HOME FLOW</div>
+                    <div class="momentum-live-label">MOMENTUM CASA</div>
                     <div class="momentum-live-value">${Math.round(momentum.homeM)}%</div>
                     <div class="momentum-live-note">Momentum casa aggiornato live.</div>
                 </div>
                 <div class="momentum-live-chip">
-                    <div class="momentum-live-label">AWAY FLOW</div>
+                    <div class="momentum-live-label">MOMENTUM TRASFERTA</div>
                     <div class="momentum-live-value">${Math.round(momentum.awayM)}%</div>
                     <div class="momentum-live-note">Momentum trasferta aggiornato live.</div>
                 </div>
                 <div class="momentum-live-chip">
-                    <div class="momentum-live-label">SWING GAP</div>
+                    <div class="momentum-live-label">DIFFERENZA INERZIA</div>
                     <div class="momentum-live-value">${Math.round(momentum.gap)}</div>
-                    <div class="momentum-live-note">Differenza inerzia tra le due squadre.</div>
+                    <div class="momentum-live-note">Differenza di spinta tra le due squadre.</div>
                 </div>
             </div>
 
@@ -299,7 +299,7 @@ function renderMomentumCinematic(momentum){
                     <span>${Math.round(momentum.pressurePulse)}%</span>
                 </div>
                 <div class="momentum-spike-item ${momentum.dangerPulse>=70?"critical":""}">
-                    <span><strong>Danger Pulse</strong> — rischio fase offensiva improvvisa</span>
+                    <span><strong>Pericolo live</strong> — rischio fase offensiva improvvisa</span>
                     <span>${Math.round(momentum.dangerPulse)}%</span>
                 </div>
             </div>
@@ -307,13 +307,13 @@ function renderMomentumCinematic(momentum){
 
         <div class="momentum-stats-grid">
             <div class="momentum-stat">
-                <div class="momentum-label">MOMENTUM SWING</div>
+                <div class="momentum-label">INERZIA MATCH</div>
                 <div class="momentum-value">${momentum.swing}</div>
                 <div class="momentum-desc">${momentum.swingText}</div>
             </div>
 
             <div class="momentum-stat">
-                <div class="momentum-label">PRESSURE PULSE</div>
+                <div class="momentum-label">PRESSIONE LIVE</div>
                 <div class="momentum-value">${Math.round(momentum.pressurePulse)}%</div>
                 <div class="momentum-bar">
                     <div class="momentum-fill" style="width:${momentum.pressurePulse}%"></div>
@@ -321,7 +321,7 @@ function renderMomentumCinematic(momentum){
             </div>
 
             <div class="momentum-stat">
-                <div class="momentum-label">DANGER PULSE</div>
+                <div class="momentum-label">PERICOLO LIVE</div>
                 <div class="momentum-value">${Math.round(momentum.dangerPulse)}%</div>
                 <div class="momentum-bar">
                     <div class="momentum-fill danger" style="width:${momentum.dangerPulse}%"></div>
@@ -338,14 +338,14 @@ function renderXg(xg){
 
     return`
     <div class="xg-grid">
-        <div class="xg-card"><div class="xg-title">HOME xG</div><div class="xg-value">${h.toFixed(2)}</div></div>
-        <div class="xg-card"><div class="xg-title">AWAY xG</div><div class="xg-value">${a.toFixed(2)}</div></div>
-        <div class="xg-card"><div class="xg-title">HOME BIG CHANCES</div><div class="xg-value">${xg.home_big_chances??0}</div></div>
-        <div class="xg-card"><div class="xg-title">AWAY BIG CHANCES</div><div class="xg-value">${xg.away_big_chances??0}</div></div>
-        <div class="xg-card"><div class="xg-title">HOME SHOT QUALITY</div><div class="xg-value">${xg.home_shot_quality??0}</div></div>
-        <div class="xg-card"><div class="xg-title">AWAY SHOT QUALITY</div><div class="xg-value">${xg.away_shot_quality??0}</div></div>
-        <div class="xg-card"><div class="xg-title">HOME xTHREAT</div><div class="xg-value">${xg.home_xthreat??0}</div></div>
-        <div class="xg-card"><div class="xg-title">AWAY xTHREAT</div><div class="xg-value">${xg.away_xthreat??0}</div></div>
+        <div class="xg-card"><div class="xg-title">xG casa</div><div class="xg-value">${h.toFixed(2)}</div></div>
+        <div class="xg-card"><div class="xg-title">xG trasferta</div><div class="xg-value">${a.toFixed(2)}</div></div>
+        <div class="xg-card"><div class="xg-title">Grandi occasioni casa</div><div class="xg-value">${xg.home_big_chances??0}</div></div>
+        <div class="xg-card"><div class="xg-title">Grandi occasioni trasferta</div><div class="xg-value">${xg.away_big_chances??0}</div></div>
+        <div class="xg-card"><div class="xg-title">Qualità tiri casa</div><div class="xg-value">${xg.home_shot_quality??0}</div></div>
+        <div class="xg-card"><div class="xg-title">Qualità tiri trasferta</div><div class="xg-value">${xg.away_shot_quality??0}</div></div>
+        <div class="xg-card"><div class="xg-title">Pericolo xT casa</div><div class="xg-value">${xg.home_xthreat??0}</div></div>
+        <div class="xg-card"><div class="xg-title">Pericolo xT trasferta</div><div class="xg-value">${xg.away_xthreat??0}</div></div>
     </div>
 
     <div class="xg-bar">
@@ -354,7 +354,7 @@ function renderXg(xg){
     </div>
 
     <div class="dominant-box">
-        xG Dominance: <strong>${xg.dominance||"BALANCED"}</strong>
+        Dominio xG: <strong>${xg.dominance||"Equilibrio"}</strong>
     </div>`;
 }
 
@@ -362,29 +362,29 @@ function renderFuture(f){
     return`
     <div class="future-grid">
         <div class="future-card">
-            <div class="future-title">NEXT GOAL</div>
+            <div class="future-title">PROSSIMO GOL</div>
             <div class="future-value">${f.next_goal_probability??"--"}%</div>
         </div>
 
         <div class="future-card">
-            <div class="future-title">COUNTER ATTACK</div>
+            <div class="future-title">CONTROPIEDE</div>
             <div class="future-value">${f.counter_attack_risk??"--"}</div>
         </div>
 
         <div class="future-card">
-            <div class="future-title">COLLAPSE RISK</div>
+            <div class="future-title">RISCHIO CROLLO</div>
             <div class="future-value">${f.collapse_risk??"--"}</div>
         </div>
 
         <div class="future-card">
-            <div class="future-title">FATIGUE</div>
+            <div class="future-title">FATICA</div>
             <div class="future-value">${f.fatigue_warning??"--"}</div>
         </div>
 
         <div class="future-card prediction-card">
-            <div class="future-title">AI PREDICTION</div>
-            <div class="future-prediction">${f.prediction??"Prediction non disponibile."}</div>
-            <div class="future-confidence">Confidence: ${f.confidence??"--"}%</div>
+            <div class="future-title">PREVISIONE</div>
+            <div class="future-prediction">${f.prediction??"Previsione non disponibile."}</div>
+            <div class="future-confidence">Affidabilità: ${f.confidence??"--"}%</div>
         </div>
     </div>`;
 }
@@ -393,7 +393,7 @@ function renderCoach(items){
     if(!items.length){
         return`
         <div class="coach-card coach-low">
-            <div class="coach-message">Tactical Coach AI non disponibile.</div>
+            <div class="coach-message">Coach tattico non disponibile.</div>
         </div>`;
     }
 
@@ -406,7 +406,7 @@ function renderCoach(items){
             return`
             <div class="coach-card ${cls}">
                 <div class="coach-top">
-                    <span class="coach-type">${i.type||"TACTICAL"}</span>
+                    <span class="coach-type">${i.type||"TACTICO"}</span>
                     <span class="coach-priority">${p}</span>
                 </div>
                 <div class="coach-team">${i.team||"MATCH"}</div>
@@ -415,9 +415,8 @@ function renderCoach(items){
         }).join("")}
     </div>`;
 }
-
 function renderPlayers(players){
-    if(!players.length)return"Player ratings non disponibili.";
+    if(!players.length)return"Pagelle giocatori non disponibili.";
 
     return`
     <div class="players-grid">
@@ -434,7 +433,7 @@ function renderPlayers(players){
                 ${i===0?`<div class="mvp-badge">MVP</div>`:""}
                 <div class="player-top">
                     <div>
-                        <div class="player-name">${p.name||"Player"}</div>
+                        <div class="player-name">${p.name||"Giocatore"}</div>
                         <div class="player-role">${p.role||p.position||"N/A"} • ${p.team||""}</div>
                     </div>
                     <div class="player-rating ${cls}">${r.toFixed(1)}</div>
@@ -442,20 +441,20 @@ function renderPlayers(players){
 
                 <div class="player-stats">
                     <div class="player-stat">
-                        <span class="player-stat-label">Danger</span>
+                        <span class="player-stat-label">Pericolo</span>
                         <span class="player-stat-value">${Math.round(safeNumber(p.danger))}</span>
                     </div>
                     <div class="player-stat">
-                        <span class="player-stat-label">Fatigue</span>
+                        <span class="player-stat-label">Fatica</span>
                         <span class="player-stat-value">${Math.round(safeNumber(p.fatigue))}%</span>
                     </div>
                     <div class="player-stat">
-                        <span class="player-stat-label">Aggression</span>
+                        <span class="player-stat-label">Aggressività</span>
                         <span class="player-stat-value">${Math.round(safeNumber(p.aggression))}</span>
                     </div>
                     <div class="player-stat">
-                        <span class="player-stat-label">Status</span>
-                        <span class="player-stat-value">${p.status||"STABLE"}</span>
+                        <span class="player-stat-label">Stato</span>
+                        <span class="player-stat-value">${p.status||"STABILE"}</span>
                     </div>
                 </div>
             </div>`;
@@ -472,7 +471,7 @@ function classifyCommentarySeverity(text){
         t.includes("momento decisivo")||
         t.includes("cambia tutto")
     ){
-        return {level:"chaos",label:"CHAOS",icon:"🌪️"};
+        return {level:"chaos",label:"INTENSITÀ",icon:"🌪️"};
     }
 
     if(
@@ -482,7 +481,7 @@ function classifyCommentarySeverity(text){
         t.includes("probabilità gol")||
         t.includes("gol")
     ){
-        return {level:"danger",label:"DANGER",icon:"🚨"};
+        return {level:"danger",label:"PERICOLO",icon:"🚨"};
     }
 
     if(
@@ -492,10 +491,10 @@ function classifyCommentarySeverity(text){
         t.includes("intensità")||
         t.includes("transizioni")
     ){
-        return {level:"warning",label:"WARNING",icon:"🔥"};
+        return {level:"warning",label:"PRESSIONE",icon:"🔥"};
     }
 
-    return {level:"normal",label:"AI LIVE",icon:"🧠"};
+    return {level:"normal",label:"LIVE",icon:"🧠"};
 }
 
 function getCommentaryLines(data,aiCore){
@@ -517,7 +516,7 @@ function getCommentaryLines(data,aiCore){
 
 function renderAICommentary(commentary,match){
     if(!commentary||!commentary.length){
-        return `<div class="ai-commentary-empty">Commentary AI non disponibile.</div>`;
+        return `<div class="ai-commentary-empty">Commento tattico non disponibile.</div>`;
     }
 
     const minute=safeNumber(match?.minute,0);
@@ -532,7 +531,7 @@ function renderAICommentary(commentary,match){
                 <div class="ai-commentary-icon">${s.icon}</div>
                 <div class="ai-commentary-top">
                     <div class="ai-commentary-severity">${s.label}</div>
-                    <div class="ai-commentary-time">${minute}' • LIVE AI</div>
+                    <div class="ai-commentary-time">${minute}' • LIVE</div>
                 </div>
                 <div class="ai-commentary-text">${line}</div>
             </div>`;
@@ -546,20 +545,29 @@ function renderWinProbability(p){
     const a=clamp(p.away_win??p.away??33.3);
     const dom=String(p.dominant_outcome||"draw").toUpperCase();
 
+    const readableDom =
+        dom === "HOME"
+            ? "Casa"
+            : dom === "AWAY"
+                ? "Trasferta"
+                : dom === "DRAW"
+                    ? "Pareggio"
+                    : dom;
+
     return`
     <div class="win-prob-wrapper">
         <div class="prob-box">
-            <div class="prob-label">HOME WIN</div>
+            <div class="prob-label">VITTORIA CASA</div>
             <div class="prob-value">${h}%</div>
         </div>
 
         <div class="prob-box">
-            <div class="prob-label">DRAW</div>
+            <div class="prob-label">PAREGGIO</div>
             <div class="prob-value">${d}%</div>
         </div>
 
         <div class="prob-box">
-            <div class="prob-label">AWAY WIN</div>
+            <div class="prob-label">VITTORIA TRASFERTA</div>
             <div class="prob-value">${a}%</div>
         </div>
     </div>
@@ -571,7 +579,7 @@ function renderWinProbability(p){
     </div>
 
     <div class="dominant-box">
-        Dominant Outcome: <strong>${dom}</strong>
+        Esito dominante: <strong>${readableDom}</strong>
     </div>`;
 }
 
