@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>MatchIQ Coach Mode - Dilettanti</title>
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00f5a0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MatchIQ Coach">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
+
+<style>
+:root{
+    --bg:#050811;
+    --panel:#0d1426;
+    --panel2:#101a31;
+    --line:rgba(255,255,255,.10);
+    --line2:rgba(255,255,255,.18);
+    --text:#ffffff;
+    --muted:#9fb2d8;
+    --soft:#c7d7f2;
+    --green:#18f08b;
+    --blue:#38a9ff;
+    --gold:#ffd166;
+    --orange:#ff8a18;
+    --red:#ff416c;
+    --purple:#8b5cf6;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,
+body{
+    min-height:100%;
+    overflow-x:hidden;
+}
+
+body{
+    font-family:Inter,Arial,sans-serif;
+    background:
+        radial-gradient(circle at 15% 0,rgba(24,240,139,.18),transparent 30%),
+        radial-gradient(circle at 86% 8%,rgba(56,169,255,.15),transparent 32%),
+        radial-gradient(circle at 50% 100%,rgba(139,92,246,.12),transparent 36%),
+        linear-gradient(180deg,#071226,#050811 66%,#03050b);
+    color:var(--text);
+}
+
+a{
+    color:inherit;
+    text-decoration:none;
+}
+
+button,
+input,
+select,
+textarea{
+    font-family:inherit;
+}
+
+button{
+    -webkit-tap-highlight-color:transparent;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:18px;
+    padding:22px 34px;
+    background:rgba(6,10,20,.88);
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    z-index:50;
+    backdrop-filter:blur(16px);
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+}
+
+.brand img{
+    width:48px;
+    height:48px;
+    object-fit:contain;
+    border-radius:14px;
+    filter:drop-shadow(0 10px 22px rgba(0,0,0,.28));
+}
+
+.logo{
+    font-size:27px;
+    font-weight:1000;
+    letter-spacing:-.6px;
+}
+
+.subtitle{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:4px;
+}
+
+.actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    border:0;
+    border-radius:16px;
+    padding:13px 18px;
+    color:white;
+    font-weight:1000;
+    cursor:pointer;
+    background:linear-gradient(135deg,#2f6bff,#7c4dff);
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:.18s ease;
+    min-height:46px;
+    text-align:center;
+    box-shadow:0 14px 34px rgba(0,0,0,.18);
+}
+
+.btn:hover{
+    transform:translateY(-1px);
+    filter:brightness(1.06);
+}
+
+.btn.dark{
+    background:rgba(255,255,255,.08);
+    border:1px solid var(--line);
+}
+
+.btn.green{
+    background:linear-gradient(135deg,var(--green),var(--blue));
+    color:#06111c;
+}
+
+.btn.gold{
+    background:linear-gradient(135deg,var(--gold),var(--orange));
+    color:#06111c;
+}
+
+.btn.red{
+    background:linear-gradient(135deg,var(--red),#8b1d35);
+}
+
+.btn.soft{
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--line);
+}
+
+.btn.outline{
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.16);
+}
+
+.btn.small-btn{
+    min-height:38px;
+    padding:9px 12px;
+    border-radius:13px;
+    font-size:12px;
+}
+
+.main{
+    max-width:1180px;
+    margin:0 auto;
+    padding:30px 28px 112px;
+}
+
+.notice{
+    display:none;
+    padding:14px 16px;
+    border-radius:18px;
+    margin:0 0 18px;
+    font-size:13px;
+    font-weight:900;
+}
+
+.notice.show{
+    display:block;
+}
+
+.notice.ok{
+    color:var(--green);
+    background:rgba(0,245,160,.10);
+    border:1px solid rgba(0,245,160,.25);
+}
+
+.notice.warn{
+    color:var(--gold);
+    background:rgba(247,183,51,.10);
+    border:1px solid rgba(247,183,51,.25);
+}
+
+.notice.err{
+    color:#ffb8b8;
+    background:rgba(255,70,70,.10);
+    border:1px solid rgba(255,70,70,.25);
+}
+
+.hero{
+    display:grid;
+    grid-template-columns:1.08fr .92fr;
+    gap:22px;
+    margin-bottom:22px;
+}
+
+.card,
+.panel{
+    background:
+        radial-gradient(circle at top right,rgba(56,169,255,.06),transparent 34%),
+        linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+    border:1px solid var(--line);
+    border-radius:30px;
+    padding:28px;
+    box-shadow:0 25px 80px rgba(0,0,0,.25);
+}
+
+.hero-card{
+    position:relative;
+    overflow:hidden;
+}
+
+.hero-card:before{
+    content:"";
+    position:absolute;
+    width:260px;
+    height:260px;
+    right:-110px;
+    top:-110px;
+    background:radial-gradient(circle,rgba(24,240,139,.16),transparent 70%);
+    pointer-events:none;
+}
+
+.hero-card > *{
+    position:relative;
+    z-index:2;
+}
+
+.badge{
+    display:inline-block;
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:1000;
+    margin-bottom:14px;
+}
+
+.badge.green{
+    background:rgba(0,245,160,.14);
+    border:1px solid rgba(0,245,160,.35);
+    color:var(--green);
+}
+
+.badge.blue{
+    background:rgba(56,169,255,.12);
+    border:1px solid rgba(56,169,255,.30);
+    color:#9fd7ff;
+}
+
+.badge.gold{
+    background:rgba(255,209,102,.13);
+    border:1px solid rgba(255,209,102,.32);
+    color:#ffe7a3;
+}
+
+h1{
+    font-size:44px;
+    line-height:1.02;
+    margin-bottom:12px;
+    letter-spacing:-1.3px;
+}
+
+h2{
+    font-size:24px;
+    margin-bottom:15px;
+    letter-spacing:-.4px;
+}
+
+h3{
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+p{
+    color:var(--soft);
+    line-height:1.7;
+}
+
+.hero-lead{
+    font-size:16px;
+    max-width:720px;
+}
+
+.micro-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-top:18px;
+}
+
+.micro-row span{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.08);
+    color:#dbe6ff;
+    font-size:12px;
+    font-weight:900;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.field{
+    display:grid;
+    gap:7px;
+}
+
+.field.full{
+    grid-column:1/-1;
+}
+
+label{
+    color:var(--muted);
+    font-size:12px;
+    font-weight:1000;
+}
+
+input,
+select,
+textarea{
+    width:100%;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.055);
+    color:white;
+    border-radius:16px;
+    padding:13px 14px;
+    outline:none;
+    font-weight:850;
+    min-height:46px;
+}
+
+textarea{
+    resize:vertical;
+    min-height:96px;
+    line-height:1.5;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+    border-color:rgba(24,240,139,.45);
+    box-shadow:0 0 0 4px rgba(24,240,139,.08);
+}
+
+select option{
+    color:#06111c;
+}
+
+.quick-actions{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:14px;
+}
+
+.event-btn{
+    border:1px solid rgba(255,255,255,.11);
+    background:rgba(255,255,255,.06);
+    color:white;
+    border-radius:18px;
+    min-height:62px;
+    padding:12px 10px;
+    font-weight:1000;
+    cursor:pointer;
+    text-align:center;
+    transition:.16s ease;
+}
+
+.event-btn:hover{
+    transform:translateY(-1px);
+    background:rgba(255,255,255,.09);
+}
+
+.event-btn.goal{
+    background:linear-gradient(135deg,rgba(24,240,139,.18),rgba(56,169,255,.10));
+    border-color:rgba(24,240,139,.28);
+}
+
+.event-btn.danger{
+    background:linear-gradient(135deg,rgba(255,65,108,.18),rgba(255,138,24,.10));
+    border-color:rgba(255,65,108,.28);
+}
+
+.event-btn.gold{
+    background:linear-gradient(135deg,rgba(255,209,102,.18),rgba(255,138,24,.10));
+    border-color:rgba(255,209,102,.30);
+}
+
+.event-emoji{
+    display:block;
+    font-size:20px;
+    margin-bottom:4px;
+}
+
+.event-text{
+    font-size:12px;
+    line-height:1.25;
+}
+
+.match-status{
+    display:grid;
+    gap:12px;
+}
+
+.status-box{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    padding:18px;
+}
+
+.status-label{
+    color:var(--muted);
+    font-size:12px;
+    font-weight:1000;
+    margin-bottom:7px;
+}
+
+.status-value{
+    font-size:20px;
+    font-weight:1000;
+    word-break:break-word;
+}
+
+.score-box{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:10px;
+    margin-top:14px;
+    padding:16px;
+    border-radius:22px;
+    background:rgba(0,0,0,.18);
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.score-team{
+    font-size:13px;
+    color:#dbe6ff;
+    font-weight:1000;
+    line-height:1.3;
+    word-break:break-word;
+}
+
+.score-team.away{
+    text-align:right;
+}
+
+.score-main{
+    font-size:34px;
+    font-weight:1000;
+    letter-spacing:-.8px;
+    color:white;
+}
+
+.section{
+    margin-top:22px;
+}
+
+.timeline{
+    display:grid;
+    gap:10px;
+    max-height:420px;
+    overflow:auto;
+    padding-right:5px;
+}
+
+.timeline::-webkit-scrollbar{
+    width:7px;
+}
+
+.timeline::-webkit-scrollbar-thumb{
+    background:rgba(56,169,255,.45);
+    border-radius:999px;
+}
+
+.event-card{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:12px;
+    align-items:flex-start;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:14px;
+}
+
+.event-minute{
+    min-width:46px;
+    padding:7px 9px;
+    border-radius:999px;
+    background:rgba(56,169,255,.14);
+    border:1px solid rgba(56,169,255,.25);
+    color:#9fd7ff;
+    font-weight:1000;
+    font-size:12px;
+    text-align:center;
+}
+
+.event-title{
+    font-weight:1000;
+    margin-bottom:4px;
+}
+
+.event-meta{
+    color:var(--muted);
+    font-size:12px;
+    font-weight:850;
+}
+
+.event-note{
+    margin-top:7px;
+    color:#dbe6ff;
+    font-size:13px;
+    line-height:1.45;
+}
+
+.delete-event{
+    border:0;
+    background:rgba(255,65,108,.14);
+    color:#ffc3cf;
+    border-radius:12px;
+    width:34px;
+    height:34px;
+    cursor:pointer;
+    font-weight:1000;
+}
+
+.empty{
+    padding:22px;
+    border-radius:22px;
+    text-align:center;
+    background:rgba(255,255,255,.04);
+    border:1px dashed rgba(255,255,255,.16);
+    color:var(--soft);
+    font-weight:900;
+    line-height:1.5;
+}
+
+.report-box{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    padding:18px;
+    color:#dbe6ff;
+    line-height:1.75;
+    white-space:pre-line;
+    max-height:520px;
+    overflow:auto;
+}
+
+.report-box strong{
+    color:#fff;
+}
+
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-top:18px;
+}
+
+.kpi{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+    padding:16px;
+}
+
+.kpi-label{
+    color:var(--muted);
+    font-size:11px;
+    font-weight:1000;
+    margin-bottom:8px;
+}
+
+.kpi-value{
+    font-size:24px;
+    font-weight:1000;
+}
+
+.bottom-nav{
+    display:none;
+}
+
+@media(max-width:980px){
+    .hero,
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .kpi-grid{
+        grid-template-columns:1fr 1fr;
+    }
+}
+
+@media(max-width:900px){
+    .topbar{
+        padding:16px 14px;
+        align-items:center;
+    }
+
+    .brand img{
+        width:42px;
+        height:42px;
+    }
+
+    .logo{
+        font-size:22px;
+    }
+
+    .subtitle{
+        font-size:12px;
+    }
+
+    .actions{
+        display:none;
+    }
+
+    .main{
+        padding:20px 14px 112px;
+        max-width:720px;
+    }
+
+    .card,
+    .panel{
+        border-radius:24px;
+        padding:20px;
+    }
+
+    h1{
+        font-size:34px;
+    }
+
+    h2{
+        font-size:22px;
+    }
+
+    .hero-lead{
+        font-size:14px;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .quick-actions{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .event-btn{
+        min-height:60px;
+    }
+
+    .score-box{
+        grid-template-columns:1fr;
+        text-align:center;
+    }
+
+    .score-team.away{
+        text-align:center;
+    }
+
+    .event-card{
+        grid-template-columns:1fr auto;
+    }
+
+    .event-minute{
+        grid-column:1/-1;
+        width:max-content;
+    }
+
+    .bottom-nav{
+        position:fixed;
+        left:0;
+        right:0;
+        bottom:0;
+        background:rgba(6,10,20,.94);
+        backdrop-filter:blur(16px);
+        border-top:1px solid var(--line);
+        padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+        display:grid;
+        grid-template-columns:repeat(4,1fr);
+        gap:8px;
+        z-index:80;
+    }
+
+    .bottom-nav a{
+        color:white;
+        text-decoration:none;
+        text-align:center;
+        font-weight:900;
+        font-size:12px;
+        padding:11px 6px;
+        border-radius:14px;
+        background:rgba(255,255,255,.055);
+    }
+
+    .bottom-nav a.active{
+        background:linear-gradient(135deg,var(--green),var(--blue));
+        color:#06111c;
+    }
+}
+
+@media(max-width:420px){
+    .logo{
+        font-size:19px;
+    }
+
+    .brand{
+        gap:9px;
+    }
+
+    h1{
+        font-size:30px;
+    }
+
+    .quick-actions{
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+    }
+
+    .event-text{
+        font-size:11px;
+    }
+
+    .kpi-grid{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <div class="brand">
+        <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
+        <div>
+            <div class="logo">MatchIQ Coach</div>
+            <div class="subtitle">Match analyst AI per il calcio dilettantistico</div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn dark" onclick="goHome()">Home</button>
+        <button class="btn green" onclick="goScout()">Scout</button>
+        <button class="btn soft" onclick="goAccount()">Account</button>
+    </div>
+</div>
+
+<div class="main">
+    <div id="pageNotice" class="notice"></div>
+    <div class="hero">
+        <div class="card hero-card">
+            <span class="badge green">COACH MODE V1</span>
+
+            <h1>Il match analyst AI per i dilettanti</h1>
+
+            <p class="hero-lead">
+                Crea una partita manuale, registra gli eventi principali e genera un report tecnico
+                utile per allenatori, staff e società dilettantistiche.
+            </p>
+
+            <div class="micro-row">
+                <span>⚽ Match manuale</span>
+                <span>📌 Eventi rapidi</span>
+                <span>🧠 Report automatico</span>
+                <span>📱 Zero API live</span>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi">
+                    <div class="kpi-label">Eventi registrati</div>
+                    <div class="kpi-value" id="kpiEvents">0</div>
+                </div>
+
+                <div class="kpi">
+                    <div class="kpi-label">Gol casa</div>
+                    <div class="kpi-value" id="kpiHomeGoals">0</div>
+                </div>
+
+                <div class="kpi">
+                    <div class="kpi-label">Gol trasferta</div>
+                    <div class="kpi-value" id="kpiAwayGoals">0</div>
+                </div>
+
+                <div class="kpi">
+                    <div class="kpi-label">Report</div>
+                    <div class="kpi-value" id="kpiReport">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <span class="badge gold">PARTITA ATTIVA</span>
+
+            <h2>Stato match</h2>
+
+            <div class="match-status">
+                <div class="status-box">
+                    <div class="status-label">Partita</div>
+                    <div class="status-value" id="activeMatchName">Nessuna partita creata</div>
+                </div>
+
+                <div class="score-box">
+                    <div class="score-team" id="scoreHomeName">Casa</div>
+                    <div class="score-main" id="scoreValue">0 - 0</div>
+                    <div class="score-team away" id="scoreAwayName">Trasferta</div>
+                </div>
+
+                <div class="status-box">
+                    <div class="status-label">Categoria</div>
+                    <div class="status-value" id="activeCategory">--</div>
+                </div>
+
+                <div class="status-box">
+                    <div class="status-label">Ultimo evento</div>
+                    <div class="status-value" id="lastEventText">Nessun evento</div>
+                </div>
+            </div>
+
+            <div class="micro-row">
+                <span>💾 Salvataggio locale</span>
+                <span>🚫 Non consuma API</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid section">
+        <div class="panel">
+            <span class="badge blue">1. CREA PARTITA</span>
+
+            <h2>Setup partita</h2>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Squadra casa</label>
+                    <input id="homeTeamInput" type="text" placeholder="Es. ASD Lomazzo" />
+                </div>
+
+                <div class="field">
+                    <label>Squadra trasferta</label>
+                    <input id="awayTeamInput" type="text" placeholder="Es. Polisportiva..." />
+                </div>
+
+                <div class="field">
+                    <label>Categoria</label>
+                    <select id="categoryInput">
+                        <option value="Dilettanti">Dilettanti</option>
+                        <option value="Terza Categoria">Terza Categoria</option>
+                        <option value="Seconda Categoria">Seconda Categoria</option>
+                        <option value="Prima Categoria">Prima Categoria</option>
+                        <option value="Promozione">Promozione</option>
+                        <option value="Eccellenza">Eccellenza</option>
+                        <option value="Juniores">Juniores</option>
+                        <option value="Allievi">Allievi</option>
+                        <option value="Giovanissimi">Giovanissimi</option>
+                        <option value="Academy">Academy</option>
+                        <option value="Altro">Altro</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Data</label>
+                    <input id="matchDateInput" type="date" />
+                </div>
+
+                <div class="field">
+                    <label>Modulo casa</label>
+                    <input id="homeShapeInput" type="text" placeholder="Es. 4-3-3" />
+                </div>
+
+                <div class="field">
+                    <label>Modulo trasferta</label>
+                    <input id="awayShapeInput" type="text" placeholder="Es. 4-4-2" />
+                </div>
+
+                <div class="field full">
+                    <label>Note pre-partita</label>
+                    <textarea id="preNotesInput" placeholder="Obiettivo partita, assenti, indicazioni tattiche, cose da osservare..."></textarea>
+                </div>
+            </div>
+
+            <div class="micro-row">
+                <button class="btn green" onclick="createManualMatch()">Crea / aggiorna partita</button>
+                <button class="btn dark" onclick="clearCurrentMatch()">Reset partita</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <span class="badge gold">2. REGISTRA EVENTI</span>
+
+            <h2>Evento rapido</h2>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Minuto</label>
+                    <input id="eventMinuteInput" type="number" min="0" max="130" placeholder="Es. 35" />
+                </div>
+
+                <div class="field">
+                    <label>Squadra</label>
+                    <select id="eventTeamInput">
+                        <option value="home">Casa</option>
+                        <option value="away">Trasferta</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Giocatore opzionale</label>
+                    <input id="eventPlayerInput" type="text" placeholder="Es. N.10 Rossi" />
+                </div>
+
+                <div class="field">
+                    <label>Nota opzionale</label>
+                    <input id="eventNoteInput" type="text" placeholder="Es. tiro da fuori, errore marcatura..." />
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="event-btn goal" onclick="addQuickEvent('gol','Gol','⚽')">
+                    <span class="event-emoji">⚽</span>
+                    <span class="event-text">Gol</span>
+                </button>
+
+                <button class="event-btn danger" onclick="addQuickEvent('tiro','Tiro','🎯')">
+                    <span class="event-emoji">🎯</span>
+                    <span class="event-text">Tiro</span>
+                </button>
+
+                <button class="event-btn danger" onclick="addQuickEvent('occasione','Occasione','🔥')">
+                    <span class="event-emoji">🔥</span>
+                    <span class="event-text">Occasione</span>
+                </button>
+
+                <button class="event-btn" onclick="addQuickEvent('recupero','Recupero palla','✅')">
+                    <span class="event-emoji">✅</span>
+                    <span class="event-text">Recupero palla</span>
+                </button>
+
+                <button class="event-btn danger" onclick="addQuickEvent('palla_persa','Palla persa','❌')">
+                    <span class="event-emoji">❌</span>
+                    <span class="event-text">Palla persa</span>
+                </button>
+
+                <button class="event-btn danger" onclick="addQuickEvent('errore_difensivo','Errore difensivo','🚨')">
+                    <span class="event-emoji">🚨</span>
+                    <span class="event-text">Errore difensivo</span>
+                </button>
+
+                <button class="event-btn gold" onclick="addQuickEvent('cambio','Cambio','🔁')">
+                    <span class="event-emoji">🔁</span>
+                    <span class="event-text">Cambio</span>
+                </button>
+
+                <button class="event-btn gold" onclick="addQuickEvent('cartellino','Cartellino','🟨')">
+                    <span class="event-emoji">🟨</span>
+                    <span class="event-text">Cartellino</span>
+                </button>
+
+                <button class="event-btn" onclick="addQuickEvent('nota','Nota coach','📝')">
+                    <span class="event-emoji">📝</span>
+                    <span class="event-text">Nota</span>
+                </button>
+            </div>
+
+            <div class="micro-row">
+                <button class="btn green" onclick="generateCoachReport()">Genera report</button>
+                <button class="btn dark" onclick="copyReport()">Copia report</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid section">
+        <div class="panel">
+            <span class="badge blue">3. TIMELINE</span>
+
+            <h2>Eventi partita</h2>
+
+            <div id="eventsTimeline" class="timeline">
+                <div class="empty">
+                    Nessun evento registrato. Crea una partita e usa i bottoni rapidi durante il match.
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <span class="badge green">4. REPORT</span>
+
+            <h2>Report tecnico automatico</h2>
+
+            <div id="coachReport" class="report-box">
+                Crea una partita, registra alcuni eventi e premi “Genera report”.
+            </div>
+
+            <div class="micro-row">
+                <button class="btn green" onclick="generateCoachReport()">Aggiorna report</button>
+                <button class="btn gold" onclick="downloadReportTxt()">Scarica TXT</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<nav class="bottom-nav">
+    <a href="/mobile.html">Home</a>
+    <a href="/scout.html">Scout</a>
+    <a class="active" href="/coach.html">Coach</a>
+    <a href="/account.html">Account</a>
+</nav>
+<script>
+const APP_VERSION = "10060";
+const STORAGE_KEY = "matchiq_coach_v1";
+
+let coachState = {
+    match: null,
+    events: [],
+    report: ""
+};
+
+function todayISO(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+}
+
+function esc(value){
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+function showNotice(message,type="ok",timeout=4500){
+    const el = document.getElementById("pageNotice");
+    if(!el) return;
+
+    el.textContent = message;
+    el.className = `notice show ${type}`;
+
+    if(timeout){
+        setTimeout(() => {
+            el.className = "notice";
+        }, timeout);
+    }
+}
+
+function isMobileDevice(){
+    return window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
+}
+
+function goHome(){
+    window.location.href = isMobileDevice()
+        ? `/mobile.html?v=${APP_VERSION}`
+        : `/index.html?v=${APP_VERSION}`;
+}
+
+function goScout(){
+    window.location.href = `/scout.html?v=${APP_VERSION}`;
+}
+
+function goAccount(){
+    window.location.href = `/account.html?v=${APP_VERSION}`;
+}
+
+function saveState(){
+    try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(coachState));
+    }catch(e){
+        console.warn("Salvataggio Coach non disponibile:", e);
+    }
+}
+
+function loadState(){
+    try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return;
+
+        const data = JSON.parse(raw);
+        if(!data || typeof data !== "object") return;
+
+        coachState = {
+            match: data.match || null,
+            events: Array.isArray(data.events) ? data.events : [],
+            report: data.report || ""
+        };
+    }catch(e){
+        console.warn("Caricamento Coach non disponibile:", e);
+    }
+}
+
+function getInputValue(id,fallback=""){
+    return document.getElementById(id)?.value?.trim() || fallback;
+}
+
+function setInputValue(id,value){
+    const el = document.getElementById(id);
+    if(el) el.value = value || "";
+}
+
+function getTeamName(side){
+    if(!coachState.match){
+        return side === "home" ? "Casa" : "Trasferta";
+    }
+
+    return side === "home"
+        ? coachState.match.homeTeam || "Casa"
+        : coachState.match.awayTeam || "Trasferta";
+}
+
+function getGoals(side){
+    return coachState.events.filter(e => e.type === "gol" && e.side === side).length;
+}
+
+function getEventsByType(type){
+    return coachState.events.filter(e => e.type === type);
+}
+
+function createManualMatch(){
+    const homeTeam = getInputValue("homeTeamInput");
+    const awayTeam = getInputValue("awayTeamInput");
+
+    if(!homeTeam || !awayTeam){
+        showNotice("Inserisci squadra casa e squadra trasferta.", "warn");
+        return;
+    }
+
+    coachState.match = {
+        id: Date.now(),
+        homeTeam,
+        awayTeam,
+        category: getInputValue("categoryInput","Dilettanti"),
+        date: getInputValue("matchDateInput", todayISO()),
+        homeShape: getInputValue("homeShapeInput",""),
+        awayShape: getInputValue("awayShapeInput",""),
+        preNotes: getInputValue("preNotesInput","")
+    };
+
+    saveState();
+    renderAll();
+
+    showNotice("Partita Coach Mode creata/aggiornata.", "ok");
+}
+
+function clearCurrentMatch(){
+    if(!confirm("Vuoi resettare partita, eventi e report Coach Mode?")) return;
+
+    coachState = {
+        match: null,
+        events: [],
+        report: ""
+    };
+
+    localStorage.removeItem(STORAGE_KEY);
+
+    setInputValue("homeTeamInput","");
+    setInputValue("awayTeamInput","");
+    setInputValue("categoryInput","Dilettanti");
+    setInputValue("matchDateInput",todayISO());
+    setInputValue("homeShapeInput","");
+    setInputValue("awayShapeInput","");
+    setInputValue("preNotesInput","");
+    setInputValue("eventMinuteInput","");
+    setInputValue("eventPlayerInput","");
+    setInputValue("eventNoteInput","");
+
+    renderAll();
+    showNotice("Partita resettata.", "ok");
+}
+
+function addQuickEvent(type,label,icon){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+
+    const minuteRaw = getInputValue("eventMinuteInput","");
+    const minute = minuteRaw === "" ? "--" : Math.max(0, Math.min(130, Number(minuteRaw) || 0));
+    const side = getInputValue("eventTeamInput","home");
+    const player = getInputValue("eventPlayerInput","");
+    const note = getInputValue("eventNoteInput","");
+
+    const event = {
+        id: Date.now() + Math.random(),
+        type,
+        label,
+        icon,
+        minute,
+        side,
+        team: getTeamName(side),
+        player,
+        note,
+        createdAt: new Date().toISOString()
+    };
+
+    coachState.events.unshift(event);
+
+    setInputValue("eventNoteInput","");
+    setInputValue("eventPlayerInput","");
+
+    saveState();
+    renderAll();
+
+    showNotice(`${label} registrato per ${event.team}.`, "ok", 2500);
+}
+
+function deleteEvent(eventId){
+    coachState.events = coachState.events.filter(e => String(e.id) !== String(eventId));
+    saveState();
+    renderAll();
+}
+
+function fillFormFromState(){
+    if(!coachState.match) return;
+
+    setInputValue("homeTeamInput", coachState.match.homeTeam);
+    setInputValue("awayTeamInput", coachState.match.awayTeam);
+    setInputValue("categoryInput", coachState.match.category || "Dilettanti");
+    setInputValue("matchDateInput", coachState.match.date || todayISO());
+    setInputValue("homeShapeInput", coachState.match.homeShape);
+    setInputValue("awayShapeInput", coachState.match.awayShape);
+    setInputValue("preNotesInput", coachState.match.preNotes);
+}
+
+function renderStatus(){
+    const match = coachState.match;
+
+    const activeMatchName = document.getElementById("activeMatchName");
+    const scoreHomeName = document.getElementById("scoreHomeName");
+    const scoreAwayName = document.getElementById("scoreAwayName");
+    const scoreValue = document.getElementById("scoreValue");
+    const activeCategory = document.getElementById("activeCategory");
+    const lastEventText = document.getElementById("lastEventText");
+
+    const homeGoals = getGoals("home");
+    const awayGoals = getGoals("away");
+
+    if(activeMatchName){
+        activeMatchName.textContent = match
+            ? `${match.homeTeam} vs ${match.awayTeam}`
+            : "Nessuna partita creata";
+    }
+
+    if(scoreHomeName) scoreHomeName.textContent = match?.homeTeam || "Casa";
+    if(scoreAwayName) scoreAwayName.textContent = match?.awayTeam || "Trasferta";
+    if(scoreValue) scoreValue.textContent = `${homeGoals} - ${awayGoals}`;
+    if(activeCategory) activeCategory.textContent = match?.category || "--";
+
+    if(lastEventText){
+        const last = coachState.events[0];
+        lastEventText.textContent = last
+            ? `${last.icon} ${last.label} · ${last.team} · ${last.minute}'`
+            : "Nessun evento";
+    }
+
+    const kpiEvents = document.getElementById("kpiEvents");
+    const kpiHomeGoals = document.getElementById("kpiHomeGoals");
+    const kpiAwayGoals = document.getElementById("kpiAwayGoals");
+    const kpiReport = document.getElementById("kpiReport");
+
+    if(kpiEvents) kpiEvents.textContent = coachState.events.length;
+    if(kpiHomeGoals) kpiHomeGoals.textContent = homeGoals;
+    if(kpiAwayGoals) kpiAwayGoals.textContent = awayGoals;
+    if(kpiReport) kpiReport.textContent = coachState.report ? "OK" : "--";
+}
+
+function renderTimeline(){
+    const box = document.getElementById("eventsTimeline");
+    if(!box) return;
+
+    if(!coachState.events.length){
+        box.innerHTML = `
+            <div class="empty">
+                Nessun evento registrato. Crea una partita e usa i bottoni rapidi durante il match.
+            </div>
+        `;
+        return;
+    }
+
+    box.innerHTML = coachState.events
+        .map(e => `
+            <div class="event-card">
+                <div class="event-minute">${esc(e.minute)}'</div>
+
+                <div>
+                    <div class="event-title">${esc(e.icon)} ${esc(e.label)}</div>
+                    <div class="event-meta">
+                        ${esc(e.team)}${e.player ? " · " + esc(e.player) : ""}
+                    </div>
+                    ${e.note ? `<div class="event-note">${esc(e.note)}</div>` : ""}
+                </div>
+
+                <button class="delete-event" onclick="deleteEvent('${esc(e.id)}')">×</button>
+            </div>
+        `)
+        .join("");
+}
+
+function getDominantSide(){
+    const homePositive =
+        getEventsByType("gol").filter(e => e.side === "home").length * 4 +
+        getEventsByType("occasione").filter(e => e.side === "home").length * 2 +
+        getEventsByType("tiro").filter(e => e.side === "home").length +
+        getEventsByType("recupero").filter(e => e.side === "home").length;
+
+    const awayPositive =
+        getEventsByType("gol").filter(e => e.side === "away").length * 4 +
+        getEventsByType("occasione").filter(e => e.side === "away").length * 2 +
+        getEventsByType("tiro").filter(e => e.side === "away").length +
+        getEventsByType("recupero").filter(e => e.side === "away").length;
+
+    if(homePositive > awayPositive + 2) return "home";
+    if(awayPositive > homePositive + 2) return "away";
+    return "balanced";
+}
+
+function buildWeaknessText(side){
+    const lost = getEventsByType("palla_persa").filter(e => e.side === side).length;
+    const def = getEventsByType("errore_difensivo").filter(e => e.side === side).length;
+    const cards = getEventsByType("cartellino").filter(e => e.side === side).length;
+
+    const problems = [];
+
+    if(lost >= 2) problems.push("troppe palle perse nella costruzione o nelle transizioni");
+    if(def >= 1) problems.push("attenzione agli errori difensivi e alle coperture preventive");
+    if(cards >= 2) problems.push("gestione emotiva e duelli da controllare meglio");
+
+    if(!problems.length){
+        problems.push("nessuna criticità forte registrata, ma serve continuità nella gestione della partita");
+    }
+
+    return problems.join("; ");
+}
+
+function buildTrainingAdvice(){
+    const lost = getEventsByType("palla_persa").length;
+    const def = getEventsByType("errore_difensivo").length;
+    const shots = getEventsByType("tiro").length;
+    const chances = getEventsByType("occasione").length;
+    const recoveries = getEventsByType("recupero").length;
+
+    if(def >= 2){
+        return "Allenamento consigliato: lavoro su linea difensiva, coperture preventive, marcature in area e uscite sotto pressione.";
+    }
+
+    if(lost >= 3){
+        return "Allenamento consigliato: possesso sotto pressione, scelta della giocata semplice e transizioni dopo palla persa.";
+    }
+
+    if(shots + chances <= 2){
+        return "Allenamento consigliato: sviluppo offensivo, occupazione area, attacco della profondità e finalizzazione.";
+    }
+
+    if(recoveries >= 4){
+        return "Allenamento consigliato: consolidare pressing, recupero palla e ripartenza immediata dopo riconquista.";
+    }
+
+    return "Allenamento consigliato: seduta mista su intensità, transizioni, finalizzazione e gestione dei momenti della partita.";
+}
+
+function generateCoachReport(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+
+    const match = coachState.match;
+    const homeGoals = getGoals("home");
+    const awayGoals = getGoals("away");
+    const totalEvents = coachState.events.length;
+
+    const dominantSide = getDominantSide();
+    const dominantTeam = dominantSide === "balanced" ? "nessuna squadra in modo netto" : getTeamName(dominantSide);
+
+    const chancesHome = getEventsByType("occasione").filter(e => e.side === "home").length;
+    const chancesAway = getEventsByType("occasione").filter(e => e.side === "away").length;
+    const shotsHome = getEventsByType("tiro").filter(e => e.side === "home").length;
+    const shotsAway = getEventsByType("tiro").filter(e => e.side === "away").length;
+    const recoveriesHome = getEventsByType("recupero").filter(e => e.side === "home").length;
+    const recoveriesAway = getEventsByType("recupero").filter(e => e.side === "away").length;
+
+    const importantEvents = coachState.events
+        .filter(e => ["gol","occasione","errore_difensivo","palla_persa"].includes(e.type))
+        .slice(0,6);
+
+    const keyMoments = importantEvents.length
+        ? importantEvents.map(e => `- ${e.minute}' ${e.icon} ${e.label} ${e.team}${e.player ? " (" + e.player + ")" : ""}${e.note ? ": " + e.note : ""}`).join("\n")
+        : "- Nessun momento chiave registrato.";
+
+    const report = `
+<strong>REPORT MATCHIQ COACH</strong>
+
+Partita: ${match.homeTeam} vs ${match.awayTeam}
+Categoria: ${match.category || "Dilettanti"}
+Data: ${match.date || "--"}
+Risultato eventi registrati: ${homeGoals} - ${awayGoals}
+Moduli: ${match.homeShape || "--"} vs ${match.awayShape || "--"}
+
+<strong>Sintesi partita</strong>
+La partita ha registrato ${totalEvents} eventi. Dal flusso manuale inserito emerge che ${dominantTeam} ha avuto il momento più influente della gara. Il report si basa sugli eventi registrati dallo staff e può essere usato come prima lettura post-partita.
+
+<strong>Produzione offensiva</strong>
+${match.homeTeam}: ${shotsHome} tiri, ${chancesHome} occasioni.
+${match.awayTeam}: ${shotsAway} tiri, ${chancesAway} occasioni.
+
+<strong>Pressione e recupero palla</strong>
+${match.homeTeam}: ${recoveriesHome} recuperi registrati.
+${match.awayTeam}: ${recoveriesAway} recuperi registrati.
+
+<strong>Punti forti</strong>
+- ${recoveriesHome >= recoveriesAway ? match.homeTeam : match.awayTeam} ha mostrato segnali positivi nel recupero palla e nella reazione agli episodi.
+- Le occasioni registrate aiutano a individuare le zone e i giocatori più coinvolti nella fase offensiva.
+- La timeline permette allo staff di rivedere i momenti chiave senza affidarsi solo alla memoria.
+
+<strong>Aree da migliorare</strong>
+- ${match.homeTeam}: ${buildWeaknessText("home")}.
+- ${match.awayTeam}: ${buildWeaknessText("away")}.
+
+<strong>Momenti chiave</strong>
+${keyMoments}
+
+<strong>Allenamento consigliato</strong>
+${buildTrainingAdvice()}
+
+<strong>Messaggio per la squadra</strong>
+La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
+
+<strong>Nota</strong>
+Questa è una prima versione locale di MatchIQ Coach. Nelle prossime versioni il report potrà diventare più avanzato con AI, PDF, pagelle giocatori e storico stagione.
+`.trim();
+
+    coachState.report = report;
+    saveState();
+    renderReport();
+    renderStatus();
+
+    showNotice("Report Coach generato.", "ok");
+}
+
+function renderReport(){
+    const box = document.getElementById("coachReport");
+    if(!box) return;
+
+    box.innerHTML = coachState.report || "Crea una partita, registra alcuni eventi e premi “Genera report”.";
+}
+
+async function copyReport(){
+    if(!coachState.report){
+        showNotice("Prima genera un report.", "warn");
+        return;
+    }
+
+    const plain = coachState.report.replace(/<[^>]*>/g,"");
+
+    try{
+        await navigator.clipboard.writeText(plain);
+        showNotice("Report copiato negli appunti.", "ok");
+    }catch{
+        showNotice("Non riesco a copiare automaticamente. Seleziona il testo manualmente.", "warn");
+    }
+}
+
+function downloadReportTxt(){
+    if(!coachState.report){
+        showNotice("Prima genera un report.", "warn");
+        return;
+    }
+
+    const match = coachState.match;
+    const title = match
+        ? `matchiq-coach-${match.homeTeam}-vs-${match.awayTeam}`.toLowerCase().replace(/[^a-z0-9]+/g,"-")
+        : "matchiq-coach-report";
+
+    const plain = coachState.report.replace(/<[^>]*>/g,"");
+    const blob = new Blob([plain], {type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+}
+
+function renderAll(){
+    fillFormFromState();
+    renderStatus();
+    renderTimeline();
+    renderReport();
+}
+
+function boot(){
+    const dateInput = document.getElementById("matchDateInput");
+    if(dateInput && !dateInput.value){
+        dateInput.value = todayISO();
+    }
+
+    loadState();
+    renderAll();
+}
+
+boot();
+
+if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js")
+            .catch(err => console.warn("Service Worker non registrato:", err));
+    });
+}
+</script>
+
+</body>
+</html>
