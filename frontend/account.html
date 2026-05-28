@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical - Account Pro V1.4</title>
+<title>MatchIQ Tactical - Account Pro V1.5</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -766,13 +766,14 @@ p{
         <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
         <div>
             <div class="logo">MatchIQ</div>
-            <div class="subtitle">Account, Pro e Beta Founder</div>
+            <div class="subtitle">Account e Pro</div>
         </div>
     </div>
 
     <div class="actions">
-        <button class="btn dark" onclick="goDashboard()">Dashboard</button>
+        <button class="btn dark" onclick="goDashboard()">Home</button>
         <button class="btn green" onclick="goScout()">Scout</button>
+        <button class="btn soft" onclick="window.location.href='/coach.html?v='+APP_VERSION">Coach</button>
         <button class="btn soft" id="loginTopBtn" onclick="goLogin()">Login</button>
         <button class="btn red" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
     </div>
@@ -788,15 +789,15 @@ p{
             <h1 id="accountTitle">Sblocca MatchIQ Pro</h1>
 
             <p id="accountIntro" class="hero-lead">
-                Usa MatchIQ come una vera piattaforma di football intelligence:
-                più partite live, Scout Mode completo, player cards, watchlist ed export report.
+                Usa MatchIQ come una vera piattaforma di assistente tattico:
+                più partite live, WhatsApp illimitate, Coach report, PDF, WhatsApp, pagelle e storico esteso.
             </p>
 
             <div class="micro-trust">
                 <span>⚡ Live analysis</span>
-                <span>🧠 AI tactical signals</span>
+                <span>🧠 Coach report</span>
                 <span>🔍 Scout Mode</span>
-                <span>📄 Export report</span>
+                <span>📄 PDF / WhatsApp</span>
             </div>
 
             <div class="account-grid">
@@ -840,13 +841,13 @@ p{
         </div>
 
         <div class="cta-panel" id="ctaPanel">
-            <span class="badge beta">BETA FOUNDER</span>
+            <span class="badge beta">MATCHIQ PRO</span>
 
             <h2>MatchIQ Pro</h2>
 
             <p>
                 Per chi vuole usare MatchIQ durante le partite live:
-                analisi, Scout Mode, player cards complete e report esportabili.
+                analisi, Scout Mode, Coach report, PDF, WhatsApp, pagelle e storico esteso.
             </p>
 
             <div class="price-wrap">
@@ -864,12 +865,12 @@ p{
             </div>
 
             <ul>
-                <li>✅ Tutte le partite live disponibili</li>
-                <li>✅ Scout Mode completo</li>
-                <li>✅ Player cards complete</li>
-                <li>✅ Watchlist Pro</li>
-                <li>✅ Export report</li>
-                <li>✅ Moduli live avanzati</li>
+                <li>✅ PDF Coach illimitati</li>
+                <li>✅ WhatsApp illimitate</li>
+                <li>✅ Pagelle illimitate</li>
+                <li>✅ Storico Coach esteso</li>
+                <li>✅ PDF / WhatsApp</li>
+                <li>✅ Uso continuativo da campo</li>
             </ul>
 
             <div class="footer-actions">
@@ -901,16 +902,16 @@ p{
 
         <div class="footer-actions">
             <button class="btn green" onclick="goScout()">Apri Scout</button>
-            <button class="btn dark" onclick="goDashboard()">Dashboard</button>
+            <button class="btn dark" onclick="goDashboard()">Home</button>
             <button class="btn dark" onclick="window.location.href='/admin-users.html'">Admin Users</button>
             <button class="btn dark" onclick="window.location.href='/admin-analytics.html'">Analytics</button>
         </div>
     </div>
 
     <div class="value-panel section">
-        <span class="badge beta">COSA SBLOCCHI</span>
+        <span class="badge beta">COSA CAMBIA CON PRO</span>
 
-        <h2>Da preview a piattaforma completa</h2>
+        <h2>Da prova gratuita a uso continuativo</h2>
 
         <p>
             La versione Free serve per provare MatchIQ. Il piano Pro è pensato per usare davvero
@@ -920,7 +921,7 @@ p{
         <div class="unlock-grid">
             <div class="unlock-card">
                 <div class="unlock-icon">⚡</div>
-                <strong>Tutti i live</strong>
+                <strong>Coach senza limiti</strong>
                 <span>
                     Sblocca tutte le partite disponibili, senza limite Free sulle partite live.
                 </span>
@@ -928,15 +929,15 @@ p{
 
             <div class="unlock-card">
                 <div class="unlock-icon">🔍</div>
-                <strong>Scout Mode completo</strong>
+                <strong>WhatsApp illimitate</strong>
                 <span>
-                    Player cards complete, segnali hot/danger/pressure e analisi più profonda.
+                    Pagelle illimitate, segnali hot/danger/pressure e analisi più profonda.
                 </span>
             </div>
 
             <div class="unlock-card">
                 <div class="unlock-icon">📄</div>
-                <strong>Report esportabili</strong>
+                <strong>Uso professionale</strong>
                 <span>
                     Esporta report e usa MatchIQ come supporto concreto di analisi.
                 </span>
@@ -947,7 +948,7 @@ p{
     <div class="founder-panel">
         <div class="founder-grid">
             <div>
-                <span class="badge beta">BETA FOUNDER</span>
+                <span class="badge beta">MATCHIQ PRO</span>
 
                 <h2>Stai entrando nella prima fase di MatchIQ</h2>
 
@@ -982,12 +983,12 @@ p{
                 </p>
 
                 <ul class="compare-list">
-                    <li>✅ Preview partite live</li>
-                    <li>✅ Accesso base alla dashboard</li>
-                    <li>✅ Scout preview</li>
-                    <li>🔒 Limite partite live</li>
-                    <li>🔒 Player cards limitate</li>
-                    <li>🔒 Export bloccato</li>
+                    <li>✅ Analisi live preview</li>
+                    <li>✅ Scout accessibile</li>
+                    <li>✅ Coach report tecnico</li>
+                    <li>🔒 5 pagelle Coach</li>
+                    <li>🔒 2 partite nello storico</li>
+                    <li>🔒 1 PDF e 1 WhatsApp di prova</li>
                 </ul>
             </div>
 
@@ -995,16 +996,16 @@ p{
                 <h3>Piano Pro</h3>
 
                 <p>
-                    Per usare MatchIQ come vera piattaforma di football intelligence.
+                    Per usare MatchIQ come vera piattaforma di assistente tattico.
                 </p>
 
                 <ul class="compare-list">
-                    <li>✅ Tutte le partite live</li>
-                    <li>✅ Scout Mode completo</li>
-                    <li>✅ Player cards complete</li>
-                    <li>✅ Watchlist</li>
-                    <li>✅ Export report</li>
-                    <li>✅ Funzioni avanzate in beta</li>
+                    <li>✅ PDF Coach illimitati</li>
+                    <li>✅ WhatsApp illimitate</li>
+                    <li>✅ Pagelle illimitate</li>
+                    <li>✅ Storico Coach esteso</li>
+                    <li>✅ PDF / WhatsApp</li>
+                    <li>✅ Uso continuativo da campo</li>
                 </ul>
             </div>
         </div>
@@ -1021,14 +1022,14 @@ p{
 </div>
 
 <nav class="bottom-nav">
-    <a href="/mobile.html">Home</a>
+    <a href="/index.html">Home</a>
     <a href="/scout.html">Scout</a>
     <a href="/coach.html">Coach</a>
     <a class="active" href="/account.html">Account</a>
 </nav>
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10059";
+const APP_VERSION = "10290";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
@@ -1103,9 +1104,7 @@ function showNotice(message,type="ok",timeout=7000){
 }
 
 function goDashboard(){
-    window.location.href = isMobileDevice()
-        ? `/mobile.html?v=${APP_VERSION}`
-        : `/index.html?v=${APP_VERSION}`;
+    window.location.href = `/index.html?v=${APP_VERSION}`;
 }
 
 function goScout(){
@@ -1127,7 +1126,7 @@ function logout(){
     sessionStorage.removeItem("matchiq_auth_token");
 
     window.location.href = isMobileDevice()
-        ? `/mobile.html?v=${APP_VERSION}`
+        ? `/index.html?v=${APP_VERSION}`
         : `/index.html?v=${APP_VERSION}`;
 }
 
@@ -1229,7 +1228,7 @@ function renderAccount(){
             : isPro
                 ? "Il tuo piano Pro è attivo. Puoi usare Scout completo, tutte le partite live, watchlist ed export report."
                 : logged
-                    ? "Il tuo account è Free. Passa a Pro per sbloccare tutte le partite, Scout completo, player cards, watchlist ed export report."
+                    ? "Il tuo account è Free. Passa a Pro per sbloccare tutte le partite, Scout completo, Coach report, PDF, WhatsApp, pagelle e storico esteso."
                     : "Stai usando MatchIQ come Guest. Accedi o registrati per salvare il piano, attivare Pro e usare tutte le funzioni avanzate.";
     }
 
