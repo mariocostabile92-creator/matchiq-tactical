@@ -49,7 +49,7 @@ function buildHistoryItem(){
     if(!match) return null;
 
     return {
-        id: Date.now() + "-" + Math.round(Math.random()*9999),
+        id: Date.now() + "-" + Math.round(Math.random() * 9999),
         savedAt: new Date().toISOString(),
         match: JSON.parse(JSON.stringify(match)),
         events: JSON.parse(JSON.stringify(coachState.events || [])),
@@ -75,7 +75,7 @@ function saveCurrentMatchToHistory(){
 
     const history = loadHistory();
     history.unshift(item);
-    saveHistory(history.slice(0,50));
+    saveHistory(history.slice(0, 50));
 
     renderHistory();
     renderStatus();
@@ -84,24 +84,65 @@ function saveCurrentMatchToHistory(){
 
 function clearCoachHistory(){
     if(!confirm("Vuoi svuotare tutto lo storico Coach?")) return;
+
     localStorage.removeItem(HISTORY_KEY);
+
     renderHistory();
     renderStatus();
     showNotice("Storico Coach svuotato.", "ok");
 }
 
-function copyHistoryReport(historyId){
+async function copyHistoryReport(historyId){
     const item = loadHistory().find(x => String(x.id) === String(historyId));
+
     if(!item || !item.report){
         showNotice("Report storico non disponibile.", "warn");
         return;
     }
 
-    const plain = String(item.report).replace(/<[^>]*>/g,"");
+    const plain = String(item.report).replace(/<[^>]*>/g, "");
+
     try{
         await navigator.clipboard.writeText(plain);
         showNotice("Report storico copiato.", "ok");
     }catch{
         showNotice("Non riesco a copiare automaticamente.", "warn");
     }
+}
+
+function reopenHistoryMatch(historyId){
+    const item = loadHistory().find(x => String(x.id) === String(historyId));
+
+    if(!item){
+        showNotice("Partita storica non trovata.", "warn");
+        return;
+    }
+
+    coachState = {
+        match: item.match || null,
+        events: Array.isArray(item.events) ? item.events : [],
+        ratings: Array.isArray(item.ratings) ? item.ratings : [],
+        report: item.report || ""
+    };
+
+    saveState();
+    renderAll();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+    showNotice("Partita riaperta dallo storico.", "ok");
+}
+
+function deleteHistoryMatch(historyId){
+    if(!confirm("Vuoi eliminare questa partita dallo storico?")) return;
+
+    const history = loadHistory().filter(x => String(x.id) !== String(historyId));
+    saveHistory(history);
+
+    renderHistory();
+    renderStatus();
+    showNotice("Partita eliminata dallo storico.", "ok");
 }
