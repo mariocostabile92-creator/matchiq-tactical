@@ -1,0 +1,26 @@
+{
+  "name": "MatchIQ Tactical",
+  "short_name": "MatchIQ",
+  "description": "AI Football Intelligence Platform per analisi live, scouting e player insights.",
+  "start_url": "/mobile.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05070d",
+  "theme_color": "#00f5a0",
+  "categories": ["sports", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/assets/matchiq-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/matchiq-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

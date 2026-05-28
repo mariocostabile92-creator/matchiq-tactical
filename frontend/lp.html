@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>MatchIQ Tactical | AI Football Intelligence</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00f5a0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MatchIQ">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
   <meta name="description" content="MatchIQ Tactical è una piattaforma AI per analisi calcistica live, Scout Mode, player intelligence, watchlist e report." />
   <style>
     :root{
@@ -231,5 +237,13 @@
   </main>
 
   <footer class="wrap foot">© MatchIQ Tactical · AI Football Intelligence Platform</footer>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js")
+      .catch(err => console.warn("Service Worker non registrato:", err));
+  });
+}
+</script>
 </body>
 </html>
