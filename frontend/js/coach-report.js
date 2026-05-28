@@ -118,7 +118,7 @@ function buildWhatsAppSummary(){
     return `MATCHIQ COACH - SINTESI\n${m.homeTeam} vs ${m.awayTeam} (${homeGoals}-${awayGoals})\nCategoria: ${m.category || "Dilettanti"}\nEventi registrati: ${coachState.events.length}\nMigliore: ${best ? `${best.player} (${best.vote})` : "non inserito"}\nFocus allenamento: ${buildTrainingAdvice().replace("Allenamento consigliato: ","")}\n\nReport generato con MatchIQ Coach.`;
 }
 
-function copyWhatsAppSummary(){
+async function copyWhatsAppSummary(){
     if(!coachState.match){
         showNotice("Prima crea una partita manuale.", "warn");
         return;
@@ -223,7 +223,7 @@ Report generato localmente da MatchIQ Coach V1.3: utile come base per analisi po
     showNotice("Report Coach generato.", "ok");
 }
 
-function copyReport(){
+async function copyReport(){
     if(!coachState.report){
         showNotice("Prima genera un report.", "warn");
         return;
