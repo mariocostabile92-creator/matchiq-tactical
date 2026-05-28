@@ -148,7 +148,18 @@ async function copyWhatsAppSummary(){
 
     try{
         await navigator.clipboard.writeText(text);
-        showNotice("Sintesi WhatsApp copiata.", "ok");
+
+        if(!isCoachPro()){
+            incrementCoachUsageCount(COACH_USAGE_KEYS.whatsappCopies);
+            renderAll();
+        }
+
+        showNotice(
+            isCoachPro()
+                ? "Sintesi WhatsApp copiata."
+                : "Sintesi WhatsApp copiata. Prova gratuita usata.",
+            "ok"
+        );
     }catch{
         showNotice("Non riesco a copiare automaticamente. Seleziona il testo manualmente.", "warn");
     }
@@ -182,7 +193,6 @@ function generateCoachReport(){
     const keyMoments = importantEvents.length
         ? importantEvents.map(e => `- ${e.minute}' ${e.icon} ${e.label} ${e.team}${e.player ? " (" + e.player + ")" : ""}${e.note ? ": " + e.note : ""}`).join("\n")
         : "- Nessun momento chiave registrato.";
-
     const report = `
 <strong>REPORT MATCHIQ COACH</strong>
 
@@ -602,5 +612,10 @@ function printCoachPdf(){
 
     setTimeout(() => {
         printWindow.print();
+
+        if(!isCoachPro()){
+            incrementCoachUsageCount(COACH_USAGE_KEYS.pdfExports);
+            renderAll();
+        }
     }, 500);
 }

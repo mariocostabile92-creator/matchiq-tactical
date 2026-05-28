@@ -1,21 +1,26 @@
-const APP_VERSION = "10095";
+const APP_VERSION = "10210";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 const COACH_FREE_LIMITS = {
-    maxRatings: 3,
-    maxHistory: 1,
-    pdf: false,
-    whatsapp: false
+    maxRatings: 5,
+    maxHistory: 2,
+    maxPdfExports: 1,
+    maxWhatsappCopies: 1
 };
 
 const COACH_PRO_LIMITS = {
     maxRatings: 999,
     maxHistory: 50,
-    pdf: true,
-    whatsapp: true
+    maxPdfExports: 999,
+    maxWhatsappCopies: 999
+};
+
+const COACH_USAGE_KEYS = {
+    pdfExports: "matchiq_coach_pdf_exports_v16",
+    whatsappCopies: "matchiq_coach_whatsapp_copies_v16"
 };
 
 let coachState = {
@@ -152,12 +157,39 @@ function getCoachLimits(){
         : COACH_FREE_LIMITS;
 }
 
+function getCoachUsageCount(key){
+    try{
+        return Number(localStorage.getItem(key) || "0") || 0;
+    }catch{
+        return 0;
+    }
+}
+
+function incrementCoachUsageCount(key){
+    try{
+        const current = getCoachUsageCount(key);
+        localStorage.setItem(key, String(current + 1));
+    }catch{}
+}
+
 function canUseCoachPdf(){
-    return getCoachLimits().pdf === true;
+    if(isCoachPro()) return true;
+    return getCoachUsageCount(COACH_USAGE_KEYS.pdfExports) < getCoachLimits().maxPdfExports;
 }
 
 function canUseCoachWhatsapp(){
-    return getCoachLimits().whatsapp === true;
+    if(isCoachPro()) return true;
+    return getCoachUsageCount(COACH_USAGE_KEYS.whatsappCopies) < getCoachLimits().maxWhatsappCopies;
+}
+
+function getCoachPdfUsageText(){
+    if(isCoachPro()) return "PDF illimitati";
+    return `PDF prova ${getCoachUsageCount(COACH_USAGE_KEYS.pdfExports)}/${getCoachLimits().maxPdfExports}`;
+}
+
+function getCoachWhatsappUsageText(){
+    if(isCoachPro()) return "WhatsApp illimitato";
+    return `WhatsApp prova ${getCoachUsageCount(COACH_USAGE_KEYS.whatsappCopies)}/${getCoachLimits().maxWhatsappCopies}`;
 }
 
 function canAddCoachRating(){
@@ -177,11 +209,11 @@ function goCoachUpgrade(){
 }
 
 function showCoachProNotice(feature){
-    const message = `🔒 ${feature} è inclusa in MatchIQ Pro. Passa a Pro per sbloccarla in modo illimitato.`;
+    const message = `🔒 Hai usato la prova gratuita di ${feature}. Passa a Pro per usarla in modo illimitato.`;
 
-    showNotice(message, "warn", 3000);
+    showNotice(message, "warn", 3500);
 
     setTimeout(() => {
         window.location.href = `/account.html?v=${APP_VERSION}&from=coach-pro-lock`;
-    }, 900);
+    }, 1200);
 }

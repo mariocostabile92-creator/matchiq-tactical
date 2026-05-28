@@ -6,8 +6,8 @@ function getCoachLimitText(){
             plan: "PRO",
             ratings: "Pagelle illimitate",
             history: `Storico ${loadHistory().length}/${limits.maxHistory}`,
-            pdf: "PDF attivo",
-            whatsapp: "WhatsApp attivo"
+            pdf: "PDF illimitati",
+            whatsapp: "WhatsApp illimitato"
         };
     }
 
@@ -15,8 +15,8 @@ function getCoachLimitText(){
         plan: "FREE",
         ratings: `Pagelle ${coachState.ratings.length}/${limits.maxRatings}`,
         history: `Storico ${loadHistory().length}/${limits.maxHistory}`,
-        pdf: "PDF Pro",
-        whatsapp: "WhatsApp Pro"
+        pdf: getCoachPdfUsageText(),
+        whatsapp: getCoachWhatsappUsageText()
     };
 }
 
@@ -52,20 +52,28 @@ function renderReportButtonsState(){
     pdfButtons.forEach(btn => {
         if(!canUseCoachPdf()){
             btn.innerHTML = "🔒 Scarica PDF";
-            btn.title = "Funzione Pro";
+            btn.title = "Prova gratuita usata. Passa a Pro per PDF illimitati.";
         }else{
-            btn.innerHTML = "Scarica PDF";
-            btn.title = "";
+            btn.innerHTML = isCoachPro()
+                ? "Scarica PDF"
+                : "Scarica PDF · prova";
+            btn.title = isCoachPro()
+                ? ""
+                : "Hai 1 esportazione PDF gratuita.";
         }
     });
 
     whatsappButtons.forEach(btn => {
         if(!canUseCoachWhatsapp()){
             btn.innerHTML = "🔒 Copia WhatsApp";
-            btn.title = "Funzione Pro";
+            btn.title = "Prova gratuita usata. Passa a Pro per WhatsApp illimitato.";
         }else{
-            btn.innerHTML = "Copia WhatsApp";
-            btn.title = "";
+            btn.innerHTML = isCoachPro()
+                ? "Copia WhatsApp"
+                : "Copia WhatsApp · prova";
+            btn.title = isCoachPro()
+                ? ""
+                : "Hai 1 copia WhatsApp gratuita.";
         }
     });
 }
@@ -208,7 +216,7 @@ function renderHistory(){
         box.innerHTML = `
             <div class="empty">
                 Nessuna partita salvata. 
-                ${isCoachPro() ? `Piano Pro: fino a ${limits.maxHistory} partite.` : `Piano Free: massimo ${limits.maxHistory} partita salvata.`}
+                ${isCoachPro() ? `Piano Pro: fino a ${limits.maxHistory} partite.` : `Piano Free: massimo ${limits.maxHistory} partite salvate.`}
             </div>
         `;
         return;
@@ -216,7 +224,7 @@ function renderHistory(){
 
     const limitHint = isCoachPro()
         ? `<div class="empty" style="padding:12px;margin-bottom:10px;">PRO attivo: storico ${history.length}/${limits.maxHistory}.</div>`
-        : `<div class="empty" style="padding:12px;margin-bottom:10px;">FREE: storico ${history.length}/${limits.maxHistory}. Lo storico completo è Pro.</div>`;
+        : `<div class="empty" style="padding:12px;margin-bottom:10px;">FREE: storico ${history.length}/${limits.maxHistory}. Storico esteso incluso in Pro.</div>`;
 
     const cards = history.map(item => {
         const m = item.match || {};
