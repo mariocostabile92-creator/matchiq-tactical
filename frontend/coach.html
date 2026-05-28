@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.4.5 - Refactor</title>
+<title>MatchIQ Coach Mode V1.5 - PDF</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -37,7 +37,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.4.5</span>
+            <span class="badge green">COACH MODE V1.5</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -357,6 +357,7 @@
             <div class="pro-report-actions">
                 <button class="btn green" onclick="generateCoachReport()">Aggiorna report</button>
                 <button class="btn gold" onclick="downloadReportTxt()">Scarica TXT</button>
+                <button class="btn green" onclick="printCoachPdf()">Scarica PDF</button>
                 <button class="btn dark" onclick="copyWhatsAppSummary()">Copia WhatsApp</button>
             </div>
             <div class="whatsapp-hint">Usa “Copia WhatsApp” per condividere una sintesi rapida con mister, staff o gruppo squadra.</div>
