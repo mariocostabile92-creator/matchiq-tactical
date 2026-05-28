@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>MatchIQ Tactical - Match Analysis</title>
+<title>MatchIQ - Analisi partita</title>
 
 <link rel="stylesheet" href="css/match.css">
 
@@ -23,32 +23,32 @@
 <body>
 <div class="topbar">
     <div>
-        <div class="logo">⚽ MatchIQ Tactical</div>
-        <div class="subtitle">AI Tactical Analysis Platform</div>
+        <div class="logo">⚽ MatchIQ</div>
+        <div class="subtitle">Analisi tattica live</div>
     </div>
 
     <div class="top-actions">
         <div class="live-badge">
             <span class="live-dot"></span>
-            <span id="liveUpdateText">LIVE UPDATE</span>
+            <span id="liveUpdateText">Live</span>
             <span>•</span>
-            <span id="refreshTimerText">Next refresh --s</span>
+            <span id="refreshTimerText">Aggiornamento --s</span>
         </div>
 
-        <button class="refresh-btn" onclick="manualRefresh()">↻ Refresh</button>
-        <button class="pdf-btn" onclick="downloadPDFReport()">📄 Download PDF</button>
+        <button class="refresh-btn" onclick="manualRefresh()">↻ Aggiorna</button>
+        <button class="pdf-btn" onclick="downloadPDFReport()">📄 Scarica PDF</button>
         <button class="dashboard-btn" onclick="goBackToDashboard()">Dashboard</button>
     </div>
 </div>
 
 <div class="live-overlay" id="liveOverlay">
-    <div class="live-overlay-title" id="liveOverlayTitle">⚡ LIVE EVENT</div>
-    <div class="live-overlay-text" id="liveOverlayText">Match flow updated.</div>
+    <div class="live-overlay-title" id="liveOverlayTitle">⚡ Evento live</div>
+    <div class="live-overlay-text" id="liveOverlayText">Flusso partita aggiornato.</div>
 </div>
 
 <div class="main" id="app">
     <div class="card">
-        <div class="section-content">Loading match...</div>
+        <div class="section-content">Caricamento analisi...</div>
     </div>
 </div>
 
@@ -128,7 +128,7 @@ document.addEventListener("visibilitychange", () => {
                 <div class="card">
                     <div class="section-content">
                         <div class="error-box">
-                            Errore: motore analisi non disponibile.
+                            Errore: analisi partita non disponibile.
                         </div>
                     </div>
                 </div>
