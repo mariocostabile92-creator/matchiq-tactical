@@ -263,3 +263,112 @@ function downloadReportTxt(){
 
     URL.revokeObjectURL(url);
 }
+
+
+function stripReportHtml(value){
+    return String(value || "")
+        .replace(/<strong>/g,"\n## ")
+        .replace(/<\/strong>/g,"\n")
+        .replace(/<[^>]*>/g,"")
+        .replace(/\n{3,}/g,"\n\n")
+        .trim();
+}
+
+function splitReportSections(reportHtml){
+    const raw = String(reportHtml || "");
+    const parts = raw.split(/<strong>|<\/strong>/g).map(x => x.trim()).filter(Boolean);
+    const sections = [];
+
+    for(let i=0; i<parts.length; i+=2){
+        const title = parts[i] || "Sezione";
+        const body = parts[i+1] || "";
+        if(title.toUpperCase().includes("REPORT MATCHIQ COACH")) continue;
+        sections.push({title, body: body.replace(/<[^>]*>/g,"").trim()});
+    }
+
+    return sections.length ? sections : [{title:"Report", body:stripReportHtml(raw)}];
+}
+
+function buildPrintableCoachReport(){
+    if(!coachState.match || !coachState.report){
+        return "";
+    }
+
+    const match = coachState.match;
+    const homeGoals = getGoals("home");
+    const awayGoals = getGoals("away");
+    const sections = splitReportSections(coachState.report);
+    const dateLabel = match.date || "--";
+    const generatedAt = new Date().toLocaleString("it-IT");
+
+    const sectionsHtml = sections.map(section => `
+        <section class="pdf-section">
+            <h2>${esc(section.title)}</h2>
+            <div class="pdf-section-body">${esc(section.body)}</div>
+        </section>
+    `).join("");
+
+    return `
+        <div class="pdf-report-page" id="pdfReportPage">
+            <div class="pdf-header">
+                <div>
+                    <div class="pdf-brand">MatchIQ Coach</div>
+                    <div class="pdf-subtitle">Report tecnico per calcio dilettantistico</div>
+                </div>
+                <div class="pdf-badge">COACH REPORT PDF</div>
+            </div>
+
+            <h1 class="pdf-title">${esc(match.homeTeam)} vs ${esc(match.awayTeam)}</h1>
+
+            <div class="pdf-meta">
+                <div class="pdf-meta-box">
+                    <div class="pdf-meta-label">Risultato</div>
+                    <div class="pdf-meta-value">${homeGoals} - ${awayGoals}</div>
+                </div>
+                <div class="pdf-meta-box">
+                    <div class="pdf-meta-label">Categoria</div>
+                    <div class="pdf-meta-value">${esc(match.category || "Dilettanti")}</div>
+                </div>
+                <div class="pdf-meta-box">
+                    <div class="pdf-meta-label">Data</div>
+                    <div class="pdf-meta-value">${esc(dateLabel)}</div>
+                </div>
+                <div class="pdf-meta-box">
+                    <div class="pdf-meta-label">Eventi</div>
+                    <div class="pdf-meta-value">${coachState.events.length}</div>
+                </div>
+            </div>
+
+            ${sectionsHtml}
+
+            <div class="pdf-footer">
+                <span>Generato con MatchIQ Coach V1.5</span>
+                <span>${esc(generatedAt)}</span>
+            </div>
+        </div>
+    `;
+}
+
+function printCoachPdf(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+
+    if(!coachState.report){
+        generateCoachReport();
+    }
+
+    const old = document.getElementById("pdfReportPage");
+    if(old) old.remove();
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = buildPrintableCoachReport();
+    document.body.appendChild(wrapper.firstElementChild);
+
+    showNotice("Si apre la stampa: scegli ‘Salva come PDF’.", "ok", 3500);
+
+    setTimeout(() => {
+        window.print();
+    }, 350);
+}
