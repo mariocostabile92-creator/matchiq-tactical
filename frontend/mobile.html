@@ -78,7 +78,10 @@ if(!isUnlocked && matches.length>visible.length){
   html+=`<article class="match" style="border-color:rgba(255,209,102,.45);background:rgba(255,209,102,.08)"><div class="league" style="color:var(--gold)">PIANO FREE</div><h3 style="margin:0 0 8px;font-size:20px">🔒 Sblocca tutte le partite live</h3><p style="color:#dbe6ff;line-height:1.45;margin:0 0 14px">Stai vedendo ${visible.length} partite su ${matches.length}. Con MatchIQ Pro sblocchi tutte le partite, Scout completo, report ed export.</p><a class="btn gold" href="/account.html">Passa a Pro</a></article>`;
 }
 box.innerHTML=html}catch(e){box.innerHTML='<div class="empty">Errore live: '+e.message+'</div>'}}
-loadPlan().then(()=>loadMatches(false));setInterval(()=>loadMatches(false),60000);
+loadPlan().then(()=>loadMatches(false));
+setInterval(()=>loadMatches(false),60000);
+</script>
+
 <script>
 if("serviceWorker" in navigator){
   window.addEventListener("load", () => {
