@@ -177,9 +177,11 @@ function goCoachUpgrade(){
 }
 
 function showCoachProNotice(feature){
-    showNotice(
-        `🔒 ${feature} è inclusa in MatchIQ Pro. Passa a Pro per sbloccarla in modo illimitato.`,
-        "warn",
-        7000
-    );
+    const message = `🔒 ${feature} è inclusa in MatchIQ Pro. Passa a Pro per sbloccarla in modo illimitato.`;
+
+    showNotice(message, "warn", 3000);
+
+    setTimeout(() => {
+        window.location.href = `/account.html?v=${APP_VERSION}&from=coach-pro-lock`;
+    }, 900);
 }
