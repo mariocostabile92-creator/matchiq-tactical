@@ -1,4 +1,4 @@
-/* MatchIQ Scout - Render Module V1.3
+/* MatchIQ Scout - Render Module V1.4
    SaaS Free/Pro + Free Match Limit + Copy Polish
 */
 
@@ -16,6 +16,33 @@ function renderAll(){
   applyScoutAccessUI();
 }
 
+function cleanScoutLabel(value){
+  const raw = String(value || "").trim();
+
+  const map = {
+    "api_football_live": "Live data",
+    "frontend-side": "Analisi locale",
+    "frontend_side": "Analisi locale",
+    "real_live_player": "Player tracking",
+    "live_player": "Player tracking",
+    "fallback": "Dati stimati",
+    "local": "Analisi locale",
+    "matchiq_real": "MatchIQ live",
+    "matchiq_local": "MatchIQ locale"
+  };
+
+  const key = raw.toLowerCase();
+
+  if(map[key]){
+    return map[key];
+  }
+
+  return raw
+    .replaceAll("_", " ")
+    .replaceAll("-", " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function renderAccessUI(){
   const actions = document.querySelector(".topbar .actions");
 
@@ -28,7 +55,7 @@ function renderAccessUI(){
 
     actions.insertAdjacentHTML(
       "afterbegin",
-      `<div class="pill mi-plan-pill ${isPro ? "pill-live" : "pill-clean"}">${esc(label)}</div>`
+      `<div class="pill mi-plan-pill ${isPro ? "pill-live" : "pill-clean"}">${esc(cleanScoutLabel(label))}</div>`
     );
 
     [...actions.children].forEach(el => {
@@ -54,8 +81,8 @@ function renderAccessUI(){
     const isPro = typeof isScoutPro === "function" ? isScoutPro() : Boolean(state.account?.is_pro);
 
     sub.textContent = isPro
-      ? "Scout completo · Live Player Intelligence · Tactical Signals · Export Report"
-      : "Scout Preview · player cards limitate · export, watchlist e simulazioni disponibili con Pro";
+      ? "Scout completo · Player intelligence live · Segnali tattici · Export report"
+      : "Anteprima Scout · player cards limitate · export, watchlist e simulazioni disponibili con Pro";
   }
 }
 
@@ -93,7 +120,7 @@ function proCtaHtml(mode = "players"){
     },
     modal: {
       title: "🔒 Scheda Player Pro",
-      desc: "Radar, AI coach commentary, probabilità live, tactical zone ed export player report sono disponibili con MatchIQ Pro."
+      desc: "Radar, commento AI, probabilità live, zona tattica ed export player report sono disponibili con MatchIQ Pro."
     },
     matches: {
       title: "🔒 Tutte le partite con Pro",
@@ -297,20 +324,20 @@ function renderHero(){
   hero.innerHTML = `
     <div>
       <h3>${esc(m.home)}</h3>
-      <p>${esc(m.league)} · Home Team</p>
+      <p>${esc(m.league)} · Casa</p>
     </div>
 
     <div class="hero-score">
       <strong>${m.scoreHome} - ${m.scoreAway}</strong>
-      <div>${m.minute}' · ${esc(m.status)}</div>
+      <div>${m.minute}' · ${esc(cleanScoutLabel(m.status || "Live"))}</div>
       <div style="margin-top:8px;font-size:12px;color:${isPro ? "#00f5a0" : "#ffb020"};font-weight:900;">
-        ${isPro ? "Scout Pro completo" : "Scout Free Preview"}
+        ${isPro ? "Scout Pro completo" : "Anteprima Scout Free"}
       </div>
     </div>
 
     <div style="text-align:right;">
       <h3>${esc(m.away)}</h3>
-      <p>Away Team</p>
+      <p>Trasferta</p>
     </div>
   `;
 }
@@ -411,7 +438,7 @@ function renderPlayers(){
             <div class="player-head">
               <div>
                 <div class="player-name">${esc(p.name)}</div>
-                <div class="player-sub">${esc(p.team)} · ${esc(p.role)} · ${esc(p.data_source)}</div>
+                <div class="player-sub">${esc(p.team)} · ${esc(p.role)} · ${esc(cleanScoutLabel(p.data_source || "Live data"))}</div>
               </div>
               <div class="score ${scoreClass}">${Math.round(num(p.scout_score,0))}</div>
             </div>
@@ -421,10 +448,10 @@ function renderPlayers(){
             </div>
 
             <div class="stats">
-              <div class="stat"><small>Threat</small><strong>${Math.round(num(p.threat,0))}</strong></div>
-              <div class="stat"><small>Creative</small><strong>${Math.round(num(p.creativity,0))}</strong></div>
-              <div class="stat"><small>Press</small><strong>${Math.round(num(p.pressure,0))}</strong></div>
-              <div class="stat"><small>Mom</small><strong>${Math.round(num(p.momentum,0))}</strong></div>
+              <div class="stat"><small>Pericolo</small><strong>${Math.round(num(p.threat,0))}</strong></div>
+              <div class="stat"><small>Creatività</small><strong>${Math.round(num(p.creativity,0))}</strong></div>
+              <div class="stat"><small>Pressione</small><strong>${Math.round(num(p.pressure,0))}</strong></div>
+              <div class="stat"><small>Momentum</small><strong>${Math.round(num(p.momentum,0))}</strong></div>
             </div>
           </div>
 
@@ -475,7 +502,7 @@ function renderTimeline(){
       <div class="event ${e.className || ""}">
         <div class="event-top">
           <span class="minute">${esc(e.minute)}'</span>
-          <span class="tag">${esc(e.label)}</span>
+          <span class="tag">${esc(cleanScoutLabel(e.label))}</span>
         </div>
         <div class="event-title">${esc(e.title)}</div>
         <div class="event-desc">${esc(e.desc)}</div>
@@ -497,15 +524,15 @@ function renderTicker(){
   }
 
   if(!state.hasRealPlayers){
-    ticker.textContent = `LIVE ${m.home} - ${m.away} · ${m.minute}' · player data non ancora disponibili per questa partita`;
+    ticker.textContent = `LIVE ${m.home} - ${m.away} · ${m.minute}' · dati giocatori non ancora disponibili per questa partita`;
     return;
   }
 
   const top = [...state.players].sort((a,b) => num(b.scout_score,0) - num(a.scout_score,0))[0];
 
   ticker.textContent = isPro
-    ? `LIVE ${m.home} - ${m.away} · ${m.minute}' · PRO · Top Scout: ${top?.name || "--"} · Threat ${Math.round(num(top?.threat,0))} · Source ${top?.data_source || "--"}`
-    : `LIVE ${m.home} - ${m.away} · ${m.minute}' · FREE PREVIEW · ${state.players.length} player analizzati, preview limitata attiva`;
+    ? `LIVE ${m.home} - ${m.away} · ${m.minute}' · PRO · Top Scout: ${top?.name || "--"} · Pericolo ${Math.round(num(top?.threat,0))} · Dati ${cleanScoutLabel(top?.data_source || "Live data")}`
+    : `LIVE ${m.home} - ${m.away} · ${m.minute}' · Anteprima Free · ${state.players.length} player analizzati, preview limitata attiva`;
 }
 
 function renderWatchlist(){
