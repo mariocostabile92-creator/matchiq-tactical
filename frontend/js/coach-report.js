@@ -62,10 +62,16 @@ function buildTrainingAdvice(){
 
 function buildRatingsReportText(){
     if(!coachState.ratings.length) return "Nessuna pagella giocatore inserita.";
+
     const best = getBestRating();
     const positives = coachState.ratings.filter(r => Number(r.vote || 0) >= 7);
     const improve = coachState.ratings.filter(r => Number(r.vote || 0) < 6);
-    const list = [...coachState.ratings].sort((a,b) => Number(b.vote || 0) - Number(a.vote || 0)).map(r => `- ${r.player} (${r.team}, ${r.role}) — voto ${r.vote}${r.note ? ": " + r.note : ""}`).join("\n");
+
+    const list = [...coachState.ratings]
+        .sort((a,b) => Number(b.vote || 0) - Number(a.vote || 0))
+        .map(r => `- ${r.player} (${r.team}, ${r.role}) — voto ${r.vote}${r.note ? ": " + r.note : ""}`)
+        .join("\n");
+
     return `
 Migliore in campo: ${best ? `${best.player} (${best.team}) con voto ${best.vote}` : "--"}.
 Giocatori positivi: ${positives.length ? positives.map(r => `${r.player} ${r.vote}`).join(", ") : "nessun voto sopra il 7 registrato"}.
@@ -111,11 +117,20 @@ function buildCriticalIssues(){
 
 function buildWhatsAppSummary(){
     if(!coachState.match) return "";
+
     const m=coachState.match;
     const best=getBestRating();
     const homeGoals=getGoals("home");
     const awayGoals=getGoals("away");
-    return `MATCHIQ COACH - SINTESI\n${m.homeTeam} vs ${m.awayTeam} (${homeGoals}-${awayGoals})\nCategoria: ${m.category || "Dilettanti"}\nEventi registrati: ${coachState.events.length}\nMigliore: ${best ? `${best.player} (${best.vote})` : "non inserito"}\nFocus allenamento: ${buildTrainingAdvice().replace("Allenamento consigliato: ","")}\n\nReport generato con MatchIQ Coach.`;
+
+    return `MATCHIQ COACH - SINTESI
+${m.homeTeam} vs ${m.awayTeam} (${homeGoals}-${awayGoals})
+Categoria: ${m.category || "Dilettanti"}
+Eventi registrati: ${coachState.events.length}
+Migliore: ${best ? `${best.player} (${best.vote})` : "non inserito"}
+Focus allenamento: ${buildTrainingAdvice().replace("Allenamento consigliato: ","")}
+
+Report generato con MatchIQ Coach.`;
 }
 
 async function copyWhatsAppSummary(){
@@ -123,7 +138,9 @@ async function copyWhatsAppSummary(){
         showNotice("Prima crea una partita manuale.", "warn");
         return;
     }
+
     const text=buildWhatsAppSummary();
+
     try{
         await navigator.clipboard.writeText(text);
         showNotice("Sintesi WhatsApp copiata.", "ok");
@@ -212,7 +229,7 @@ ${buildWhatsAppSummary()}
 La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
 
 <strong>Nota</strong>
-Report generato localmente da MatchIQ Coach V1.3: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
+Report generato localmente da MatchIQ Coach V1.5: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
 `.trim();
 
     coachState.report = report;
@@ -229,7 +246,7 @@ async function copyReport(){
         return;
     }
 
-    const plain = coachState.report.replace(/<[^>]*>/g,"");
+    const plain = stripReportHtml(coachState.report);
 
     try{
         await navigator.clipboard.writeText(plain);
@@ -250,7 +267,7 @@ function downloadReportTxt(){
         ? `matchiq-coach-${match.homeTeam}-vs-${match.awayTeam}`.toLowerCase().replace(/[^a-z0-9]+/g,"-")
         : "matchiq-coach-report";
 
-    const plain = coachState.report.replace(/<[^>]*>/g,"");
+    const plain = stripReportHtml(coachState.report);
     const blob = new Blob([plain], {type:"text/plain;charset=utf-8"});
     const url = URL.createObjectURL(blob);
 
@@ -264,29 +281,67 @@ function downloadReportTxt(){
     URL.revokeObjectURL(url);
 }
 
+function stripReportHtml(html){
+    const div = document.createElement("div");
+    div.innerHTML = String(html || "");
+    return div.textContent || div.innerText || "";
+}
 
-function stripReportHtml(value){
-    return String(value || "")
-        .replace(/<strong>/g,"\n## ")
-        .replace(/<\/strong>/g,"\n")
-        .replace(/<[^>]*>/g,"")
-        .replace(/\n{3,}/g,"\n\n")
-        .trim();
+function escapePrintHtml(value){
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 }
 
 function splitReportSections(reportHtml){
-    const raw = String(reportHtml || "");
-    const parts = raw.split(/<strong>|<\/strong>/g).map(x => x.trim()).filter(Boolean);
-    const sections = [];
+    const text = stripReportHtml(reportHtml);
+    const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
 
-    for(let i=0; i<parts.length; i+=2){
-        const title = parts[i] || "Sezione";
-        const body = parts[i+1] || "";
-        if(title.toUpperCase().includes("REPORT MATCHIQ COACH")) continue;
-        sections.push({title, body: body.replace(/<[^>]*>/g,"").trim()});
+    const sections = [];
+    let current = {
+        title: "Report",
+        lines: []
+    };
+
+    const knownTitles = [
+        "REPORT MATCHIQ COACH",
+        "Sintesi partita",
+        "Produzione offensiva",
+        "Pressione e recupero palla",
+        "Punti forti",
+        "Aree da migliorare",
+        "Momenti chiave",
+        "Pagelle giocatori",
+        "Consigli per il mister",
+        "Criticità tattiche",
+        "Allenamento consigliato",
+        "Sintesi WhatsApp",
+        "Messaggio per la squadra",
+        "Nota"
+    ];
+
+    lines.forEach(line => {
+        if(knownTitles.includes(line)){
+            if(current.lines.length || current.title !== "Report"){
+                sections.push(current);
+            }
+            current = {
+                title: line,
+                lines: []
+            };
+        }else{
+            current.lines.push(line);
+        }
+    });
+
+    if(current.lines.length || current.title !== "Report"){
+        sections.push(current);
     }
 
-    return sections.length ? sections : [{title:"Report", body:stripReportHtml(raw)}];
+    return sections;
 }
 
 function buildPrintableCoachReport(){
@@ -294,59 +349,215 @@ function buildPrintableCoachReport(){
         return "";
     }
 
-    const match = coachState.match;
+    const m = coachState.match;
     const homeGoals = getGoals("home");
     const awayGoals = getGoals("away");
-    const sections = splitReportSections(coachState.report);
-    const dateLabel = match.date || "--";
     const generatedAt = new Date().toLocaleString("it-IT");
+    const sections = splitReportSections(coachState.report);
 
-    const sectionsHtml = sections.map(section => `
-        <section class="pdf-section">
-            <h2>${esc(section.title)}</h2>
-            <div class="pdf-section-body">${esc(section.body)}</div>
+    const sectionHtml = sections.map(section => `
+        <section class="print-section">
+            <h2>${escapePrintHtml(section.title)}</h2>
+            ${section.lines.map(line => `<p>${escapePrintHtml(line)}</p>`).join("")}
         </section>
     `).join("");
 
     return `
-        <div class="pdf-report-page" id="pdfReportPage">
-            <div class="pdf-header">
-                <div>
-                    <div class="pdf-brand">MatchIQ Coach</div>
-                    <div class="pdf-subtitle">Report tecnico per calcio dilettantistico</div>
-                </div>
-                <div class="pdf-badge">COACH REPORT PDF</div>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>MatchIQ Coach PDF</title>
+<style>
+@page{
+    size:A4;
+    margin:16mm;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#101828;
+    background:#ffffff;
+}
+
+.print-wrap{
+    max-width:780px;
+    margin:0 auto;
+}
+
+.print-header{
+    border-bottom:3px solid #18f08b;
+    padding-bottom:14px;
+    margin-bottom:18px;
+}
+
+.brand-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+}
+
+.brand-title{
+    font-size:26px;
+    font-weight:900;
+    letter-spacing:-.5px;
+}
+
+.brand-sub{
+    color:#475467;
+    font-size:12px;
+    margin-top:4px;
+    font-weight:700;
+}
+
+.badge-print{
+    background:#e8fff4;
+    border:1px solid #18f08b;
+    color:#05603a;
+    border-radius:999px;
+    padding:7px 10px;
+    font-size:11px;
+    font-weight:900;
+    white-space:nowrap;
+}
+
+.match-title{
+    margin-top:18px;
+    font-size:24px;
+    font-weight:900;
+    letter-spacing:-.5px;
+}
+
+.score-line{
+    margin-top:6px;
+    font-size:34px;
+    font-weight:900;
+    color:#111827;
+}
+
+.meta-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    margin:16px 0 20px;
+}
+
+.meta-card{
+    border:1px solid #e4e7ec;
+    border-radius:12px;
+    padding:10px;
+    background:#f9fafb;
+}
+
+.meta-label{
+    color:#667085;
+    font-size:10px;
+    text-transform:uppercase;
+    font-weight:900;
+    margin-bottom:5px;
+}
+
+.meta-value{
+    font-size:13px;
+    font-weight:900;
+    color:#101828;
+}
+
+.print-section{
+    break-inside:avoid;
+    page-break-inside:avoid;
+    border:1px solid #e4e7ec;
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+}
+
+.print-section h2{
+    margin:0 0 8px;
+    font-size:16px;
+    color:#06111c;
+    letter-spacing:-.2px;
+}
+
+.print-section p{
+    margin:0 0 6px;
+    color:#344054;
+    font-size:12.5px;
+    line-height:1.45;
+}
+
+.print-footer{
+    margin-top:18px;
+    padding-top:10px;
+    border-top:1px solid #e4e7ec;
+    color:#667085;
+    font-size:11px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+}
+
+@media print{
+    body{
+        print-color-adjust:exact;
+        -webkit-print-color-adjust:exact;
+    }
+}
+</style>
+</head>
+<body>
+<div class="print-wrap">
+    <header class="print-header">
+        <div class="brand-row">
+            <div>
+                <div class="brand-title">MatchIQ Coach</div>
+                <div class="brand-sub">Report tecnico per calcio dilettantistico</div>
             </div>
-
-            <h1 class="pdf-title">${esc(match.homeTeam)} vs ${esc(match.awayTeam)}</h1>
-
-            <div class="pdf-meta">
-                <div class="pdf-meta-box">
-                    <div class="pdf-meta-label">Risultato</div>
-                    <div class="pdf-meta-value">${homeGoals} - ${awayGoals}</div>
-                </div>
-                <div class="pdf-meta-box">
-                    <div class="pdf-meta-label">Categoria</div>
-                    <div class="pdf-meta-value">${esc(match.category || "Dilettanti")}</div>
-                </div>
-                <div class="pdf-meta-box">
-                    <div class="pdf-meta-label">Data</div>
-                    <div class="pdf-meta-value">${esc(dateLabel)}</div>
-                </div>
-                <div class="pdf-meta-box">
-                    <div class="pdf-meta-label">Eventi</div>
-                    <div class="pdf-meta-value">${coachState.events.length}</div>
-                </div>
-            </div>
-
-            ${sectionsHtml}
-
-            <div class="pdf-footer">
-                <span>Generato con MatchIQ Coach V1.5</span>
-                <span>${esc(generatedAt)}</span>
-            </div>
+            <div class="badge-print">REPORT PDF</div>
         </div>
-    `;
+
+        <div class="match-title">${escapePrintHtml(m.homeTeam)} vs ${escapePrintHtml(m.awayTeam)}</div>
+        <div class="score-line">${homeGoals} - ${awayGoals}</div>
+    </header>
+
+    <div class="meta-grid">
+        <div class="meta-card">
+            <div class="meta-label">Categoria</div>
+            <div class="meta-value">${escapePrintHtml(m.category || "Dilettanti")}</div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">Data</div>
+            <div class="meta-value">${escapePrintHtml(m.date || "--")}</div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">Eventi</div>
+            <div class="meta-value">${coachState.events.length}</div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">Pagelle</div>
+            <div class="meta-value">${coachState.ratings.length}</div>
+        </div>
+    </div>
+
+    ${sectionHtml}
+
+    <footer class="print-footer">
+        <span>Generato con MatchIQ Coach</span>
+        <span>${escapePrintHtml(generatedAt)}</span>
+    </footer>
+</div>
+</body>
+</html>
+`;
 }
 
 function printCoachPdf(){
@@ -359,16 +570,27 @@ function printCoachPdf(){
         generateCoachReport();
     }
 
-    const old = document.getElementById("pdfReportPage");
-    if(old) old.remove();
+    const printable = buildPrintableCoachReport();
 
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = buildPrintableCoachReport();
-    document.body.appendChild(wrapper.firstElementChild);
+    if(!printable){
+        showNotice("Non riesco a creare il PDF. Genera prima il report.", "warn");
+        return;
+    }
 
-    showNotice("Si apre la stampa: scegli ‘Salva come PDF’.", "ok", 3500);
+    const printWindow = window.open("", "_blank", "width=900,height=1100");
+
+    if(!printWindow){
+        showNotice("Popup bloccato. Consenti i popup per scaricare il PDF.", "warn");
+        return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(printable);
+    printWindow.document.close();
+
+    printWindow.focus();
 
     setTimeout(() => {
-        window.print();
-    }, 350);
+        printWindow.print();
+    }, 500);
 }
