@@ -1,6 +1,7 @@
 /*
     MatchIQ - Match Render Module
     Rendering principale pagina match + momentum chart.
+    Copy polish: titoli più puliti, meno tecnici, senza "AI" nei blocchi principali.
 */
 
 function render(data){
@@ -27,8 +28,8 @@ function render(data){
     const homeGlow=clamp(Math.max(homePressure,homeDanger),8,100);
     const awayGlow=clamp(Math.max(awayPressure,awayDanger),8,100);
 
-    const home=match.home||match.home_team||"Home";
-    const away=match.away||match.away_team||"Away";
+    const home=match.home||match.home_team||"Casa";
+    const away=match.away||match.away_team||"Trasferta";
 
     const flow=calculateLiveFlowVisual(data);
     const simulation=generateMatchSimulation(data,flow);
@@ -42,7 +43,7 @@ function render(data){
 
     if(change.major){
         showLiveOverlay(
-            change.messages[0]||"⚡ LIVE CHANGE",
+            change.messages[0]||"⚡ CAMBIO LIVE",
             `Aggiornamento rilevato: ${change.messages.join(" • ")}`
         );
     }
@@ -77,17 +78,17 @@ function render(data){
         </div>
     </div>
 
-    ${renderSection("psych","🧠","Psychological Live Engine",renderPsychologicalEngine(flow,home,away))}
-    ${renderSection("sim","🔥","Match Simulation Engine — Next 5 Minutes",renderMatchSimulation(simulation))}
-    ${renderSection("identity","🧬","Team Tactical Identity Engine",renderTacticalIdentity(identity))}
-    ${renderSection("attack","🗺️","Attack Prediction Map Engine",renderAttackPrediction(attack))}
-    ${renderSection("events","⚡","Live Event Cinematic System",renderCinematicEvents(),change.changed)}
-    ${renderSection("momentum","📈","Momentum Engine Cinematico",renderMomentumCinematic(momentum),change.changed)}
-    ${renderSection("win","🔥","AI Win Probability",renderWinProbability(winProb))}
-    ${renderSection("future","🔮","AI Future Prediction",renderFuture(future))}
-    ${renderSection("xg","⚽","Live xG Analysis",renderXg(xg))}
+    ${renderSection("psych","🧠","Motore psicologico live",renderPsychologicalEngine(flow,home,away))}
+    ${renderSection("sim","🔥","Prossimi 5 minuti",renderMatchSimulation(simulation))}
+    ${renderSection("identity","🧬","Identità tattica live",renderTacticalIdentity(identity))}
+    ${renderSection("attack","🗺️","Mappa attacco",renderAttackPrediction(attack))}
+    ${renderSection("events","⚡","Eventi chiave live",renderCinematicEvents(),change.changed)}
+    ${renderSection("momentum","📈","Momentum live",renderMomentumCinematic(momentum),change.changed)}
+    ${renderSection("win","🔥","Probabilità vittoria",renderWinProbability(winProb))}
+    ${renderSection("future","🔮","Scenario prossimo",renderFuture(future))}
+    ${renderSection("xg","⚽","Analisi xG live",renderXg(xg))}
 
-    ${renderSection("alerts","🚨","Live Tactical Alerts",`
+    ${renderSection("alerts","🚨","Alert tattici live",`
         <div class="alert-grid">
             ${
                 alerts.length
@@ -99,7 +100,7 @@ function render(data){
                                 ?"medium"
                                 :""
                     }">
-                        <strong>${a.title||a.type||"AI Alert"}</strong><br>
+                        <strong>${a.title||a.type||"Alert tattico"}</strong><br>
                         ${a.message||a.detail||""}
                     </div>
                 `).join("")
@@ -108,29 +109,29 @@ function render(data){
         </div>
     `)}
 
-    ${renderSection("coach","🧠","Tactical Coach AI",renderCoach(coach))}
+    ${renderSection("coach","🧠","Coach tattico",renderCoach(coach))}
 
-    ${renderSection("tactical","📊","Tactical Analysis",`
+    ${renderSection("tactical","📊","Analisi tattica",`
         <div class="analysis-grid">
             <div>
-                ${renderBar("Home Pressure",homePressure,"")}
-                ${renderBar("Away Pressure",awayPressure,"away")}
-                ${renderBar("Home Danger",homeDanger,"")}
-                ${renderBar("Away Danger",awayDanger,"away")}
+                ${renderBar("Pressione casa",homePressure,"")}
+                ${renderBar("Pressione trasferta",awayPressure,"away")}
+                ${renderBar("Pericolo casa",homeDanger,"")}
+                ${renderBar("Pericolo trasferta",awayDanger,"away")}
             </div>
 
             <div class="side-stats">
-                <div>Dominant Team: <strong>${pressure.dominant_team||"Equilibrio"}</strong></div>
-                <div>Dominance: <strong>${pressure.dominance_label||"N/A"}</strong></div>
-                <div>Goal Prob. Home: <strong>${pressure.home?.goal_probability??"N/A"}</strong></div>
-                <div>Goal Prob. Away: <strong>${pressure.away?.goal_probability??"N/A"}</strong></div>
-                <div>Match Tempo: <strong>${getTempoLabel(tactical.match_tempo||aiCore.match_tempo)}</strong></div>
-                <div>AI Confidence: <strong>${aiCore.confidence_score||"N/A"}</strong></div>
+                <div>Squadra dominante: <strong>${pressure.dominant_team||"Equilibrio"}</strong></div>
+                <div>Dominio: <strong>${pressure.dominance_label||"N/A"}</strong></div>
+                <div>Prob. gol casa: <strong>${pressure.home?.goal_probability??"N/A"}</strong></div>
+                <div>Prob. gol trasferta: <strong>${pressure.away?.goal_probability??"N/A"}</strong></div>
+                <div>Ritmo partita: <strong>${getTempoLabel(tactical.match_tempo||aiCore.match_tempo)}</strong></div>
+                <div>Affidabilità lettura: <strong>${aiCore.confidence_score||"N/A"}</strong></div>
             </div>
         </div>
     `)}
 
-    ${renderSection("heatmap","🔥","Tactical Heatmap PRO",`
+    ${renderSection("heatmap","🔥","Heatmap tattica Pro",`
         <div class="heatmap-wrapper">
             <div class="pitch">
                 <div class="pitch-lines"></div>
@@ -146,33 +147,33 @@ function render(data){
                     style="opacity:${awayGlow/100};width:${280+awayGlow*4}px;height:${280+awayGlow*4}px;">
                 </div>
 
-                <div class="zone-label" style="left:16%;top:12%;">HOME PRESSURE</div>
-                <div class="zone-label" style="left:44%;top:12%;">CENTRAL ZONE</div>
-                <div class="zone-label" style="right:16%;top:12%;">AWAY PRESSURE</div>
-                <div class="zone-label" style="left:43%;bottom:10%;">TRANSITION ZONE</div>
+                <div class="zone-label" style="left:16%;top:12%;">PRESSIONE CASA</div>
+                <div class="zone-label" style="left:44%;top:12%;">ZONA CENTRALE</div>
+                <div class="zone-label" style="right:16%;top:12%;">PRESSIONE TRASFERTA</div>
+                <div class="zone-label" style="left:43%;bottom:10%;">TRANSIZIONE</div>
             </div>
 
             <div class="legend">
                 <div class="legend-item">
                     <div class="legend-color" style="background:#2f6bff"></div>
-                    ${home}: ${Math.round(homePressure)} pressure / ${Math.round(homeDanger)} danger
+                    ${home}: ${Math.round(homePressure)} pressione / ${Math.round(homeDanger)} pericolo
                 </div>
 
                 <div class="legend-item">
                     <div class="legend-color" style="background:#ff315c"></div>
-                    ${away}: ${Math.round(awayPressure)} pressure / ${Math.round(awayDanger)} danger
+                    ${away}: ${Math.round(awayPressure)} pressione / ${Math.round(awayDanger)} pericolo
                 </div>
             </div>
         </div>
     `)}
 
-    ${renderSection("players","⭐","AI Player Ratings",renderPlayers(players))}
-    ${renderSection("commentary","🧠","AI Commentary",renderAICommentary(commentary,match),change.changed)}
+    ${renderSection("players","⭐","Pagelle live",renderPlayers(players))}
+    ${renderSection("commentary","🧠","Commento tattico",renderAICommentary(commentary,match),change.changed)}
 
     ${renderSection(
         "timeline",
         "⏱️",
-        "AI Timeline",
+        "Timeline live",
         timeline.length
             ? `<div class="timeline-scroll">
                 ${timeline.slice(0,8).map(ev=>`
@@ -188,13 +189,12 @@ function render(data){
             : "Timeline non disponibile."
     )}
 
-    ${renderSection("report","📑","AI Match Report",`<div class="report-box">${getReport(data)}</div>`)}
+    ${renderSection("report","📑","Report partita",`<div class="report-box">${getReport(data)}</div>`)}
     `;
 
     initToggles();
     buildMomentumChart(momentum);
 }
-
 function updateMomentumHistory(momentum){
     const minute=Math.round(clamp(momentum.minute,0,120));
     const signature=`${minute}-${Math.round(momentum.homeM)}-${Math.round(momentum.awayM)}-${Math.round(momentum.temperature)}`;
@@ -316,7 +316,7 @@ function buildMomentumChart(momentum){
             labels:series.labels,
             datasets:[
                 {
-                    label:"Home Momentum",
+                    label:"Momentum casa",
                     data:series.home,
                     borderColor:"#2f6bff",
                     backgroundColor:"rgba(47,107,255,.20)",
@@ -327,7 +327,7 @@ function buildMomentumChart(momentum){
                     borderWidth:3
                 },
                 {
-                    label:"Away Momentum",
+                    label:"Momentum trasferta",
                     data:series.away,
                     borderColor:"#ff315c",
                     backgroundColor:"rgba(255,49,92,.18)",
@@ -338,7 +338,7 @@ function buildMomentumChart(momentum){
                     borderWidth:3
                 },
                 {
-                    label:"Match Temperature",
+                    label:"Temperatura match",
                     data:series.temp,
                     borderColor:"#ffb020",
                     backgroundColor:"rgba(255,176,32,.08)",
@@ -349,7 +349,7 @@ function buildMomentumChart(momentum){
                     borderDash:[8,6]
                 },
                 {
-                    label:"Danger Pulse",
+                    label:"Pericolo live",
                     data:series.danger,
                     borderColor:"rgba(255,255,255,.60)",
                     backgroundColor:"rgba(255,255,255,.05)",
@@ -360,7 +360,7 @@ function buildMomentumChart(momentum){
                     borderDash:[2,6]
                 },
                 {
-                    label:"Spike Alert",
+                    label:"Alert spike",
                     data:series.spikePoints,
                     borderColor:"#ffffff",
                     backgroundColor:"#ff315c",
