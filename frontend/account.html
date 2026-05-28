@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical - Account V8.1.3</title>
+<title>MatchIQ Tactical - Account Pro V1.4</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -18,6 +18,7 @@
     --panel:#0d1426;
     --panel2:#101a31;
     --line:rgba(255,255,255,.10);
+    --line2:rgba(255,255,255,.18);
     --text:#ffffff;
     --muted:#9fb2d8;
     --soft:#c7d7f2;
@@ -26,6 +27,7 @@
     --gold:#ffd166;
     --orange:#ff8a18;
     --red:#ff416c;
+    --purple:#8b5cf6;
 }
 
 *{
@@ -34,7 +36,8 @@
     box-sizing:border-box;
 }
 
-html,body{
+html,
+body{
     min-height:100%;
     overflow-x:hidden;
 }
@@ -44,6 +47,7 @@ body{
     background:
         radial-gradient(circle at 15% 0,rgba(24,240,139,.18),transparent 30%),
         radial-gradient(circle at 85% 10%,rgba(56,169,255,.15),transparent 32%),
+        radial-gradient(circle at 50% 100%,rgba(139,92,246,.10),transparent 36%),
         linear-gradient(180deg,#071226,#050811 65%,#03050b);
     color:var(--text);
 }
@@ -53,13 +57,18 @@ a{
     text-decoration:none;
 }
 
+button,
+input{
+    font-family:inherit;
+}
+
 .topbar{
     display:flex;
     justify-content:space-between;
     align-items:center;
     gap:18px;
     padding:22px 34px;
-    background:rgba(6,10,20,.86);
+    background:rgba(6,10,20,.88);
     border-bottom:1px solid var(--line);
     position:sticky;
     top:0;
@@ -79,6 +88,7 @@ a{
     height:48px;
     object-fit:contain;
     border-radius:14px;
+    filter:drop-shadow(0 10px 22px rgba(0,0,0,.28));
 }
 
 .logo{
@@ -116,6 +126,7 @@ a{
     transition:.18s ease;
     min-height:46px;
     text-align:center;
+    box-shadow:0 14px 34px rgba(0,0,0,.18);
 }
 
 .btn:hover{
@@ -147,6 +158,11 @@ a{
     border:1px solid var(--line);
 }
 
+.btn.outline{
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.16);
+}
+
 .btn:disabled{
     opacity:.65;
     cursor:not-allowed;
@@ -157,7 +173,7 @@ a{
 .main{
     max-width:1180px;
     margin:0 auto;
-    padding:30px 28px 96px;
+    padding:30px 28px 108px;
 }
 
 .notice{
@@ -193,18 +209,43 @@ a{
 
 .hero{
     display:grid;
-    grid-template-columns:1.18fr .82fr;
+    grid-template-columns:1.12fr .88fr;
     gap:22px;
     margin-bottom:22px;
 }
 
 .card,
-.cta-panel{
-    background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+.cta-panel,
+.founder-panel,
+.value-panel{
+    background:
+        radial-gradient(circle at top right,rgba(56,169,255,.06),transparent 34%),
+        linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
     border:1px solid var(--line);
     border-radius:30px;
     padding:28px;
     box-shadow:0 25px 80px rgba(0,0,0,.25);
+}
+
+.card.hero-main{
+    position:relative;
+    overflow:hidden;
+}
+
+.card.hero-main:before{
+    content:"";
+    position:absolute;
+    width:260px;
+    height:260px;
+    right:-110px;
+    top:-110px;
+    background:radial-gradient(circle,rgba(24,240,139,.16),transparent 70%);
+    pointer-events:none;
+}
+
+.card.hero-main > *{
+    position:relative;
+    z-index:2;
 }
 
 .badge{
@@ -240,11 +281,17 @@ a{
     color:#9fd7ff;
 }
 
+.badge.beta{
+    background:rgba(255,209,102,.13);
+    border:1px solid rgba(255,209,102,.32);
+    color:#ffe7a3;
+}
+
 h1{
-    font-size:42px;
+    font-size:44px;
     line-height:1.02;
     margin-bottom:12px;
-    letter-spacing:-1.2px;
+    letter-spacing:-1.3px;
 }
 
 h2{
@@ -253,9 +300,19 @@ h2{
     letter-spacing:-.4px;
 }
 
+h3{
+    font-size:20px;
+    margin-bottom:10px;
+}
+
 p{
     color:var(--soft);
     line-height:1.7;
+}
+
+.hero-lead{
+    font-size:16px;
+    max-width:720px;
 }
 
 .account-grid{
@@ -293,8 +350,198 @@ p{
     color:var(--green);
 }
 
+.footer-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:20px;
+}
+
+.small{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:12px;
+}
+
+.micro-trust{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-top:18px;
+}
+
+.micro-trust span{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.08);
+    color:#dbe6ff;
+    font-size:12px;
+    font-weight:900;
+}
+
+.cta-panel{
+    background:
+        radial-gradient(circle at top right,rgba(255,209,102,.14),transparent 35%),
+        linear-gradient(145deg,rgba(255,226,138,.13),rgba(47,107,255,.08));
+    border:1px solid rgba(255,226,138,.25);
+}
+
+.cta-panel h2{
+    font-size:31px;
+    margin-bottom:10px;
+}
+
+.price-wrap{
+    display:grid;
+    gap:12px;
+    margin:18px 0;
+}
+
+.price-card{
+    padding:17px;
+    border-radius:22px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.10);
+}
+
+.price-card.featured{
+    background:linear-gradient(135deg,rgba(255,209,102,.18),rgba(255,138,24,.10));
+    border:1px solid rgba(255,209,102,.42);
+    box-shadow:0 0 34px rgba(255,209,102,.10);
+}
+
+.price-label{
+    font-size:13px;
+    color:#dbe6ff;
+    font-weight:900;
+    margin-bottom:6px;
+}
+
+.price{
+    font-size:38px;
+    font-weight:1000;
+    color:#fff;
+    letter-spacing:-.8px;
+}
+
+.price small{
+    font-size:15px;
+    color:var(--muted);
+}
+
+.price-note{
+    font-size:13px;
+    color:#ffe7a3;
+    font-weight:900;
+    margin-top:8px;
+    line-height:1.35;
+}
+
+.cta-panel ul,
+.compare-list,
+.unlock-list{
+    list-style:none;
+    display:grid;
+    gap:10px;
+    margin:18px 0;
+    color:#dbe6ff;
+    line-height:1.45;
+}
+
+.unlock-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin-top:18px;
+}
+
+.unlock-card{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    padding:20px;
+}
+
+.unlock-icon{
+    font-size:24px;
+    margin-bottom:10px;
+}
+
+.unlock-card strong{
+    display:block;
+    font-size:17px;
+    margin-bottom:8px;
+}
+
+.unlock-card span{
+    color:var(--soft);
+    font-size:13px;
+    line-height:1.5;
+}
+
 .section{
     margin-top:22px;
+}
+
+.compare-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+
+.compare-card{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    padding:22px;
+}
+
+.compare-card.pro{
+    background:linear-gradient(145deg,rgba(0,245,160,.10),rgba(56,169,255,.06));
+    border-color:rgba(0,245,160,.25);
+}
+
+.compare-card h3{
+    font-size:22px;
+    margin-bottom:12px;
+}
+
+.compare-card p{
+    font-size:14px;
+}
+
+.founder-panel{
+    margin-top:22px;
+    background:
+        radial-gradient(circle at top left,rgba(255,209,102,.15),transparent 34%),
+        linear-gradient(145deg,rgba(255,209,102,.10),rgba(56,169,255,.05));
+    border-color:rgba(255,209,102,.28);
+}
+
+.founder-grid{
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+    gap:18px;
+    align-items:center;
+}
+
+.founder-points{
+    display:grid;
+    gap:10px;
+}
+
+.founder-point{
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:13px;
+    color:#dbe6ff;
+    font-weight:900;
+    line-height:1.45;
 }
 
 .subscription-box{
@@ -328,87 +575,17 @@ p{
     word-break:break-word;
 }
 
-.cta-panel{
-    background:linear-gradient(145deg,rgba(255,226,138,.13),rgba(47,107,255,.08));
-    border:1px solid rgba(255,226,138,.25);
-}
-
-.cta-panel h2{
-    font-size:30px;
-    margin-bottom:10px;
-}
-
-.price{
-    font-size:42px;
-    font-weight:1000;
-    margin:16px 0 6px;
-    color:#fff;
-}
-
-.price small{
-    font-size:15px;
-    color:var(--muted);
-}
-
-.cta-panel ul,
-.compare-list{
-    list-style:none;
-    display:grid;
-    gap:10px;
-    margin:18px 0;
-    color:#dbe6ff;
-    line-height:1.45;
-}
-
-.footer-actions{
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    margin-top:20px;
-}
-
 .loading{
     color:var(--muted);
     padding:20px 0;
     font-weight:900;
 }
 
-.small{
-    font-size:12px;
-    color:var(--muted);
-    margin-top:12px;
-}
-
-.compare-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:16px;
-}
-
-.compare-card{
-    background:rgba(255,255,255,.045);
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:24px;
-    padding:22px;
-}
-
-.compare-card.pro{
-    background:linear-gradient(145deg,rgba(0,245,160,.10),rgba(56,169,255,.06));
-    border-color:rgba(0,245,160,.25);
-}
-
-.compare-card h3{
-    font-size:22px;
-    margin-bottom:12px;
-}
-
-.compare-card p{
-    font-size:14px;
-}
-
 .owner-panel{
     display:none;
-    background:linear-gradient(145deg,rgba(255,226,138,.12),rgba(139,92,246,.08));
+    background:
+        radial-gradient(circle at top right,rgba(255,226,138,.16),transparent 34%),
+        linear-gradient(145deg,rgba(255,226,138,.12),rgba(139,92,246,.08));
     border:1px solid rgba(255,226,138,.25);
     border-radius:28px;
     padding:26px;
@@ -421,6 +598,17 @@ p{
 
 .bottom-nav{
     display:none;
+}
+
+@media(max-width:980px){
+    .hero,
+    .founder-grid{
+        grid-template-columns:1fr;
+    }
+
+    .unlock-grid{
+        grid-template-columns:1fr;
+    }
 }
 
 @media(max-width:900px){
@@ -447,7 +635,7 @@ p{
     }
 
     .main{
-        padding:20px 14px 108px;
+        padding:20px 14px 112px;
         max-width:720px;
     }
 
@@ -457,7 +645,9 @@ p{
     }
 
     .card,
-    .cta-panel{
+    .cta-panel,
+    .founder-panel,
+    .value-panel{
         border-radius:24px;
         padding:20px;
     }
@@ -468,6 +658,10 @@ p{
 
     h2{
         font-size:22px;
+    }
+
+    .hero-lead{
+        font-size:14px;
     }
 
     .account-grid{
@@ -498,6 +692,19 @@ p{
 
     .row span:last-child{
         text-align:left;
+    }
+
+    .price{
+        font-size:36px;
+    }
+
+    .micro-trust{
+        gap:7px;
+    }
+
+    .micro-trust span{
+        font-size:11px;
+        padding:7px 9px;
     }
 
     .bottom-nav{
@@ -546,7 +753,7 @@ p{
     }
 
     .price{
-        font-size:36px;
+        font-size:32px;
     }
 }
 </style>
@@ -559,7 +766,7 @@ p{
         <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
         <div>
             <div class="logo">MatchIQ</div>
-            <div class="subtitle">Account e piano Pro</div>
+            <div class="subtitle">Account, Pro e Beta Founder</div>
         </div>
     </div>
 
@@ -574,16 +781,23 @@ p{
 <div class="main">
 
     <div id="pageNotice" class="notice"></div>
-
     <div class="hero">
-        <div class="card">
+        <div class="card hero-main">
             <span class="badge guest" id="planBadge">CARICAMENTO</span>
 
-            <h1 id="accountTitle">Il tuo account MatchIQ</h1>
+            <h1 id="accountTitle">Sblocca MatchIQ Pro</h1>
 
-            <p id="accountIntro">
-                Qui puoi controllare il tuo piano, attivare Pro e gestire il tuo abbonamento.
+            <p id="accountIntro" class="hero-lead">
+                Usa MatchIQ come una vera piattaforma di football intelligence:
+                più partite live, Scout Mode completo, player cards, watchlist ed export report.
             </p>
+
+            <div class="micro-trust">
+                <span>⚡ Live analysis</span>
+                <span>🧠 AI tactical signals</span>
+                <span>🔍 Scout Mode</span>
+                <span>📄 Export report</span>
+            </div>
 
             <div class="account-grid">
                 <div class="info-box">
@@ -612,11 +826,11 @@ p{
                 </button>
 
                 <button class="btn gold" id="upgradeMonthlyBtn" onclick="startCheckout('pro_monthly')">
-                    Passa a Pro mensile
+                    Attiva Pro mensile
                 </button>
 
                 <button class="btn gold" id="upgradeYearlyBtn" onclick="startCheckout('pro_yearly')">
-                    Passa a Pro annuale
+                    Attiva Pro annuale
                 </button>
             </div>
 
@@ -626,31 +840,60 @@ p{
         </div>
 
         <div class="cta-panel" id="ctaPanel">
-            <h2>MatchIQ Pro</h2>
-            <p>Sblocca tutte le partite, Scout Mode completo, watchlist ed export report.</p>
+            <span class="badge beta">BETA FOUNDER</span>
 
-            <div class="price">9,99€ <small>/ mese</small></div>
-            <p class="small">Oppure 79,99€ / anno.</p>
+            <h2>MatchIQ Pro</h2>
+
+            <p>
+                Per chi vuole usare MatchIQ durante le partite live:
+                analisi, Scout Mode, player cards complete e report esportabili.
+            </p>
+
+            <div class="price-wrap">
+                <div class="price-card">
+                    <div class="price-label">Piano mensile</div>
+                    <div class="price">9,99€ <small>/ mese</small></div>
+                    <div class="price-note">Ideale per provarlo durante le prossime partite.</div>
+                </div>
+
+                <div class="price-card featured">
+                    <div class="price-label">Piano annuale</div>
+                    <div class="price">79,99€ <small>/ anno</small></div>
+                    <div class="price-note">🔥 Risparmi 39,89€ rispetto al mensile.</div>
+                </div>
+            </div>
 
             <ul>
-                <li>✅ Tutte le partite live</li>
+                <li>✅ Tutte le partite live disponibili</li>
                 <li>✅ Scout Mode completo</li>
                 <li>✅ Player cards complete</li>
-                <li>✅ Watchlist</li>
+                <li>✅ Watchlist Pro</li>
                 <li>✅ Export report</li>
                 <li>✅ Moduli live avanzati</li>
             </ul>
 
             <div class="footer-actions">
-                <button class="btn gold" onclick="startCheckout('pro_monthly')">Attiva mensile</button>
-                <button class="btn gold" onclick="startCheckout('pro_yearly')">Attiva annuale</button>
+                <button class="btn gold" onclick="startCheckout('pro_monthly')">
+                    Attiva mensile
+                </button>
+
+                <button class="btn gold" onclick="startCheckout('pro_yearly')">
+                    Attiva annuale
+                </button>
+            </div>
+
+            <div class="small">
+                Accesso immediato dopo il pagamento. Se qualcosa non si aggiorna subito,
+                il piano può essere verificato dall’account.
             </div>
         </div>
     </div>
 
     <div class="owner-panel" id="ownerPanel">
         <span class="badge owner">OWNER CONTROL</span>
+
         <h2>Accesso owner attivo</h2>
+
         <p>
             Hai accesso completo a MatchIQ: Scout Pro, tutte le partite, export,
             admin users e analytics.
@@ -664,31 +907,104 @@ p{
         </div>
     </div>
 
+    <div class="value-panel section">
+        <span class="badge beta">COSA SBLOCCHI</span>
+
+        <h2>Da preview a piattaforma completa</h2>
+
+        <p>
+            La versione Free serve per provare MatchIQ. Il piano Pro è pensato per usare davvero
+            l’app durante le partite, con più dati, più profondità e strumenti da scout.
+        </p>
+
+        <div class="unlock-grid">
+            <div class="unlock-card">
+                <div class="unlock-icon">⚡</div>
+                <strong>Tutti i live</strong>
+                <span>
+                    Sblocca tutte le partite disponibili, senza limite Free sulle partite live.
+                </span>
+            </div>
+
+            <div class="unlock-card">
+                <div class="unlock-icon">🔍</div>
+                <strong>Scout Mode completo</strong>
+                <span>
+                    Player cards complete, segnali hot/danger/pressure e analisi più profonda.
+                </span>
+            </div>
+
+            <div class="unlock-card">
+                <div class="unlock-icon">📄</div>
+                <strong>Report esportabili</strong>
+                <span>
+                    Esporta report e usa MatchIQ come supporto concreto di analisi.
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="founder-panel">
+        <div class="founder-grid">
+            <div>
+                <span class="badge beta">BETA FOUNDER</span>
+
+                <h2>Stai entrando nella prima fase di MatchIQ</h2>
+
+                <p>
+                    MatchIQ è in evoluzione continua. Chi entra ora aiuta a definire il prodotto:
+                    live analysis, Scout Mode e presto strumenti dedicati anche al calcio dilettantistico.
+                </p>
+
+                <div class="footer-actions">
+                    <button class="btn green" onclick="goScout()">Prova Scout</button>
+                    <button class="btn outline" onclick="goDashboard()">Torna alla Home</button>
+                </div>
+            </div>
+
+            <div class="founder-points">
+                <div class="founder-point">✅ Accesso anticipato alle funzioni Pro</div>
+                <div class="founder-point">✅ Feedback diretto sul prodotto</div>
+                <div class="founder-point">✅ Evoluzione verso Coach Mode per dilettanti</div>
+            </div>
+        </div>
+    </div>
+
     <div class="card section">
         <h2>Free vs Pro</h2>
 
         <div class="compare-grid">
             <div class="compare-card">
                 <h3>Piano Free</h3>
-                <p>Ideale per provare MatchIQ e capire il valore della piattaforma.</p>
+
+                <p>
+                    Ideale per provare MatchIQ e capire il valore della piattaforma.
+                </p>
+
                 <ul class="compare-list">
                     <li>✅ Preview partite live</li>
                     <li>✅ Accesso base alla dashboard</li>
                     <li>✅ Scout preview</li>
                     <li>🔒 Limite partite live</li>
+                    <li>🔒 Player cards limitate</li>
                     <li>🔒 Export bloccato</li>
                 </ul>
             </div>
 
             <div class="compare-card pro">
                 <h3>Piano Pro</h3>
-                <p>Per usare MatchIQ come vera piattaforma di football intelligence.</p>
+
+                <p>
+                    Per usare MatchIQ come vera piattaforma di football intelligence.
+                </p>
+
                 <ul class="compare-list">
                     <li>✅ Tutte le partite live</li>
                     <li>✅ Scout Mode completo</li>
                     <li>✅ Player cards complete</li>
                     <li>✅ Watchlist</li>
                     <li>✅ Export report</li>
+                    <li>✅ Funzioni avanzate in beta</li>
                 </ul>
             </div>
         </div>
@@ -707,13 +1023,12 @@ p{
 <nav class="bottom-nav">
     <a href="/mobile.html">Home</a>
     <a href="/scout.html">Scout</a>
-    <a class="active" href="/account.html">Pro</a>
-    <a href="/account.html">Account</a>
+    <a href="/account.html">Pro</a>
+    <a class="active" href="/account.html">Account</a>
 </nav>
-
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10058";
+const APP_VERSION = "10059";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
@@ -902,20 +1217,20 @@ function renderAccount(){
         accountTitle.textContent = isOwner
             ? "Owner Pro attivo"
             : isPro
-                ? "Piano Pro attivo"
+                ? "MatchIQ Pro è attivo"
                 : logged
                     ? "Passa a MatchIQ Pro"
-                    : "Accedi e sblocca MatchIQ";
+                    : "Accedi e sblocca MatchIQ Pro";
     }
 
     if(accountIntro){
         accountIntro.textContent = isOwner
             ? "Hai accesso completo a MatchIQ: Scout, tutte le partite, export, admin e analytics."
             : isPro
-                ? "Il tuo piano Pro è attivo. Puoi gestire abbonamento, metodo di pagamento e fatture tramite Stripe."
+                ? "Il tuo piano Pro è attivo. Puoi usare Scout completo, tutte le partite live, watchlist ed export report."
                 : logged
-                    ? "Il tuo account è Free. Puoi passare a Pro per sbloccare tutte le partite, Scout completo, watchlist ed export report."
-                    : "Stai usando MatchIQ come Guest. Accedi o registrati per salvare il piano e attivare Pro.";
+                    ? "Il tuo account è Free. Passa a Pro per sbloccare tutte le partite, Scout completo, player cards, watchlist ed export report."
+                    : "Stai usando MatchIQ come Guest. Accedi o registrati per salvare il piano, attivare Pro e usare tutte le funzioni avanzate.";
     }
 
     if(portalBtn){
@@ -978,11 +1293,11 @@ function renderSubscription(){
         box.innerHTML = `
             <div class="row">
                 <span>Accesso</span>
-                <span>Guest</span>
+                <span>Guest Preview</span>
             </div>
             <div class="row">
                 <span>Account</span>
-                <span>Accedi o registrati per gestire il piano</span>
+                <span>Accedi o registrati per gestire piano e pagamento</span>
             </div>
             <div class="row">
                 <span>Upgrade Pro</span>
@@ -1116,6 +1431,10 @@ async function loadSubscription(){
             showNotice("Sei tornato dal portale Stripe. Dati account aggiornati.", "ok");
         }
 
+        if(params.get("checkout") === "success"){
+            showNotice("Pagamento completato. Sto aggiornando il piano account.", "ok", 9000);
+        }
+
     }catch(e){
         console.error(e);
 
@@ -1207,7 +1526,11 @@ async function startCheckout(plan="pro_monthly"){
         document.getElementById("upgradeYearlyBtn")
     ].filter(Boolean);
 
-    buttons.forEach(b => b.disabled = true);
+    buttons.forEach(b => {
+        b.disabled = true;
+        b.dataset.oldText = b.textContent;
+        b.textContent = "Apertura checkout...";
+    });
 
     try{
         const res = await fetch(`${API_BASE}/payments/create-checkout-session`, {
@@ -1251,7 +1574,10 @@ async function startCheckout(plan="pro_monthly"){
         console.error(e);
         showNotice("Errore Stripe: " + e.message, "err");
     }finally{
-        buttons.forEach(b => b.disabled = false);
+        buttons.forEach(b => {
+            b.disabled = false;
+            b.textContent = b.dataset.oldText || (b.id === "upgradeYearlyBtn" ? "Attiva Pro annuale" : "Attiva Pro mensile");
+        });
     }
 }
 
