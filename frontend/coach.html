@@ -767,6 +767,353 @@ select option{
         grid-template-columns:1fr;
     }
 }
+/* ======================================================
+   MATCHIQ COACH MODE V1.1
+   Mobile sideline polish
+====================================================== */
+
+.report-box{
+    font-size:14px;
+    line-height:1.85;
+}
+
+.report-box strong{
+    display:block;
+    margin:14px 0 6px;
+    font-size:15px;
+    color:#ffffff;
+}
+
+.status-box,
+.kpi,
+.event-card,
+.unlock-card{
+    backdrop-filter:blur(10px);
+}
+
+.event-btn{
+    position:relative;
+    overflow:hidden;
+}
+
+.event-btn:active{
+    transform:scale(.98);
+}
+
+.event-btn:after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+    transform:translateX(-120%);
+    transition:.35s ease;
+    pointer-events:none;
+}
+
+.event-btn:hover:after{
+    transform:translateX(120%);
+}
+
+.score-main{
+    background:linear-gradient(90deg,#fff,#dbeafe);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+}
+
+.timeline{
+    min-height:220px;
+}
+
+.event-card{
+    box-shadow:0 12px 32px rgba(0,0,0,.14);
+}
+
+.delete-event{
+    transition:.15s ease;
+}
+
+.delete-event:active{
+    transform:scale(.94);
+}
+
+@media(max-width:900px){
+
+    body{
+        background:
+            radial-gradient(circle at 12% 0,rgba(24,240,139,.16),transparent 32%),
+            radial-gradient(circle at 86% 10%,rgba(56,169,255,.13),transparent 34%),
+            linear-gradient(180deg,#071226,#050811 68%,#03050b);
+    }
+
+    .topbar{
+        position:sticky;
+        top:0;
+        min-height:74px;
+        padding:calc(12px + env(safe-area-inset-top)) 14px 12px;
+    }
+
+    .brand{
+        align-items:center;
+    }
+
+    .brand img{
+        width:46px;
+        height:46px;
+        border-radius:15px;
+    }
+
+    .logo{
+        font-size:24px;
+        line-height:1.05;
+    }
+
+    .subtitle{
+        font-size:11px;
+        line-height:1.35;
+        max-width:250px;
+    }
+
+    .main{
+        padding:16px 12px 116px;
+    }
+
+    .hero{
+        gap:12px;
+        margin-bottom:14px;
+    }
+
+    .card,
+    .panel{
+        padding:18px;
+        border-radius:24px;
+    }
+
+    .hero-card{
+        background:
+            radial-gradient(circle at top right,rgba(24,240,139,.10),transparent 36%),
+            linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+    }
+
+    h1{
+        font-size:31px;
+        line-height:1.06;
+    }
+
+    h2{
+        font-size:21px;
+    }
+
+    .hero-lead{
+        font-size:14px;
+        line-height:1.55;
+    }
+
+    .micro-row{
+        gap:7px;
+        margin-top:14px;
+    }
+
+    .micro-row span{
+        font-size:11px;
+        padding:7px 9px;
+    }
+
+    .kpi-grid{
+        grid-template-columns:repeat(2,1fr);
+        gap:9px;
+    }
+
+    .kpi{
+        padding:14px;
+        border-radius:18px;
+    }
+
+    .kpi-value{
+        font-size:25px;
+    }
+
+    .match-status{
+        gap:10px;
+    }
+
+    .status-box{
+        padding:15px;
+        border-radius:19px;
+    }
+
+    .status-value{
+        font-size:18px;
+    }
+
+    .score-box{
+        padding:18px;
+        border-radius:22px;
+        background:
+            radial-gradient(circle at center,rgba(24,240,139,.09),transparent 55%),
+            rgba(0,0,0,.20);
+    }
+
+    .score-main{
+        font-size:48px;
+        line-height:1;
+    }
+
+    .score-team{
+        font-size:14px;
+    }
+
+    .section{
+        margin-top:14px;
+    }
+
+    .field{
+        gap:6px;
+    }
+
+    label{
+        font-size:12px;
+    }
+
+    input,
+    select,
+    textarea{
+        min-height:52px;
+        border-radius:17px;
+        font-size:15px;
+        padding:14px;
+    }
+
+    textarea{
+        min-height:110px;
+    }
+
+    .quick-actions{
+        grid-template-columns:repeat(2,1fr);
+        gap:10px;
+        margin-top:16px;
+    }
+
+    .event-btn{
+        min-height:78px;
+        border-radius:20px;
+        padding:13px 10px;
+    }
+
+    .event-emoji{
+        font-size:25px;
+        margin-bottom:7px;
+    }
+
+    .event-text{
+        font-size:13px;
+        line-height:1.22;
+    }
+
+    .event-card{
+        border-radius:19px;
+        padding:15px;
+        gap:10px;
+    }
+
+    .event-title{
+        font-size:15px;
+    }
+
+    .event-meta{
+        font-size:12px;
+    }
+
+    .event-note{
+        font-size:13px;
+    }
+
+    .timeline{
+        max-height:390px;
+        min-height:210px;
+    }
+
+    .report-box{
+        max-height:460px;
+        font-size:13px;
+        line-height:1.75;
+        border-radius:20px;
+        padding:16px;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    .report-box strong{
+        font-size:14px;
+        margin:13px 0 5px;
+    }
+
+    .btn{
+        min-height:52px;
+        border-radius:17px;
+    }
+
+    .btn.small-btn{
+        min-height:42px;
+    }
+
+    .bottom-nav{
+        box-shadow:0 -16px 45px rgba(0,0,0,.34);
+    }
+
+    .bottom-nav a{
+        min-height:48px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:13px;
+    }
+}
+
+@media(max-width:420px){
+
+    .main{
+        padding-left:10px;
+        padding-right:10px;
+    }
+
+    h1{
+        font-size:29px;
+    }
+
+    .logo{
+        font-size:22px;
+    }
+
+    .subtitle{
+        font-size:10px;
+    }
+
+    .quick-actions{
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+    }
+
+    .event-btn{
+        min-height:74px;
+        border-radius:18px;
+    }
+
+    .event-emoji{
+        font-size:23px;
+    }
+
+    .event-text{
+        font-size:12px;
+    }
+
+    .score-main{
+        font-size:44px;
+    }
+
+    .kpi-grid{
+        grid-template-columns:1fr 1fr;
+    }
+}
 </style>
 </head>
 
