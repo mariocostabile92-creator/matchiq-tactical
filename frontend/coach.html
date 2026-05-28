@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode - Dilettanti</title>
+<title>MatchIQ Coach Mode V1.3 - Dilettanti</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -768,7 +768,7 @@ select option{
     }
 }
 /* ======================================================
-   MATCHIQ COACH MODE V1.1
+   MATCHIQ COACH MODE V1.3.1
    Mobile sideline polish
 ====================================================== */
 
@@ -1132,6 +1132,15 @@ select option{
 .rating-remove{border:0;background:rgba(255,65,108,.14);color:#ffc3cf;border-radius:12px;padding:8px 11px;cursor:pointer;font-weight:1000}
 @media(max-width:900px){.ratings-list{max-height:390px}.rating-card{border-radius:19px;padding:15px}.rating-player{font-size:15px}.rating-vote{min-width:52px;height:52px;border-radius:17px}}
 
+/* ======================================================
+   MATCHIQ COACH MODE V1.3 - Professional Report Polish
+====================================================== */
+.pro-report-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.report-box{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.035));}
+.report-box em{color:#ffe7a3;font-style:normal;font-weight:900}
+.whatsapp-hint{margin-top:10px;color:var(--muted);font-size:12px;font-weight:850;line-height:1.45}
+@media(max-width:900px){.pro-report-actions{display:grid;grid-template-columns:1fr 1fr}.pro-report-actions .btn{width:100%}}
+
 </style>
 </head>
 
@@ -1157,7 +1166,7 @@ select option{
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1</span>
+            <span class="badge green">COACH MODE V1.3</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -1474,10 +1483,12 @@ select option{
                 Crea una partita, registra alcuni eventi e premi “Genera report”.
             </div>
 
-            <div class="micro-row">
+            <div class="pro-report-actions">
                 <button class="btn green" onclick="generateCoachReport()">Aggiorna report</button>
                 <button class="btn gold" onclick="downloadReportTxt()">Scarica TXT</button>
+                <button class="btn dark" onclick="copyWhatsAppSummary()">Copia WhatsApp</button>
             </div>
+            <div class="whatsapp-hint">Usa “Copia WhatsApp” per condividere una sintesi rapida con mister, staff o gruppo squadra.</div>
         </div>
     </div>
 
@@ -1490,8 +1501,8 @@ select option{
     <a href="/account.html">Account</a>
 </nav>
 <script>
-const APP_VERSION = "10060";
-const STORAGE_KEY = "matchiq_coach_v1";
+const APP_VERSION = "10070";
+const STORAGE_KEY = "matchiq_coach_v13";
 
 let coachState = {
     match: null,
@@ -1927,6 +1938,66 @@ ${list}
 `.trim();
 }
 
+function getEventCount(type, side=null){
+    return coachState.events.filter(e => e.type === type && (!side || e.side === side)).length;
+}
+
+function buildCoachTips(){
+    const tips=[];
+    const lost=getEventCount("palla_persa");
+    const def=getEventCount("errore_difensivo");
+    const chances=getEventCount("occasione");
+    const shots=getEventCount("tiro");
+    const recoveries=getEventCount("recupero");
+
+    if(def>=1) tips.push("Curare meglio distanze tra i reparti, coperture preventive e marcature sulle seconde palle.");
+    if(lost>=2) tips.push("Ridurre le palle perse forzate: chiedere più appoggi semplici e migliore orientamento del corpo in ricezione.");
+    if(shots+chances<=2) tips.push("Aumentare presenza in area e attacco della profondità: servono più soluzioni negli ultimi 25 metri.");
+    if(recoveries>=3) tips.push("Il recupero palla è un segnale positivo: lavorare sulla prima giocata dopo riconquista.");
+    if(!tips.length) tips.push("Continuare su intensità, ordine e comunicazione: il match non mostra criticità dominanti dagli eventi inseriti.");
+
+    return tips.map((t,i)=>`${i+1}. ${t}`).join("\n");
+}
+
+function buildCriticalIssues(){
+    const issues=[];
+    const homeLost=getEventCount("palla_persa","home");
+    const awayLost=getEventCount("palla_persa","away");
+    const homeDef=getEventCount("errore_difensivo","home");
+    const awayDef=getEventCount("errore_difensivo","away");
+
+    if(homeLost>=2) issues.push(`${getTeamName("home")}: gestione possesso da migliorare, troppe palle perse.`);
+    if(awayLost>=2) issues.push(`${getTeamName("away")}: gestione possesso da migliorare, troppe palle perse.`);
+    if(homeDef>=1) issues.push(`${getTeamName("home")}: attenzione a coperture e letture difensive.`);
+    if(awayDef>=1) issues.push(`${getTeamName("away")}: attenzione a coperture e letture difensive.`);
+
+    if(!issues.length) issues.push("Nessuna criticità grave registrata: lavorare sulla continuità dei principi di gioco.");
+    return issues.map(x=>`- ${x}`).join("\n");
+}
+
+function buildWhatsAppSummary(){
+    if(!coachState.match) return "";
+    const m=coachState.match;
+    const best=getBestRating();
+    const homeGoals=getGoals("home");
+    const awayGoals=getGoals("away");
+    return `MATCHIQ COACH - SINTESI\n${m.homeTeam} vs ${m.awayTeam} (${homeGoals}-${awayGoals})\nCategoria: ${m.category || "Dilettanti"}\nEventi registrati: ${coachState.events.length}\nMigliore: ${best ? `${best.player} (${best.vote})` : "non inserito"}\nFocus allenamento: ${buildTrainingAdvice().replace("Allenamento consigliato: ","")}\n\nReport generato con MatchIQ Coach.`;
+}
+
+async function copyWhatsAppSummary(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+    const text=buildWhatsAppSummary();
+    try{
+        await navigator.clipboard.writeText(text);
+        showNotice("Sintesi WhatsApp copiata.", "ok");
+    }catch{
+        showNotice("Non riesco a copiare automaticamente. Seleziona il testo manualmente.", "warn");
+    }
+}
+
 function generateCoachReport(){
     if(!coachState.match){
         showNotice("Prima crea una partita manuale.", "warn");
@@ -1991,14 +2062,23 @@ ${keyMoments}
 <strong>Pagelle giocatori</strong>
 ${buildRatingsReportText()}
 
+<strong>Consigli per il mister</strong>
+${buildCoachTips()}
+
+<strong>Criticità tattiche</strong>
+${buildCriticalIssues()}
+
 <strong>Allenamento consigliato</strong>
 ${buildTrainingAdvice()}
+
+<strong>Sintesi WhatsApp</strong>
+${buildWhatsAppSummary()}
 
 <strong>Messaggio per la squadra</strong>
 La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
 
 <strong>Nota</strong>
-Questa è una prima versione locale di MatchIQ Coach. Nelle prossime versioni il report potrà diventare più avanzato con AI, PDF, pagelle giocatori e storico stagione.
+Report generato localmente da MatchIQ Coach V1.3: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
 `.trim();
 
     coachState.report = report;
