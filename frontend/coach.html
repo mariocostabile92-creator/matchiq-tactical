@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.3 - Dilettanti</title>
+<title>MatchIQ Coach Mode V1.4 - Dilettanti</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -768,7 +768,7 @@ select option{
     }
 }
 /* ======================================================
-   MATCHIQ COACH MODE V1.3.1
+   MATCHIQ COACH MODE V1.4.1
    Mobile sideline polish
 ====================================================== */
 
@@ -1133,13 +1133,30 @@ select option{
 @media(max-width:900px){.ratings-list{max-height:390px}.rating-card{border-radius:19px;padding:15px}.rating-player{font-size:15px}.rating-vote{min-width:52px;height:52px;border-radius:17px}}
 
 /* ======================================================
-   MATCHIQ COACH MODE V1.3 - Professional Report Polish
+   MATCHIQ COACH MODE V1.4 - Professional Report Polish
 ====================================================== */
 .pro-report-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .report-box{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.035));}
 .report-box em{color:#ffe7a3;font-style:normal;font-weight:900}
 .whatsapp-hint{margin-top:10px;color:var(--muted);font-size:12px;font-weight:850;line-height:1.45}
 @media(max-width:900px){.pro-report-actions{display:grid;grid-template-columns:1fr 1fr}.pro-report-actions .btn{width:100%}}
+
+/* ======================================================
+   MATCHIQ COACH MODE V1.4 - Storico Coach
+====================================================== */
+.history-list{display:grid;gap:10px;max-height:430px;overflow:auto;padding-right:5px}
+.history-list::-webkit-scrollbar{width:7px}
+.history-list::-webkit-scrollbar-thumb{background:rgba(24,240,139,.45);border-radius:999px}
+.history-card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:15px;box-shadow:0 12px 32px rgba(0,0,0,.14)}
+.history-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}
+.history-title{font-weight:1000;font-size:15px;line-height:1.35}
+.history-date{color:var(--muted);font-size:12px;font-weight:850;white-space:nowrap}
+.history-meta{color:#dbe6ff;font-size:12px;font-weight:850;line-height:1.5;margin-bottom:10px}
+.history-actions{display:flex;gap:8px;flex-wrap:wrap}
+.history-actions button{border:0;border-radius:12px;padding:9px 11px;font-weight:1000;cursor:pointer;color:white;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10)}
+.history-actions button.green{background:linear-gradient(135deg,var(--green),var(--blue));color:#06111c}
+.history-actions button.red{background:rgba(255,65,108,.14);color:#ffc3cf}
+@media(max-width:900px){.history-list{max-height:390px}.history-actions{display:grid;grid-template-columns:1fr 1fr}.history-actions button{width:100%}}
 
 </style>
 </head>
@@ -1166,7 +1183,7 @@ select option{
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.3</span>
+            <span class="badge green">COACH MODE V1.4</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -1199,8 +1216,8 @@ select option{
                 </div>
 
                 <div class="kpi">
-                    <div class="kpi-label">Report</div>
-                    <div class="kpi-value" id="kpiReport">--</div>
+                    <div class="kpi-label">Partite salvate</div>
+                    <div class="kpi-value" id="kpiSavedMatches">0</div>
                 </div>
             </div>
         </div>
@@ -1492,6 +1509,37 @@ select option{
         </div>
     </div>
 
+
+    <div class="grid section">
+        <div class="panel">
+            <span class="badge gold">6. STORICO COACH</span>
+
+            <h2>Archivio partite</h2>
+
+            <p>
+                Salva la partita nello storico locale, riapri report precedenti e conserva le analisi settimanali della squadra.
+            </p>
+
+            <div class="micro-row">
+                <button class="btn green" onclick="saveCurrentMatchToHistory()">Salva nello storico</button>
+                <button class="btn dark" onclick="renderHistory()">Aggiorna storico</button>
+                <button class="btn red" onclick="clearCoachHistory()">Svuota storico</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <span class="badge blue">PARTITE SALVATE</span>
+
+            <h2>Storico Coach</h2>
+
+            <div id="coachHistoryList" class="history-list">
+                <div class="empty">
+                    Nessuna partita salvata. Genera un report e premi “Salva nello storico”.
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <nav class="bottom-nav">
@@ -1501,8 +1549,9 @@ select option{
     <a href="/account.html">Account</a>
 </nav>
 <script>
-const APP_VERSION = "10070";
+const APP_VERSION = "10080";
 const STORAGE_KEY = "matchiq_coach_v13";
+const HISTORY_KEY = "matchiq_coach_history_v14";
 
 let coachState = {
     match: null,
@@ -1755,12 +1804,12 @@ function renderStatus(){
     const kpiEvents = document.getElementById("kpiEvents");
     const kpiHomeGoals = document.getElementById("kpiHomeGoals");
     const kpiAwayGoals = document.getElementById("kpiAwayGoals");
-    const kpiReport = document.getElementById("kpiReport");
+    const kpiSavedMatches = document.getElementById("kpiSavedMatches");
 
     if(kpiEvents) kpiEvents.textContent = coachState.events.length;
     if(kpiHomeGoals) kpiHomeGoals.textContent = homeGoals;
     if(kpiAwayGoals) kpiAwayGoals.textContent = awayGoals;
-    if(kpiReport) kpiReport.textContent = coachState.report ? "OK" : "--";
+    if(kpiSavedMatches) kpiSavedMatches.textContent = loadHistory().length;
 }
 
 function renderTimeline(){
@@ -2137,12 +2186,156 @@ function downloadReportTxt(){
     URL.revokeObjectURL(url);
 }
 
+function loadHistory(){
+    try{
+        const raw = localStorage.getItem(HISTORY_KEY);
+        const data = raw ? JSON.parse(raw) : [];
+        return Array.isArray(data) ? data : [];
+    }catch(e){
+        console.warn("Storico Coach non disponibile:", e);
+        return [];
+    }
+}
+
+function saveHistory(list){
+    try{
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    }catch(e){
+        console.warn("Salvataggio storico non disponibile:", e);
+    }
+}
+
+function buildHistoryItem(){
+    const match = coachState.match;
+    if(!match) return null;
+
+    return {
+        id: Date.now() + "-" + Math.round(Math.random()*9999),
+        savedAt: new Date().toISOString(),
+        match: JSON.parse(JSON.stringify(match)),
+        events: JSON.parse(JSON.stringify(coachState.events || [])),
+        ratings: JSON.parse(JSON.stringify(coachState.ratings || [])),
+        report: coachState.report || "",
+        homeGoals: getGoals("home"),
+        awayGoals: getGoals("away")
+    };
+}
+
+function saveCurrentMatchToHistory(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+
+    if(!coachState.report){
+        generateCoachReport();
+    }
+
+    const item = buildHistoryItem();
+    if(!item) return;
+
+    const history = loadHistory();
+    history.unshift(item);
+    saveHistory(history.slice(0,50));
+
+    renderHistory();
+    renderStatus();
+    showNotice("Partita salvata nello storico Coach.", "ok");
+}
+
+function openHistoryMatch(historyId){
+    const item = loadHistory().find(x => String(x.id) === String(historyId));
+    if(!item){
+        showNotice("Partita storico non trovata.", "warn");
+        return;
+    }
+
+    coachState = {
+        match: item.match || null,
+        events: Array.isArray(item.events) ? item.events : [],
+        ratings: Array.isArray(item.ratings) ? item.ratings : [],
+        report: item.report || ""
+    };
+
+    saveState();
+    renderAll();
+    window.scrollTo({top:0,behavior:"smooth"});
+    showNotice("Partita riaperta dallo storico.", "ok");
+}
+
+async function copyHistoryReport(historyId){
+    const item = loadHistory().find(x => String(x.id) === String(historyId));
+    if(!item || !item.report){
+        showNotice("Report storico non disponibile.", "warn");
+        return;
+    }
+
+    const plain = String(item.report).replace(/<[^>]*>/g,"");
+    try{
+        await navigator.clipboard.writeText(plain);
+        showNotice("Report storico copiato.", "ok");
+    }catch{
+        showNotice("Non riesco a copiare automaticamente.", "warn");
+    }
+}
+
+function deleteHistoryMatch(historyId){
+    if(!confirm("Vuoi eliminare questa partita dallo storico?")) return;
+    const history = loadHistory().filter(x => String(x.id) !== String(historyId));
+    saveHistory(history);
+    renderHistory();
+    renderStatus();
+}
+
+function clearCoachHistory(){
+    if(!confirm("Vuoi svuotare tutto lo storico Coach?")) return;
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+    renderStatus();
+    showNotice("Storico Coach svuotato.", "ok");
+}
+
+function renderHistory(){
+    const box = document.getElementById("coachHistoryList");
+    if(!box) return;
+
+    const history = loadHistory();
+    if(!history.length){
+        box.innerHTML = `<div class="empty">Nessuna partita salvata. Genera un report e premi “Salva nello storico”.</div>`;
+        return;
+    }
+
+    box.innerHTML = history.map(item => {
+        const m = item.match || {};
+        const saved = item.savedAt ? new Date(item.savedAt).toLocaleDateString("it-IT") : "--";
+        const title = `${m.homeTeam || "Casa"} vs ${m.awayTeam || "Trasferta"}`;
+        return `
+            <div class="history-card">
+                <div class="history-top">
+                    <div class="history-title">${esc(title)}</div>
+                    <div class="history-date">${esc(saved)}</div>
+                </div>
+                <div class="history-meta">
+                    ${esc(m.category || "Dilettanti")} · Risultato eventi ${esc(item.homeGoals ?? 0)}-${esc(item.awayGoals ?? 0)} ·
+                    ${esc((item.events || []).length)} eventi · ${esc((item.ratings || []).length)} pagelle
+                </div>
+                <div class="history-actions">
+                    <button class="green" onclick="openHistoryMatch('${esc(item.id)}')">Riapri</button>
+                    <button onclick="copyHistoryReport('${esc(item.id)}')">Copia report</button>
+                    <button class="red" onclick="deleteHistoryMatch('${esc(item.id)}')">Elimina</button>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
 function renderAll(){
     fillFormFromState();
     renderStatus();
     renderTimeline();
     renderRatings();
     renderReport();
+    renderHistory();
 }
 
 function boot(){
