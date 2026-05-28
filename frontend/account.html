@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical - Account Pro V1.6</title>
+<title>MatchIQ Tactical - Account Pro V1.7</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -596,6 +596,29 @@ p{
     display:block;
 }
 
+.pro-only-panel{
+    display:none;
+    background:
+        radial-gradient(circle at top right,rgba(24,240,139,.13),transparent 34%),
+        linear-gradient(145deg,rgba(24,240,139,.10),rgba(56,169,255,.06));
+    border:1px solid rgba(24,240,139,.22);
+    border-radius:28px;
+    padding:26px;
+    margin-top:22px;
+}
+
+.pro-only-panel.show{
+    display:block;
+}
+
+.hidden-for-pro{
+    display:block;
+}
+
+.hidden-for-pro.hide{
+    display:none !important;
+}
+
 .bottom-nav{
     display:none;
 }
@@ -647,7 +670,8 @@ p{
     .card,
     .cta-panel,
     .founder-panel,
-    .value-panel{
+    .value-panel,
+    .pro-only-panel{
         border-radius:24px;
         padding:20px;
     }
@@ -758,7 +782,6 @@ p{
 }
 </style>
 </head>
-
 <body>
 
 <div class="topbar">
@@ -782,6 +805,7 @@ p{
 <div class="main">
 
     <div id="pageNotice" class="notice"></div>
+
     <div class="hero">
         <div class="card hero-main">
             <span class="badge guest" id="planBadge">CARICAMENTO</span>
@@ -789,8 +813,8 @@ p{
             <h1 id="accountTitle">Sblocca MatchIQ Pro</h1>
 
             <p id="accountIntro" class="hero-lead">
-                Usa MatchIQ come una vera piattaforma di assistente tattico:
-                più partite live, WhatsApp illimitate, Coach report, PDF, WhatsApp, pagelle e storico esteso.
+                Usa MatchIQ come assistente tattico per mister, staff, scout e società:
+                Coach report, PDF, WhatsApp, pagelle, storico, Scout Mode e analisi live.
             </p>
 
             <div class="micro-trust">
@@ -844,14 +868,14 @@ p{
             </div>
         </div>
 
-        <div class="cta-panel" id="ctaPanel">
+        <div class="cta-panel hidden-for-pro" id="ctaPanel">
             <span class="badge beta">MATCHIQ PRO</span>
 
             <h2>MatchIQ Pro</h2>
 
             <p>
-                Per chi vuole usare MatchIQ durante le partite live:
-                analisi, Scout Mode, Coach report, PDF, WhatsApp, pagelle e storico esteso.
+                Per usare MatchIQ tutta la stagione: Coach report, PDF, WhatsApp,
+                pagelle, storico esteso, Scout Mode e analisi live.
             </p>
 
             <div class="price-wrap">
@@ -873,7 +897,7 @@ p{
                 <li>✅ WhatsApp illimitate</li>
                 <li>✅ Pagelle illimitate</li>
                 <li>✅ Storico Coach esteso</li>
-                <li>✅ PDF / WhatsApp</li>
+                <li>✅ Scout e funzioni avanzate</li>
                 <li>✅ Uso continuativo da campo</li>
             </ul>
 
@@ -900,42 +924,74 @@ p{
         <h2>Accesso owner attivo</h2>
 
         <p>
-            Hai accesso completo a MatchIQ: Scout Pro, tutte le partite, export,
-            admin users e analytics.
+            Hai accesso completo a MatchIQ: Coach, Scout, live, admin users,
+            analytics e funzioni Pro senza limiti.
         </p>
 
         <div class="footer-actions">
+            <button class="btn green" onclick="window.location.href='/coach.html?v='+APP_VERSION">Apri Coach</button>
             <button class="btn green" onclick="goScout()">Apri Scout</button>
             <button class="btn dark" onclick="goDashboard()">Home</button>
-            <button class="btn dark" onclick="window.location.href='/admin-users.html'">Admin Users</button>
-            <button class="btn dark" onclick="window.location.href='/admin-analytics.html'">Analytics</button>
+            <button class="btn dark" onclick="window.location.href='/admin-users.html?v='+APP_VERSION">Admin Users</button>
+            <button class="btn dark" onclick="window.location.href='/admin-analytics.html?v='+APP_VERSION">Analytics</button>
         </div>
     </div>
 
-    <div class="value-panel section">
+    <div class="pro-only-panel" id="proOnlyPanel">
+        <span class="badge pro">PIANO ATTIVO</span>
+
+        <h2>Funzioni sbloccate</h2>
+
+        <p>
+            Il tuo piano è già attivo. Puoi usare MatchIQ come assistente tattico
+            con strumenti avanzati per campo, report e scouting.
+        </p>
+
+        <div class="unlock-grid">
+            <div class="unlock-card">
+                <div class="unlock-icon">📝</div>
+                <strong>Coach Pro</strong>
+                <span>Pagelle, report e storico esteso per uso continuativo.</span>
+            </div>
+
+            <div class="unlock-card">
+                <div class="unlock-icon">📄</div>
+                <strong>PDF / WhatsApp</strong>
+                <span>Report PDF e sintesi WhatsApp senza blocchi di prova.</span>
+            </div>
+
+            <div class="unlock-card">
+                <div class="unlock-icon">🔎</div>
+                <strong>Scout + Live</strong>
+                <span>Supporto avanzato per lettura partita e giocatori.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="value-panel section hidden-for-pro" id="valuePanel">
         <span class="badge beta">COSA CAMBIA CON PRO</span>
 
         <h2>Da prova gratuita a uso continuativo</h2>
 
         <p>
             La versione Free serve per provare MatchIQ. Il piano Pro è pensato per usare davvero
-            l’app durante le partite, con più dati, più profondità e strumenti da scout.
+            l’app durante la stagione, con più strumenti e meno limiti.
         </p>
 
         <div class="unlock-grid">
             <div class="unlock-card">
-                <div class="unlock-icon">⚡</div>
+                <div class="unlock-icon">📝</div>
                 <strong>Coach senza limiti</strong>
                 <span>
-                    Sblocca tutte le partite disponibili, senza limite Free sulle partite live.
+                    Pagelle, report e storico più esteso per lavorare con continuità.
                 </span>
             </div>
 
             <div class="unlock-card">
-                <div class="unlock-icon">🔍</div>
+                <div class="unlock-icon">📲</div>
                 <strong>WhatsApp illimitate</strong>
                 <span>
-                    Pagelle illimitate, segnali hot/danger/pressure e analisi più profonda.
+                    Sintesi pronte da condividere con staff, squadra o società.
                 </span>
             </div>
 
@@ -943,39 +999,39 @@ p{
                 <div class="unlock-icon">📄</div>
                 <strong>Uso professionale</strong>
                 <span>
-                    Esporta report e usa MatchIQ come supporto concreto di analisi.
+                    PDF e report più ordinati per supportare il lavoro tecnico.
                 </span>
             </div>
         </div>
     </div>
 
-    <div class="founder-panel">
+    <div class="founder-panel hidden-for-pro" id="founderPanel">
         <div class="founder-grid">
             <div>
                 <span class="badge beta">MATCHIQ PRO</span>
 
-                <h2>Stai entrando nella prima fase di MatchIQ</h2>
+                <h2>Porta MatchIQ nella tua stagione</h2>
 
                 <p>
-                    MatchIQ è in evoluzione continua. Chi entra ora aiuta a definire il prodotto:
-                    live analysis, Scout Mode e presto strumenti dedicati anche al calcio dilettantistico.
+                    MatchIQ nasce per aiutare mister, staff, scout e società a trasformare
+                    appunti, eventi e letture live in report più ordinati.
                 </p>
 
                 <div class="footer-actions">
-                    <button class="btn green" onclick="goScout()">Prova Scout</button>
+                    <button class="btn green" onclick="window.location.href='/coach.html?v='+APP_VERSION">Prova Coach</button>
                     <button class="btn outline" onclick="goDashboard()">Torna alla Home</button>
                 </div>
             </div>
 
             <div class="founder-points">
-                <div class="founder-point">✅ Accesso anticipato alle funzioni Pro</div>
-                <div class="founder-point">✅ Feedback diretto sul prodotto</div>
-                <div class="founder-point">✅ Evoluzione verso Coach Mode per dilettanti</div>
+                <div class="founder-point">✅ Report post-partita più ordinati</div>
+                <div class="founder-point">✅ Pagelle e storico durante la stagione</div>
+                <div class="founder-point">✅ Live e Scout come valore aggiunto</div>
             </div>
         </div>
     </div>
 
-    <div class="card section">
+    <div class="card section hidden-for-pro" id="comparePanel">
         <h2>Free vs Pro</h2>
 
         <div class="compare-grid">
@@ -1008,7 +1064,7 @@ p{
                     <li>✅ WhatsApp illimitate</li>
                     <li>✅ Pagelle illimitate</li>
                     <li>✅ Storico Coach esteso</li>
-                    <li>✅ PDF / WhatsApp</li>
+                    <li>✅ Scout Mode</li>
                     <li>✅ Uso continuativo da campo</li>
                 </ul>
             </div>
@@ -1016,10 +1072,10 @@ p{
     </div>
 
     <div class="card section">
-        <h2>Dettagli abbonamento</h2>
+        <h2>Dettagli account</h2>
 
         <div id="subscriptionContent" class="subscription-box">
-            <div class="loading">Caricamento dati abbonamento...</div>
+            <div class="loading">Caricamento dati account...</div>
         </div>
     </div>
 
@@ -1031,9 +1087,10 @@ p{
     <a href="/coach.html">Coach</a>
     <a class="active" href="/account.html">Account</a>
 </nav>
+
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10320";
+const APP_VERSION = "10340";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
@@ -1089,10 +1146,6 @@ function isOwnerEmail(email){
     return String(email || "").toLowerCase().trim() === OWNER_EMAIL;
 }
 
-function isMobileDevice(){
-    return window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
-}
-
 function showNotice(message,type="ok",timeout=7000){
     const el = document.getElementById("pageNotice");
     if(!el) return;
@@ -1129,9 +1182,7 @@ function logout(){
     sessionStorage.removeItem("matchiq_user");
     sessionStorage.removeItem("matchiq_auth_token");
 
-    window.location.href = isMobileDevice()
-        ? `/index.html?v=${APP_VERSION}`
-        : `/index.html?v=${APP_VERSION}`;
+    window.location.href = `/index.html?v=${APP_VERSION}`;
 }
 
 function formatDate(value){
@@ -1172,6 +1223,12 @@ function getDisplayEmail(){
     );
 }
 
+function setCommercialSectionsVisible(visible){
+    document.querySelectorAll(".hidden-for-pro").forEach(el => {
+        el.classList.toggle("hide", !visible);
+    });
+}
+
 function renderAccount(){
     const token = getAuthToken();
     const localUser = getLocalUser();
@@ -1201,9 +1258,11 @@ function renderAccount(){
     const logoutPageBtn = document.getElementById("logoutPageBtn");
     const upgradeMonthlyBtn = document.getElementById("upgradeMonthlyBtn");
     const upgradeYearlyBtn = document.getElementById("upgradeYearlyBtn");
-    const ctaPanel = document.getElementById("ctaPanel");
-    const smallNote = document.getElementById("smallNote");
     const ownerPanel = document.getElementById("ownerPanel");
+    const proOnlyPanel = document.getElementById("proOnlyPanel");
+    const smallNote = document.getElementById("smallNote");
+
+    setCommercialSectionsVisible(!isPro);
 
     if(emailValue) emailValue.textContent = logged ? (email || "Utente") : "Guest";
     if(planValue) planValue.textContent = isOwner ? "OWNER PRO" : logged ? plan.toUpperCase() : "GUEST";
@@ -1229,11 +1288,11 @@ function renderAccount(){
 
     if(accountIntro){
         accountIntro.textContent = isOwner
-            ? "Hai accesso completo a MatchIQ: Scout, tutte le partite, export, admin e analytics."
+            ? "Hai accesso completo a MatchIQ: Coach, Scout, live, admin users, analytics e funzioni Pro senza limiti."
             : isPro
-                ? "Il tuo piano Pro è attivo. Puoi usare Scout completo, tutte le partite live, watchlist ed export report."
+                ? "Il tuo piano Pro è attivo. Puoi usare Coach report, PDF, WhatsApp, pagelle, storico, Scout Mode e analisi live con limiti estesi."
                 : logged
-                    ? "Il tuo account è Free. Passa a Pro per sbloccare tutte le partite, Scout completo, Coach report, PDF, WhatsApp, pagelle e storico esteso."
+                    ? "Il tuo account è Free. Passa a Pro per sbloccare PDF, WhatsApp, pagelle, storico esteso e uso continuativo da campo."
                     : "Stai usando MatchIQ come Guest. Accedi o registrati per salvare il piano, attivare Pro e usare tutte le funzioni avanzate.";
     }
 
@@ -1265,19 +1324,19 @@ function renderAccount(){
         upgradeYearlyBtn.style.display = isPro ? "none" : "inline-flex";
     }
 
-    if(ctaPanel){
-        ctaPanel.style.display = isPro ? "none" : "block";
-    }
-
     if(ownerPanel){
         ownerPanel.className = isOwner ? "owner-panel show" : "owner-panel";
+    }
+
+    if(proOnlyPanel){
+        proOnlyPanel.className = isPro ? "pro-only-panel show" : "pro-only-panel";
     }
 
     if(smallNote){
         smallNote.textContent = isOwner
             ? "Account owner: nessun abbonamento Stripe da gestire."
             : isPro
-                ? "Puoi gestire abbonamento, carta e fatture dal portale Stripe."
+                ? "Il tuo piano è attivo. Puoi gestire abbonamento, carta e fatture dal portale Stripe se disponibile."
                 : logged
                     ? "I pagamenti e la gestione dell’abbonamento sono gestiti in sicurezza tramite Stripe."
                     : "Per attivare Pro devi prima accedere o registrarti.";
@@ -1295,6 +1354,7 @@ function renderSubscription(){
     const logged = Boolean(token);
     const plan = normalizePlan(accountState.plan || localStorage.getItem("matchiq_user_plan") || "guest");
     const isOwner = accountState.is_owner || isOwnerEmail(email);
+    const isPro = isOwner || isProLike(plan);
     const subscription = accountState.subscription;
 
     if(!logged){
@@ -1340,12 +1400,12 @@ function renderSubscription(){
                 <span>${plan.toUpperCase()}</span>
             </div>
             <div class="row">
-                <span>Abbonamento</span>
-                <span>Nessun abbonamento attivo trovato</span>
+                <span>Stato piano</span>
+                <span>${isPro ? "Attivo" : "Free / nessun abbonamento attivo"}</span>
             </div>
             <div class="row">
                 <span>Upgrade</span>
-                <span>Disponibile</span>
+                <span>${isPro ? "Non necessario" : "Disponibile"}</span>
             </div>
         `;
         return;
