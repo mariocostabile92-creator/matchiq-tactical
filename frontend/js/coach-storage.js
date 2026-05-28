@@ -38,7 +38,8 @@ function loadHistory(){
 
 function saveHistory(list){
     try{
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+        const max = getCoachLimits().maxHistory || 1;
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, max)));
     }catch(e){
         console.warn("Salvataggio storico non disponibile:", e);
     }
@@ -66,6 +67,14 @@ function saveCurrentMatchToHistory(){
         return;
     }
 
+    const history = loadHistory();
+    const limits = getCoachLimits();
+
+    if(!isCoachPro() && history.length >= limits.maxHistory){
+        showCoachProNotice("Storico Coach completo");
+        return;
+    }
+
     if(!coachState.report){
         generateCoachReport();
     }
@@ -73,13 +82,17 @@ function saveCurrentMatchToHistory(){
     const item = buildHistoryItem();
     if(!item) return;
 
-    const history = loadHistory();
     history.unshift(item);
-    saveHistory(history.slice(0, 50));
+    saveHistory(history);
 
     renderHistory();
     renderStatus();
-    showNotice("Partita salvata nello storico Coach.", "ok");
+
+    if(isCoachPro()){
+        showNotice("Partita salvata nello storico Coach.", "ok");
+    }else{
+        showNotice(`Partita salvata nello storico Coach. Free: ${loadHistory().length}/${limits.maxHistory}.`, "ok", 4500);
+    }
 }
 
 function clearCoachHistory(){

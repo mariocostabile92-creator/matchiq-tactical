@@ -134,6 +134,11 @@ Report generato con MatchIQ Coach.`;
 }
 
 async function copyWhatsAppSummary(){
+    if(!canUseCoachWhatsapp()){
+        showCoachProNotice("Sintesi WhatsApp");
+        return;
+    }
+
     if(!coachState.match){
         showNotice("Prima crea una partita manuale.", "warn");
         return;
@@ -229,7 +234,7 @@ ${buildWhatsAppSummary()}
 La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
 
 <strong>Nota</strong>
-Report generato localmente da MatchIQ Coach V1.5: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
+Report generato localmente da MatchIQ Coach V1.6: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
 `.trim();
 
     coachState.report = report;
@@ -561,6 +566,11 @@ body{
 }
 
 function printCoachPdf(){
+    if(!canUseCoachPdf()){
+        showCoachProNotice("Export PDF Coach");
+        return;
+    }
+
     if(!coachState.match){
         showNotice("Prima crea una partita manuale.", "warn");
         return;

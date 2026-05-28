@@ -1,6 +1,22 @@
-const APP_VERSION = "10085";
+const APP_VERSION = "10095";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
+
+const OWNER_EMAIL = "mario.costabile92@outlook.it";
+
+const COACH_FREE_LIMITS = {
+    maxRatings: 3,
+    maxHistory: 1,
+    pdf: false,
+    whatsapp: false
+};
+
+const COACH_PRO_LIMITS = {
+    maxRatings: 999,
+    maxHistory: 50,
+    pdf: true,
+    whatsapp: true
+};
 
 let coachState = {
     match: null,
@@ -87,4 +103,79 @@ function getEventsByType(type){
 
 function getEventCount(type, side=null){
     return coachState.events.filter(e => e.type === type && (!side || e.side === side)).length;
+}
+
+function getStoredUser(){
+    try{
+        return JSON.parse(
+            localStorage.getItem("matchiq_auth_user") ||
+            sessionStorage.getItem("matchiq_auth_user") ||
+            "null"
+        );
+    }catch{
+        return null;
+    }
+}
+
+function getStoredPlan(){
+    const user = getStoredUser();
+    const email = String(user?.email || localStorage.getItem("matchiq_user_email") || "").toLowerCase().trim();
+
+    if(email === OWNER_EMAIL){
+        return "owner";
+    }
+
+    return String(
+        user?.plan ||
+        user?.piano ||
+        localStorage.getItem("matchiq_user_plan") ||
+        sessionStorage.getItem("matchiq_user_plan") ||
+        "free"
+    ).toLowerCase().trim();
+}
+
+function isCoachPro(){
+    const plan = getStoredPlan();
+
+    return [
+        "pro",
+        "scout",
+        "owner",
+        "owner_pro",
+        "admin"
+    ].includes(plan);
+}
+
+function getCoachLimits(){
+    return isCoachPro()
+        ? COACH_PRO_LIMITS
+        : COACH_FREE_LIMITS;
+}
+
+function canUseCoachPdf(){
+    return getCoachLimits().pdf === true;
+}
+
+function canUseCoachWhatsapp(){
+    return getCoachLimits().whatsapp === true;
+}
+
+function canAddCoachRating(){
+    return coachState.ratings.length < getCoachLimits().maxRatings;
+}
+
+function canSaveCoachHistory(){
+    return loadHistory().length < getCoachLimits().maxHistory;
+}
+
+function getCoachPlanLabel(){
+    return isCoachPro() ? "PRO" : "FREE";
+}
+
+function goCoachUpgrade(){
+    window.location.href = `/account.html?v=${APP_VERSION}`;
+}
+
+function showCoachProNotice(feature){
+    showNotice(`${feature} è una funzione Pro. Vai su Account / Pro per sbloccarla.`, "warn", 6000);
 }

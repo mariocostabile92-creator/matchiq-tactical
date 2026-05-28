@@ -118,21 +118,47 @@ function addPlayerRating(){
         showNotice("Prima crea una partita manuale.", "warn");
         return;
     }
+
+    if(!canAddCoachRating()){
+        showCoachProNotice("Pagelle illimitate");
+        return;
+    }
+
     const player = getInputValue("ratingPlayerInput","");
     const side = getInputValue("ratingTeamInput","home");
     const role = getInputValue("ratingRoleInput","Jolly");
     const vote = Number(getInputValue("ratingVoteInput","6"));
     const note = getInputValue("ratingNoteInput","");
+
     if(!player){
         showNotice("Inserisci il nome del giocatore.", "warn");
         return;
     }
-    const rating = {id: Date.now() + Math.random(), player, side, team: getTeamName(side), role, vote: Number.isFinite(vote) ? vote : 6, note, createdAt: new Date().toISOString()};
+
+    const rating = {
+        id: Date.now() + Math.random(),
+        player,
+        side,
+        team: getTeamName(side),
+        role,
+        vote: Number.isFinite(vote) ? vote : 6,
+        note,
+        createdAt: new Date().toISOString()
+    };
+
     coachState.ratings.unshift(rating);
+
     saveState();
     clearRatingForm();
     renderAll();
-    showNotice(`Pagella aggiunta: ${player} (${rating.vote}).`, "ok", 2500);
+
+    const limits = getCoachLimits();
+
+    if(!isCoachPro()){
+        showNotice(`Pagella aggiunta: ${player} (${rating.vote}). Free: ${coachState.ratings.length}/${limits.maxRatings}.`, "ok", 3500);
+    }else{
+        showNotice(`Pagella aggiunta: ${player} (${rating.vote}).`, "ok", 2500);
+    }
 }
 
 function deleteRating(ratingId){
