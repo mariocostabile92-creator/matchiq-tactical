@@ -1,4 +1,6 @@
-/* MatchIQ Scout - Render Module V8.1.3 SaaS Free/Pro + Free Match Limit */
+/* MatchIQ Scout - Render Module V1.3
+   SaaS Free/Pro + Free Match Limit + Copy Polish
+*/
 
 function renderAll(){
   renderAccessUI();
@@ -63,7 +65,7 @@ function goToProRequest(){
     return;
   }
 
-  window.location.href = "/index.html#pricing";
+  window.location.href = "/account.html";
 }
 
 function goToAccount(){
@@ -78,24 +80,24 @@ function goToAccount(){
 function proCtaHtml(mode = "players"){
   const textByMode = {
     players: {
-      title: "🔒 Sblocca MatchIQ Scout Pro",
-      desc: "Stai vedendo una preview limitata. Con Pro sblocchi tutte le player cards, export report, watchlist, simulazione eventi e schede player complete."
+      title: "🔒 Scout Pro sblocca l’analisi completa",
+      desc: "Stai vedendo una preview limitata. Con Pro accedi a tutte le player cards, watchlist, export report e segnali avanzati durante il match."
     },
     hidden: {
-      title: "🔒 Player nascosti",
-      desc: "Altri giocatori sono disponibili solo con Scout Pro. Passa a Pro per vedere l’intera analisi live della partita."
+      title: "🔒 Altri player disponibili con Pro",
+      desc: "La preview Free mostra solo una parte dei giocatori. Passa a Pro per vedere l’intera lettura live della partita."
     },
     watchlist: {
       title: "🔒 Watchlist Pro",
-      desc: "La watchlist è disponibile solo per Pro/Owner. Salva i giocatori più interessanti e crea report scout più rapidi."
+      desc: "Salva i giocatori più interessanti, monitorali durante il match e costruisci report scout più rapidi."
     },
     modal: {
       title: "🔒 Scheda Player Pro",
-      desc: "La scheda completa include radar, AI coach commentary, probabilità live, tactical zone e report player esportabile."
+      desc: "Radar, AI coach commentary, probabilità live, tactical zone ed export player report sono disponibili con MatchIQ Pro."
     },
     matches: {
-      title: "🔒 Altre partite disponibili con Pro",
-      desc: "Con MatchIQ Free puoi usare Scout solo su 3 partite live. Con Pro sblocchi tutte le partite, player cards complete, watchlist, export e simulazioni."
+      title: "🔒 Tutte le partite con Pro",
+      desc: "Con Free puoi usare Scout su un numero limitato di partite live. Con Pro sblocchi tutte le partite, player cards complete, watchlist ed export."
     }
   };
 
@@ -104,12 +106,18 @@ function proCtaHtml(mode = "players"){
   return `
     <div class="empty" style="grid-column:1/-1;border-color:#ffb020;background:rgba(255,176,32,.08);">
       <strong>${c.title}</strong>
-      <br>
       <span>${c.desc}</span>
+
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:14px 0;">
+        <div style="padding:9px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;font-weight:900;">✅ Player cards complete</div>
+        <div style="padding:9px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;font-weight:900;">✅ Watchlist</div>
+        <div style="padding:9px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;font-weight:900;">✅ Export report</div>
+        <div style="padding:9px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;font-weight:900;">✅ Tutti i live</div>
+      </div>
+
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px;">
-        <button class="btn btn-green" onclick="goToProRequest()">Passa a Pro</button>
-        <button class="btn" onclick="goToAccount()">Account</button>
-        <button class="btn" onclick="goDashboard()">Dashboard</button>
+        <button class="btn btn-green" onclick="goToProRequest()">Sblocca Pro</button>
+        <button class="btn" onclick="goToAccount()">Vedi piano</button>
       </div>
     </div>
   `;
@@ -184,15 +192,22 @@ function scoutMatchesProLockHtml(total, visible){
 
   return `
     <div class="empty" style="border-color:#ffb020;background:rgba(255,176,32,.08);">
-      <strong>🔒 Altre ${hidden} partite disponibili con Pro</strong>
-      <br>
+      <strong>🔒 ${hidden} partite Scout disponibili con Pro</strong>
       <span>
         Con MatchIQ Free puoi selezionare massimo ${visible} partite live.
-        Con Pro sblocchi tutte le partite, Scout completo, player cards, watchlist, export e simulazioni.
+        Con Pro sblocchi tutte le partite, Scout completo, player cards, watchlist ed export.
       </span>
+
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:14px 0;">
+        <div style="padding:9px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;font-weight:900;">✅ Tutte le partite</div>
+        <div style="padding:9px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;font-weight:900;">✅ Scout completo</div>
+        <div style="padding:9px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;font-weight:900;">✅ Watchlist</div>
+        <div style="padding:9px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;font-weight:900;">✅ Export report</div>
+      </div>
+
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px;">
-        <button class="btn btn-green" onclick="goToProRequest()">Passa a Pro</button>
-        <button class="btn" onclick="goToAccount()">Account</button>
+        <button class="btn btn-green" onclick="goToProRequest()">Sblocca Pro</button>
+        <button class="btn" onclick="goToAccount()">Vedi piano</button>
       </div>
     </div>
   `;
@@ -207,7 +222,9 @@ function renderMatches(){
     box.innerHTML = `
       <div class="empty">
         <strong>Nessuna partita live disponibile</strong>
-        Uso il match_id dell'URL se presente.
+        <span>
+          Apri Scout dalla Home live oppure aggiorna tra poco.
+        </span>
       </div>
     `;
     return;
@@ -265,8 +282,13 @@ function renderHero(){
   if(!m){
     hero.innerHTML = `
       <div>
-        <h3>Nessun match selezionato</h3>
-        <p>Apri scout.html?match_id=ID_PARTITA.</p>
+        <h3>Nessuna partita selezionata</h3>
+        <p>Apri Scout dalla Home live oppure seleziona una partita disponibile.</p>
+      </div>
+
+      <div class="hero-score">
+        <strong>--</strong>
+        <div>In attesa</div>
       </div>
     `;
     return;
@@ -308,7 +330,6 @@ function renderMetrics(){
     if(el) el.textContent = valuePct(v);
   });
 }
-
 function renderPlayers(){
   const box = document.getElementById("players");
 
@@ -317,8 +338,16 @@ function renderPlayers(){
   if(!state.hasRealPlayers){
     box.innerHTML = `
       <div class="empty">
-        <strong>Giocatori reali non disponibili</strong>
-        Scout legge solo data.players dello schema clean.
+        <strong>Player data non ancora disponibili</strong>
+        <span>
+          I dati dei giocatori non sono disponibili per questa partita.
+          Prova un altro match live oppure aggiorna tra poco.
+        </span>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px;">
+          <button class="btn btn-green" onclick="manualRefresh()">Aggiorna Scout</button>
+          <button class="btn" onclick="goDashboard()">Torna alla Home</button>
+        </div>
       </div>
     `;
     return;
@@ -339,7 +368,14 @@ function renderPlayers(){
     box.innerHTML = `
       <div class="empty">
         <strong>Nessun giocatore trovato</strong>
-        Modifica i filtri scout.
+        <span>
+          Nessun player corrisponde ai filtri selezionati.
+          Prova a modificare ruolo, segnale AI o score minimo.
+        </span>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px;">
+          <button class="btn btn-green" onclick="resetFilters()">Reset filtri</button>
+        </div>
       </div>
     `;
     return;
@@ -423,8 +459,10 @@ function renderTimeline(){
   if(!state.events.length){
     box.innerHTML = `
       <div class="empty">
-        <strong>Nessun evento player reale</strong>
-        La timeline si popolerà con eventi live.
+        <strong>Nessun evento live rilevato</strong>
+        <span>
+          Gli eventi dei giocatori compariranno appena saranno disponibili durante il match.
+        </span>
       </div>
     `;
     return;
@@ -454,12 +492,12 @@ function renderTicker(){
   const isPro = typeof isScoutPro === "function" ? isScoutPro() : Boolean(state.account?.is_pro);
 
   if(!m){
-    ticker.textContent = "MatchIQ Scout V8.1.3 · nessuna partita live ricevuta";
+    ticker.textContent = "MatchIQ Scout · seleziona una partita live dalla Home o dalla lista Scout";
     return;
   }
 
   if(!state.hasRealPlayers){
-    ticker.textContent = `LIVE ${m.home} - ${m.away} · ${m.minute}' · giocatori reali non disponibili`;
+    ticker.textContent = `LIVE ${m.home} - ${m.away} · ${m.minute}' · player data non ancora disponibili per questa partita`;
     return;
   }
 
@@ -489,7 +527,9 @@ function renderWatchlist(){
     box.innerHTML = `
       <div class="empty">
         <strong>Watchlist vuota</strong>
-        Salva i player da monitorare.
+        <span>
+          Salva i player più interessanti durante il match e ritrovali qui.
+        </span>
       </div>
     `;
     return;
