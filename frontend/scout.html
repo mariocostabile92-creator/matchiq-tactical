@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>MatchIQ Scout V8.1.2</title>
+  <title>MatchIQ Scout</title>
 
   <link rel="stylesheet" href="css/scout.css">
 
@@ -23,9 +23,9 @@
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
-      <strong>Caricamento MatchIQ Scout V8.1.2...</strong>
+      <strong>Caricamento MatchIQ Scout...</strong>
       <p id="loaderSubtitle" style="color:var(--muted);margin-top:6px;font-size:13px;">
-        Scout Free Preview · Pro unlock · Live player intelligence
+        Anteprima Scout · Pro sblocca player intelligence live
       </p>
     </div>
   </div>
@@ -33,7 +33,7 @@
   <div class="app">
     <header class="topbar">
       <div>
-        <h1>MatchIQ Scout V8.1.2</h1>
+        <h1>MatchIQ Scout</h1>
         <div class="subtitle" id="scoutSubtitle">
           Scout Preview · player cards limitate · export, watchlist e simulazioni disponibili con Pro
         </div>
@@ -43,11 +43,11 @@
         <button class="btn" onclick="goDashboard()">← Dashboard</button>
 
         <div class="pill pill-live">
-          <span class="dot"></span> LIVE DATA
+          <span class="dot"></span> Dati live
         </div>
 
-        <div class="pill pill-clean" id="adminActionsPill">ADMIN ACTIONS</div>
-        <div class="pill pill-api" id="apiSafePill">FREE PREVIEW</div>
+        <div class="pill pill-clean" id="adminActionsPill">Admin</div>
+        <div class="pill pill-api" id="apiSafePill">Anteprima Free</div>
 
         <button class="btn" id="scoutAccountBtn" onclick="goAccount()">Account</button>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
@@ -63,7 +63,7 @@
     </header>
 
     <div class="ticker" id="tickerText">
-      MatchIQ Scout V8.1.2 · Free Preview attiva · passa a Pro per sbloccare player cards complete, watchlist, export e simulazioni.
+      MatchIQ Scout · Anteprima Free attiva · passa a Pro per sbloccare player cards complete, watchlist, export e simulazioni.
     </div>
 
     <div class="notice" id="noticeBox"></div>
@@ -130,26 +130,26 @@
           </div>
 
           <div class="metric">
-            <small>Pressure Index</small>
+            <small>Pressione</small>
             <strong id="mPressure">--</strong>
           </div>
 
           <div class="metric">
-            <small>Creativity</small>
+            <small>Creatività</small>
             <strong id="mCreativity">--</strong>
           </div>
 
           <div class="metric">
-            <small>Live Threat</small>
+            <small>Pericolo live</small>
             <strong id="mThreat">--</strong>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-head">
-            <h2>Player Live Cards</h2>
+            <h2>Player cards live</h2>
             <small id="playerCardsHint">
-              Preview Free: clicca un player per aprire la scheda. Pro sblocca analisi completa.
+              Anteprima Free: clicca un player per aprire la scheda. Pro sblocca l’analisi completa.
             </small>
           </div>
 
@@ -159,7 +159,7 @@
 
       <aside class="panel">
         <div class="panel-head">
-          <h2>AI Live Timeline</h2>
+          <h2>Timeline live AI</h2>
           <small id="eventCount">0 eventi</small>
         </div>
 
@@ -200,12 +200,12 @@
         </div>
 
         <div class="kpi">
-          <small>Threat</small>
+          <small>Pericolo</small>
           <strong id="modalThreat">--</strong>
         </div>
 
         <div class="kpi">
-          <small>Creativity</small>
+          <small>Creatività</small>
           <strong id="modalCreativity">--</strong>
         </div>
 
@@ -217,20 +217,20 @@
 
       <div class="pro-grid">
         <div class="pro-card">
-          <h3>Live Impact Meter <span id="impactLabel">--</span></h3>
+          <h3>Impatto live <span id="impactLabel">--</span></h3>
 
           <div class="impact-wrap">
             <div class="impact-ring" id="impactRing" style="--impact:0%;">
               <div class="impact-value">
                 <strong id="impactValue">--</strong>
-                <span>LIVE IMPACT</span>
+                <span>IMPATTO LIVE</span>
               </div>
             </div>
 
             <div class="bars">
               <div class="bar-row">
                 <div class="bar-top">
-                  <span>Threat</span>
+                  <span>Pericolo</span>
                   <span id="barThreatText">--</span>
                 </div>
                 <div class="bar"><span id="barThreat"></span></div>
@@ -264,19 +264,19 @@
         </div>
 
         <div class="pro-card">
-          <h3>Radar Performance <span>V8.1.2</span></h3>
+          <h3>Radar performance <span>Live</span></h3>
           <div class="radar-wrap">
             <svg class="radar" viewBox="0 0 300 300" id="radarSvg"></svg>
           </div>
         </div>
 
         <div class="pro-card">
-          <h3>AI Coach Commentary <span id="commentSource">live</span></h3>
+          <h3>Commento AI Coach <span id="commentSource">live</span></h3>
           <div class="ai-box" id="modalComment">--</div>
         </div>
 
         <div class="pro-card">
-          <h3>Mini Tactical Zone <span id="zoneLabel">--</span></h3>
+          <h3>Zona tattica <span id="zoneLabel">--</span></h3>
           <div class="mini-pitch">
             <div class="pitch-line"></div>
             <div class="pitch-mid"></div>
@@ -290,38 +290,38 @@
         </div>
 
         <div class="pro-card">
-          <h3>Probabilità Live <span>frontend-side</span></h3>
+          <h3>Probabilità live <span>Analisi locale</span></h3>
 
           <div class="prob-grid">
             <div class="prob">
-              <small>Goal Probability</small>
+              <small>Probabilità gol</small>
               <strong id="goalProb">--</strong>
             </div>
 
             <div class="prob">
-              <small>Assist Probability</small>
+              <small>Probabilità assist</small>
               <strong id="assistProb">--</strong>
             </div>
 
             <div class="prob">
-              <small>Next Action Impact</small>
+              <small>Impatto prossima azione</small>
               <strong id="nextImpact">--</strong>
             </div>
 
             <div class="prob">
-              <small>Watchlist Fit</small>
+              <small>Fit watchlist</small>
               <strong id="watchFit">--</strong>
             </div>
           </div>
         </div>
 
         <div class="pro-card" style="grid-column:1/-1;">
-          <h3>Eventi Player <span>timeline personale</span></h3>
+          <h3>Eventi player <span>Timeline personale</span></h3>
           <div class="modal-events" id="modalEvents"></div>
         </div>
 
         <div class="pro-card" id="modalScoutActionsCard" style="grid-column:1/-1;">
-          <h3>Azioni Scout <span>PRO ACTIONS</span></h3>
+          <h3>Azioni Scout <span>Pro</span></h3>
 
           <div class="actions">
             <button class="btn btn-green" id="modalAddWatchBtn" onclick="addOpenPlayerToWatchlist()">
