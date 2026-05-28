@@ -2,184 +2,712 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Tactical - Login V8.1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>MatchIQ Tactical - Login V8.2</title>
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00f5a0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MatchIQ">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
 <style>
+:root{
+    --bg:#03050b;
+    --panel:rgba(255,255,255,.065);
+    --panel2:rgba(255,255,255,.04);
+    --line:rgba(255,255,255,.11);
+    --text:#ffffff;
+    --muted:#aebee7;
+    --soft:#c7d7f2;
+    --green:#00f5a0;
+    --blue:#2f6bff;
+    --gold:#ffe28a;
+    --red:#ff4058;
+    --purple:#8b5cf6;
+}
+
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
+}
+
+html,
+body{
+    min-height:100%;
+    overflow-x:hidden;
 }
 
 body{
+    font-family:Inter,Arial,sans-serif;
     background:
-        radial-gradient(circle at top left,#1f2bff22,transparent 40%),
-        radial-gradient(circle at bottom right,#ff00aa11,transparent 40%),
-        #030b26;
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:white;
+        radial-gradient(circle at 15% 0%,rgba(47,107,255,.28),transparent 32%),
+        radial-gradient(circle at 88% 12%,rgba(0,245,160,.16),transparent 30%),
+        radial-gradient(circle at bottom,rgba(139,92,246,.13),transparent 36%),
+        linear-gradient(180deg,#07101f 0%,#03050b 60%,#02030a 100%);
+    color:var(--text);
 }
 
-.login-container{
-    width:430px;
-    max-width:calc(100% - 28px);
-    background:linear-gradient(135deg,rgba(20,30,70,.95),rgba(10,15,40,.98));
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:24px;
-    padding:40px;
-    box-shadow:0 0 40px rgba(0,0,0,.5),0 0 60px rgba(77,110,255,.12);
-    backdrop-filter:blur(10px);
+button,
+input{
+    font-family:inherit;
+}
+
+a{
+    color:inherit;
+}
+
+.page{
+    min-height:100vh;
+    display:grid;
+    grid-template-rows:auto 1fr;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:18px;
+    padding:18px 28px;
+    background:rgba(5,10,24,.86);
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(16px);
+    position:sticky;
+    top:0;
+    z-index:20;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+}
+
+.brand img{
+    width:48px;
+    height:48px;
+    object-fit:contain;
+    border-radius:15px;
+    filter:drop-shadow(0 12px 28px rgba(0,245,160,.16));
 }
 
 .logo{
-    text-align:center;
-    margin-bottom:30px;
+    font-size:25px;
+    font-weight:1000;
+    letter-spacing:-.6px;
+    line-height:1.05;
 }
 
-.logo h1{
-    font-size:34px;
-    margin-bottom:8px;
-}
-
-.logo p{
-    color:#8ea6ff;
-    font-size:14px;
-    line-height:1.5;
-}
-
-.input-group{
-    margin-bottom:20px;
-}
-
-.input-group label{
-    display:block;
-    margin-bottom:8px;
-    color:#9eb0ff;
-    font-size:13px;
+.subtitle{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:4px;
     font-weight:800;
 }
 
-.input-group input{
-    width:100%;
-    padding:16px;
-    border-radius:14px;
-    border:1px solid rgba(255,255,255,.08);
-    background:#0b1438;
+.top-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    border:0;
+    border-radius:15px;
+    padding:12px 16px;
     color:white;
-    outline:none;
-    transition:.2s;
-    font-weight:800;
+    font-weight:1000;
+    cursor:pointer;
+    background:linear-gradient(135deg,var(--blue),#7c4dff);
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:44px;
+    white-space:nowrap;
+    transition:.18s ease;
 }
 
-.input-group input:focus{
-    border-color:#4d6eff;
-    box-shadow:0 0 20px rgba(77,110,255,.2);
+.btn:hover{
+    transform:translateY(-1px);
+    filter:brightness(1.07);
+}
+
+.btn.green{
+    background:linear-gradient(135deg,var(--green),var(--blue));
+    color:#06111c;
+}
+
+.btn.dark{
+    background:rgba(255,255,255,.08);
+    border:1px solid var(--line);
+}
+
+.btn.red{
+    background:linear-gradient(135deg,var(--red),#8b1d35);
+}
+
+.btn:disabled{
+    opacity:.65;
+    cursor:not-allowed;
+    transform:none;
+    filter:none;
+}
+
+.main{
+    width:100%;
+    max-width:1180px;
+    margin:0 auto;
+    padding:34px 24px 34px;
+    display:grid;
+    grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);
+    gap:22px;
+    align-items:center;
+}
+
+.hero-card,
+.login-card{
+    background:
+        radial-gradient(circle at top right,rgba(0,245,160,.10),transparent 34%),
+        linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+    border:1px solid var(--line);
+    border-radius:30px;
+    padding:30px;
+    box-shadow:0 25px 80px rgba(0,0,0,.28);
+}
+
+.badge-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+}
+
+.badge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:1000;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06);
+    color:#dbe6ff;
+}
+
+.badge.green{
+    background:rgba(0,245,160,.12);
+    border-color:rgba(0,245,160,.35);
+    color:var(--green);
+}
+
+.badge.gold{
+    background:rgba(247,183,51,.14);
+    border-color:rgba(247,183,51,.35);
+    color:var(--gold);
+}
+
+h1{
+    font-size:clamp(34px,4vw,54px);
+    line-height:1.04;
+    letter-spacing:-1.5px;
+    margin-bottom:14px;
+}
+
+h2{
+    font-size:28px;
+    letter-spacing:-.5px;
+    margin-bottom:8px;
+}
+
+p{
+    color:var(--soft);
+    line-height:1.65;
+    font-size:15px;
+}
+
+.value-list{
+    display:grid;
+    gap:12px;
+    margin-top:22px;
+}
+
+.value-item{
+    display:grid;
+    grid-template-columns:42px 1fr;
+    gap:12px;
+    padding:14px;
+    border-radius:18px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.075);
+}
+
+.value-icon{
+    width:42px;
+    height:42px;
+    border-radius:15px;
+    background:linear-gradient(135deg,var(--green),var(--blue));
+    color:#06111c;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:1000;
+}
+
+.value-title{
+    font-size:15px;
+    font-weight:1000;
+    margin-bottom:4px;
+}
+
+.value-text{
+    color:var(--muted);
+    line-height:1.5;
+    font-size:13px;
+}
+
+.login-head{
+    text-align:center;
+    margin-bottom:22px;
+}
+
+.login-logo{
+    width:70px;
+    height:70px;
+    object-fit:contain;
+    border-radius:20px;
+    margin:0 auto 14px;
+    display:block;
+    filter:drop-shadow(0 16px 35px rgba(0,245,160,.18));
+}
+
+.form{
+    display:grid;
+    gap:16px;
+}
+
+.field{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.field label{
+    color:var(--muted);
+    font-size:12px;
+    font-weight:1000;
+    text-transform:uppercase;
+    letter-spacing:.3px;
+}
+
+.input-wrap{
+    position:relative;
+}
+
+.input{
+    width:100%;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(4,8,18,.85);
+    color:#fff;
+    border-radius:16px;
+    padding:15px 15px;
+    outline:none;
+    font-weight:800;
+    min-height:52px;
+}
+
+.input.has-toggle{
+    padding-right:92px;
+}
+
+.input:focus{
+    border-color:rgba(0,245,160,.45);
+    box-shadow:0 0 0 4px rgba(0,245,160,.08);
+}
+
+.password-toggle{
+    position:absolute;
+    right:8px;
+    top:50%;
+    transform:translateY(-50%);
+    border:0;
+    border-radius:12px;
+    padding:9px 11px;
+    background:rgba(255,255,255,.08);
+    color:#dbe6ff;
+    font-size:12px;
+    font-weight:1000;
+    cursor:pointer;
+}
+
+.password-toggle:hover{
+    background:rgba(255,255,255,.13);
 }
 
 .login-btn{
     width:100%;
-    padding:16px;
-    border:none;
-    border-radius:14px;
-    background:linear-gradient(90deg,#4d6eff,#7d4dff);
-    color:white;
-    font-weight:900;
+    border:0;
+    border-radius:17px;
+    padding:15px 16px;
+    min-height:54px;
+    background:linear-gradient(135deg,var(--green),var(--blue));
+    color:#06111c;
+    font-size:15px;
+    font-weight:1000;
     cursor:pointer;
-    transition:.2s;
-}
-
-.login-btn:hover{
-    transform:translateY(-2px);
-    box-shadow:0 0 25px rgba(77,110,255,.4);
+    margin-top:4px;
 }
 
 .login-btn:disabled{
     opacity:.65;
     cursor:not-allowed;
-    transform:none;
 }
 
 .message{
-    margin-top:18px;
+    margin-top:16px;
+    padding:13px 14px;
+    border-radius:16px;
     text-align:center;
-    font-size:14px;
-    line-height:1.5;
-}
-
-.error{color:#ff5f7d}
-.success{color:#00ff9d}
-.warn{color:#ffe28a}
-
-.bottom-link{
-    margin-top:25px;
-    text-align:center;
-    font-size:14px;
-    color:#c7d4ff;
-}
-
-.bottom-link a{
-    color:#7da2ff;
-    text-decoration:none;
+    display:none;
+    font-size:13px;
+    line-height:1.45;
     font-weight:900;
 }
 
-.back-link{
-    margin-top:14px;
-    text-align:center;
-    font-size:13px;
+.message.show{
+    display:block;
 }
 
-.back-link a{
-    color:#8ea6ff;
+.message.error{
+    color:#ffb8b8;
+    background:rgba(255,70,70,.10);
+    border:1px solid rgba(255,70,70,.25);
+}
+
+.message.success{
+    color:var(--green);
+    background:rgba(0,245,160,.10);
+    border:1px solid rgba(0,245,160,.25);
+}
+
+.message.warn{
+    color:var(--gold);
+    background:rgba(247,183,51,.10);
+    border:1px solid rgba(247,183,51,.25);
+}
+
+.links{
+    display:grid;
+    gap:12px;
+    margin-top:20px;
+    text-align:center;
+}
+
+.links a,
+.fake-link{
+    color:#9fc0ff;
+    font-weight:1000;
     text-decoration:none;
+    cursor:pointer;
+    background:transparent;
+    border:0;
+    font-size:14px;
+}
+
+.links a:hover,
+.fake-link:hover{
+    color:#fff;
+}
+
+.divider{
+    height:1px;
+    background:rgba(255,255,255,.08);
+    margin:4px 0;
+}
+
+.help-box{
+    display:none;
+    margin-top:16px;
+    padding:16px;
+    border-radius:18px;
+    background:rgba(255,226,138,.10);
+    border:1px solid rgba(255,226,138,.25);
+    color:#ffe7a3;
+    font-size:13px;
+    line-height:1.55;
+    font-weight:800;
+}
+
+.help-box.show{
+    display:block;
+}
+
+.small{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.6;
+    margin-top:14px;
+    text-align:center;
+}
+
+.bottom-nav{
+    display:none;
+}
+
+@media(max-width:900px){
+    body{
+        padding-bottom:86px;
+    }
+
+    .topbar{
+        padding:calc(10px + env(safe-area-inset-top)) 14px 12px;
+        align-items:center;
+    }
+
+    .brand img{
+        width:42px;
+        height:42px;
+        border-radius:14px;
+    }
+
+    .logo{
+        font-size:21px;
+    }
+
+    .subtitle{
+        font-size:11px;
+    }
+
+    .top-actions{
+        display:none;
+    }
+
+    .main{
+        padding:18px 14px 100px;
+        grid-template-columns:1fr;
+        gap:14px;
+        align-items:start;
+    }
+
+    .hero-card{
+        display:none;
+    }
+
+    .login-card{
+        border-radius:24px;
+        padding:22px;
+    }
+
+    .login-logo{
+        width:62px;
+        height:62px;
+    }
+
+    h2{
+        font-size:25px;
+    }
+
+    .input,
+    .login-btn{
+        min-height:54px;
+    }
+
+    .bottom-nav{
+        position:fixed;
+        left:10px;
+        right:10px;
+        bottom:10px;
+        z-index:100;
+        display:grid;
+        grid-template-columns:repeat(4,1fr);
+        gap:8px;
+        padding:8px;
+        border-radius:24px;
+        background:rgba(4,8,18,.92);
+        border:1px solid rgba(255,255,255,.12);
+        backdrop-filter:blur(18px);
+        box-shadow:0 22px 60px rgba(0,0,0,.45);
+    }
+
+    .bottom-nav a{
+        border:0;
+        border-radius:18px;
+        padding:10px 6px;
+        background:rgba(255,255,255,.06);
+        color:#dbe6ff;
+        font-size:11px;
+        font-weight:1000;
+        cursor:pointer;
+        min-height:52px;
+        text-decoration:none;
+        text-align:center;
+    }
+
+    .bottom-nav a.active{
+        background:linear-gradient(135deg,var(--green),var(--blue));
+        color:#06111c;
+    }
+}
+
+@media(max-width:380px){
+    .logo{
+        font-size:19px;
+    }
+
+    .subtitle{
+        font-size:10px;
+    }
+
+    .login-card{
+        padding:18px;
+    }
+
+    h2{
+        font-size:23px;
+    }
+
+    .input.has-toggle{
+        padding-right:84px;
+    }
+
+    .password-toggle{
+        font-size:11px;
+        padding:8px 9px;
+    }
 }
 </style>
 </head>
 
 <body>
+<div class="page">
 
-<div class="login-container">
-    <div class="logo">
-        <h1>⚽ MatchIQ Tactical</h1>
-        <p>Login account · necessario per attivare MatchIQ Pro</p>
+<header class="topbar">
+    <div class="brand">
+        <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
+        <div>
+            <div class="logo">MatchIQ Tactical</div>
+            <div class="subtitle">Account · Coach · Scout · PWA</div>
+        </div>
     </div>
 
-    <form id="loginForm">
-        <div class="input-group">
-            <label>Email</label>
-            <input type="email" id="email" required placeholder="Inserisci email" autocomplete="email">
+    <div class="top-actions">
+        <a class="btn dark" href="/index.html?v=10330">Home</a>
+        <a class="btn dark" href="/scout.html?v=10330">Scout</a>
+        <a class="btn green" href="/coach.html?v=10330">Coach</a>
+    </div>
+</header>
+
+<main class="main">
+
+    <section class="hero-card">
+        <div class="badge-row">
+            <span class="badge green">MATCHIQ ACCOUNT</span>
+            <span class="badge gold">Coach Pro</span>
         </div>
 
-        <div class="input-group">
-            <label>Password</label>
-            <input type="password" id="password" required placeholder="Inserisci password" autocomplete="current-password">
+        <h1>Accedi e porta MatchIQ sempre con te.</h1>
+
+        <p>
+            Usa MatchIQ da desktop e da telefono/PWA con lo stesso account:
+            Coach Mode, report PDF, sintesi WhatsApp, Scout Mode e analisi live.
+        </p>
+
+        <div class="value-list">
+            <div class="value-item">
+                <div class="value-icon">1</div>
+                <div>
+                    <div class="value-title">Coach Mode</div>
+                    <div class="value-text">Eventi, pagelle, report e storico partita per mister e staff.</div>
+                </div>
+            </div>
+
+            <div class="value-item">
+                <div class="value-icon">2</div>
+                <div>
+                    <div class="value-title">Scout + Live</div>
+                    <div class="value-text">Segnali sui giocatori e lettura tattica quando ci sono partite live.</div>
+                </div>
+            </div>
+
+            <div class="value-item">
+                <div class="value-icon">3</div>
+                <div>
+                    <div class="value-title">Pro quando ti serve</div>
+                    <div class="value-text">PDF, WhatsApp, pagelle e storico estesi per uso continuativo.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="login-card">
+        <div class="login-head">
+            <img class="login-logo" src="/assets/matchiq-logo.png" alt="MatchIQ" onerror="this.style.display='none'">
+            <h2>Accedi a MatchIQ</h2>
+            <p>Entra nel tuo account per usare Home, Coach, Scout e Pro sulla stessa webapp/PWA.</p>
         </div>
 
-        <button type="submit" class="login-btn" id="loginBtn">
-            LOGIN
-        </button>
-    </form>
+        <form id="loginForm" class="form">
+            <div class="field">
+                <label for="email">Email</label>
+                <input class="input" type="email" id="email" required placeholder="email@esempio.com" autocomplete="email">
+            </div>
 
-    <div id="message" class="message"></div>
+            <div class="field">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <input class="input has-toggle" type="password" id="password" required placeholder="Inserisci password" autocomplete="current-password">
+                    <button class="password-toggle" type="button" id="togglePasswordBtn" onclick="togglePassword()">Mostra</button>
+                </div>
+            </div>
 
-    <div class="bottom-link">
-        Non hai un account?
-        <a href="register.html?v=10050">Registrati</a>
-    </div>
+            <button type="submit" class="login-btn" id="loginBtn">
+                Accedi
+            </button>
+        </form>
 
-    <div class="back-link">
-        <a href="index.html?v=10050">← Torna alla dashboard</a>
-    </div>
+        <div id="message" class="message"></div>
+
+        <div class="links">
+            <button class="fake-link" type="button" onclick="showPasswordHelp()">Password dimenticata?</button>
+            <div class="divider"></div>
+            <div>
+                Non hai un account?
+                <a href="/register.html?v=10330">Registrati</a>
+            </div>
+            <a href="/index.html?v=10330">← Torna alla Home</a>
+        </div>
+
+        <div class="help-box" id="passwordHelp">
+            Recupero password non ancora automatico: scrivi all’amministratore o crea un nuovo account.
+            Nel prossimo step possiamo aggiungere il reset password via email.
+        </div>
+
+        <div class="small">
+            Desktop e telefono/PWA usano lo stesso account. Dopo il login verrai riportato alla Home.
+        </div>
+    </section>
+
+</main>
+
+<nav class="bottom-nav" aria-label="Navigazione mobile">
+    <a href="/index.html?v=10330">🏠<br>Home</a>
+    <a href="/scout.html?v=10330">🧠<br>Scout</a>
+    <a href="/coach.html?v=10330">📝<br>Coach</a>
+    <a class="active" href="/account.html?v=10330">👤<br>Account</a>
+</nav>
+
 </div>
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10050";
+const APP_VERSION = "10330";
 
 function getToken(){
     return localStorage.getItem("matchiq_auth_token") || "";
@@ -193,8 +721,8 @@ function saveAuth(token,user){
         localStorage.setItem("matchiq_user_email", user.email);
     }
 
-    if(user?.plan){
-        localStorage.setItem("matchiq_user_plan", user.plan);
+    if(user?.plan || user?.piano){
+        localStorage.setItem("matchiq_user_plan", user.plan || user.piano);
     }
 }
 
@@ -203,6 +731,32 @@ function clearOldAuth(){
     sessionStorage.removeItem("matchiq_user");
     sessionStorage.removeItem("matchiq_auth_user");
     sessionStorage.removeItem("matchiq_auth_token");
+}
+
+function setMessage(text,type="success"){
+    const message = document.getElementById("message");
+    if(!message) return;
+
+    message.textContent = text;
+    message.className = `message show ${type}`;
+}
+
+function togglePassword(){
+    const input = document.getElementById("password");
+    const btn = document.getElementById("togglePasswordBtn");
+
+    if(!input || !btn) return;
+
+    const isHidden = input.type === "password";
+    input.type = isHidden ? "text" : "password";
+    btn.textContent = isHidden ? "Nascondi" : "Mostra";
+}
+
+function showPasswordHelp(){
+    const box = document.getElementById("passwordHelp");
+    if(!box) return;
+
+    box.classList.toggle("show");
 }
 
 async function verifyExistingToken(){
@@ -222,16 +776,11 @@ async function verifyExistingToken(){
 
         if(res.ok && data.success && data.user){
             saveAuth(token, data.user);
-            window.location.href = `index.html?v=${APP_VERSION}`;
+            window.location.href = `/index.html?v=${APP_VERSION}`;
         }
     }catch(e){
         console.warn("Token esistente non verificato", e);
     }
-}
-
-function setMessage(text,type="success"){
-    const message = document.getElementById("message");
-    message.innerHTML = `<span class="${type}">${text}</span>`;
 }
 
 async function doLogin(email,password){
@@ -274,7 +823,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     }
 
     btn.disabled = true;
-    btn.textContent = "LOGIN IN CORSO...";
+    btn.textContent = "Accesso in corso...";
 
     try{
         clearOldAuth();
@@ -285,18 +834,25 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         setMessage("Login completato. Reindirizzamento...", "success");
 
         setTimeout(() => {
-            window.location.href = `index.html?v=${APP_VERSION}`;
+            window.location.href = `/index.html?v=${APP_VERSION}`;
         },600);
 
     }catch(err){
         setMessage(err.message || "Errore login", "error");
     }finally{
         btn.disabled = false;
-        btn.textContent = "LOGIN";
+        btn.textContent = "Accedi";
     }
 });
 
 verifyExistingToken();
+
+if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js")
+            .catch(err => console.warn("Service Worker non registrato:", err));
+    });
+}
 </script>
 
 </body>
