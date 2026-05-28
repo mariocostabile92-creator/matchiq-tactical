@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Mobile V1.3</title>
+<title>MatchIQ Mobile V1.4</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -165,6 +165,74 @@ a{
   line-height:1.48;
   font-size:14px;
   max-width:560px;
+}
+
+.guide{
+  background:rgba(255,255,255,.045);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:15px;
+  margin:14px 0;
+  box-shadow:0 16px 45px rgba(0,0,0,.18);
+}
+
+.guide-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.guide-head span{
+  display:inline-flex;
+  color:var(--green);
+  font-size:11px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  margin-bottom:5px;
+}
+
+.guide-head h3{
+  margin:0;
+  font-size:20px;
+  letter-spacing:-.4px;
+}
+
+.guide-head small{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.guide-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+.guide-card{
+  display:block;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:17px;
+  padding:13px;
+  min-height:142px;
+}
+
+.guide-card strong{
+  display:block;
+  font-size:15px;
+  margin-bottom:7px;
+}
+
+.guide-card p{
+  margin:0;
+  color:var(--soft);
+  font-size:12px;
+  line-height:1.42;
 }
 
 .quick{
@@ -466,6 +534,14 @@ a{
 }
 
 @media(max-width:420px){
+  .guide-grid{
+    grid-template-columns:1fr;
+  }
+
+  .guide-card{
+    min-height:auto;
+  }
+
   .app{
     padding-left:12px;
     padding-right:12px;
@@ -540,7 +616,7 @@ a{
 </head>
 
 <body>
-<!-- MatchIQ Mobile V1.3 - Coach nav + Pro copy polish -->
+<!-- MatchIQ Mobile V1.4 - Home usage guide + onboarding polish -->
 <div class="app">
 
   <header class="top">
@@ -559,15 +635,46 @@ a{
     <div class="hero-kicker">● Live Tactical App</div>
     <h2>Leggi la partita prima degli altri.</h2>
     <p>
-      Segui le partite live, apri l’analisi e usa Scout Mode per individuare segnali,
-      momentum e giocatori interessanti in tempo reale.
+      Segui le partite live, apri l’analisi tattica, usa Scout per i giocatori e Coach per creare report anche sulle tue partite.
     </p>
   </section>
 
+  <section class="guide">
+    <div class="guide-head">
+      <div>
+        <span>Guida rapida</span>
+        <h3>Come usare MatchIQ</h3>
+      </div>
+      <small>4 aree principali</small>
+    </div>
+
+    <div class="guide-grid">
+      <a class="guide-card" href="#matches">
+        <strong>📊 Analisi</strong>
+        <p>Apri una partita live e leggi momentum, pressione, xG, probabilità vittoria e scenari dei prossimi minuti.</p>
+      </a>
+
+      <a class="guide-card" href="/scout.html">
+        <strong>🔎 Scout</strong>
+        <p>Trova i giocatori più interessanti durante il live: score, pericolo, creatività, segnali e watchlist.</p>
+      </a>
+
+      <a class="guide-card" href="/coach.html">
+        <strong>🧠 Coach</strong>
+        <p>Crea una partita manuale per squadre dilettanti, registra eventi, pagelle e genera un report.</p>
+      </a>
+
+      <a class="guide-card" href="/account.html">
+        <strong>⚡ Account / Pro</strong>
+        <p>Gestisci il piano e sblocca più partite live, Scout completo, watchlist ed export.</p>
+      </a>
+    </div>
+  </section>
+
   <div class="quick">
-    <button class="btn primary" onclick="loadMatches(true)">Top Leagues</button>
-    <button class="btn dark" onclick="loadMatches(false)">All Live</button>
-    <a class="btn gold" href="/scout.html">Scout Mode</a>
+    <button class="btn primary" onclick="loadMatches(true)">Top leghe</button>
+    <button class="btn dark" onclick="loadMatches(false)">Tutti i live</button>
+    <a class="btn gold" href="/scout.html">Scout</a>
     <a class="btn dark" href="/account.html">Account / Pro</a>
   </div>
 
@@ -579,9 +686,9 @@ a{
     </div>
 
     <div class="status-card">
-      <b>Engine</b>
+      <b>Sistema</b>
       <span>ONLINE</span>
-      <small class="sub">AI + Live data</small>
+      <small class="sub">Dati live + lettura tattica</small>
     </div>
   </div>
 
