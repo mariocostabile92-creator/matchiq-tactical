@@ -154,6 +154,8 @@ def init_db():
                 plan TEXT NOT NULL DEFAULT 'free',
                 is_active INTEGER NOT NULL DEFAULT 1,
                 stripe_customer_id TEXT,
+                email_verified INTEGER NOT NULL DEFAULT 0,
+                email_verified_at TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
@@ -172,8 +174,31 @@ def init_db():
         """)
 
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT UNIQUE NOT NULL,
+                expires_at TEXT NOT NULL,
+                used INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                used_at TEXT,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+        cur.execute("""
             ALTER TABLE users
             ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT
+        """)
+
+        cur.execute("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS email_verified INTEGER NOT NULL DEFAULT 0
+        """)
+
+        cur.execute("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS email_verified_at TEXT
         """)
 
         cur.execute("""
@@ -255,6 +280,8 @@ def init_db():
                 plan TEXT NOT NULL DEFAULT 'free',
                 is_active INTEGER NOT NULL DEFAULT 1,
                 stripe_customer_id TEXT,
+                email_verified INTEGER NOT NULL DEFAULT 0,
+                email_verified_at TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
@@ -343,6 +370,30 @@ def init_db():
             )
         """)
 
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT UNIQUE NOT NULL,
+                expires_at TEXT NOT NULL,
+                used INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                used_at TEXT,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+    # Safe migrations for existing users table.
+    try:
+        cur.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+    except Exception:
+        pass
+
+    try:
+        cur.execute("ALTER TABLE users ADD COLUMN email_verified_at TEXT")
+    except Exception:
+        pass
+
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_api_usage_user_feature_date
         ON api_usage(user_id, feature, usage_date)
@@ -381,6 +432,21 @@ def init_db():
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires
         ON password_reset_tokens(expires_at)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user
+        ON email_verification_tokens(user_id)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_hash
+        ON email_verification_tokens(token_hash)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_expires
+        ON email_verification_tokens(expires_at)
     """)
 
     conn.commit()
@@ -1298,6 +1364,89 @@ def update_user_password(user_id: int, password_hash: str):
             updated_at = ?
         WHERE id = ?
     """), (password_hash, now, user_id))
+
+    conn.commit()
+    conn.close()
+    return True
+
+
+# =========================================================
+# EMAIL VERIFICATION
+# =========================================================
+
+def create_email_verification_token(user_id: int, token_hash: str, expires_at: str):
+    now = utc_now()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(q("""
+        UPDATE email_verification_tokens
+        SET used = 1, used_at = ?
+        WHERE user_id = ? AND used = 0
+    """), (now, user_id))
+
+    if USE_POSTGRES:
+        cur.execute("""
+            INSERT INTO email_verification_tokens (user_id, token_hash, expires_at, used, created_at, used_at)
+            VALUES (%s, %s, %s, 0, %s, NULL)
+            RETURNING id
+        """, (user_id, token_hash, expires_at, now))
+        token_id = get_last_insert_id(cur)
+    else:
+        cur.execute("""
+            INSERT INTO email_verification_tokens (user_id, token_hash, expires_at, used, created_at, used_at)
+            VALUES (?, ?, ?, 0, ?, NULL)
+        """, (user_id, token_hash, expires_at, now))
+        token_id = cur.lastrowid
+
+    conn.commit()
+    conn.close()
+    return token_id
+
+
+def get_valid_email_verification_token(token_hash: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(q("""
+        SELECT evt.*, u.email, u.is_active, COALESCE(u.email_verified, 0) AS email_verified
+        FROM email_verification_tokens evt
+        JOIN users u ON u.id = evt.user_id
+        WHERE evt.token_hash = ? AND evt.used = 0
+        LIMIT 1
+    """), (token_hash,))
+
+    row = fetchone(cur)
+    conn.close()
+    return row
+
+
+def mark_email_verification_token_used(token_id: int):
+    now = utc_now()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(q("""
+        UPDATE email_verification_tokens
+        SET used = 1, used_at = ?
+        WHERE id = ?
+    """), (now, token_id))
+
+    conn.commit()
+    conn.close()
+    return True
+
+
+def mark_user_email_verified(user_id: int):
+    now = utc_now()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(q("""
+        UPDATE users
+        SET email_verified = 1, email_verified_at = ?, updated_at = ?
+        WHERE id = ?
+    """), (now, now, user_id))
 
     conn.commit()
     conn.close()
