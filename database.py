@@ -363,32 +363,6 @@ def init_db():
             )
         """)
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS email_verification_tokens (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                token_hash TEXT UNIQUE NOT NULL,
-                expires_at TEXT NOT NULL,
-                used INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL,
-                used_at TEXT,
-                FOREIGN KEY(user_id) REFERENCES users(id)
-            )
-        """)
-
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS email_verification_tokens (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                token_hash TEXT UNIQUE NOT NULL,
-                expires_at TEXT NOT NULL,
-                used INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL,
-                used_at TEXT,
-                FOREIGN KEY(user_id) REFERENCES users(id)
-            )
-        """)
-
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_api_usage_user_feature_date
         ON api_usage(user_id, feature, usage_date)
@@ -427,21 +401,6 @@ def init_db():
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires
         ON password_reset_tokens(expires_at)
-    """)
-
-    cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user
-        ON email_verification_tokens(user_id)
-    """)
-
-    cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_hash
-        ON email_verification_tokens(token_hash)
-    """)
-
-    cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_expires
-        ON email_verification_tokens(expires_at)
     """)
 
     conn.commit()
