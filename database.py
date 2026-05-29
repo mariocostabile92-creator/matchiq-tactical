@@ -177,6 +177,16 @@ def init_db():
         """)
 
         cur.execute("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS email_verified INTEGER NOT NULL DEFAULT 0
+        """)
+
+        cur.execute("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS email_verified_at TEXT
+        """)
+
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS saved_matches (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL,
@@ -259,6 +269,16 @@ def init_db():
                 updated_at TEXT NOT NULL
             )
         """)
+
+        try:
+            cur.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+        except Exception:
+            pass
+
+        try:
+            cur.execute("ALTER TABLE users ADD COLUMN email_verified_at TEXT")
+        except Exception:
+            pass
 
         cur.execute("""
             CREATE TABLE IF NOT EXISTS saved_matches (
