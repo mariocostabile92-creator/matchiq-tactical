@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical - Register V8.2</title>
+<title>MatchIQ Tactical - Register V8.3 Email Verification Required</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -400,6 +400,32 @@ p{
     border:1px solid rgba(247,183,51,.25);
 }
 
+.verify-box{
+    display:none;
+    margin-top:16px;
+    padding:16px;
+    border-radius:18px;
+    background:rgba(0,245,160,.09);
+    border:1px solid rgba(0,245,160,.28);
+}
+
+.verify-box.show{display:block;}
+
+.verify-link{
+    margin-top:10px;
+    width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    padding:12px;
+    border-radius:14px;
+    background:rgba(0,0,0,.24);
+    border:1px solid rgba(255,255,255,.10);
+    color:#9fc0ff;
+    font-size:12px;
+    font-weight:900;
+}
+
 .links{
     display:grid;
     gap:12px;
@@ -573,9 +599,9 @@ p{
     </div>
 
     <div class="top-actions">
-        <a class="btn dark" href="/index.html?v=10350">Home</a>
-        <a class="btn dark" href="/login.html?v=10350">Login</a>
-        <a class="btn green" href="/coach.html?v=10350">Coach</a>
+        <a class="btn dark" href="/index.html?v=10450">Home</a>
+        <a class="btn dark" href="/login.html?v=10450">Login</a>
+        <a class="btn green" href="/coach.html?v=10450">Coach</a>
     </div>
 </header>
 
@@ -665,36 +691,44 @@ p{
 
         <div id="message" class="message"></div>
 
+        <div id="verifyBox" class="verify-box">
+            <strong>Account creato ✅</strong>
+            <p style="margin-top:6px;font-size:13px;line-height:1.5;">Ora devi verificare la tua email prima di accedere a MatchIQ.</p>
+            <a id="verifyBtn" class="btn green" style="width:100%;margin-top:12px;display:none;" href="#">Verifica email ora</a>
+            <div id="verifyLinkText" class="verify-link" style="display:none;"></div>
+            <a class="btn dark" style="width:100%;margin-top:10px;" href="/login.html?v=10450">Vai al login</a>
+        </div>
+
         <div class="links">
             <div>
                 Hai già un account?
-                <a href="/login.html?v=10350">Accedi</a>
+                <a href="/login.html?v=10450">Accedi</a>
             </div>
 
             <div class="divider"></div>
 
-            <a href="/index.html?v=10350">← Torna alla Home</a>
+            <a href="/index.html?v=10450">← Torna alla Home</a>
         </div>
 
         <div class="small">
-            Dopo la registrazione verrai portato alla Home. Potrai usare subito le funzioni Free e poi passare a Pro.
+            Dopo la registrazione dovrai verificare la tua email. Solo dopo la verifica potrai accedere a MatchIQ.
         </div>
     </section>
 
 </main>
 
 <nav class="bottom-nav" aria-label="Navigazione mobile">
-    <a href="/index.html?v=10350">🏠<br>Home</a>
-    <a href="/scout.html?v=10350">🧠<br>Scout</a>
-    <a href="/coach.html?v=10350">📝<br>Coach</a>
-    <a class="active" href="/account.html?v=10350">👤<br>Account</a>
+    <a href="/index.html?v=10450">🏠<br>Home</a>
+    <a href="/scout.html?v=10450">🧠<br>Scout</a>
+    <a href="/coach.html?v=10450">📝<br>Coach</a>
+    <a class="active" href="/account.html?v=10450">👤<br>Account</a>
 </nav>
 
 </div>
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10350";
+const APP_VERSION = "10450";
 
 function saveAuth(token,user){
     localStorage.setItem("matchiq_auth_token", token);
@@ -754,11 +788,6 @@ async function doRegister(email,password){
         throw new Error(data.detail || data.message || "Registrazione non riuscita");
     }
 
-    if(!data.token){
-        throw new Error("Token non ricevuto dal backend");
-    }
-
-    saveAuth(data.token, data.user || {});
     return data;
 }
 
@@ -792,13 +821,31 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
         clearOldAuth();
         setMessage("Creazione account in corso...", "warn");
 
-        await doRegister(email,password);
+        const data = await doRegister(email,password);
 
-        setMessage("Account creato. Reindirizzamento...", "success");
+        setMessage("Account creato. Verifica la tua email prima di accedere.", "success");
 
-        setTimeout(() => {
-            window.location.href = `/index.html?v=${APP_VERSION}`;
-        },600);
+        const verifyBox = document.getElementById("verifyBox");
+        const verifyBtn = document.getElementById("verifyBtn");
+        const verifyLinkText = document.getElementById("verifyLinkText");
+
+        if(verifyBox){
+            verifyBox.classList.add("show");
+        }
+
+        if(data.verification_link && verifyBtn){
+            verifyBtn.href = data.verification_link;
+            verifyBtn.style.display = "inline-flex";
+        }
+
+        if(data.verification_link && verifyLinkText){
+            verifyLinkText.textContent = data.verification_link;
+            verifyLinkText.style.display = "block";
+        }
+
+        btn.textContent = "Account creato";
+        btn.disabled = true;
+        return;
 
     }catch(err){
         setMessage(err.message || "Errore registrazione", "error");

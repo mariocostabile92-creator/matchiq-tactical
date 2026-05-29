@@ -1,6 +1,6 @@
 """
 auth.py
-MatchIQ Tactical - Auth Routes V8.3 Password Reset + Email Verification
+MatchIQ Tactical - Auth Routes V8.4 Email Verification Required Password Reset + Email Verification
 
 Gestisce:
 - registrazione utenti
@@ -276,6 +276,12 @@ def login(data: LoginRequest):
         raise HTTPException(
             status_code=403,
             detail="Utente disattivato"
+        )
+
+    if not user.get("email_verified"):
+        raise HTTPException(
+            status_code=403,
+            detail="Devi verificare la tua email prima di accedere."
         )
 
     token = create_access_token(
