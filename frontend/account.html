@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical - Account Pro V1.7</title>
+<title>MatchIQ Tactical - Account V1.9 Free Clarity</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -619,6 +619,68 @@ p{
     display:none !important;
 }
 
+.free-guide-panel{
+    display:none;
+    background:
+        radial-gradient(circle at top right,rgba(56,169,255,.12),transparent 34%),
+        linear-gradient(145deg,rgba(56,169,255,.09),rgba(24,240,139,.045));
+    border:1px solid rgba(56,169,255,.22);
+    border-radius:28px;
+    padding:26px;
+    margin-top:22px;
+}
+
+.free-guide-panel.show{
+    display:block;
+}
+
+.free-guide-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+}
+
+.free-guide-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-top:16px;
+}
+
+.free-guide-card{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.085);
+    border-radius:20px;
+    padding:16px;
+}
+
+.free-guide-card strong{
+    display:block;
+    font-size:15px;
+    margin-bottom:6px;
+}
+
+.free-guide-card span{
+    color:var(--soft);
+    font-size:12px;
+    line-height:1.45;
+}
+
+.free-guide-note{
+    margin-top:16px;
+    padding:14px;
+    border-radius:18px;
+    background:rgba(255,209,102,.10);
+    border:1px solid rgba(255,209,102,.20);
+    color:#ffe7a3;
+    font-size:13px;
+    font-weight:900;
+    line-height:1.5;
+}
+
 .bottom-nav{
     display:none;
 }
@@ -629,7 +691,8 @@ p{
         grid-template-columns:1fr;
     }
 
-    .unlock-grid{
+    .unlock-grid,
+    .free-guide-grid{
         grid-template-columns:1fr;
     }
 }
@@ -671,7 +734,8 @@ p{
     .cta-panel,
     .founder-panel,
     .value-panel,
-    .pro-only-panel{
+    .pro-only-panel,
+    .free-guide-panel{
         border-radius:24px;
         padding:20px;
     }
@@ -839,11 +903,6 @@ p{
                     <div class="info-label">Stato</div>
                     <div class="info-value status-value" id="statusValue">PREVIEW</div>
                 </div>
-
-                <div class="info-box">
-                    <div class="info-label">Verifica email</div>
-                    <div class="info-value" id="emailVerifyValue">IN PREPARAZIONE</div>
-                </div>
             </div>
 
             <div class="footer-actions">
@@ -973,6 +1032,40 @@ p{
         </div>
     </div>
 
+    <div class="free-guide-panel" id="freeGuidePanel">
+        <div class="free-guide-head">
+            <div>
+                <span class="badge free">PIANO FREE</span>
+                <h2>Cosa puoi provare ora</h2>
+                <p>Usa MatchIQ in una partita reale e capisci subito se ti fa risparmiare tempo nel report.</p>
+            </div>
+            <button class="btn green" onclick="window.location.href='/coach.html?v='+APP_VERSION">Apri Coach Mode</button>
+        </div>
+
+        <div class="free-guide-grid">
+            <div class="free-guide-card">
+                <strong>📝 Coach report base</strong>
+                <span>Segna eventi e crea una prima lettura tecnica della partita.</span>
+            </div>
+            <div class="free-guide-card">
+                <strong>⭐ 5 pagelle</strong>
+                <span>Prova la valutazione giocatori prima di passare a Pro.</span>
+            </div>
+            <div class="free-guide-card">
+                <strong>📄 1 PDF Coach</strong>
+                <span>Esporta un report di prova ordinato e condivisibile.</span>
+            </div>
+            <div class="free-guide-card">
+                <strong>📲 1 sintesi WhatsApp</strong>
+                <span>Prepara una sintesi veloce per staff, squadra o società.</span>
+            </div>
+        </div>
+
+        <div class="free-guide-note">
+            Consiglio: prova MatchIQ durante una partita vera. Se il report diventa più veloce e ordinato, il piano Pro ha senso per usarlo tutta la stagione.
+        </div>
+    </div>
+
     <div class="value-panel section hidden-for-pro" id="valuePanel">
         <span class="badge beta">COSA CAMBIA CON PRO</span>
 
@@ -1095,7 +1188,7 @@ p{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10340";
+const APP_VERSION = "10390";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
@@ -1254,7 +1347,6 @@ function renderAccount(){
     const emailValue = document.getElementById("emailValue");
     const planValue = document.getElementById("planValue");
     const statusValue = document.getElementById("statusValue");
-    const emailVerifyValue = document.getElementById("emailVerifyValue");
     const accountIntro = document.getElementById("accountIntro");
     const accountTitle = document.getElementById("accountTitle");
     const portalBtn = document.getElementById("portalBtn");
@@ -1266,6 +1358,7 @@ function renderAccount(){
     const upgradeYearlyBtn = document.getElementById("upgradeYearlyBtn");
     const ownerPanel = document.getElementById("ownerPanel");
     const proOnlyPanel = document.getElementById("proOnlyPanel");
+    const freeGuidePanel = document.getElementById("freeGuidePanel");
     const smallNote = document.getElementById("smallNote");
 
     setCommercialSectionsVisible(!isPro);
@@ -1275,30 +1368,6 @@ function renderAccount(){
 
     if(statusValue){
         statusValue.textContent = isOwner ? "COMPLETO" : isPro ? "ATTIVO" : logged ? "FREE" : "PREVIEW";
-    }
-
-    if(emailVerifyValue){
-        const emailVerified =
-            accountState.email_verified === true ||
-            accountState.email_verified === 1 ||
-            accountState.email_verified === "1" ||
-            localUser?.email_verified === true ||
-            localUser?.email_verified === 1 ||
-            localUser?.email_verified === "1";
-
-        if(!logged){
-            emailVerifyValue.textContent = "NON DISPONIBILE";
-            emailVerifyValue.style.color = "var(--muted)";
-        }else if(isOwner){
-            emailVerifyValue.textContent = "OWNER VERIFICATO";
-            emailVerifyValue.style.color = "var(--gold)";
-        }else if(emailVerified){
-            emailVerifyValue.textContent = "VERIFICATA ✅";
-            emailVerifyValue.style.color = "var(--green)";
-        }else{
-            emailVerifyValue.textContent = "DA VERIFICARE ⚠️";
-            emailVerifyValue.style.color = "var(--gold)";
-        }
     }
 
     if(planBadge){
@@ -1360,6 +1429,10 @@ function renderAccount(){
 
     if(proOnlyPanel){
         proOnlyPanel.className = isPro ? "pro-only-panel show" : "pro-only-panel";
+    }
+
+    if(freeGuidePanel){
+        freeGuidePanel.className = logged && !isPro ? "free-guide-panel show" : "free-guide-panel";
     }
 
     if(smallNote){
@@ -1513,14 +1586,12 @@ async function loadSubscription(){
             email: data.email || localUser.email || localStorage.getItem("matchiq_user_email") || "",
             plan: data.plan || localUser.plan || localStorage.getItem("matchiq_user_plan") || "free",
             is_owner: Boolean(data.is_owner),
-            email_verified: data.email_verified ?? data.user?.email_verified ?? localUser.email_verified ?? false,
             subscription: data.subscription || null,
             logged:true
         };
 
         localUser.email = accountState.email || localUser.email;
         localUser.plan = accountState.plan;
-        localUser.email_verified = accountState.email_verified;
         saveLocalUser(localUser);
 
         renderAccount();
