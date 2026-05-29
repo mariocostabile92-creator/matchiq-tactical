@@ -1661,6 +1661,10 @@ if os.path.exists(FRONTEND_DIR):
     def serve_login():
         return FileResponse(os.path.join(FRONTEND_DIR, "login.html"))
 
+    @app.get("/reset-password.html")
+    def serve_reset_password():
+        return FileResponse(os.path.join(FRONTEND_DIR, "reset-password.html"))
+
     @app.get("/register.html")
     def serve_register():
         return FileResponse(os.path.join(FRONTEND_DIR, "register.html"))
