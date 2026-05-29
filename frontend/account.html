@@ -839,6 +839,11 @@ p{
                     <div class="info-label">Stato</div>
                     <div class="info-value status-value" id="statusValue">PREVIEW</div>
                 </div>
+
+                <div class="info-box">
+                    <div class="info-label">Verifica email</div>
+                    <div class="info-value" id="emailVerifyValue">IN PREPARAZIONE</div>
+                </div>
             </div>
 
             <div class="footer-actions">
@@ -1249,6 +1254,7 @@ function renderAccount(){
     const emailValue = document.getElementById("emailValue");
     const planValue = document.getElementById("planValue");
     const statusValue = document.getElementById("statusValue");
+    const emailVerifyValue = document.getElementById("emailVerifyValue");
     const accountIntro = document.getElementById("accountIntro");
     const accountTitle = document.getElementById("accountTitle");
     const portalBtn = document.getElementById("portalBtn");
@@ -1269,6 +1275,30 @@ function renderAccount(){
 
     if(statusValue){
         statusValue.textContent = isOwner ? "COMPLETO" : isPro ? "ATTIVO" : logged ? "FREE" : "PREVIEW";
+    }
+
+    if(emailVerifyValue){
+        const emailVerified =
+            accountState.email_verified === true ||
+            accountState.email_verified === 1 ||
+            accountState.email_verified === "1" ||
+            localUser?.email_verified === true ||
+            localUser?.email_verified === 1 ||
+            localUser?.email_verified === "1";
+
+        if(!logged){
+            emailVerifyValue.textContent = "NON DISPONIBILE";
+            emailVerifyValue.style.color = "var(--muted)";
+        }else if(isOwner){
+            emailVerifyValue.textContent = "OWNER VERIFICATO";
+            emailVerifyValue.style.color = "var(--gold)";
+        }else if(emailVerified){
+            emailVerifyValue.textContent = "VERIFICATA ✅";
+            emailVerifyValue.style.color = "var(--green)";
+        }else{
+            emailVerifyValue.textContent = "DA VERIFICARE ⚠️";
+            emailVerifyValue.style.color = "var(--gold)";
+        }
     }
 
     if(planBadge){
@@ -1483,12 +1513,14 @@ async function loadSubscription(){
             email: data.email || localUser.email || localStorage.getItem("matchiq_user_email") || "",
             plan: data.plan || localUser.plan || localStorage.getItem("matchiq_user_plan") || "free",
             is_owner: Boolean(data.is_owner),
+            email_verified: data.email_verified ?? data.user?.email_verified ?? localUser.email_verified ?? false,
             subscription: data.subscription || null,
             logged:true
         };
 
         localUser.email = accountState.email || localUser.email;
         localUser.plan = accountState.plan;
+        localUser.email_verified = accountState.email_verified;
         saveLocalUser(localUser);
 
         renderAccount();
