@@ -1,6 +1,6 @@
 """
 auth.py
-MatchIQ Tactical - Auth Routes V8.2 Password Reset
+MatchIQ Tactical - Auth Routes V8.3 Password Reset + Email Verification
 
 Gestisce:
 - registrazione utenti
@@ -9,6 +9,8 @@ Gestisce:
 - piani free/pro/scout/owner
 - richiesta reset password
 - conferma reset password
+- richiesta verifica email
+- conferma verifica email
 """
 
 import os
@@ -28,6 +30,10 @@ from database import (
     get_valid_password_reset_token,
     mark_password_reset_token_used,
     update_user_password,
+    create_email_verification_token,
+    get_valid_email_verification_token,
+    mark_email_verification_token_used,
+    mark_user_email_verified,
 )
 
 from security import (
@@ -51,10 +57,15 @@ APP_PUBLIC_URL = os.getenv(
 ).rstrip("/")
 
 PASSWORD_RESET_TOKEN_MINUTES = int(os.getenv("PASSWORD_RESET_TOKEN_MINUTES", "30"))
+EMAIL_VERIFICATION_TOKEN_MINUTES = int(os.getenv("EMAIL_VERIFICATION_TOKEN_MINUTES", "1440"))
 
 # In produzione possiamo tenere questo a 0 quando avremo email automatica.
 # Per ora serve per testare il reset senza SMTP.
 PASSWORD_RESET_EXPOSE_LINK = os.getenv("PASSWORD_RESET_EXPOSE_LINK", "1") == "1"
+
+# MVP/test: espone verification_link nella risposta.
+# Quando colleghiamo Brevo/SMTP, imposta EMAIL_VERIFICATION_EXPOSE_LINK=0.
+EMAIL_VERIFICATION_EXPOSE_LINK = os.getenv("EMAIL_VERIFICATION_EXPOSE_LINK", "1") == "1"
 
 
 # =========================================================
@@ -80,6 +91,14 @@ class PasswordResetConfirmRequest(BaseModel):
     password: str
 
 
+class EmailVerificationRequest(BaseModel):
+    email: EmailStr
+
+
+class EmailVerificationConfirmRequest(BaseModel):
+    token: str
+
+
 # =========================================================
 # HELPERS
 # =========================================================
@@ -96,8 +115,16 @@ def hash_reset_token(token: str):
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def hash_email_verification_token(token: str):
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
 def build_reset_link(token: str):
     return f"{APP_PUBLIC_URL}/reset-password.html?token={token}"
+
+
+def build_email_verification_link(token: str):
+    return f"{APP_PUBLIC_URL}/verify-email.html?token={token}"
 
 
 def parse_iso_datetime(value: str):
@@ -115,6 +142,26 @@ def parse_iso_datetime(value: str):
     except Exception:
         return None
 
+
+
+def create_verification_for_user(user: dict):
+    """
+    Genera e salva un token verifica email per un utente attivo.
+    Ritorna il link in chiaro solo per MVP/test.
+    """
+    raw_token = secrets.token_urlsafe(48)
+    token_hash = hash_email_verification_token(raw_token)
+
+    expires_at_dt = utc_now_dt() + timedelta(minutes=EMAIL_VERIFICATION_TOKEN_MINUTES)
+    expires_at = iso_utc(expires_at_dt)
+
+    create_email_verification_token(
+        user_id=user["id"],
+        token_hash=token_hash,
+        expires_at=expires_at
+    )
+
+    return build_email_verification_link(raw_token)
 
 def get_current_user(authorization: str = Header(None)):
     if not authorization:
@@ -181,16 +228,29 @@ def register(data: RegisterRequest):
         plan=user["plan"]
     )
 
-    return {
+    verification_link = create_verification_for_user(user)
+
+    response = {
         "success": True,
-        "message": "Registrazione completata",
+        "message": "Registrazione completata. Verifica la tua email per completare l'account.",
         "token": token,
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "plan": user["plan"]
+            "plan": user["plan"],
+            "email_verified": bool(user.get("email_verified")),
+            "email_verified_at": user.get("email_verified_at")
         }
     }
+
+    if EMAIL_VERIFICATION_EXPOSE_LINK:
+        response["verification_link"] = verification_link
+        response["dev_note"] = (
+            "Verification link esposto solo per MVP/test. "
+            "Quando colleghi email automatica, imposta EMAIL_VERIFICATION_EXPOSE_LINK=0."
+        )
+
+    return response
 
 
 @router.post("/login")
@@ -231,7 +291,9 @@ def login(data: LoginRequest):
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "plan": user["plan"]
+            "plan": user["plan"],
+            "email_verified": bool(user.get("email_verified")),
+            "email_verified_at": user.get("email_verified_at")
         }
     }
 
@@ -245,6 +307,8 @@ def me(current_user=Depends(get_current_user)):
             "email": current_user["email"],
             "plan": current_user["plan"],
             "is_active": current_user["is_active"],
+            "email_verified": bool(current_user.get("email_verified")),
+            "email_verified_at": current_user.get("email_verified_at"),
             "created_at": current_user["created_at"]
         }
     }
@@ -377,3 +441,113 @@ def confirm_password_reset(data: PasswordResetConfirmRequest):
         "success": True,
         "message": "Password aggiornata correttamente. Ora puoi accedere con la nuova password."
     }
+
+# =========================================================
+# EMAIL VERIFICATION ROUTES
+# =========================================================
+
+@router.post("/email-verification/request")
+def request_email_verification(data: EmailVerificationRequest):
+    """
+    Richiede un nuovo link di verifica email.
+
+    Per sicurezza ritorna success True anche se l'email non esiste.
+    In modalità MVP/test restituisce verification_link se EMAIL_VERIFICATION_EXPOSE_LINK=1.
+    Più avanti colleghiamo Brevo/SMTP e togliamo verification_link dalla risposta.
+    """
+    init_db()
+
+    email = data.email.lower().strip()
+    user = get_user_by_email(email)
+
+    public_message = (
+        "Se l'email è registrata, riceverai le istruzioni per verificare l'account."
+    )
+
+    if not user:
+        return {
+            "success": True,
+            "message": public_message
+        }
+
+    if not user.get("is_active"):
+        return {
+            "success": True,
+            "message": public_message
+        }
+
+    if user.get("email_verified"):
+        return {
+            "success": True,
+            "message": "Email già verificata."
+        }
+
+    verification_link = create_verification_for_user(user)
+
+    response = {
+        "success": True,
+        "message": public_message,
+        "expires_in_minutes": EMAIL_VERIFICATION_TOKEN_MINUTES
+    }
+
+    if EMAIL_VERIFICATION_EXPOSE_LINK:
+        response["verification_link"] = verification_link
+        response["dev_note"] = (
+            "Verification link esposto solo per MVP/test. "
+            "Quando colleghi email automatica, imposta EMAIL_VERIFICATION_EXPOSE_LINK=0."
+        )
+
+    return response
+
+
+@router.post("/email-verification/confirm")
+def confirm_email_verification(data: EmailVerificationConfirmRequest):
+    """
+    Conferma verifica email con token.
+    """
+    init_db()
+
+    token = (data.token or "").strip()
+
+    if not token:
+        raise HTTPException(
+            status_code=400,
+            detail="Token verifica email mancante"
+        )
+
+    token_hash = hash_email_verification_token(token)
+    verification_row = get_valid_email_verification_token(token_hash)
+
+    if not verification_row:
+        raise HTTPException(
+            status_code=400,
+            detail="Token non valido o già utilizzato"
+        )
+
+    if not verification_row.get("is_active"):
+        raise HTTPException(
+            status_code=403,
+            detail="Utente disattivato"
+        )
+
+    expires_at = parse_iso_datetime(verification_row.get("expires_at"))
+
+    if not expires_at or expires_at < utc_now_dt():
+        try:
+            mark_email_verification_token_used(verification_row["id"])
+        except Exception:
+            pass
+
+        raise HTTPException(
+            status_code=400,
+            detail="Token scaduto. Richiedi una nuova verifica email."
+        )
+
+    mark_user_email_verified(verification_row["user_id"])
+    mark_email_verification_token_used(verification_row["id"])
+
+    return {
+        "success": True,
+        "message": "Email verificata correttamente."
+    }
+
