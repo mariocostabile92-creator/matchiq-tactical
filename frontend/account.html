@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical - Account V1.9 Free Clarity</title>
+<title>MatchIQ Tactical - Account Pro V1.7</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -619,68 +619,6 @@ p{
     display:none !important;
 }
 
-.free-guide-panel{
-    display:none;
-    background:
-        radial-gradient(circle at top right,rgba(56,169,255,.12),transparent 34%),
-        linear-gradient(145deg,rgba(56,169,255,.09),rgba(24,240,139,.045));
-    border:1px solid rgba(56,169,255,.22);
-    border-radius:28px;
-    padding:26px;
-    margin-top:22px;
-}
-
-.free-guide-panel.show{
-    display:block;
-}
-
-.free-guide-head{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:14px;
-    flex-wrap:wrap;
-    margin-bottom:16px;
-}
-
-.free-guide-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:12px;
-    margin-top:16px;
-}
-
-.free-guide-card{
-    background:rgba(255,255,255,.045);
-    border:1px solid rgba(255,255,255,.085);
-    border-radius:20px;
-    padding:16px;
-}
-
-.free-guide-card strong{
-    display:block;
-    font-size:15px;
-    margin-bottom:6px;
-}
-
-.free-guide-card span{
-    color:var(--soft);
-    font-size:12px;
-    line-height:1.45;
-}
-
-.free-guide-note{
-    margin-top:16px;
-    padding:14px;
-    border-radius:18px;
-    background:rgba(255,209,102,.10);
-    border:1px solid rgba(255,209,102,.20);
-    color:#ffe7a3;
-    font-size:13px;
-    font-weight:900;
-    line-height:1.5;
-}
-
 .bottom-nav{
     display:none;
 }
@@ -691,8 +629,7 @@ p{
         grid-template-columns:1fr;
     }
 
-    .unlock-grid,
-    .free-guide-grid{
+    .unlock-grid{
         grid-template-columns:1fr;
     }
 }
@@ -734,8 +671,7 @@ p{
     .cta-panel,
     .founder-panel,
     .value-panel,
-    .pro-only-panel,
-    .free-guide-panel{
+    .pro-only-panel{
         border-radius:24px;
         padding:20px;
     }
@@ -1032,40 +968,6 @@ p{
         </div>
     </div>
 
-    <div class="free-guide-panel" id="freeGuidePanel">
-        <div class="free-guide-head">
-            <div>
-                <span class="badge free">PIANO FREE</span>
-                <h2>Cosa puoi provare ora</h2>
-                <p>Usa MatchIQ in una partita reale e capisci subito se ti fa risparmiare tempo nel report.</p>
-            </div>
-            <button class="btn green" onclick="window.location.href='/coach.html?v='+APP_VERSION">Apri Coach Mode</button>
-        </div>
-
-        <div class="free-guide-grid">
-            <div class="free-guide-card">
-                <strong>📝 Coach report base</strong>
-                <span>Segna eventi e crea una prima lettura tecnica della partita.</span>
-            </div>
-            <div class="free-guide-card">
-                <strong>⭐ 5 pagelle</strong>
-                <span>Prova la valutazione giocatori prima di passare a Pro.</span>
-            </div>
-            <div class="free-guide-card">
-                <strong>📄 1 PDF Coach</strong>
-                <span>Esporta un report di prova ordinato e condivisibile.</span>
-            </div>
-            <div class="free-guide-card">
-                <strong>📲 1 sintesi WhatsApp</strong>
-                <span>Prepara una sintesi veloce per staff, squadra o società.</span>
-            </div>
-        </div>
-
-        <div class="free-guide-note">
-            Consiglio: prova MatchIQ durante una partita vera. Se il report diventa più veloce e ordinato, il piano Pro ha senso per usarlo tutta la stagione.
-        </div>
-    </div>
-
     <div class="value-panel section hidden-for-pro" id="valuePanel">
         <span class="badge beta">COSA CAMBIA CON PRO</span>
 
@@ -1188,7 +1090,7 @@ p{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10390";
+const APP_VERSION = "10340";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
@@ -1358,7 +1260,6 @@ function renderAccount(){
     const upgradeYearlyBtn = document.getElementById("upgradeYearlyBtn");
     const ownerPanel = document.getElementById("ownerPanel");
     const proOnlyPanel = document.getElementById("proOnlyPanel");
-    const freeGuidePanel = document.getElementById("freeGuidePanel");
     const smallNote = document.getElementById("smallNote");
 
     setCommercialSectionsVisible(!isPro);
@@ -1429,10 +1330,6 @@ function renderAccount(){
 
     if(proOnlyPanel){
         proOnlyPanel.className = isPro ? "pro-only-panel show" : "pro-only-panel";
-    }
-
-    if(freeGuidePanel){
-        freeGuidePanel.className = logged && !isPro ? "free-guide-panel show" : "free-guide-panel";
     }
 
     if(smallNote){
@@ -1760,6 +1657,60 @@ if("serviceWorker" in navigator){
             .catch(err => console.warn("Service Worker non registrato:", err));
     });
 }
+
+
+/* MatchIQ V2.0 - Email verified refresh fix */
+(function(){
+  const API_BASE = (window.API_BASE || '').replace(/\/$/, '');
+  function getToken(){ return localStorage.getItem('matchiq_auth_token') || localStorage.getItem('token') || ''; }
+  function boolVal(v){ return v === true || v === 1 || v === '1' || String(v).toLowerCase() === 'true'; }
+  function readLocalUser(){
+    try { return JSON.parse(localStorage.getItem('matchiq_auth_user') || localStorage.getItem('user') || '{}'); } catch(e){ return {}; }
+  }
+  function ensureEmailVerifyCard(user){
+    const isOwner = String(user?.plan || user?.piano || '').toLowerCase() === 'owner' || String(user?.email || '').toLowerCase() === 'mario.costabile92@outlook.it';
+    const verified = isOwner || boolVal(user?.email_verified) || boolVal(user?.emailVerified);
+    const label = isOwner ? 'OWNER VERIFICATO' : (verified ? 'VERIFICATA ✅' : 'DA VERIFICARE ⚠️');
+    const detailBlocks = Array.from(document.querySelectorAll('.stat-card,.info-card,.mini-card,.field,.account-field,div'));
+    let emailCard = detailBlocks.find(el => /Email/i.test(el.textContent || '') && (el.textContent || '').includes('@'));
+    let host = emailCard && emailCard.parentElement ? emailCard.parentElement : document.querySelector('.profile-grid,.account-grid,.hero-grid,.account-card,.card') || document.body;
+    let card = document.getElementById('emailVerifyCard');
+    if(!card){
+      card = document.createElement('div');
+      card.id = 'emailVerifyCard';
+      card.className = emailCard ? emailCard.className : 'stat-card';
+      card.style.cssText = 'border:1px solid rgba(34,197,94,.35);border-radius:16px;padding:14px 16px;background:rgba(15,23,42,.65);min-height:72px;';
+      card.innerHTML = '<div style="font-size:12px;color:#93a4c7;font-weight:800;margin-bottom:8px;">Verifica email</div><div id="emailVerifyValue" style="font-size:16px;font-weight:950;color:#fbbf24;"></div>';
+      if(emailCard && emailCard.nextSibling) host.insertBefore(card, emailCard.nextSibling); else host.appendChild(card);
+    }
+    const value = card.querySelector('#emailVerifyValue');
+    if(value){
+      value.textContent = label;
+      value.style.color = verified ? '#22c55e' : '#fbbf24';
+    }
+  }
+  async function refreshEmailVerified(){
+    const localUser = readLocalUser();
+    ensureEmailVerifyCard(localUser);
+    const token = getToken();
+    if(!token) return;
+    try{
+      const res = await fetch(API_BASE + '/api/auth/me', {headers:{'Authorization':'Bearer ' + token}, cache:'no-store'});
+      const data = await res.json().catch(()=>({}));
+      const user = data.user || data || localUser;
+      if(user && user.email){
+        const merged = Object.assign({}, localUser, user);
+        localStorage.setItem('matchiq_auth_user', JSON.stringify(merged));
+        localStorage.setItem('matchiq_user_email', merged.email || '');
+        localStorage.setItem('matchiq_user_plan', merged.plan || merged.piano || 'free');
+        ensureEmailVerifyCard(merged);
+      }
+    }catch(e){ console.warn('Email verification refresh failed', e); }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refreshEmailVerified); else refreshEmailVerified();
+  setTimeout(refreshEmailVerified, 700);
+})();
+
 </script>
 
 </body>
