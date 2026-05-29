@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verifica email - MatchIQ</title>
+  <style>
+    :root{--bg:#070b14;--card:#111827;--card2:#0b1220;--text:#f8fafc;--muted:#94a3b8;--line:rgba(148,163,184,.22);--accent:#22c55e;--danger:#ef4444;--blue:#38bdf8;--gold:#fbbf24;}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top,#15345f 0,#070b14 44%,#020617 100%);color:var(--text);display:flex;align-items:center;justify-content:center;padding:22px;}
+    .wrap{width:min(520px,100%)} .card{background:linear-gradient(180deg,rgba(17,24,39,.96),rgba(2,6,23,.96));border:1px solid var(--line);border-radius:28px;box-shadow:0 24px 80px rgba(0,0,0,.42);padding:26px;overflow:hidden;position:relative}.card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at top right,rgba(56,189,248,.18),transparent 34%);pointer-events:none}.content{position:relative;z-index:1}.brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}.logo{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#1d4ed8,#22c55e);font-weight:900;box-shadow:0 14px 32px rgba(34,197,94,.22)}.brand h1{font-size:18px;margin:0}.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:999px;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.24);color:#bae6fd;font-weight:800;font-size:12px;margin-bottom:14px}.status{margin:18px 0;padding:18px;border-radius:22px;border:1px solid var(--line);background:rgba(15,23,42,.72)}.status h2{margin:0 0 8px;font-size:24px}.status p{margin:0;color:var(--muted);line-height:1.55}.loader{width:34px;height:34px;border-radius:50%;border:4px solid rgba(148,163,184,.25);border-top-color:var(--blue);animation:spin 1s linear infinite;margin-bottom:14px}@keyframes spin{to{transform:rotate(360deg)}}.ok{border-color:rgba(34,197,94,.38);background:rgba(34,197,94,.10)}.err{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.10)}.warn{border-color:rgba(251,191,36,.38);background:rgba(251,191,36,.10)}.actions{display:grid;gap:10px;margin-top:18px}.btn{width:100%;border:0;border-radius:16px;padding:14px 16px;font-weight:900;cursor:pointer;text-decoration:none;text-align:center;color:#03110a;background:linear-gradient(135deg,#22c55e,#86efac)}.btn.secondary{background:rgba(15,23,42,.9);color:var(--text);border:1px solid var(--line)}.small{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.45}@media(max-width:520px){body{padding:14px;align-items:flex-start}.card{border-radius:24px;padding:20px;margin-top:18px}.status h2{font-size:21px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <div class="content">
+        <div class="brand">
+          <div class="logo">MIQ</div>
+          <div><h1>MatchIQ Tactical</h1><p>Verifica email account</p></div>
+        </div>
+        <div class="badge">🔐 Sicurezza account</div>
+        <div id="statusBox" class="status">
+          <div class="loader" id="loader"></div>
+          <h2 id="title">Verifico la tua email...</h2>
+          <p id="message">Attendi qualche secondo. Stiamo confermando il link di verifica.</p>
+        </div>
+        <div class="actions">
+          <a class="btn" href="/account.html?v=10400">Vai all’account</a>
+          <a class="btn secondary" href="/login.html?v=10400">Torna al login</a>
+        </div>
+        <p class="small">Se il link risulta scaduto, accedi al tuo account e richiedi un nuovo link di verifica.</p>
+      </div>
+    </section>
+  </main>
+<script>
+(function(){
+  const API_BASE = window.location.origin;
+  const params = new URLSearchParams(window.location.search);
+  const token = (params.get('token') || '').trim();
+  const box = document.getElementById('statusBox');
+  const title = document.getElementById('title');
+  const msg = document.getElementById('message');
+  const loader = document.getElementById('loader');
+  function setState(type,t,m){ box.classList.remove('ok','err','warn'); if(type) box.classList.add(type); if(loader) loader.style.display='none'; title.textContent=t; msg.textContent=m; }
+  async function verify(){
+    if(!token){ setState('warn','Token mancante','Il link di verifica non contiene un token valido. Richiedi un nuovo link dal tuo account.'); return; }
+    try{
+      const res = await fetch(`${API_BASE}/api/auth/email-verification/confirm`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
+      const data = await res.json().catch(()=>({}));
+      if(!res.ok || data.success===false){ throw new Error(data.detail || data.message || 'Token non valido o scaduto.'); }
+      setState('ok','Email verificata ✅',data.message || 'La tua email è stata verificata correttamente. Ora puoi tornare al tuo account.');
+      try{
+        const raw = localStorage.getItem('matchiq_auth_user');
+        if(raw){ const u=JSON.parse(raw); u.email_verified=true; u.email_verified_at=new Date().toISOString(); localStorage.setItem('matchiq_auth_user',JSON.stringify(u)); }
+      }catch(e){}
+    }catch(err){ setState('err','Verifica non riuscita',err.message || 'Il link non è valido, è scaduto o è già stato usato.'); }
+  }
+  verify();
+})();
+</script>
+</body>
+</html>

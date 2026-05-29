@@ -1416,185 +1416,6 @@ def account_limits(user=Depends(get_optional_user)):
 
 
 
-
-
-# =========================================================
-# ADMIN USERS - V8.3 HOTFIX SAFE
-# =========================================================
-
-class AdminUserPlanPayload(BaseModel):
-    plan: str
-    deactivate: Optional[bool] = False
-
-
-@app.get("/api/admin/users")
-def admin_list_users(
-    plan: Optional[str] = Query("all"),
-    search: Optional[str] = Query(""),
-    status: Optional[str] = Query("all"),
-    limit: int = Query(300, ge=1, le=1000),
-    admin_ok: bool = Depends(require_admin_token)
-):
-    try:
-        from database import get_admin_users
-        users = get_admin_users(
-            plan=plan or "all",
-            search=search or "",
-            status=status or "all",
-            limit=limit
-        )
-        return {"ok": True, "count": len(users), "users": users, "data": users}
-    except ImportError:
-        database_url = get_database_url()
-        if not database_url:
-            raise HTTPException(status_code=500, detail="DATABASE_URL non configurato")
-        conn = None
-        try:
-            conn = psycopg2.connect(database_url)
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            where = []
-            params = []
-            if plan and plan not in ["all", "tutti", "Tutti"]:
-                where.append("LOWER(u.plan) = %s")
-                params.append(str(plan).lower())
-            if search:
-                q = f"%{search.strip()}%"
-                where.append("(u.email ILIKE %s OR COALESCE(u.stripe_customer_id,'') ILIKE %s OR COALESCE(s.provider_customer_id,'') ILIKE %s OR COALESCE(s.provider_subscription_id,'') ILIKE %s)")
-                params.extend([q, q, q, q])
-            if status and status not in ["all", "tutti", "Tutti"]:
-                if status == "active":
-                    where.append("u.is_active = 1")
-                elif status == "disabled":
-                    where.append("u.is_active = 0")
-                elif status == "sub_active":
-                    where.append("COALESCE(s.status,'') = 'active'")
-                elif status == "sub_missing":
-                    where.append("(s.id IS NULL OR COALESCE(s.status,'') <> 'active')")
-            where_sql = "WHERE " + " AND ".join(where) if where else ""
-            params.append(limit)
-            cur.execute(f"""
-                SELECT
-                    u.id, u.email, u.plan, u.is_active, u.stripe_customer_id, u.created_at, u.updated_at,
-                    s.id AS subscription_id, s.plan AS subscription_plan, s.status AS subscription_status,
-                    s.provider, s.provider_customer_id, s.provider_subscription_id,
-                    s.current_period_start, s.current_period_end,
-                    s.created_at AS subscription_created_at, s.updated_at AS subscription_updated_at,
-                    COALESCE(usage_today.total_usage_today, 0) AS total_usage_today
-                FROM users u
-                LEFT JOIN LATERAL (
-                    SELECT * FROM subscriptions s2
-                    WHERE s2.user_id = u.id
-                    ORDER BY CASE WHEN s2.status = 'active' THEN 0 ELSE 1 END, s2.created_at DESC
-                    LIMIT 1
-                ) s ON TRUE
-                LEFT JOIN (
-                    SELECT user_id, COALESCE(SUM(count),0) AS total_usage_today
-                    FROM api_usage
-                    WHERE usage_date = %s
-                    GROUP BY user_id
-                ) usage_today ON usage_today.user_id = u.id
-                {where_sql}
-                ORDER BY u.created_at DESC
-                LIMIT %s
-            """, [datetime.now(timezone.utc).date().isoformat()] + params)
-            rows = [dict(r) for r in cur.fetchall()]
-            cur.close()
-            def norm(r):
-                for k,v in list(r.items()):
-                    if hasattr(v, 'isoformat'):
-                        r[k]=v.isoformat()
-                    elif v is None:
-                        r[k]=''
-                r['plan'] = str(r.get('plan') or 'free').lower()
-                r['is_active'] = int(r.get('is_active') or 0)
-                return r
-            users=[norm(r) for r in rows]
-            return {"ok": True, "count": len(users), "users": users, "data": users}
-        except Exception as e:
-            logger.exception("[ADMIN USERS] Errore caricamento utenti fallback")
-            raise HTTPException(status_code=500, detail=str(e))
-        finally:
-            if conn:
-                conn.close()
-    except Exception as e:
-        logger.exception("[ADMIN USERS] Errore caricamento utenti")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.patch("/api/admin/users/{user_id}/plan")
-def admin_patch_user_plan(
-    user_id: int,
-    payload: AdminUserPlanPayload = Body(...),
-    admin_ok: bool = Depends(require_admin_token)
-):
-    try:
-        from database import admin_update_user_plan
-        updated = admin_update_user_plan(
-            user_id=user_id,
-            plan=payload.plan,
-            deactivate=bool(payload.deactivate)
-        )
-        if not updated:
-            raise HTTPException(status_code=404, detail="Utente non trovato")
-        return {"ok": True, "message": "Utente aggiornato", "user": updated, "data": updated}
-    except ImportError:
-        plan_value = (payload.plan or "free").lower().strip()
-        if plan_value not in ["free", "pro", "scout", "owner"]:
-            raise HTTPException(status_code=400, detail="Piano non valido")
-        database_url = get_database_url()
-        if not database_url:
-            raise HTTPException(status_code=500, detail="DATABASE_URL non configurato")
-        conn = None
-        try:
-            now = datetime.now(timezone.utc).isoformat()
-            conn = psycopg2.connect(database_url)
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            cur.execute("""
-                UPDATE users
-                SET plan = %s, is_active = %s, updated_at = %s
-                WHERE id = %s
-                RETURNING id, email, plan, is_active, stripe_customer_id, created_at, updated_at
-            """, (plan_value, 0 if payload.deactivate else 1, now, user_id))
-            user = cur.fetchone()
-            if not user:
-                conn.rollback()
-                raise HTTPException(status_code=404, detail="Utente non trovato")
-            if plan_value in ["pro", "scout", "owner"]:
-                cur.execute("""
-                    INSERT INTO subscriptions (user_id, plan, status, provider, provider_customer_id, provider_subscription_id, current_period_start, current_period_end, created_at, updated_at)
-                    VALUES (%s, %s, 'active', 'manual_admin', '', '', %s, '', %s, %s)
-                """, (user_id, plan_value, now, now, now))
-            elif plan_value == "free":
-                cur.execute("""
-                    UPDATE subscriptions
-                    SET status = 'cancelled', updated_at = %s
-                    WHERE user_id = %s AND status = 'active' AND provider = 'manual_admin'
-                """, (now, user_id))
-            conn.commit()
-            updated = dict(user)
-            for k,v in list(updated.items()):
-                if hasattr(v, 'isoformat'):
-                    updated[k]=v.isoformat()
-                elif v is None:
-                    updated[k]=''
-            return {"ok": True, "message": "Utente aggiornato", "user": updated, "data": updated}
-        except HTTPException:
-            raise
-        except Exception as e:
-            if conn:
-                conn.rollback()
-            logger.exception("[ADMIN USERS] Errore aggiornamento piano fallback")
-            raise HTTPException(status_code=500, detail=str(e))
-        finally:
-            if conn:
-                conn.close()
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception("[ADMIN USERS] Errore aggiornamento piano")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 # =========================================================
 # ADMIN ANALYTICS - V8.3
 # =========================================================
@@ -1640,11 +1461,6 @@ if os.path.exists(FRONTEND_DIR):
     def serve_admin_alias():
         return FileResponse(os.path.join(FRONTEND_DIR, "admin-beta.html"))
 
-
-    @app.get("/admin-users.html")
-    def serve_admin_users():
-        return FileResponse(os.path.join(FRONTEND_DIR, "admin-users.html"))
-
     @app.get("/admin-analytics.html")
     def serve_admin_analytics():
         return FileResponse(os.path.join(FRONTEND_DIR, "admin-analytics.html"))
@@ -1661,10 +1477,6 @@ if os.path.exists(FRONTEND_DIR):
     def serve_login():
         return FileResponse(os.path.join(FRONTEND_DIR, "login.html"))
 
-    @app.get("/reset-password.html")
-    def serve_reset_password():
-        return FileResponse(os.path.join(FRONTEND_DIR, "reset-password.html"))
-
     @app.get("/register.html")
     def serve_register():
         return FileResponse(os.path.join(FRONTEND_DIR, "register.html"))
@@ -1672,6 +1484,11 @@ if os.path.exists(FRONTEND_DIR):
     @app.get("/reset-password.html")
     def serve_reset_password():
         return FileResponse(os.path.join(FRONTEND_DIR, "reset-password.html"))
+
+    @app.get("/verify-email.html")
+    def serve_verify_email():
+        return FileResponse(os.path.join(FRONTEND_DIR, "verify-email.html"))
+
 
 def get_services_status():
     return {
