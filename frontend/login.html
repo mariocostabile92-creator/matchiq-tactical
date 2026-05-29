@@ -752,11 +752,49 @@ function togglePassword(){
     btn.textContent = isHidden ? "Nascondi" : "Mostra";
 }
 
-function showPasswordHelp(){
-    const box = document.getElementById("passwordHelp");
-    if(!box) return;
+async function showPasswordHelp(){
+    const emailInput = document.getElementById("email");
+    const email = emailInput ? emailInput.value.trim() : "";
 
-    box.classList.toggle("show");
+    if(!email){
+        setMessage("Inserisci prima la tua email, poi clicca Password dimenticata.", "warn");
+        if(emailInput) emailInput.focus();
+        return;
+    }
+
+    try{
+        setMessage("Richiesta reset password in corso...", "warn");
+
+        const res = await fetch(`${API_BASE}/auth/password-reset/request`, {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "Accept":"application/json"
+            },
+            body:JSON.stringify({ email })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if(!res.ok || data.success === false){
+            throw new Error(data.detail || data.message || "Errore richiesta reset password");
+        }
+
+        if(data.reset_link){
+            setMessage("Link reset generato. Apertura pagina reset...", "success");
+
+            setTimeout(() => {
+                window.location.href = data.reset_link;
+            },800);
+
+            return;
+        }
+
+        setMessage(data.message || "Se l'email è registrata, riceverai le istruzioni per reimpostare la password.", "success");
+
+    }catch(err){
+        setMessage(err.message || "Errore reset password", "error");
+    }
 }
 
 async function verifyExistingToken(){
