@@ -1414,6 +1414,156 @@ def account_limits(user=Depends(get_optional_user)):
     return build_account_limits_response(user)
 
 
+# =========================================================
+# ADMIN USERS - V8.5
+# =========================================================
+
+def normalize_admin_user_row(row):
+    if not row:
+        return {}
+
+    item = dict(row)
+
+    created_at = item.get("created_at")
+    email_verified_at = item.get("email_verified_at")
+
+    if hasattr(created_at, "isoformat"):
+        item["created_at"] = created_at.isoformat()
+
+    if hasattr(email_verified_at, "isoformat"):
+        item["email_verified_at"] = email_verified_at.isoformat()
+
+    plan = item.get("plan") or item.get("piano") or "free"
+    item["plan"] = plan
+    item["piano"] = plan
+
+    item["is_active"] = bool(item.get("is_active", True))
+    item["email_verified"] = bool(item.get("email_verified", False))
+
+    return item
+
+
+@app.get("/api/admin/users", tags=["Admin"])
+def admin_users(
+    search: Optional[str] = Query(None),
+    plan: Optional[str] = Query("all"),
+    status: Optional[str] = Query("all"),
+    limit: int = Query(300, ge=1, le=1000),
+    admin_ok: bool = Depends(require_admin_token)
+):
+    database_url = get_database_url()
+
+    if not database_url:
+        return {
+            "ok": False,
+            "users": [],
+            "items": [],
+            "data": [],
+            "count": 0,
+            "message": "DATABASE_URL non configurato"
+        }
+
+    conn = None
+
+    try:
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        where = []
+        params = []
+
+        if search:
+            q = f"%{search.strip()}%"
+            where.append("email ILIKE %s")
+            params.append(q)
+
+        if plan and plan not in ["all", "tutti", "Tutti"]:
+            where.append("COALESCE(plan, piano, 'free') = %s")
+            params.append(plan.strip().lower())
+
+        if status and status not in ["all", "tutti", "Tutti"]:
+            if status in ["active", "attivo", "Attivo"]:
+                where.append("COALESCE(is_active, TRUE) = TRUE")
+            elif status in ["inactive", "disattivato", "Disattivato"]:
+                where.append("COALESCE(is_active, TRUE) = FALSE")
+            elif status in ["verified", "verificato", "Verificato"]:
+                where.append("COALESCE(email_verified, 0) <> 0")
+            elif status in ["unverified", "non_verificato", "Non verificato"]:
+                where.append("COALESCE(email_verified, 0) = 0")
+
+        where_sql = ""
+        if where:
+            where_sql = "WHERE " + " AND ".join(where)
+
+        params.append(limit)
+
+        cur.execute(f"""
+            SELECT
+                id,
+                email,
+                COALESCE(plan, piano, 'free') AS plan,
+                COALESCE(plan, piano, 'free') AS piano,
+                COALESCE(is_active, TRUE) AS is_active,
+                COALESCE(email_verified, 0) AS email_verified,
+                email_verified_at,
+                created_at
+            FROM users
+            {where_sql}
+            ORDER BY created_at DESC NULLS LAST, id DESC
+            LIMIT %s;
+        """, params)
+
+        rows = cur.fetchall()
+        users = [normalize_admin_user_row(row) for row in rows]
+
+        cur.execute("SELECT COUNT(*) AS total FROM users;")
+        total = cur.fetchone()["total"]
+
+        cur.execute("""
+            SELECT COUNT(*) AS verified
+            FROM users
+            WHERE COALESCE(email_verified, 0) <> 0;
+        """)
+        verified = cur.fetchone()["verified"]
+
+        cur.execute("""
+            SELECT COUNT(*) AS free
+            FROM users
+            WHERE COALESCE(plan, piano, 'free') = 'free';
+        """)
+        free = cur.fetchone()["free"]
+
+        cur.execute("""
+            SELECT COUNT(*) AS pro
+            FROM users
+            WHERE COALESCE(plan, piano, 'free') = 'pro';
+        """)
+        pro = cur.fetchone()["pro"]
+
+        cur.close()
+
+        return {
+            "ok": True,
+            "count": len(users),
+            "total": total,
+            "verified": verified,
+            "unverified": max(int(total) - int(verified), 0),
+            "free": free,
+            "pro": pro,
+            "users": users,
+            "items": users,
+            "data": users
+        }
+
+    except Exception as e:
+        logger.exception("[ADMIN USERS] Errore caricamento utenti")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        if conn:
+            conn.close()
+
+
 
 
 # =========================================================
