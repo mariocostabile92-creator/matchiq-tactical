@@ -1478,7 +1478,7 @@ def admin_users(
             params.append(q)
 
         if plan and plan not in ["all", "tutti", "Tutti"]:
-            where.append("COALESCE(plan, piano, 'free') = %s")
+            where.append("COALESCE(plan, 'free') = %s")
             params.append(plan.strip().lower())
 
         if status and status not in ["all", "tutti", "Tutti"]:
@@ -1501,8 +1501,8 @@ def admin_users(
             SELECT
                 id,
                 email,
-                COALESCE(plan, piano, 'free') AS plan,
-                COALESCE(plan, piano, 'free') AS piano,
+                COALESCE(plan, 'free') AS plan,
+                COALESCE(plan, 'free') AS piano,
                 COALESCE(is_active, TRUE) AS is_active,
                 COALESCE(email_verified, 0) AS email_verified,
                 email_verified_at,
@@ -1529,14 +1529,14 @@ def admin_users(
         cur.execute("""
             SELECT COUNT(*) AS free
             FROM users
-            WHERE COALESCE(plan, piano, 'free') = 'free';
+            WHERE COALESCE(plan, 'free') = 'free';
         """)
         free = cur.fetchone()["free"]
 
         cur.execute("""
             SELECT COUNT(*) AS pro
             FROM users
-            WHERE COALESCE(plan, piano, 'free') = 'pro';
+            WHERE COALESCE(plan, 'free') = 'pro';
         """)
         pro = cur.fetchone()["pro"]
 
