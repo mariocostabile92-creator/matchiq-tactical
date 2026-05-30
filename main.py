@@ -1437,8 +1437,8 @@ def normalize_admin_user_row(row):
     item["plan"] = plan
     item["piano"] = plan
 
-    item["is_active"] = bool(item.get("is_active", True))
-    item["email_verified"] = bool(item.get("email_verified", False))
+    item["is_active"] = str(item.get("is_active", "1")).lower() not in ["0", "false", "none", ""]
+    item["email_verified"] = str(item.get("email_verified", "0")).lower() not in ["0", "false", "none", ""]
 
     return item
 
@@ -1483,9 +1483,9 @@ def admin_users(
 
         if status and status not in ["all", "tutti", "Tutti"]:
             if status in ["active", "attivo", "Attivo"]:
-                where.append("COALESCE(is_active, TRUE) = TRUE")
+                where.append("COALESCE(is_active, 1) <> 0")
             elif status in ["inactive", "disattivato", "Disattivato"]:
-                where.append("COALESCE(is_active, TRUE) = FALSE")
+                where.append("COALESCE(is_active, 1) = 0")
             elif status in ["verified", "verificato", "Verificato"]:
                 where.append("COALESCE(email_verified, 0) <> 0")
             elif status in ["unverified", "non_verificato", "Non verificato"]:
@@ -1503,7 +1503,7 @@ def admin_users(
                 email,
                 COALESCE(plan, 'free') AS plan,
                 COALESCE(plan, 'free') AS piano,
-                COALESCE(is_active, TRUE) AS is_active,
+                COALESCE(is_active, 1) AS is_active,
                 COALESCE(email_verified, 0) AS email_verified,
                 email_verified_at,
                 created_at
