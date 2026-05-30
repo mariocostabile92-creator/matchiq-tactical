@@ -1415,8 +1415,19 @@ def account_limits(user=Depends(get_optional_user)):
 
 
 # =========================================================
-# ADMIN USERS - V8.5
+# ADMIN USERS - V8.6 SAFE ACTIONS
 # =========================================================
+
+class AdminUserUpdatePayload(BaseModel):
+    plan: Optional[str] = None
+    is_active: Optional[int] = None
+
+
+def normalize_admin_bool(value, default=False):
+    if value is None:
+        return default
+    return str(value).strip().lower() not in ["0", "false", "none", "", "no", "null"]
+
 
 def normalize_admin_user_row(row):
     if not row:
@@ -1433,14 +1444,34 @@ def normalize_admin_user_row(row):
     if hasattr(email_verified_at, "isoformat"):
         item["email_verified_at"] = email_verified_at.isoformat()
 
-    plan = item.get("plan") or item.get("piano") or "free"
-    item["plan"] = plan
-    item["piano"] = plan
+    plan_value = str(item.get("plan") or "free").lower().strip()
+    if plan_value not in ["free", "pro", "scout", "owner"]:
+        plan_value = "free"
 
-    item["is_active"] = str(item.get("is_active", "1")).lower() not in ["0", "false", "none", ""]
-    item["email_verified"] = str(item.get("email_verified", "0")).lower() not in ["0", "false", "none", ""]
+    item["plan"] = plan_value
+    item["piano"] = plan_value
+    item["is_active"] = normalize_admin_bool(item.get("is_active"), True)
+    item["email_verified"] = normalize_admin_bool(item.get("email_verified"), False)
 
     return item
+
+
+def fetch_admin_user_by_id(cur, user_id: int):
+    cur.execute("""
+        SELECT
+            id,
+            email,
+            COALESCE(plan, 'free') AS plan,
+            COALESCE(plan, 'free') AS piano,
+            COALESCE(is_active, 1) AS is_active,
+            COALESCE(email_verified, 0) AS email_verified,
+            email_verified_at,
+            created_at
+        FROM users
+        WHERE id = %s
+        LIMIT 1;
+    """, (user_id,))
+    return cur.fetchone()
 
 
 @app.get("/api/admin/users", tags=["Admin"])
@@ -1478,17 +1509,18 @@ def admin_users(
             params.append(q)
 
         if plan and plan not in ["all", "tutti", "Tutti"]:
-            where.append("COALESCE(plan, 'free') = %s")
+            where.append("LOWER(COALESCE(plan, 'free')) = %s")
             params.append(plan.strip().lower())
 
         if status and status not in ["all", "tutti", "Tutti"]:
-            if status in ["active", "attivo", "Attivo"]:
+            status_value = status.strip()
+            if status_value in ["active", "attivo", "Attivo"]:
                 where.append("COALESCE(is_active, 1) <> 0")
-            elif status in ["inactive", "disattivato", "Disattivato"]:
+            elif status_value in ["inactive", "disattivato", "Disattivato"]:
                 where.append("COALESCE(is_active, 1) = 0")
-            elif status in ["verified", "verificato", "Verificato"]:
+            elif status_value in ["verified", "verificato", "Verificato"]:
                 where.append("COALESCE(email_verified, 0) <> 0")
-            elif status in ["unverified", "non_verificato", "Non verificato"]:
+            elif status_value in ["unverified", "non_verificato", "Non verificato"]:
                 where.append("COALESCE(email_verified, 0) = 0")
 
         where_sql = ""
@@ -1517,28 +1549,35 @@ def admin_users(
         users = [normalize_admin_user_row(row) for row in rows]
 
         cur.execute("SELECT COUNT(*) AS total FROM users;")
-        total = cur.fetchone()["total"]
+        total = int(cur.fetchone()["total"] or 0)
 
         cur.execute("""
             SELECT COUNT(*) AS verified
             FROM users
             WHERE COALESCE(email_verified, 0) <> 0;
         """)
-        verified = cur.fetchone()["verified"]
+        verified = int(cur.fetchone()["verified"] or 0)
 
         cur.execute("""
             SELECT COUNT(*) AS free
             FROM users
-            WHERE COALESCE(plan, 'free') = 'free';
+            WHERE LOWER(COALESCE(plan, 'free')) = 'free';
         """)
-        free = cur.fetchone()["free"]
+        free = int(cur.fetchone()["free"] or 0)
 
         cur.execute("""
             SELECT COUNT(*) AS pro
             FROM users
-            WHERE COALESCE(plan, 'free') = 'pro';
+            WHERE LOWER(COALESCE(plan, 'free')) = 'pro';
         """)
-        pro = cur.fetchone()["pro"]
+        pro = int(cur.fetchone()["pro"] or 0)
+
+        cur.execute("""
+            SELECT COUNT(*) AS scout_owner
+            FROM users
+            WHERE LOWER(COALESCE(plan, 'free')) IN ('scout', 'owner');
+        """)
+        scout_owner = int(cur.fetchone()["scout_owner"] or 0)
 
         cur.close()
 
@@ -1547,9 +1586,10 @@ def admin_users(
             "count": len(users),
             "total": total,
             "verified": verified,
-            "unverified": max(int(total) - int(verified), 0),
+            "unverified": max(total - verified, 0),
             "free": free,
             "pro": pro,
+            "scout_owner": scout_owner,
             "users": users,
             "items": users,
             "data": users
@@ -1564,6 +1604,108 @@ def admin_users(
             conn.close()
 
 
+@app.patch("/api/admin/users/{user_id}", tags=["Admin"])
+def admin_update_user(
+    user_id: int,
+    payload: AdminUserUpdatePayload = Body(...),
+    admin_ok: bool = Depends(require_admin_token)
+):
+    database_url = get_database_url()
+
+    if not database_url:
+        raise HTTPException(status_code=500, detail="DATABASE_URL non configurato")
+
+    updates = []
+    params = []
+
+    if payload.plan is not None:
+        new_plan = str(payload.plan).lower().strip()
+        if new_plan not in ["free", "pro", "scout", "owner"]:
+            raise HTTPException(status_code=400, detail="Piano non valido")
+        updates.append("plan = %s")
+        params.append(new_plan)
+
+    if payload.is_active is not None:
+        new_active = 1 if int(payload.is_active) != 0 else 0
+        updates.append("is_active = %s")
+        params.append(new_active)
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="Nessun campo da aggiornare")
+
+    params.append(user_id)
+
+    conn = None
+
+    try:
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute(f"""
+            UPDATE users
+            SET {", ".join(updates)}
+            WHERE id = %s
+            RETURNING id;
+        """, params)
+
+        updated = cur.fetchone()
+
+        if not updated:
+            conn.rollback()
+            cur.close()
+            raise HTTPException(status_code=404, detail="Utente non trovato")
+
+        row = fetch_admin_user_by_id(cur, user_id)
+
+        conn.commit()
+        cur.close()
+
+        user = normalize_admin_user_row(row)
+
+        return {
+            "ok": True,
+            "message": "Utente aggiornato",
+            "user": user,
+            "data": user,
+            "item": user
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        logger.exception("[ADMIN USERS] Errore aggiornamento utente")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.post("/api/admin/users/{user_id}/deactivate", tags=["Admin"])
+def admin_deactivate_user(
+    user_id: int,
+    admin_ok: bool = Depends(require_admin_token)
+):
+    return admin_update_user(
+        user_id=user_id,
+        payload=AdminUserUpdatePayload(is_active=0),
+        admin_ok=admin_ok
+    )
+
+
+@app.post("/api/admin/users/{user_id}/activate", tags=["Admin"])
+def admin_activate_user(
+    user_id: int,
+    admin_ok: bool = Depends(require_admin_token)
+):
+    return admin_update_user(
+        user_id=user_id,
+        payload=AdminUserUpdatePayload(is_active=1),
+        admin_ok=admin_ok
+    )
 
 
 # =========================================================
