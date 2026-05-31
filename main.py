@@ -61,6 +61,8 @@ from app.services.full_analysis_service import (
 )
 from auth import router as auth_router
 from database import init_db, get_admin_analytics
+from auth import create_verification_for_user
+from brevo_service import send_verification_email, is_email_configured
 from usage_guard import (
     get_optional_user,
     enforce_guest_or_user_limit,
@@ -1415,8 +1417,17 @@ def account_limits(user=Depends(get_optional_user)):
 
 
 # =========================================================
-# ADMIN USERS - V8.5
+# ADMIN USERS - V8.7 ADMIN UX + EMAIL ACTIONS
 # =========================================================
+
+ADMIN_ALLOWED_PLANS = ["free", "pro", "scout", "owner"]
+
+
+def admin_bool(value, default=False):
+    if value is None:
+        return default
+    return str(value).strip().lower() in ["1", "true", "t", "yes", "y", "attivo", "active"]
+
 
 def normalize_admin_user_row(row):
     if not row:
@@ -1424,23 +1435,50 @@ def normalize_admin_user_row(row):
 
     item = dict(row)
 
-    created_at = item.get("created_at")
-    email_verified_at = item.get("email_verified_at")
+    for key in ["created_at", "email_verified_at"]:
+        value = item.get(key)
+        if hasattr(value, "isoformat"):
+            item[key] = value.isoformat()
 
-    if hasattr(created_at, "isoformat"):
-        item["created_at"] = created_at.isoformat()
+    plan = str(item.get("plan") or item.get("piano") or "free").lower().strip()
+    if plan not in ADMIN_ALLOWED_PLANS:
+        plan = "free"
 
-    if hasattr(email_verified_at, "isoformat"):
-        item["email_verified_at"] = email_verified_at.isoformat()
-
-    plan = item.get("plan") or item.get("piano") or "free"
     item["plan"] = plan
     item["piano"] = plan
-
-    item["is_active"] = str(item.get("is_active", "1")).lower() not in ["0", "false", "none", ""]
-    item["email_verified"] = str(item.get("email_verified", "0")).lower() not in ["0", "false", "none", ""]
+    item["is_active"] = admin_bool(item.get("is_active"), True)
+    item["email_verified"] = admin_bool(item.get("email_verified"), False)
+    item["subscription_status"] = item.get("subscription_status") or ""
+    item["provider"] = item.get("provider") or ""
+    item["total_usage_today"] = int(item.get("total_usage_today") or 0)
 
     return item
+
+
+def admin_fetch_user(cur, user_id: int):
+    cur.execute("""
+        SELECT
+            id,
+            email,
+            COALESCE(plan, 'free') AS plan,
+            COALESCE(plan, 'free') AS piano,
+            COALESCE(is_active, 1) AS is_active,
+            COALESCE(email_verified, 0) AS email_verified,
+            email_verified_at,
+            created_at,
+            '' AS subscription_status,
+            '' AS provider,
+            '' AS provider_customer_id,
+            '' AS provider_subscription_id,
+            '' AS subscription_plan,
+            NULL AS current_period_start,
+            NULL AS current_period_end,
+            0 AS total_usage_today
+        FROM users
+        WHERE id = %s;
+    """, (user_id,))
+    row = cur.fetchone()
+    return normalize_admin_user_row(row) if row else None
 
 
 @app.get("/api/admin/users", tags=["Admin"])
@@ -1454,14 +1492,7 @@ def admin_users(
     database_url = get_database_url()
 
     if not database_url:
-        return {
-            "ok": False,
-            "users": [],
-            "items": [],
-            "data": [],
-            "count": 0,
-            "message": "DATABASE_URL non configurato"
-        }
+        return {"ok": False, "users": [], "items": [], "data": [], "count": 0, "message": "DATABASE_URL non configurato"}
 
     conn = None
 
@@ -1478,23 +1509,27 @@ def admin_users(
             params.append(q)
 
         if plan and plan not in ["all", "tutti", "Tutti"]:
-            where.append("COALESCE(plan, 'free') = %s")
-            params.append(plan.strip().lower())
+            plan_value = plan.strip().lower()
+            if plan_value in ADMIN_ALLOWED_PLANS:
+                where.append("COALESCE(plan, 'free') = %s")
+                params.append(plan_value)
 
         if status and status not in ["all", "tutti", "Tutti"]:
-            if status in ["active", "attivo", "Attivo"]:
+            status_value = status.strip().lower()
+            if status_value in ["active", "attivo"]:
                 where.append("COALESCE(is_active, 1) <> 0")
-            elif status in ["inactive", "disattivato", "Disattivato"]:
+            elif status_value in ["inactive", "disabled", "disattivato"]:
                 where.append("COALESCE(is_active, 1) = 0")
-            elif status in ["verified", "verificato", "Verificato"]:
+            elif status_value in ["verified", "verificato"]:
                 where.append("COALESCE(email_verified, 0) <> 0")
-            elif status in ["unverified", "non_verificato", "Non verificato"]:
+            elif status_value in ["unverified", "non_verificato", "non verificato"]:
                 where.append("COALESCE(email_verified, 0) = 0")
+            elif status_value == "sub_active":
+                where.append("FALSE")
+            elif status_value == "sub_missing":
+                where.append("TRUE")
 
-        where_sql = ""
-        if where:
-            where_sql = "WHERE " + " AND ".join(where)
-
+        where_sql = "WHERE " + " AND ".join(where) if where else ""
         params.append(limit)
 
         cur.execute(f"""
@@ -1506,7 +1541,15 @@ def admin_users(
                 COALESCE(is_active, 1) AS is_active,
                 COALESCE(email_verified, 0) AS email_verified,
                 email_verified_at,
-                created_at
+                created_at,
+                '' AS subscription_status,
+                '' AS provider,
+                '' AS provider_customer_id,
+                '' AS provider_subscription_id,
+                '' AS subscription_plan,
+                NULL AS current_period_start,
+                NULL AS current_period_end,
+                0 AS total_usage_today
             FROM users
             {where_sql}
             ORDER BY created_at DESC NULLS LAST, id DESC
@@ -1519,26 +1562,17 @@ def admin_users(
         cur.execute("SELECT COUNT(*) AS total FROM users;")
         total = cur.fetchone()["total"]
 
-        cur.execute("""
-            SELECT COUNT(*) AS verified
-            FROM users
-            WHERE COALESCE(email_verified, 0) <> 0;
-        """)
+        cur.execute("SELECT COUNT(*) AS verified FROM users WHERE COALESCE(email_verified, 0) <> 0;")
         verified = cur.fetchone()["verified"]
 
-        cur.execute("""
-            SELECT COUNT(*) AS free
-            FROM users
-            WHERE COALESCE(plan, 'free') = 'free';
-        """)
+        cur.execute("SELECT COUNT(*) AS free FROM users WHERE COALESCE(plan, 'free') = 'free';")
         free = cur.fetchone()["free"]
 
-        cur.execute("""
-            SELECT COUNT(*) AS pro
-            FROM users
-            WHERE COALESCE(plan, 'free') = 'pro';
-        """)
+        cur.execute("SELECT COUNT(*) AS pro FROM users WHERE COALESCE(plan, 'free') = 'pro';")
         pro = cur.fetchone()["pro"]
+
+        cur.execute("SELECT COUNT(*) AS scout_owner FROM users WHERE COALESCE(plan, 'free') IN ('scout', 'owner');")
+        scout_owner = cur.fetchone()["scout_owner"]
 
         cur.close()
 
@@ -1550,6 +1584,8 @@ def admin_users(
             "unverified": max(int(total) - int(verified), 0),
             "free": free,
             "pro": pro,
+            "scout_owner": scout_owner,
+            "subscription_active": 0,
             "users": users,
             "items": users,
             "data": users
@@ -1576,9 +1612,8 @@ def admin_update_user_plan(
         return {"ok": False, "message": "DATABASE_URL non configurato"}
 
     raw_plan = str(payload.get("plan") or "free").lower().strip()
-    allowed_plans = ["free", "pro", "scout", "owner"]
 
-    if raw_plan not in allowed_plans:
+    if raw_plan not in ADMIN_ALLOWED_PLANS:
         raise HTTPException(status_code=400, detail="Piano non valido")
 
     deactivate = bool(payload.get("deactivate", False))
@@ -1618,12 +1653,7 @@ def admin_update_user_plan(
 
         user = normalize_admin_user_row(row)
 
-        return {
-            "ok": True,
-            "message": "Utente aggiornato correttamente",
-            "user": user,
-            "data": user
-        }
+        return {"ok": True, "message": "Utente aggiornato correttamente", "user": user, "data": user}
 
     except HTTPException:
         raise
@@ -1638,8 +1668,99 @@ def admin_update_user_plan(
             conn.close()
 
 
+@app.post("/api/admin/users/{user_id}/activate", tags=["Admin"])
+def admin_activate_user(user_id: int, admin_ok: bool = Depends(require_admin_token)):
+    database_url = get_database_url()
+    if not database_url:
+        return {"ok": False, "message": "DATABASE_URL non configurato"}
+    conn = None
+    try:
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("UPDATE users SET is_active = 1 WHERE id = %s RETURNING id;", (user_id,))
+        if not cur.fetchone():
+            conn.rollback(); cur.close(); raise HTTPException(status_code=404, detail="Utente non trovato")
+        user = admin_fetch_user(cur, user_id)
+        conn.commit(); cur.close()
+        return {"ok": True, "message": "Utente riattivato", "user": user, "data": user}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn: conn.rollback()
+        logger.exception("[ADMIN USERS] Errore riattivazione utente")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
 
 
+@app.post("/api/admin/users/{user_id}/deactivate", tags=["Admin"])
+def admin_deactivate_user(user_id: int, admin_ok: bool = Depends(require_admin_token)):
+    database_url = get_database_url()
+    if not database_url:
+        return {"ok": False, "message": "DATABASE_URL non configurato"}
+    conn = None
+    try:
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("UPDATE users SET is_active = 0 WHERE id = %s RETURNING id;", (user_id,))
+        if not cur.fetchone():
+            conn.rollback(); cur.close(); raise HTTPException(status_code=404, detail="Utente non trovato")
+        user = admin_fetch_user(cur, user_id)
+        conn.commit(); cur.close()
+        return {"ok": True, "message": "Utente disattivato", "user": user, "data": user}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn: conn.rollback()
+        logger.exception("[ADMIN USERS] Errore disattivazione utente")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
+
+
+@app.post("/api/admin/users/{user_id}/resend-verification", tags=["Admin"])
+def admin_resend_user_verification(user_id: int, admin_ok: bool = Depends(require_admin_token)):
+    database_url = get_database_url()
+    if not database_url:
+        return {"ok": False, "message": "DATABASE_URL non configurato"}
+
+    conn = None
+    try:
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        user = admin_fetch_user(cur, user_id)
+        cur.close()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="Utente non trovato")
+
+        if not user.get("is_active"):
+            raise HTTPException(status_code=400, detail="Utente disattivato: riattivalo prima di reinviare la verifica")
+
+        if user.get("email_verified"):
+            return {"ok": True, "message": "Email già verificata", "email_sent": False, "user": user, "data": user}
+
+        verification_link = create_verification_for_user(user)
+        email_result = send_verification_email(user["email"], verification_link)
+        email_sent = bool(email_result.get("success") if isinstance(email_result, dict) else email_result)
+
+        return {
+            "ok": True,
+            "message": "Verifica email reinviata" if email_sent else "Token creato, ma invio email non riuscito",
+            "email_sent": email_sent,
+            "email_configured": bool(is_email_configured()),
+            "user": user,
+            "data": user,
+            "verification_link": verification_link if os.getenv("EMAIL_VERIFICATION_EXPOSE_LINK", "1") == "1" else None
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("[ADMIN USERS] Errore reinvio verifica email")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
 
 # =========================================================
 # ADMIN ANALYTICS - V8.3
@@ -1705,6 +1826,18 @@ if os.path.exists(FRONTEND_DIR):
     @app.get("/register.html")
     def serve_register():
         return FileResponse(os.path.join(FRONTEND_DIR, "register.html"))
+
+    @app.get("/admin-users.html")
+    def serve_admin_users():
+        return FileResponse(os.path.join(FRONTEND_DIR, "admin-users.html"))
+
+    @app.get("/verify-email.html")
+    def serve_verify_email():
+        return FileResponse(os.path.join(FRONTEND_DIR, "verify-email.html"))
+
+    @app.get("/reset-password.html")
+    def serve_reset_password():
+        return FileResponse(os.path.join(FRONTEND_DIR, "reset-password.html"))
 
 
 def get_services_status():
