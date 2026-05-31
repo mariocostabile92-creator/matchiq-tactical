@@ -27,7 +27,7 @@ from database import (
 )
 
 try:
-    from email_service import send_verification_email, send_password_reset_email, is_email_configured
+    from brevo_service import send_verification_email, send_password_reset_email, is_email_configured
 except Exception:
     def send_verification_email(*args, **kwargs):
         return False
