@@ -368,25 +368,59 @@ function buildPrintableCoachReport(){
     const homeGoals = getGoals("home");
     const awayGoals = getGoals("away");
     const generatedAt = new Date().toLocaleString("it-IT");
+    const best = getBestRating();
+
+    const events = [...(coachState.events || [])]
+        .sort((a,b) => Number(a.minute || 0) - Number(b.minute || 0));
+
+    const ratings = [...(coachState.ratings || [])]
+        .sort((a,b) => Number(b.vote || 0) - Number(a.vote || 0));
+
     const sections = splitReportSections(coachState.report);
 
-    const sectionHtml = sections.map(section => `
-        <section class="print-section">
-            <h2>${escapePrintHtml(section.title)}</h2>
-            ${section.lines.map(line => `<p>${escapePrintHtml(line)}</p>`).join("")}
-        </section>
-    `).join("");
+    const eventsHtml = events.length ? events.map(e => `
+        <tr>
+            <td>${escapePrintHtml(e.minute)}'</td>
+            <td>${escapePrintHtml(e.icon)} ${escapePrintHtml(e.label)}</td>
+            <td>${escapePrintHtml(e.team)}</td>
+            <td>${escapePrintHtml(e.player || "-")}</td>
+            <td>${escapePrintHtml(e.note || "-")}</td>
+        </tr>
+    `).join("") : `
+        <tr><td colspan="5">Nessun evento registrato.</td></tr>
+    `;
+
+    const ratingsHtml = ratings.length ? ratings.map(r => `
+        <tr>
+            <td><strong>${escapePrintHtml(r.player)}</strong></td>
+            <td>${escapePrintHtml(r.team)}</td>
+            <td>${escapePrintHtml(r.role)}</td>
+            <td class="vote">${escapePrintHtml(r.vote)}</td>
+            <td>${escapePrintHtml(r.note || "-")}</td>
+        </tr>
+    `).join("") : `
+        <tr><td colspan="5">Nessuna pagella inserita.</td></tr>
+    `;
+
+    const sectionHtml = sections
+        .filter(section => !["REPORT MATCHIQ COACH", "Sintesi WhatsApp"].includes(section.title))
+        .map(section => `
+            <section class="print-section">
+                <h2>${escapePrintHtml(section.title)}</h2>
+                ${section.lines.map(line => `<p>${escapePrintHtml(line)}</p>`).join("")}
+            </section>
+        `).join("");
 
     return `
 <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>MatchIQ Coach PDF</title>
+<title>MatchIQ Coach Report</title>
 <style>
 @page{
     size:A4;
-    margin:16mm;
+    margin:14mm;
 }
 
 *{
@@ -401,101 +435,131 @@ body{
 }
 
 .print-wrap{
-    max-width:780px;
+    max-width:800px;
     margin:0 auto;
 }
 
-.print-header{
-    border-bottom:3px solid #18f08b;
-    padding-bottom:14px;
+.cover{
+    border-radius:22px;
+    padding:24px;
+    background:linear-gradient(135deg,#06111c,#102a43);
+    color:white;
     margin-bottom:18px;
 }
 
 .brand-row{
     display:flex;
-    align-items:center;
     justify-content:space-between;
-    gap:18px;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:28px;
 }
 
 .brand-title{
-    font-size:26px;
+    font-size:30px;
     font-weight:900;
-    letter-spacing:-.5px;
+    letter-spacing:-.7px;
 }
 
 .brand-sub{
-    color:#475467;
+    color:#c8d8ff;
     font-size:12px;
-    margin-top:4px;
+    margin-top:5px;
     font-weight:700;
 }
 
 .badge-print{
-    background:#e8fff4;
-    border:1px solid #18f08b;
-    color:#05603a;
+    background:#18f08b;
+    color:#06111c;
     border-radius:999px;
-    padding:7px 10px;
+    padding:8px 12px;
     font-size:11px;
     font-weight:900;
     white-space:nowrap;
 }
 
 .match-title{
-    margin-top:18px;
-    font-size:24px;
+    font-size:28px;
     font-weight:900;
     letter-spacing:-.5px;
+    margin-bottom:8px;
 }
 
 .score-line{
-    margin-top:6px;
-    font-size:34px;
+    font-size:44px;
     font-weight:900;
-    color:#111827;
+    color:#18f08b;
+    margin-bottom:14px;
 }
 
-.meta-grid{
+.cover-meta{
     display:grid;
     grid-template-columns:repeat(4,1fr);
-    gap:8px;
-    margin:16px 0 20px;
+    gap:9px;
+    margin-top:18px;
 }
 
-.meta-card{
-    border:1px solid #e4e7ec;
-    border-radius:12px;
-    padding:10px;
-    background:#f9fafb;
+.cover-card{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:14px;
+    padding:11px;
 }
 
-.meta-label{
-    color:#667085;
+.cover-label{
+    color:#b7c7ef;
     font-size:10px;
     text-transform:uppercase;
     font-weight:900;
     margin-bottom:5px;
 }
 
-.meta-value{
+.cover-value{
     font-size:13px;
     font-weight:900;
+}
+
+.summary-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:14px;
+}
+
+.summary-card{
+    border:1px solid #e4e7ec;
+    border-radius:16px;
+    padding:13px;
+    background:#f9fafb;
+}
+
+.summary-label{
+    color:#667085;
+    font-size:10px;
+    text-transform:uppercase;
+    font-weight:900;
+    margin-bottom:6px;
+}
+
+.summary-value{
     color:#101828;
+    font-size:14px;
+    font-weight:900;
+    line-height:1.35;
 }
 
 .print-section{
     break-inside:avoid;
     page-break-inside:avoid;
     border:1px solid #e4e7ec;
-    border-radius:14px;
-    padding:14px 16px;
+    border-radius:16px;
+    padding:15px 17px;
     margin-bottom:12px;
 }
 
 .print-section h2{
-    margin:0 0 8px;
-    font-size:16px;
+    margin:0 0 9px;
+    font-size:17px;
     color:#06111c;
     letter-spacing:-.2px;
 }
@@ -504,7 +568,75 @@ body{
     margin:0 0 6px;
     color:#344054;
     font-size:12.5px;
-    line-height:1.45;
+    line-height:1.48;
+}
+
+.table-section{
+    break-inside:avoid;
+    page-break-inside:avoid;
+    margin-bottom:14px;
+}
+
+.table-title{
+    font-size:17px;
+    font-weight:900;
+    margin-bottom:8px;
+    color:#06111c;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    border:1px solid #e4e7ec;
+    border-radius:14px;
+    overflow:hidden;
+    font-size:11.5px;
+}
+
+th{
+    text-align:left;
+    background:#f2f4f7;
+    color:#475467;
+    padding:9px;
+    text-transform:uppercase;
+    font-size:10px;
+    font-weight:900;
+}
+
+td{
+    border-top:1px solid #e4e7ec;
+    padding:9px;
+    color:#344054;
+    vertical-align:top;
+}
+
+.vote{
+    font-size:16px;
+    font-weight:900;
+    color:#05603a;
+}
+
+.training-box{
+    border:2px solid #18f08b;
+    background:#ecfff5;
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:14px;
+    break-inside:avoid;
+}
+
+.training-box h2{
+    color:#05603a;
+    margin:0 0 8px;
+    font-size:18px;
+}
+
+.training-box p{
+    color:#064e3b;
+    font-size:13px;
+    line-height:1.5;
+    margin:0;
+    font-weight:700;
 }
 
 .print-footer{
@@ -526,49 +658,101 @@ body{
 }
 </style>
 </head>
+
 <body>
 <div class="print-wrap">
-    <header class="print-header">
+
+    <section class="cover">
         <div class="brand-row">
             <div>
                 <div class="brand-title">MatchIQ Coach</div>
-                <div class="brand-sub">Report tecnico per calcio dilettantistico</div>
+                <div class="brand-sub">Report tecnico professionale per calcio dilettantistico</div>
             </div>
-            <div class="badge-print">REPORT PDF</div>
+            <div class="badge-print">COACH REPORT V2</div>
         </div>
 
         <div class="match-title">${escapePrintHtml(m.homeTeam)} vs ${escapePrintHtml(m.awayTeam)}</div>
         <div class="score-line">${homeGoals} - ${awayGoals}</div>
-    </header>
 
-    <div class="meta-grid">
-        <div class="meta-card">
-            <div class="meta-label">Categoria</div>
-            <div class="meta-value">${escapePrintHtml(m.category || "Dilettanti")}</div>
+        <div class="cover-meta">
+            <div class="cover-card">
+                <div class="cover-label">Categoria</div>
+                <div class="cover-value">${escapePrintHtml(m.category || "Dilettanti")}</div>
+            </div>
+            <div class="cover-card">
+                <div class="cover-label">Data</div>
+                <div class="cover-value">${escapePrintHtml(m.date || "--")}</div>
+            </div>
+            <div class="cover-card">
+                <div class="cover-label">Modulo casa</div>
+                <div class="cover-value">${escapePrintHtml(m.homeShape || "--")}</div>
+            </div>
+            <div class="cover-card">
+                <div class="cover-label">Modulo trasferta</div>
+                <div class="cover-value">${escapePrintHtml(m.awayShape || "--")}</div>
+            </div>
         </div>
+    </section>
 
-        <div class="meta-card">
-            <div class="meta-label">Data</div>
-            <div class="meta-value">${escapePrintHtml(m.date || "--")}</div>
+    <section class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-label">Eventi registrati</div>
+            <div class="summary-value">${coachState.events.length}</div>
         </div>
+        <div class="summary-card">
+            <div class="summary-label">Pagelle inserite</div>
+            <div class="summary-value">${coachState.ratings.length}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Migliore</div>
+            <div class="summary-value">${best ? `${escapePrintHtml(best.player)} · ${escapePrintHtml(best.vote)}` : "Non inserito"}</div>
+        </div>
+    </section>
 
-        <div class="meta-card">
-            <div class="meta-label">Eventi</div>
-            <div class="meta-value">${coachState.events.length}</div>
-        </div>
-
-        <div class="meta-card">
-            <div class="meta-label">Pagelle</div>
-            <div class="meta-value">${coachState.ratings.length}</div>
-        </div>
-    </div>
+    <section class="training-box">
+        <h2>Focus allenamento consigliato</h2>
+        <p>${escapePrintHtml(buildTrainingAdvice())}</p>
+    </section>
 
     ${sectionHtml}
 
+    <section class="table-section">
+        <div class="table-title">Timeline eventi</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Min.</th>
+                    <th>Evento</th>
+                    <th>Squadra</th>
+                    <th>Giocatore</th>
+                    <th>Nota</th>
+                </tr>
+            </thead>
+            <tbody>${eventsHtml}</tbody>
+        </table>
+    </section>
+
+    <section class="table-section">
+        <div class="table-title">Pagelle giocatori</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Giocatore</th>
+                    <th>Squadra</th>
+                    <th>Ruolo</th>
+                    <th>Voto</th>
+                    <th>Nota</th>
+                </tr>
+            </thead>
+            <tbody>${ratingsHtml}</tbody>
+        </table>
+    </section>
+
     <footer class="print-footer">
-        <span>Generato con MatchIQ Coach</span>
+        <span>Generated by MatchIQ Tactical · Coach Mode</span>
         <span>${escapePrintHtml(generatedAt)}</span>
     </footer>
+
 </div>
 </body>
 </html>
@@ -597,7 +781,7 @@ function printCoachPdf(){
         return;
     }
 
-    const printWindow = window.open("", "_blank", "width=900,height=1100");
+    const printWindow = window.open("", "_blank", "width=920,height=1100");
 
     if(!printWindow){
         showNotice("Popup bloccato. Consenti i popup per scaricare il PDF.", "warn");
@@ -607,7 +791,6 @@ function printCoachPdf(){
     printWindow.document.open();
     printWindow.document.write(printable);
     printWindow.document.close();
-
     printWindow.focus();
 
     setTimeout(() => {
@@ -617,5 +800,5 @@ function printCoachPdf(){
             incrementCoachUsageCount(COACH_USAGE_KEYS.pdfExports);
             renderAll();
         }
-    }, 500);
+    }, 650);
 }
