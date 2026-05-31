@@ -210,7 +210,10 @@ def login(data: LoginRequest):
         raise HTTPException(status_code=401, detail="Email o password non corretti")
     if not user.get("is_active"):
         raise HTTPException(status_code=403, detail="Utente disattivato")
-    if not user.get("email_verified") and not is_owner_or_admin(user):
+    # TEMP SAFE MODE: non bloccare il login se Brevo/email non arriva.
+    # L'account mostra comunque email_verified=False finche non viene verificata.
+    EMAIL_VERIFICATION_LOGIN_BLOCK = os.getenv("EMAIL_VERIFICATION_LOGIN_BLOCK", "0") == "1"
+    if EMAIL_VERIFICATION_LOGIN_BLOCK and not user.get("email_verified") and not is_owner_or_admin(user):
         raise HTTPException(status_code=403, detail="Devi verificare la tua email prima di accedere.")
     token = create_access_token(user_id=user["id"], email=user["email"], plan=user["plan"])
     return {
