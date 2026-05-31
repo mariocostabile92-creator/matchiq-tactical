@@ -7,6 +7,7 @@ from app.routers.live import create_live_router
 from app.routers.admin_beta import router as admin_beta_router, require_admin_token
 from app.routers.admin_users import router as admin_users_router
 from app.routers.admin_analytics import router as admin_analytics_router
+from app.routers.frontend import router as frontend_router, FRONTEND_DIR
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
 from datetime import datetime, timezone
@@ -22,7 +23,6 @@ from app.services.scout_service import (
 
 from fastapi import FastAPI, Query, Depends, Body, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.utils.cache import (
     cache_valid,
@@ -513,64 +513,10 @@ app.include_router(admin_analytics_router)
 
 
 # =========================================================
-# FRONTEND STATIC
+# FRONTEND ROUTER
 # =========================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
-
-logger.info("FRONTEND_DIR: %s", FRONTEND_DIR)
-logger.info("FRONTEND EXISTS: %s", os.path.exists(FRONTEND_DIR))
-
-if os.path.exists(FRONTEND_DIR):
-
-    @app.get("/")
-    def serve_home():
-        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
-
-    @app.get("/index.html")
-    def serve_index_html():
-        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
-
-    @app.get("/admin-beta.html")
-    def serve_admin_beta():
-        return FileResponse(os.path.join(FRONTEND_DIR, "admin-beta.html"))
-
-    @app.get("/admin")
-    def serve_admin_alias():
-        return FileResponse(os.path.join(FRONTEND_DIR, "admin-beta.html"))
-
-    @app.get("/admin-analytics.html")
-    def serve_admin_analytics():
-        return FileResponse(os.path.join(FRONTEND_DIR, "admin-analytics.html"))
-
-    @app.get("/scout.html")
-    def serve_scout():
-        return FileResponse(os.path.join(FRONTEND_DIR, "scout.html"))
-
-    @app.get("/match.html")
-    def serve_match():
-        return FileResponse(os.path.join(FRONTEND_DIR, "match.html"))
-
-    @app.get("/login.html")
-    def serve_login():
-        return FileResponse(os.path.join(FRONTEND_DIR, "login.html"))
-
-    @app.get("/register.html")
-    def serve_register():
-        return FileResponse(os.path.join(FRONTEND_DIR, "register.html"))
-
-    @app.get("/admin-users.html")
-    def serve_admin_users():
-        return FileResponse(os.path.join(FRONTEND_DIR, "admin-users.html"))
-
-    @app.get("/verify-email.html")
-    def serve_verify_email():
-        return FileResponse(os.path.join(FRONTEND_DIR, "verify-email.html"))
-
-    @app.get("/reset-password.html")
-    def serve_reset_password():
-        return FileResponse(os.path.join(FRONTEND_DIR, "reset-password.html"))
+app.include_router(frontend_router)
 
 
 def get_services_status():
