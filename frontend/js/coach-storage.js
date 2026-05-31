@@ -1,3 +1,41 @@
+async function trackCoachFeature(feature, metadata = {}){
+    try{
+        const headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        };
+
+        if(window.MatchIQAuth && typeof MatchIQAuth.authHeaders === "function"){
+            Object.assign(headers, MatchIQAuth.authHeaders({
+                "Content-Type": "application/json"
+            }));
+        }else{
+            const token = localStorage.getItem("matchiq_auth_token") || sessionStorage.getItem("matchiq_auth_token");
+            if(token){
+                headers["Authorization"] = "Bearer " + token;
+            }
+        }
+
+        await fetch("/api/coach/track", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+                feature,
+                metadata: {
+                    source: "coach",
+                    path: window.location.pathname,
+                    is_pwa: Boolean(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches),
+                    timestamp: new Date().toISOString(),
+                    ...metadata
+                }
+            }),
+            keepalive: true
+        });
+    }catch(e){
+        console.warn("[Coach Tracking] Tracking non disponibile:", e);
+    }
+}
+
 function saveState(){
     try{
         localStorage.setItem(STORAGE_KEY, JSON.stringify(coachState));
@@ -84,6 +122,12 @@ function saveCurrentMatchToHistory(){
 
     history.unshift(item);
     saveHistory(history);
+
+    trackCoachFeature("coach_history", {
+        events: coachState.events.length,
+        ratings: coachState.ratings.length,
+        has_report: Boolean(coachState.report)
+    });
 
     renderHistory();
     renderStatus();

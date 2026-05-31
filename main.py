@@ -7,6 +7,7 @@ from app.routers.live import create_live_router
 from app.routers.admin_beta import router as admin_beta_router, require_admin_token
 from app.routers.admin_users import router as admin_users_router
 from app.routers.admin_analytics import router as admin_analytics_router
+from app.routers.coach_tracking import router as coach_tracking_router
 from app.routers.frontend import router as frontend_router, FRONTEND_DIR
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
@@ -133,6 +134,7 @@ app.add_middleware(
 init_db()
 app.include_router(auth_router)
 app.include_router(payments_router)
+app.include_router(coach_tracking_router)
 
 
 # =========================================================
