@@ -3,195 +3,46 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MatchIQ Admin Beta Requests V8.0.5 Secure</title>
+<title>MatchIQ Admin Beta V9</title>
+<script src="js/auth.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-    font-family:Inter,Arial,sans-serif;
-    min-height:100vh;
-    color:#fff;
-    background:radial-gradient(circle at top,#152343,#070b16 55%,#03050b);
-}
-.topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:16px;
-    padding:24px 34px;
-    background:rgba(9,15,32,.94);
-    border-bottom:1px solid rgba(255,255,255,.08);
-    position:sticky;
-    top:0;
-    z-index:10;
-}
+body{font-family:Inter,Arial,sans-serif;min-height:100vh;color:#fff;background:radial-gradient(circle at top,#152343,#070b16 55%,#03050b)}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:24px 34px;background:rgba(9,15,32,.94);border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;z-index:10}
 .logo{font-size:26px;font-weight:1000}
 .subtitle{color:#8fa3d7;font-size:13px;margin-top:4px}
 .actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.btn{
-    border:0;
-    border-radius:14px;
-    padding:12px 16px;
-    color:#fff;
-    font-weight:1000;
-    cursor:pointer;
-    background:linear-gradient(135deg,#2f6bff,#7c4dff);
-}
+.btn{border:0;border-radius:14px;padding:12px 16px;color:#fff;font-weight:1000;cursor:pointer;background:linear-gradient(135deg,#2f6bff,#7c4dff)}
 .btn.dark{background:rgba(255,255,255,.08)}
 .btn.green{background:linear-gradient(135deg,#00c980,#2f6bff)}
 .btn.gold{background:linear-gradient(135deg,#f7b733,#fc4a1a)}
 .btn.red{background:linear-gradient(135deg,#ff4058,#8b1d35)}
-.btn.small-btn{
-    padding:8px 10px;
-    border-radius:10px;
-    font-size:12px;
-}
+.btn.small-btn{padding:8px 10px;border-radius:10px;font-size:12px}
 .main{max-width:1650px;margin:auto;padding:32px}
-.status-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:16px;
-    margin-bottom:26px;
-}
-.status-card{
-    background:rgba(255,255,255,.055);
-    border:1px solid rgba(255,255,255,.09);
-    border-radius:22px;
-    padding:18px;
-    font-weight:1000;
-}
-.dot{
-    display:inline-block;
-    width:10px;
-    height:10px;
-    border-radius:50%;
-    background:#32ff96;
-    margin-right:8px;
-}
-.dot.warn{background:#f7b733}
-.dot.bad{background:#ff4058}
-.hero{
-    background:rgba(255,255,255,.055);
-    border:1px solid rgba(255,255,255,.09);
-    border-radius:30px;
-    padding:28px;
-    margin-bottom:24px;
-}
-.badge{
-    display:inline-block;
-    padding:8px 12px;
-    border-radius:999px;
-    background:rgba(0,245,160,.12);
-    border:1px solid rgba(0,245,160,.35);
-    color:#00f5a0;
-    font-size:12px;
-    font-weight:1000;
-    margin-bottom:14px;
-}
-.badge.secure{
-    background:rgba(47,107,255,.16);
-    border-color:rgba(47,107,255,.38);
-    color:#8fb1ff;
-}
+.status-grid,.stats-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.status-card,.stat-box{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:18px;font-weight:1000}
+.stat-box small{color:#8fa3d7;font-size:12px;font-weight:1000;text-transform:uppercase}
+.stat-box strong{display:block;font-size:30px;margin-top:8px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#32ff96;margin-right:8px}
+.hero,.panel{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);border-radius:30px;padding:28px;margin-bottom:24px}
+.badge{display:inline-block;padding:8px 12px;border-radius:999px;background:rgba(0,245,160,.12);border:1px solid rgba(0,245,160,.35);color:#00f5a0;font-size:12px;font-weight:1000;margin-bottom:14px}
+.badge.secure{background:rgba(47,107,255,.16);border-color:rgba(47,107,255,.38);color:#8fb1ff}
 .hero h1{font-size:38px;margin-bottom:10px}
 .hero p{color:#b7c7ef;line-height:1.7}
-.stats-mini{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-    gap:14px;
-    margin:0 0 24px;
-}
-.stat-box{
-    background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:22px;
-    padding:18px;
-}
-.stat-box small{
-    color:#8fa3d7;
-    font-size:12px;
-    font-weight:1000;
-    text-transform:uppercase;
-}
-.stat-box strong{
-    display:block;
-    font-size:30px;
-    margin-top:8px;
-}
-.panel{
-    background:rgba(255,255,255,.055);
-    border:1px solid rgba(255,255,255,.09);
-    border-radius:26px;
-    padding:22px;
-}
-.panel-head{
-    display:flex;
-    justify-content:space-between;
-    gap:12px;
-    align-items:center;
-    margin-bottom:18px;
-}
+.panel-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px}
 .panel-head h2{font-size:24px}
-.controls{
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
-}
-input,select,textarea{
-    border:1px solid rgba(255,255,255,.10);
-    background:rgba(4,8,18,.85);
-    color:#fff;
-    border-radius:14px;
-    padding:12px 14px;
-    outline:none;
-    font-weight:800;
-}
-textarea{
-    width:100%;
-    min-height:64px;
-    resize:vertical;
-    font-size:12px;
-    line-height:1.4;
-}
-.table-wrap{
-    width:100%;
-    overflow:auto;
-    border-radius:20px;
-    border:1px solid rgba(255,255,255,.08);
-}
-table{
-    width:100%;
-    border-collapse:collapse;
-    min-width:1780px;
-}
-th,td{
-    text-align:left;
-    padding:14px 16px;
-    border-bottom:1px solid rgba(255,255,255,.07);
-    vertical-align:top;
-}
-th{
-    color:#8fa3d7;
-    font-size:12px;
-    text-transform:uppercase;
-    background:rgba(255,255,255,.045);
-}
+.controls{display:flex;gap:12px;flex-wrap:wrap}
+input,select,textarea{border:1px solid rgba(255,255,255,.10);background:rgba(4,8,18,.85);color:#fff;border-radius:14px;padding:12px 14px;outline:none;font-weight:800}
+textarea{width:100%;min-height:64px;resize:vertical;font-size:12px;line-height:1.4}
+.table-wrap{width:100%;overflow:auto;border-radius:20px;border:1px solid rgba(255,255,255,.08)}
+table{width:100%;border-collapse:collapse;min-width:1780px}
+th,td{text-align:left;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top}
+th{color:#8fa3d7;font-size:12px;text-transform:uppercase;background:rgba(255,255,255,.045)}
 td{color:#eaf0ff;font-size:14px}
-.reason{
-    color:#aebee7;
-    max-width:300px;
-    white-space:normal;
-    line-height:1.45;
-}
+.reason{color:#aebee7;max-width:300px;white-space:normal;line-height:1.45}
 .email{color:#00f5a0;font-weight:900}
-.profile-pill,.plan-pill,.status-pill,.template-pill,.code-pill{
-    display:inline-block;
-    padding:6px 10px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:1000;
-    border:1px solid rgba(255,255,255,.14);
-}
+.profile-pill,.plan-pill,.status-pill,.template-pill,.code-pill{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:1000;border:1px solid rgba(255,255,255,.14)}
 .profile-scout{background:rgba(0,245,160,.13);color:#00f5a0}
 .profile-analista{background:rgba(47,107,255,.16);color:#8fb1ff}
 .profile-creator{background:rgba(247,183,51,.14);color:#ffe28a}
@@ -204,631 +55,379 @@ td{color:#eaf0ff;font-size:14px}
 .status-convertito{background:rgba(0,201,128,.22);color:#7dffca}
 .status-scartato{background:rgba(255,64,88,.13);color:#ff9aaa}
 .template-pill{background:rgba(0,245,160,.10);color:#00f5a0}
-.code-pill{
-    background:rgba(247,183,51,.14);
-    color:#ffe28a;
-    font-family:Consolas,monospace;
-    letter-spacing:.4px;
-}
-.no-code{
-    display:inline-block;
-    padding:8px 10px;
-    border-radius:999px;
-    background:rgba(255,255,255,.07);
-    color:#8fa3d7;
-    font-size:12px;
-    font-weight:1000;
-}
-.row-actions{display:flex;gap:8px;flex-wrap:wrap}
+.code-pill{background:rgba(247,183,51,.14);color:#ffe28a;font-family:Consolas,monospace;letter-spacing:.4px}
+.no-code{display:inline-block;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.07);color:#8fa3d7;font-size:12px;font-weight:1000}
+.row-actions,.code-actions{display:flex;gap:8px;flex-wrap:wrap}
 .crm-cell{min-width:260px}
 .template-cell{min-width:240px}
 .code-cell{min-width:230px}
 .crm-status{width:100%;margin-bottom:8px}
-.empty,.error,.ok{
-    padding:18px;
-    border-radius:18px;
-    margin-top:12px;
-}
+.empty,.error,.ok{padding:18px;border-radius:18px;margin-top:12px}
 .empty{background:rgba(255,255,255,.05);color:#b7c7ef}
-.ok{
-    color:#00f5a0;
-    background:rgba(0,245,160,.10);
-    border:1px solid rgba(0,245,160,.25);
-}
-.error{
-    color:#ffb8b8;
-    background:rgba(255,70,70,.12);
-    border:1px solid rgba(255,70,70,.25);
-}
-.token-box{
-    background:rgba(47,107,255,.10);
-    border:1px solid rgba(47,107,255,.28);
-    color:#dbe6ff;
-    padding:18px;
-    border-radius:22px;
-    margin-bottom:22px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:14px;
-    flex-wrap:wrap;
-}
-.token-box strong{display:block;margin-bottom:4px}
-.token-box small{color:#9eb1e8}
-.token-ok{
-    color:#00f5a0;
-}
-.token-missing{
-    color:#ffe28a;
-}
+.ok{color:#00f5a0;background:rgba(0,245,160,.10);border:1px solid rgba(0,245,160,.25)}
+.error{color:#ffb8b8;background:rgba(255,70,70,.12);border:1px solid rgba(255,70,70,.25)}
 .small{color:#8fa3d7;font-size:12px}
-.note-label{
-    display:block;
-    color:#8fa3d7;
-    font-size:11px;
-    font-weight:1000;
-    margin:8px 0 6px;
-}
-.updated{
-    color:#8fa3d7;
-    font-size:11px;
-    margin-top:6px;
-}
-.template-preview,.code-help{
-    color:#aebee7;
-    font-size:12px;
-    line-height:1.45;
-    margin-top:8px;
-}
-.code-actions{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    margin-top:8px;
-}
-@media(max-width:900px){
-    .topbar{flex-direction:column;align-items:flex-start}
-    .panel-head{flex-direction:column;align-items:flex-start}
-    .token-box{align-items:flex-start}
-}
+.note-label{display:block;color:#8fa3d7;font-size:11px;font-weight:1000;margin:8px 0 6px}
+.updated,.template-preview,.code-help{color:#aebee7;font-size:12px;line-height:1.45;margin-top:8px}
+@media(max-width:900px){.topbar{flex-direction:column;align-items:flex-start}.panel-head{flex-direction:column;align-items:flex-start}.actions,.controls{width:100%}.btn{width:100%}.main{padding:18px}}
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-    <div>
-        <div class="logo">⚽ MatchIQ Admin</div>
-        <div class="subtitle">Beta Requests · V8.0.5 Secure Admin Token</div>
-    </div>
-
-    <div class="actions">
-        <button class="btn dark" onclick="goDashboard()">← Dashboard</button>
-        <button class="btn green" onclick="loadBetaRequests()">Aggiorna richieste</button>
-        <button class="btn gold" onclick="exportBetaCSV()">Export CSV</button>
-        <button class="btn dark" onclick="setAdminToken()">Imposta Admin Token</button>
-        <button class="btn red" onclick="clearAdminToken()">Rimuovi Token</button>
-    </div>
+  <div>
+    <div class="logo">⚽ MatchIQ Admin</div>
+    <div class="subtitle">Beta Requests · V9 Professional</div>
+  </div>
+  <div class="actions">
+    <button class="btn dark" onclick="goDashboard()">← Dashboard</button>
+    <button class="btn dark" onclick="goUsers()">Users</button>
+    <button class="btn dark" onclick="goAnalytics()">Analytics</button>
+    <button class="btn green" onclick="loadBetaRequests()">Aggiorna</button>
+    <button class="btn gold" onclick="exportBetaCSV()">Export CSV</button>
+  </div>
 </div>
 
 <div class="main">
+  <div class="status-grid">
+    <div class="status-card"><span class="dot"></span>ADMIN PANEL ACTIVE</div>
+    <div class="status-card"><span class="dot"></span>BETA DATABASE</div>
+    <div class="status-card"><span class="dot"></span>OWNER ACCESS</div>
+    <div class="status-card"><span class="dot"></span><span id="requestTotal">0 RICHIESTE</span></div>
+  </div>
 
-    <div class="token-box">
-        <div>
-            <strong id="adminTokenTitle">Admin Token</strong>
-            <small id="adminTokenStatus">Verifica token...</small>
-        </div>
-        <div class="small">
-            Gli endpoint admin ora sono protetti da header <strong>X-Admin-Token</strong>.
-        </div>
+  <div class="hero">
+    <span class="badge secure">ADMIN V9 PROFESSIONAL</span>
+    <h1>Gestione richieste accesso Beta</h1>
+    <p>
+      Pannello pulito per gestire lead, stati CRM, codici beta, template email ed export CSV.
+      Il token admin resta una protezione backend, ma non viene più mostrato nella UI.
+    </p>
+  </div>
+
+  <div class="stats-mini">
+    <div class="stat-box"><small>Totale</small><strong id="statTotal">0</strong></div>
+    <div class="stat-box"><small>Nuovi</small><strong id="statNuovo">0</strong></div>
+    <div class="stat-box"><small>Contattati</small><strong id="statContattato">0</strong></div>
+    <div class="stat-box"><small>Interessati</small><strong id="statInteressato">0</strong></div>
+    <div class="stat-box"><small>Convertiti</small><strong id="statConvertito">0</strong></div>
+    <div class="stat-box"><small>Scartati</small><strong id="statScartato">0</strong></div>
+  </div>
+
+  <div class="stats-mini">
+    <div class="stat-box"><small>Scout</small><strong id="statScout">0</strong></div>
+    <div class="stat-box"><small>Analisti</small><strong id="statAnalyst">0</strong></div>
+    <div class="stat-box"><small>Creator</small><strong id="statCreator">0</strong></div>
+    <div class="stat-box"><small>Lead caldi</small><strong id="statHot">0</strong></div>
+    <div class="stat-box"><small>Codici</small><strong id="statCodes">0</strong></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Lista richieste</h2>
+      <div class="controls">
+        <input id="searchInput" placeholder="Cerca nome, email, profilo, codice..." oninput="renderRequests()" />
+        <select id="statusFilter" onchange="renderRequests()">
+          <option value="all">Tutti gli stati</option>
+          <option value="Nuovo">Nuovo</option>
+          <option value="Contattato">Contattato</option>
+          <option value="Interessato">Interessato</option>
+          <option value="Convertito">Convertito</option>
+          <option value="Scartato">Scartato</option>
+        </select>
+        <select id="profileFilter" onchange="renderRequests()">
+          <option value="all">Tutti i profili</option>
+          <option value="Scout">Scout</option>
+          <option value="Analista">Analista</option>
+          <option value="Creator sportivo">Creator sportivo</option>
+          <option value="Scommettitore evoluto">Scommettitore evoluto</option>
+          <option value="Appassionato">Appassionato</option>
+          <option value="Altro">Altro</option>
+        </select>
+        <select id="planFilter" onchange="renderRequests()">
+          <option value="all">Tutti gli interessi</option>
+          <option value="Beta gratuita">Beta gratuita</option>
+          <option value="Piano Pro">Piano Pro</option>
+          <option value="Collaborazione">Collaborazione</option>
+          <option value="Test prodotto">Test prodotto</option>
+        </select>
+      </div>
     </div>
 
-    <div class="status-grid">
-        <div class="status-card"><span class="dot"></span>ADMIN PANEL ACTIVE</div>
-        <div class="status-card"><span class="dot"></span>BETA DATABASE CONNECTED</div>
-        <div class="status-card"><span class="dot"></span>V8.0.5 SECURE TOKEN</div>
-        <div class="status-card"><span class="dot"></span><span id="requestTotal">0 RICHIESTE</span></div>
-    </div>
-
-    <div class="hero">
-        <span class="badge secure">V8.0.5 SECURE ADMIN</span>
-        <h1>Gestione richieste accesso Beta</h1>
-        <p>
-            Visualizza, filtra e gestisci i lead beta di MatchIQ Tactical.
-            Gli endpoint admin sono ora protetti con token privato. Inserisci il token admin una sola volta dal pulsante in alto:
-            verrà salvato solo nel tuo browser e inviato come header <strong>X-Admin-Token</strong>.
-        </p>
-    </div>
-
-    <div class="stats-mini">
-        <div class="stat-box"><small>Totale richieste</small><strong id="statTotal">0</strong></div>
-        <div class="stat-box"><small>Nuovi</small><strong id="statNuovo">0</strong></div>
-        <div class="stat-box"><small>Contattati</small><strong id="statContattato">0</strong></div>
-        <div class="stat-box"><small>Interessati</small><strong id="statInteressato">0</strong></div>
-        <div class="stat-box"><small>Convertiti</small><strong id="statConvertito">0</strong></div>
-        <div class="stat-box"><small>Scartati</small><strong id="statScartato">0</strong></div>
-    </div>
-
-    <div class="stats-mini">
-        <div class="stat-box"><small>Scout</small><strong id="statScout">0</strong></div>
-        <div class="stat-box"><small>Analisti</small><strong id="statAnalyst">0</strong></div>
-        <div class="stat-box"><small>Creator</small><strong id="statCreator">0</strong></div>
-        <div class="stat-box"><small>Lead caldi</small><strong id="statHot">0</strong></div>
-        <div class="stat-box"><small>Codici generati</small><strong id="statCodes">0</strong></div>
-    </div>
-
-    <div class="panel">
-        <div class="panel-head">
-            <h2>Lista richieste</h2>
-
-            <div class="controls">
-                <input id="searchInput" placeholder="Cerca nome, email, profilo, codice..." oninput="renderRequests()" />
-
-                <select id="statusFilter" onchange="renderRequests()">
-                    <option value="all">Tutti gli stati</option>
-                    <option value="Nuovo">Nuovo</option>
-                    <option value="Contattato">Contattato</option>
-                    <option value="Interessato">Interessato</option>
-                    <option value="Convertito">Convertito</option>
-                    <option value="Scartato">Scartato</option>
-                </select>
-
-                <select id="profileFilter" onchange="renderRequests()">
-                    <option value="all">Tutti i profili</option>
-                    <option value="Scout">Scout</option>
-                    <option value="Analista">Analista</option>
-                    <option value="Creator sportivo">Creator sportivo</option>
-                    <option value="Scommettitore evoluto">Scommettitore evoluto</option>
-                    <option value="Appassionato">Appassionato</option>
-                    <option value="Altro">Altro</option>
-                </select>
-
-                <select id="planFilter" onchange="renderRequests()">
-                    <option value="all">Tutti gli interessi</option>
-                    <option value="Beta gratuita">Beta gratuita</option>
-                    <option value="Piano Pro">Piano Pro</option>
-                    <option value="Collaborazione">Collaborazione</option>
-                    <option value="Test prodotto">Test prodotto</option>
-                </select>
-            </div>
-        </div>
-
-        <div id="messageBox"></div>
-        <div id="tableBox"><div class="empty">Caricamento richieste beta...</div></div>
-    </div>
-
+    <div id="messageBox"></div>
+    <div id="tableBox"><div class="empty">Caricamento richieste beta...</div></div>
+  </div>
 </div>
 
 <script>
-const APP_VERSION = "10041";
-const ADMIN_TOKEN_STORAGE_KEY = "matchiq_admin_token_v805";
+const APP_VERSION = "10320";
 const VALID_STATUSES = ["Nuovo","Contattato","Interessato","Convertito","Scartato"];
-
 let betaRequests = [];
 
-function goDashboard(){
-    window.location.href = `/index.html?v=${APP_VERSION}`;
-}
+function goDashboard(){window.location.href=`/index.html?v=${APP_VERSION}`}
+function goUsers(){window.location.href=`/admin-users.html?v=${APP_VERSION}`}
+function goAnalytics(){window.location.href=`/admin-analytics.html?v=${APP_VERSION}`}
 
-/* =========================
-   ADMIN TOKEN
-========================= */
-
-function getAdminToken(){
-    return localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) || "";
+function adminHeaders(extra={}){
+  if(window.MatchIQAuth && typeof MatchIQAuth.adminHeaders === "function"){
+    return MatchIQAuth.adminHeaders(extra);
+  }
+  return {"Accept":"application/json",...extra};
 }
 
 function hasAdminToken(){
-    return Boolean(getAdminToken().trim());
+  return Boolean(window.MatchIQAuth && MatchIQAuth.getAdminToken && MatchIQAuth.getAdminToken());
 }
-
-function adminHeaders(extra = {}){
-    const token = getAdminToken().trim();
-
-    const headers = {
-        "Accept": "application/json",
-        ...extra
-    };
-
-    if(token){
-        headers["X-Admin-Token"] = token;
-    }
-
-    return headers;
-}
-
-function updateAdminTokenUI(){
-    const title = document.getElementById("adminTokenTitle");
-    const status = document.getElementById("adminTokenStatus");
-
-    if(!title || !status) return;
-
-    if(hasAdminToken()){
-        title.innerHTML = `<span class="token-ok">Admin Token configurato</span>`;
-        status.textContent = "Il pannello invierà X-Admin-Token nelle richieste protette.";
-    }else{
-        title.innerHTML = `<span class="token-missing">Admin Token mancante</span>`;
-        status.textContent = "Clicca “Imposta Admin Token” e incolla il valore configurato su Railway.";
-    }
-}
-
-function setAdminToken(){
-    const current = getAdminToken();
-    const token = prompt(
-        "Incolla ADMIN_API_TOKEN configurato su Railway.\nIl valore verrà salvato solo in questo browser.",
-        current
-    );
-
-    if(token === null) return;
-
-    const clean = token.trim();
-
-    if(!clean){
-        showMessage("Token vuoto: nessuna modifica salvata.", "error");
-        return;
-    }
-
-    localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, clean);
-    updateAdminTokenUI();
-    showMessage("Admin token salvato nel browser. Ora ricarico le richieste.", "ok");
-    loadBetaRequests();
-}
-
-function clearAdminToken(){
-    localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-    updateAdminTokenUI();
-    betaRequests = [];
-    updateTotal(0);
-    updateStats([]);
-    document.getElementById("tableBox").innerHTML = `<div class="empty">Token rimosso. Imposta nuovamente il token per leggere i lead.</div>`;
-    showMessage("Admin token rimosso dal browser.", "empty");
-}
-
-/* =========================
-   UI MESSAGE
-========================= */
 
 function showMessage(message,type="empty"){
-    const box = document.getElementById("messageBox");
-    if(!box) return;
-    box.innerHTML = `<div class="${type}">${message}</div>`;
+  const box=document.getElementById("messageBox");
+  if(!box)return;
+  box.innerHTML=`<div class="${type}">${message}</div>`;
 }
 
 function clearMessage(){
-    const box = document.getElementById("messageBox");
-    if(box) box.innerHTML = "";
+  const box=document.getElementById("messageBox");
+  if(box)box.innerHTML="";
 }
 
-function handleAuthError(data, fallbackMessage){
-    const detail = data?.detail || data?.message || fallbackMessage || "";
-
-    if(String(detail).toLowerCase().includes("admin token")){
-        showMessage(
-            `Accesso admin bloccato: ${esc(detail)}. Clicca “Imposta Admin Token” e incolla il token configurato su Railway.`,
-            "error"
-        );
-        return true;
-    }
-
-    return false;
+function handleAuthError(data,fallbackMessage){
+  const detail=data?.detail||data?.message||fallbackMessage||"";
+  if(String(detail).toLowerCase().includes("admin token")){
+    showMessage("Accesso admin non configurato su questo dispositivo. Il backend richiede ancora il token interno.", "error");
+    return true;
+  }
+  return false;
 }
-
-/* =========================
-   API
-========================= */
 
 async function loadBetaRequests(){
-    clearMessage();
-    updateAdminTokenUI();
+  clearMessage();
 
-    const tableBox = document.getElementById("tableBox");
-    tableBox.innerHTML = `<div class="empty">Caricamento richieste beta...</div>`;
+  const tableBox=document.getElementById("tableBox");
+  tableBox.innerHTML=`<div class="empty">Caricamento richieste beta...</div>`;
 
-    if(!hasAdminToken()){
-        betaRequests = [];
-        updateTotal(0);
-        updateStats([]);
-        tableBox.innerHTML = `<div class="empty">Admin token mancante. Clicca “Imposta Admin Token” per caricare i lead.</div>`;
-        showMessage("Admin token mancante. Gli endpoint admin sono protetti.", "error");
-        return;
+  if(!hasAdminToken()){
+    betaRequests=[];
+    updateTotal(0);
+    updateStats([]);
+    tableBox.innerHTML=`<div class="empty">Accesso admin non configurato su questo dispositivo.</div>`;
+    showMessage("Token interno mancante. UI pulita attiva: il token non viene più mostrato nel pannello.", "error");
+    return;
+  }
+
+  try{
+    const res=await fetch(`/api/beta-requests?ts=${Date.now()}`,{
+      method:"GET",
+      headers:adminHeaders(),
+      cache:"no-store"
+    });
+
+    const text=await res.text();
+    let data;
+
+    try{data=JSON.parse(text)}
+    catch{throw new Error("Risposta non JSON: "+text.slice(0,120))}
+
+    if(!res.ok || data.ok===false){
+      betaRequests=[];
+      updateTotal(0);
+      updateStats([]);
+      tableBox.innerHTML="";
+      if(handleAuthError(data,"Admin token non valido"))return;
+      showMessage(data.message||data.reason||data.detail||"Errore caricamento richieste beta.","error");
+      return;
     }
 
-    try{
-        const res = await fetch(`/api/beta-requests?ts=${Date.now()}`, {
-            method:"GET",
-            headers: adminHeaders(),
-            cache:"no-store"
-        });
+    const requests=Array.isArray(data.requests)?data.requests:Array.isArray(data.data)?data.data:Array.isArray(data.items)?data.items:Array.isArray(data.leads)?data.leads:[];
+    betaRequests=requests.map(normalizeRequest);
 
-        const text = await res.text();
+    updateTotal(betaRequests.length);
+    updateStats(betaRequests);
+    renderRequests();
 
-        let data;
-        try{
-            data = JSON.parse(text);
-        }catch(parseErr){
-            throw new Error("Risposta non JSON: " + text.slice(0,120));
-        }
+    showMessage(betaRequests.length?`Richieste caricate: ${betaRequests.length}`:"Nessuna richiesta beta presente.",betaRequests.length?"ok":"empty");
 
-        if(!res.ok || data.ok === false){
-            betaRequests = [];
-            updateTotal(0);
-            updateStats([]);
-            tableBox.innerHTML = "";
-
-            if(handleAuthError(data, "Admin token non valido")){
-                return;
-            }
-
-            showMessage(data.message || data.reason || data.detail || "Errore caricamento richieste beta.", "error");
-            return;
-        }
-
-        const requests = Array.isArray(data.requests)
-            ? data.requests
-            : Array.isArray(data.data)
-                ? data.data
-                : Array.isArray(data.items)
-                    ? data.items
-                    : Array.isArray(data.leads)
-                        ? data.leads
-                        : [];
-
-        betaRequests = requests.map(normalizeRequest);
-        updateTotal(betaRequests.length);
-        updateStats(betaRequests);
-
-        if(betaRequests.length){
-            showMessage(`Richieste caricate correttamente: ${betaRequests.length}`, "ok");
-        }else{
-            showMessage("Nessuna richiesta beta presente.", "empty");
-        }
-
-        renderRequests();
-
-    }catch(e){
-        betaRequests = [];
-        updateTotal(0);
-        updateStats([]);
-        tableBox.innerHTML = "";
-        showMessage("Errore caricamento: " + e.message, "error");
-    }
+  }catch(e){
+    betaRequests=[];
+    updateTotal(0);
+    updateStats([]);
+    tableBox.innerHTML="";
+    showMessage("Errore caricamento: "+e.message,"error");
+  }
 }
 
 function normalizeRequest(r){
-    return {
-        id: r.id,
-        name: r.name || "",
-        email: r.email || "",
-        profile: r.profile || "",
-        plan: r.plan || r.interest || "Beta gratuita",
-        reason: r.reason || r.message || "",
-        source: r.source || "",
-        status: VALID_STATUSES.includes(r.status) ? r.status : "Nuovo",
-        internal_note: r.internal_note || "",
-        beta_code: r.beta_code || "",
-        created_at: r.created_at || "",
-        updated_at: r.updated_at || ""
-    };
+  return {
+    id:r.id,
+    name:r.name||"",
+    email:r.email||"",
+    profile:r.profile||"",
+    plan:r.plan||r.interest||"Beta gratuita",
+    reason:r.reason||r.message||"",
+    source:r.source||"",
+    status:VALID_STATUSES.includes(r.status)?r.status:"Nuovo",
+    internal_note:r.internal_note||"",
+    beta_code:r.beta_code||"",
+    created_at:r.created_at||"",
+    updated_at:r.updated_at||""
+  };
 }
 
 function renderRequests(){
-    const tableBox = document.getElementById("tableBox");
-    const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
-    const status = document.getElementById("statusFilter")?.value || "all";
-    const profile = document.getElementById("profileFilter")?.value || "all";
-    const plan = document.getElementById("planFilter")?.value || "all";
+  const tableBox=document.getElementById("tableBox");
+  const q=(document.getElementById("searchInput")?.value||"").toLowerCase().trim();
+  const status=document.getElementById("statusFilter")?.value||"all";
+  const profile=document.getElementById("profileFilter")?.value||"all";
+  const plan=document.getElementById("planFilter")?.value||"all";
 
-    const list = betaRequests.filter(r => {
-        const haystack = [
-            r.id,
-            r.name,
-            r.email,
-            r.profile,
-            r.plan,
-            r.reason,
-            r.status,
-            r.internal_note,
-            r.beta_code,
-            r.source,
-            r.created_at
-        ].join(" ").toLowerCase();
+  const list=betaRequests.filter(r=>{
+    const haystack=[r.id,r.name,r.email,r.profile,r.plan,r.reason,r.status,r.internal_note,r.beta_code,r.source,r.created_at].join(" ").toLowerCase();
+    return (!q||haystack.includes(q)) &&
+      (status==="all"||String(r.status||"")===status) &&
+      (profile==="all"||String(r.profile||"")===profile) &&
+      (plan==="all"||String(r.plan||"")===plan);
+  });
 
-        return (!q || haystack.includes(q)) &&
-               (status === "all" || String(r.status || "") === status) &&
-               (profile === "all" || String(r.profile || "") === profile) &&
-               (plan === "all" || String(r.plan || "") === plan);
-    });
+  updateTotal(list.length);
 
-    updateTotal(list.length);
+  if(!list.length){
+    tableBox.innerHTML=`<div class="empty">Nessuna richiesta beta trovata.</div>`;
+    return;
+  }
 
-    if(!list.length){
-        tableBox.innerHTML = `<div class="empty">Nessuna richiesta beta trovata.</div>`;
-        return;
-    }
-
-    tableBox.innerHTML = `
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Email</th>
-                        <th>Profilo</th>
-                        <th>Interesse</th>
-                        <th>Stato</th>
-                        <th>Motivo</th>
-                        <th>CRM</th>
-                        <th>Codice Beta</th>
-                        <th>Template</th>
-                        <th>Data</th>
-                        <th>Azioni</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${list.map(r => {
-                        const template = buildEmailTemplate(r);
-                        return `
-                        <tr>
-                            <td>${esc(r.id)}</td>
-                            <td><strong>${esc(r.name)}</strong></td>
-                            <td class="email">${esc(r.email)}</td>
-                            <td><span class="profile-pill ${profileClass(r.profile)}">${esc(r.profile)}</span></td>
-                            <td><span class="plan-pill">${esc(r.plan || "-")}</span></td>
-                            <td><span class="status-pill ${statusClass(r.status)}">${esc(r.status)}</span></td>
-                            <td class="reason">${esc(r.reason || "-")}</td>
-                            <td class="crm-cell">
-                                <select class="crm-status" id="status_${escAttr(r.id)}">
-                                    ${VALID_STATUSES.map(s => `
-                                        <option value="${escAttr(s)}" ${s === r.status ? "selected" : ""}>${esc(s)}</option>
-                                    `).join("")}
-                                </select>
-
-                                <label class="note-label">Nota interna</label>
-                                <textarea id="note_${escAttr(r.id)}" placeholder="Es. Da ricontattare, vuole demo, interessato Pro...">${esc(r.internal_note || "")}</textarea>
-
-                                <div class="updated">
-                                    Aggiornato: ${formatDate(r.updated_at || r.created_at)}
-                                </div>
-                            </td>
-                            <td class="code-cell">
-                                ${r.beta_code
-                                    ? `<span class="code-pill">${esc(r.beta_code)}</span>
-                                       <div class="code-help">Codice personale già assegnato.</div>`
-                                    : `<span class="no-code">Nessun codice</span>
-                                       <div class="code-help">Genera un codice beta per questo lead.</div>`
-                                }
-                                <div class="code-actions">
-                                    <button class="btn green small-btn" onclick="generateBetaCode('${escAttr(r.id)}')">Genera codice</button>
-                                    <button class="btn dark small-btn" onclick="copyBetaCode('${escAttr(r.id)}')">Copia codice</button>
-                                </div>
-                            </td>
-                            <td class="template-cell">
-                                <span class="template-pill">${esc(template.label)}</span>
-                                <div class="template-preview">${esc(template.preview)}</div>
-                            </td>
-                            <td>
-                                ${formatDate(r.created_at)}
-                                <div class="small">${esc(r.source || "")}</div>
-                            </td>
-                            <td>
-                                <div class="row-actions">
-                                    <button class="btn green small-btn" onclick="saveLeadCRM('${escAttr(r.id)}')">Salva CRM</button>
-                                    <button class="btn dark small-btn" onclick="copyEmail('${escAttr(r.email)}')">Copia email</button>
-                                    <button class="btn gold small-btn" onclick="openMailById('${escAttr(r.id)}')">Mail</button>
-                                    <button class="btn dark small-btn" onclick="copyTemplateById('${escAttr(r.id)}')">Copia template</button>
-                                    <button class="btn dark small-btn" onclick="quickStatus('${escAttr(r.id)}','Contattato')">Contattato</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `}).join("")}
-                </tbody>
-            </table>
-        </div>
-    `;
+  tableBox.innerHTML=`
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Nome</th><th>Email</th><th>Profilo</th><th>Interesse</th><th>Stato</th><th>Motivo</th><th>CRM</th><th>Codice Beta</th><th>Template</th><th>Data</th><th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(r=>{
+            const template=buildEmailTemplate(r);
+            return `
+              <tr>
+                <td>${esc(r.id)}</td>
+                <td><strong>${esc(r.name)}</strong></td>
+                <td class="email">${esc(r.email)}</td>
+                <td><span class="profile-pill ${profileClass(r.profile)}">${esc(r.profile)}</span></td>
+                <td><span class="plan-pill">${esc(r.plan||"-")}</span></td>
+                <td><span class="status-pill ${statusClass(r.status)}">${esc(r.status)}</span></td>
+                <td class="reason">${esc(r.reason||"-")}</td>
+                <td class="crm-cell">
+                  <select class="crm-status" id="status_${escAttr(r.id)}">
+                    ${VALID_STATUSES.map(s=>`<option value="${escAttr(s)}" ${s===r.status?"selected":""}>${esc(s)}</option>`).join("")}
+                  </select>
+                  <label class="note-label">Nota interna</label>
+                  <textarea id="note_${escAttr(r.id)}" placeholder="Es. Da ricontattare, vuole demo, interessato Pro...">${esc(r.internal_note||"")}</textarea>
+                  <div class="updated">Aggiornato: ${formatDate(r.updated_at||r.created_at)}</div>
+                </td>
+                <td class="code-cell">
+                  ${r.beta_code?`<span class="code-pill">${esc(r.beta_code)}</span><div class="code-help">Codice personale già assegnato.</div>`:`<span class="no-code">Nessun codice</span><div class="code-help">Genera un codice beta per questo lead.</div>`}
+                  <div class="code-actions">
+                    <button class="btn green small-btn" onclick="generateBetaCode('${escAttr(r.id)}')">Genera codice</button>
+                    <button class="btn dark small-btn" onclick="copyBetaCode('${escAttr(r.id)}')">Copia codice</button>
+                  </div>
+                </td>
+                <td class="template-cell">
+                  <span class="template-pill">${esc(template.label)}</span>
+                  <div class="template-preview">${esc(template.preview)}</div>
+                </td>
+                <td>${formatDate(r.created_at)}<div class="small">${esc(r.source||"")}</div></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn green small-btn" onclick="saveLeadCRM('${escAttr(r.id)}')">Salva CRM</button>
+                    <button class="btn dark small-btn" onclick="copyEmail('${escAttr(r.email)}')">Copia email</button>
+                    <button class="btn gold small-btn" onclick="openMailById('${escAttr(r.id)}')">Mail</button>
+                    <button class="btn dark small-btn" onclick="copyTemplateById('${escAttr(r.id)}')">Copia template</button>
+                    <button class="btn dark small-btn" onclick="quickStatus('${escAttr(r.id)}','Contattato')">Contattato</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 function updateTotal(value){
-    const total = document.getElementById("requestTotal");
-    if(total) total.textContent = `${value} RICHIESTE`;
+  const total=document.getElementById("requestTotal");
+  if(total)total.textContent=`${value} RICHIESTE`;
 }
 
 function updateStats(list){
-    const total = list.length;
-    const countStatus = status => list.filter(r => String(r.status || "Nuovo") === status).length;
-    const scout = list.filter(r => String(r.profile || "") === "Scout").length;
-    const analyst = list.filter(r => String(r.profile || "") === "Analista").length;
-    const creator = list.filter(r => String(r.profile || "") === "Creator sportivo").length;
-    const hot = list.filter(r => ["Interessato","Convertito"].includes(String(r.status || ""))).length;
-    const codes = list.filter(r => String(r.beta_code || "").trim()).length;
-
-    setText("statTotal", total);
-    setText("statNuovo", countStatus("Nuovo"));
-    setText("statContattato", countStatus("Contattato"));
-    setText("statInteressato", countStatus("Interessato"));
-    setText("statConvertito", countStatus("Convertito"));
-    setText("statScartato", countStatus("Scartato"));
-    setText("statScout", scout);
-    setText("statAnalyst", analyst);
-    setText("statCreator", creator);
-    setText("statHot", hot);
-    setText("statCodes", codes);
+  const countStatus=s=>list.filter(r=>String(r.status||"Nuovo")===s).length;
+  setText("statTotal",list.length);
+  setText("statNuovo",countStatus("Nuovo"));
+  setText("statContattato",countStatus("Contattato"));
+  setText("statInteressato",countStatus("Interessato"));
+  setText("statConvertito",countStatus("Convertito"));
+  setText("statScartato",countStatus("Scartato"));
+  setText("statScout",list.filter(r=>String(r.profile||"")==="Scout").length);
+  setText("statAnalyst",list.filter(r=>String(r.profile||"")==="Analista").length);
+  setText("statCreator",list.filter(r=>String(r.profile||"")==="Creator sportivo").length);
+  setText("statHot",list.filter(r=>["Interessato","Convertito"].includes(String(r.status||""))).length);
+  setText("statCodes",list.filter(r=>String(r.beta_code||"").trim()).length);
 }
 
 function setText(id,value){
-    const el = document.getElementById(id);
-    if(el) el.textContent = value;
+  const el=document.getElementById(id);
+  if(el)el.textContent=value;
 }
 
 function profileClass(profile){
-    const p = String(profile || "").toLowerCase();
-
-    if(p.includes("scout")) return "profile-scout";
-    if(p.includes("analista")) return "profile-analista";
-    if(p.includes("creator")) return "profile-creator";
-    if(p.includes("scommettitore")) return "profile-better";
-
-    return "profile-default";
+  const p=String(profile||"").toLowerCase();
+  if(p.includes("scout"))return"profile-scout";
+  if(p.includes("analista"))return"profile-analista";
+  if(p.includes("creator"))return"profile-creator";
+  if(p.includes("scommettitore"))return"profile-better";
+  return"profile-default";
 }
 
 function statusClass(status){
-    const s = String(status || "Nuovo").toLowerCase();
-
-    if(s.includes("nuovo")) return "status-nuovo";
-    if(s.includes("contattato")) return "status-contattato";
-    if(s.includes("interessato")) return "status-interessato";
-    if(s.includes("convertito")) return "status-convertito";
-    if(s.includes("scartato")) return "status-scartato";
-
-    return "status-nuovo";
+  const s=String(status||"Nuovo").toLowerCase();
+  if(s.includes("nuovo"))return"status-nuovo";
+  if(s.includes("contattato"))return"status-contattato";
+  if(s.includes("interessato"))return"status-interessato";
+  if(s.includes("convertito"))return"status-convertito";
+  if(s.includes("scartato"))return"status-scartato";
+  return"status-nuovo";
 }
 
 function getLeadById(id){
-    return betaRequests.find(r => String(r.id) === String(id));
+  return betaRequests.find(r=>String(r.id)===String(id));
 }
 
 function getCurrentLeadState(id){
-    const lead = getLeadById(id);
-
-    if(!lead) return null;
-
-    const currentStatus = document.getElementById(`status_${id}`)?.value || lead.status || "Nuovo";
-    const currentNote = document.getElementById(`note_${id}`)?.value || lead.internal_note || "";
-
-    return {
-        ...lead,
-        status: currentStatus,
-        internal_note: currentNote
-    };
+  const lead=getLeadById(id);
+  if(!lead)return null;
+  return {
+    ...lead,
+    status:document.getElementById(`status_${id}`)?.value||lead.status||"Nuovo",
+    internal_note:document.getElementById(`note_${id}`)?.value||lead.internal_note||""
+  };
 }
 
 function buildEmailTemplate(lead){
-    const name = lead.name || "";
-    const profile = lead.profile || "utente";
-    const plan = lead.plan || "Beta gratuita";
-    const reason = lead.reason || "-";
-    const status = lead.status || "Nuovo";
-    const betaCode = lead.beta_code || "";
-    const cleanName = name || "ciao";
-
-    const codeBlock = betaCode
-        ? `
+  const name=lead.name||"ciao";
+  const profile=lead.profile||"utente";
+  const plan=lead.plan||"Beta gratuita";
+  const reason=lead.reason||"-";
+  const status=lead.status||"Nuovo";
+  const betaCode=lead.beta_code||"";
+  const codeBlock=betaCode?`
 
 Codice accesso beta:
 ${betaCode}
 
-Conserva questo codice: sarà utile per identificare il tuo accesso beta.`
-        : `
+Conserva questo codice: sarà utile per identificare il tuo accesso beta.`:`
 
 Il codice di accesso beta ti verrà inviato appena sarà generato dal pannello admin.`;
 
-    if(status === "Contattato"){
-        return {
-            label: "Follow-up",
-            subject: "Follow-up accesso Beta MatchIQ Tactical",
-            preview: betaCode ? "Follow-up con codice beta incluso." : "Follow-up dopo primo contatto.",
-            body:
-`Ciao ${cleanName},
+  if(status==="Contattato"){
+    return {label:"Follow-up",subject:"Follow-up accesso Beta MatchIQ Tactical",preview:betaCode?"Follow-up con codice beta incluso.":"Follow-up dopo primo contatto.",body:`Ciao ${name},
 
 ti ricontatto in merito alla tua richiesta di accesso alla beta di MatchIQ Tactical.
 
@@ -837,359 +436,257 @@ Ho visto che hai indicato:
 - Interesse: ${plan}
 - Motivo: ${reason}${codeBlock}
 
-Mi farebbe piacere capire meglio come vorresti usare la piattaforma, così posso indirizzarti sulle funzioni più utili per te.
-
 Possiamo sentirci con una breve demo o posso mandarti qualche informazione in più.
 
 A presto,
 Mario
-MatchIQ Tactical`
-        };
-    }
+MatchIQ Tactical`};
+  }
 
-    if(status === "Interessato"){
-        return {
-            label: "Invito demo",
-            subject: "Demo MatchIQ Tactical - accesso Beta",
-            preview: betaCode ? "Lead caldo: demo + codice beta." : "Lead caldo: proponi demo e piano Pro.",
-            body:
-`Ciao ${cleanName},
+  if(status==="Interessato"){
+    return {label:"Invito demo",subject:"Demo MatchIQ Tactical - accesso Beta",preview:betaCode?"Lead caldo: demo + codice beta.":"Lead caldo: proponi demo.",body:`Ciao ${name},
 
 ho visto il tuo interesse per MatchIQ Tactical e ti propongo una breve demo della piattaforma.
 
-Ti mostro in modo semplice:
+Ti mostro:
 - Dashboard live
 - Scout Mode
-- Player signals
-- Watchlist
-- Report ed export
-- Possibili funzioni Pro${codeBlock}
-
-L’obiettivo è capire se MatchIQ può esserti utile per analisi, scouting, contenuti sportivi o monitoraggio live.
+- Coach Mode
+- Report PDF / WhatsApp
+- Funzioni Pro${codeBlock}
 
 Dimmi pure quando ti farebbe comodo.
 
 A presto,
 Mario
-MatchIQ Tactical`
-        };
-    }
+MatchIQ Tactical`};
+  }
 
-    if(status === "Convertito"){
-        return {
-            label: "Accesso confermato",
-            subject: "Accesso MatchIQ Tactical confermato",
-            preview: betaCode ? "Conferma accesso con codice beta." : "Conferma accesso e prossimi step.",
-            body:
-`Ciao ${cleanName},
+  if(status==="Convertito"){
+    return {label:"Accesso confermato",subject:"Accesso MatchIQ Tactical confermato",preview:betaCode?"Conferma accesso con codice beta.":"Conferma accesso e prossimi step.",body:`Ciao ${name},
 
 ti confermo i prossimi step per l’accesso a MatchIQ Tactical.${codeBlock}
 
-Da qui potrai iniziare a testare:
-- Dashboard live
-- Scout Mode
-- Player cards
-- Watchlist
-- Report scout
-
-Nei prossimi aggiornamenti verranno aggiunte anche funzioni Free / Pro e accessi beta più controllati.
-
-Ti mando a breve le istruzioni operative.
+Da qui potrai iniziare a testare Dashboard, Scout Mode, Coach Mode e report.
 
 A presto,
 Mario
-MatchIQ Tactical`
-        };
-    }
+MatchIQ Tactical`};
+  }
 
-    if(status === "Scartato"){
-        return {
-            label: "Chiusura gentile",
-            subject: "Richiesta Beta MatchIQ Tactical",
-            preview: "Messaggio gentile per chiudere o rimandare il contatto.",
-            body:
-`Ciao ${cleanName},
+  if(status==="Scartato"){
+    return {label:"Chiusura gentile",subject:"Richiesta Beta MatchIQ Tactical",preview:"Messaggio gentile per chiudere o rimandare.",body:`Ciao ${name},
 
 grazie per aver richiesto informazioni su MatchIQ Tactical.
 
 In questa fase sto dando priorità ad alcuni profili specifici per la beta, ma tengo comunque il tuo contatto per eventuali aperture successive.
 
-Ti ringrazio per l’interesse e ti aggiornerò in caso di nuove disponibilità.
-
 A presto,
 Mario
-MatchIQ Tactical`
-        };
-    }
+MatchIQ Tactical`};
+  }
 
-    return {
-        label: "Benvenuto Beta",
-        subject: "Accesso Beta MatchIQ Tactical",
-        preview: betaCode ? "Primo contatto con codice beta incluso." : "Primo contatto per nuovo lead beta.",
-        body:
-`Ciao ${cleanName},
+  return {label:"Benvenuto Beta",subject:"Accesso Beta MatchIQ Tactical",preview:betaCode?"Primo contatto con codice beta incluso.":"Primo contatto per nuovo lead beta.",body:`Ciao ${name},
 
 grazie per aver richiesto accesso alla beta di MatchIQ Tactical.
 
-Ho ricevuto la tua richiesta con questi dati:
+Ho ricevuto la tua richiesta:
 - Profilo: ${profile}
 - Interesse: ${plan}
 - Motivo: ${reason}${codeBlock}
-
-MatchIQ Tactical è una piattaforma di AI Football Intelligence pensata per leggere partite live, momentum, segnali tattici e player insights in tempo reale.
 
 Ti ricontatto per capire meglio come vorresti usarla e valutare l’accesso alla beta.
 
 A presto,
 Mario
-MatchIQ Tactical`
-    };
+MatchIQ Tactical`};
 }
 
 async function saveLeadCRM(id){
-    const status = document.getElementById(`status_${id}`)?.value || "Nuovo";
-    const internal_note = document.getElementById(`note_${id}`)?.value || "";
+  const status=document.getElementById(`status_${id}`)?.value||"Nuovo";
+  const internal_note=document.getElementById(`note_${id}`)?.value||"";
+  showMessage(`Salvataggio CRM lead #${esc(id)}...`,"empty");
 
-    showMessage(`Salvataggio CRM lead #${esc(id)}...`, "empty");
+  try{
+    const res=await fetch(`/api/beta-requests/${encodeURIComponent(id)}`,{
+      method:"PATCH",
+      headers:adminHeaders({"Content-Type":"application/json"}),
+      body:JSON.stringify({status,internal_note})
+    });
 
-    try{
-        const res = await fetch(`/api/beta-requests/${encodeURIComponent(id)}`, {
-            method:"PATCH",
-            headers: adminHeaders({
-                "Content-Type":"application/json"
-            }),
-            body:JSON.stringify({
-                status,
-                internal_note
-            })
-        });
+    const text=await res.text();
+    let data;
+    try{data=JSON.parse(text)}catch{throw new Error("Risposta non JSON: "+text.slice(0,120))}
 
-        const text = await res.text();
-
-        let data;
-        try{
-            data = JSON.parse(text);
-        }catch{
-            throw new Error("Risposta non JSON: " + text.slice(0,120));
-        }
-
-        if(!res.ok || data.ok === false){
-            if(handleAuthError(data, "Admin token non valido")) return;
-            throw new Error(data.message || data.detail || "Errore salvataggio CRM");
-        }
-
-        const updated = normalizeRequest(data.request || data.lead || data.data || {});
-        betaRequests = betaRequests.map(r => String(r.id) === String(id) ? updated : r);
-
-        updateStats(betaRequests);
-        renderRequests();
-        showMessage(`Lead #${esc(id)} aggiornato correttamente.`, "ok");
-
-    }catch(e){
-        showMessage("Errore salvataggio CRM: " + e.message, "error");
+    if(!res.ok || data.ok===false){
+      if(handleAuthError(data,"Admin token non valido"))return;
+      throw new Error(data.message||data.detail||"Errore salvataggio CRM");
     }
+
+    const updated=normalizeRequest(data.request||data.lead||data.data||{});
+    betaRequests=betaRequests.map(r=>String(r.id)===String(id)?updated:r);
+    updateStats(betaRequests);
+    renderRequests();
+    showMessage(`Lead #${esc(id)} aggiornato correttamente.`,"ok");
+
+  }catch(e){
+    showMessage("Errore salvataggio CRM: "+e.message,"error");
+  }
 }
 
 async function generateBetaCode(id){
-    showMessage(`Generazione codice beta per lead #${esc(id)}...`, "empty");
+  showMessage(`Generazione codice beta per lead #${esc(id)}...`,"empty");
 
-    try{
-        const res = await fetch(`/api/beta-requests/${encodeURIComponent(id)}/generate-code`, {
-            method:"POST",
-            headers: adminHeaders()
-        });
+  try{
+    const res=await fetch(`/api/beta-requests/${encodeURIComponent(id)}/generate-code`,{
+      method:"POST",
+      headers:adminHeaders()
+    });
 
-        const text = await res.text();
+    const text=await res.text();
+    let data;
+    try{data=JSON.parse(text)}catch{throw new Error("Risposta non JSON: "+text.slice(0,120))}
 
-        let data;
-        try{
-            data = JSON.parse(text);
-        }catch{
-            throw new Error("Risposta non JSON: " + text.slice(0,120));
-        }
-
-        if(!res.ok || data.ok === false){
-            if(handleAuthError(data, "Admin token non valido")) return;
-            throw new Error(data.message || data.detail || "Errore generazione codice");
-        }
-
-        const updated = normalizeRequest(data.request || data.lead || data.data || {});
-        betaRequests = betaRequests.map(r => String(r.id) === String(id) ? updated : r);
-
-        updateStats(betaRequests);
-        renderRequests();
-
-        showMessage(`Codice beta generato: ${esc(updated.beta_code || data.beta_code || "")}`, "ok");
-
-    }catch(e){
-        showMessage("Errore generazione codice beta: " + e.message, "error");
+    if(!res.ok || data.ok===false){
+      if(handleAuthError(data,"Admin token non valido"))return;
+      throw new Error(data.message||data.detail||"Errore generazione codice");
     }
+
+    const updated=normalizeRequest(data.request||data.lead||data.data||{});
+    betaRequests=betaRequests.map(r=>String(r.id)===String(id)?updated:r);
+    updateStats(betaRequests);
+    renderRequests();
+    showMessage(`Codice beta generato: ${esc(updated.beta_code||data.beta_code||"")}`,"ok");
+
+  }catch(e){
+    showMessage("Errore generazione codice beta: "+e.message,"error");
+  }
 }
 
 async function quickStatus(id,status){
-    const select = document.getElementById(`status_${id}`);
-    if(select) select.value = status;
-    await saveLeadCRM(id);
+  const select=document.getElementById(`status_${id}`);
+  if(select)select.value=status;
+  await saveLeadCRM(id);
 }
 
 async function copyEmail(email){
-    try{
-        await navigator.clipboard.writeText(email);
-        showMessage(`Email copiata: ${esc(email)}`, "ok");
-    }catch(e){
-        showMessage(`Copia non riuscita. Email: ${esc(email)}`, "error");
-    }
+  try{
+    await navigator.clipboard.writeText(email);
+    showMessage(`Email copiata: ${esc(email)}`,"ok");
+  }catch{
+    showMessage(`Copia non riuscita. Email: ${esc(email)}`,"error");
+  }
 }
 
 async function copyBetaCode(id){
-    const lead = getLeadById(id);
+  const lead=getLeadById(id);
+  if(!lead)return showMessage("Lead non trovato.","error");
+  if(!lead.beta_code)return showMessage("Questo lead non ha ancora un codice beta.","error");
 
-    if(!lead){
-        showMessage("Lead non trovato.", "error");
-        return;
-    }
-
-    if(!lead.beta_code){
-        showMessage("Questo lead non ha ancora un codice beta. Clicca prima su Genera codice.", "error");
-        return;
-    }
-
-    try{
-        await navigator.clipboard.writeText(lead.beta_code);
-        showMessage(`Codice copiato: ${esc(lead.beta_code)}`, "ok");
-    }catch(e){
-        showMessage("Copia codice non riuscita.", "error");
-    }
+  try{
+    await navigator.clipboard.writeText(lead.beta_code);
+    showMessage(`Codice copiato: ${esc(lead.beta_code)}`,"ok");
+  }catch{
+    showMessage("Copia codice non riuscita.","error");
+  }
 }
 
 function openMailById(id){
-    const lead = getCurrentLeadState(id);
-
-    if(!lead){
-        showMessage("Lead non trovato.", "error");
-        return;
-    }
-
-    const template = buildEmailTemplate(lead);
-    const subject = encodeURIComponent(template.subject);
-    const body = encodeURIComponent(template.body);
-
-    window.location.href = `mailto:${lead.email}?subject=${subject}&body=${body}`;
+  const lead=getCurrentLeadState(id);
+  if(!lead)return showMessage("Lead non trovato.","error");
+  const template=buildEmailTemplate(lead);
+  window.location.href=`mailto:${lead.email}?subject=${encodeURIComponent(template.subject)}&body=${encodeURIComponent(template.body)}`;
 }
 
 async function copyTemplateById(id){
-    const lead = getCurrentLeadState(id);
-
-    if(!lead){
-        showMessage("Lead non trovato.", "error");
-        return;
-    }
-
-    const template = buildEmailTemplate(lead);
-    const fullText =
-`Oggetto: ${template.subject}
+  const lead=getCurrentLeadState(id);
+  if(!lead)return showMessage("Lead non trovato.","error");
+  const template=buildEmailTemplate(lead);
+  const fullText=`Oggetto: ${template.subject}
 
 ${template.body}`;
 
-    try{
-        await navigator.clipboard.writeText(fullText);
-        showMessage(`Template "${esc(template.label)}" copiato per ${esc(lead.name || lead.email)}.`, "ok");
-    }catch(e){
-        showMessage("Copia template non riuscita.", "error");
-    }
+  try{
+    await navigator.clipboard.writeText(fullText);
+    showMessage(`Template "${esc(template.label)}" copiato per ${esc(lead.name||lead.email)}.`,"ok");
+  }catch{
+    showMessage("Copia template non riuscita.","error");
+  }
 }
 
 async function exportBetaCSV(){
-    const status = document.getElementById("statusFilter")?.value || "all";
-    const profile = document.getElementById("profileFilter")?.value || "all";
-    const plan = document.getElementById("planFilter")?.value || "all";
+  if(!hasAdminToken()){
+    showMessage("Accesso admin non configurato su questo dispositivo.","error");
+    return;
+  }
 
-    if(!hasAdminToken()){
-        showMessage("Admin token mancante. Imposta il token prima di esportare.", "error");
-        return;
+  const status=document.getElementById("statusFilter")?.value||"all";
+  const profile=document.getElementById("profileFilter")?.value||"all";
+  const plan=document.getElementById("planFilter")?.value||"all";
+  const params=new URLSearchParams();
+
+  if(status!=="all")params.set("status",status);
+  if(profile!=="all")params.set("profile",profile);
+  if(plan!=="all")params.set("plan",plan);
+  params.set("ts",Date.now());
+
+  showMessage("Preparazione export CSV.","empty");
+
+  try{
+    const res=await fetch(`/api/beta-requests/export.csv?${params.toString()}`,{
+      method:"GET",
+      headers:adminHeaders(),
+      cache:"no-store"
+    });
+
+    const text=await res.text();
+
+    if(!res.ok){
+      let data={};
+      try{data=JSON.parse(text)}catch{}
+      if(handleAuthError(data,"Admin token non valido"))return;
+      throw new Error(data.message||data.detail||text.slice(0,160)||"Export CSV non riuscito");
     }
 
-    const params = new URLSearchParams();
+    const blob=new Blob([text],{type:"text/csv;charset=utf-8"});
+    const downloadUrl=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=downloadUrl;
+    a.download=`matchiq_beta_requests_${new Date().toISOString().slice(0,19).replaceAll(":","-")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(downloadUrl);
+    showMessage("Export CSV completato.","ok");
 
-    if(status !== "all") params.set("status", status);
-    if(profile !== "all") params.set("profile", profile);
-    if(plan !== "all") params.set("plan", plan);
-    params.set("ts", Date.now());
-
-    const url = `/api/beta-requests/export.csv?${params.toString()}`;
-
-    showMessage("Preparazione export CSV...", "empty");
-
-    try{
-        const res = await fetch(url, {
-            method:"GET",
-            headers: adminHeaders(),
-            cache:"no-store"
-        });
-
-        const text = await res.text();
-
-        if(!res.ok){
-            let data = {};
-            try{ data = JSON.parse(text); }catch{}
-            if(handleAuthError(data, "Admin token non valido")) return;
-            throw new Error(data.message || data.detail || text.slice(0,160) || "Export CSV non riuscito");
-        }
-
-        const blob = new Blob([text], {type:"text/csv;charset=utf-8"});
-        const downloadUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-
-        a.href = downloadUrl;
-        a.download = `matchiq_beta_requests_${new Date().toISOString().slice(0,19).replaceAll(":","-")}.csv`;
-
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        URL.revokeObjectURL(downloadUrl);
-        showMessage("Export CSV completato.", "ok");
-
-    }catch(e){
-        showMessage("Errore export CSV: " + e.message, "error");
-    }
+  }catch(e){
+    showMessage("Errore export CSV: "+e.message,"error");
+  }
 }
 
 function formatDate(value){
-    if(!value) return "-";
-
-    try{
-        const d = new Date(value);
-        if(Number.isNaN(d.getTime())) return value;
-
-        return d.toLocaleString("it-IT",{
-            day:"2-digit",
-            month:"2-digit",
-            year:"numeric",
-            hour:"2-digit",
-            minute:"2-digit"
-        });
-    }catch{
-        return value;
-    }
+  if(!value)return"-";
+  try{
+    const d=new Date(value);
+    if(Number.isNaN(d.getTime()))return value;
+    return d.toLocaleString("it-IT",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  }catch{return value}
 }
 
 function esc(value){
-    return String(value ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+  return String(value??"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-function escAttr(value){
-    return esc(value);
-}
+function escAttr(value){return esc(value)}
 
-document.addEventListener("DOMContentLoaded", () => {
-    updateAdminTokenUI();
-    loadBetaRequests();
+document.addEventListener("DOMContentLoaded",()=>{
+  if(window.MatchIQAuth && !MatchIQAuth.requireAdminPage())return;
+  loadBetaRequests();
 });
 </script>
 
