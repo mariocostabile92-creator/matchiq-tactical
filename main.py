@@ -4,7 +4,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 import logging
 from app.routers.live import create_live_router
-from app.routers.admin_beta import router as admin_beta_router
+from app.routers.admin_beta import router as admin_beta_router, require_admin_token
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
 from datetime import datetime, timezone
