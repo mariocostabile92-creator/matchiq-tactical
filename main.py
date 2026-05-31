@@ -6,6 +6,7 @@ import logging
 from app.routers.live import create_live_router
 from app.routers.admin_beta import router as admin_beta_router, require_admin_token
 from app.routers.admin_users import router as admin_users_router
+from app.routers.admin_analytics import router as admin_analytics_router
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
 from datetime import datetime, timezone
@@ -56,7 +57,7 @@ from app.services.full_analysis_service import (
     build_full_analysis
 )
 from auth import router as auth_router
-from database import init_db, get_admin_analytics
+from database import init_db
 from auth import create_verification_for_user
 from brevo_service import send_verification_email, is_email_configured
 from usage_guard import (
@@ -505,20 +506,10 @@ app.include_router(admin_users_router)
 
 
 # =========================================================
-# ADMIN ANALYTICS - V8.3
+# ADMIN ANALYTICS ROUTER
 # =========================================================
 
-@app.get("/api/admin/analytics")
-def admin_analytics(admin_ok: bool = Depends(require_admin_token)):
-    try:
-        data = get_admin_analytics()
-        return {
-            "ok": True,
-            **data
-        }
-    except Exception as e:
-        logger.exception("[ADMIN ANALYTICS] Errore caricamento analytics")
-        raise HTTPException(status_code=500, detail=str(e))
+app.include_router(admin_analytics_router)
 
 
 # =========================================================
