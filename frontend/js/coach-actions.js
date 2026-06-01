@@ -149,6 +149,17 @@ function addPlayerRating(){
     coachState.ratings.unshift(rating);
 
     saveState();
+
+    if(typeof trackCoachFeature === "function"){
+        trackCoachFeature("coach_pagelle", {
+            player: rating.player,
+            role: rating.role,
+            team: rating.team,
+            vote: rating.vote,
+            total_ratings: coachState.ratings.length
+        });
+    }
+
     clearRatingForm();
     renderAll();
 

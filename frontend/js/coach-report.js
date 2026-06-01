@@ -154,6 +154,14 @@ async function copyWhatsAppSummary(){
             renderAll();
         }
 
+        if(typeof trackCoachFeature === "function"){
+            trackCoachFeature("coach_whatsapp", {
+                events: coachState.events.length,
+                ratings: coachState.ratings.length,
+                has_report: Boolean(coachState.report)
+            });
+        }
+
         showNotice(
             isCoachPro()
                 ? "Sintesi WhatsApp copiata."
@@ -251,6 +259,14 @@ Report generato localmente da MatchIQ Coach V1.6: utile come base per analisi po
     saveState();
     renderReport();
     renderStatus();
+
+    if(typeof trackCoachFeature === "function"){
+        trackCoachFeature("coach_report", {
+            events: coachState.events.length,
+            ratings: coachState.ratings.length,
+            has_match: Boolean(coachState.match)
+        });
+    }
 
     showNotice("Report Coach generato.", "ok");
 }
@@ -795,6 +811,14 @@ function printCoachPdf(){
 
     setTimeout(() => {
         printWindow.print();
+
+        if(typeof trackCoachFeature === "function"){
+            trackCoachFeature("coach_pdf", {
+                events: coachState.events.length,
+                ratings: coachState.ratings.length,
+                has_report: Boolean(coachState.report)
+            });
+        }
 
         if(!isCoachPro()){
             incrementCoachUsageCount(COACH_USAGE_KEYS.pdfExports);
