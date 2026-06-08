@@ -203,7 +203,26 @@ def ts_to_iso(value) -> str:
         return ""
 
 
+
+
+def stripe_obj_to_dict(obj):
+    """Converte in modo sicuro StripeObject/list/dict in strutture Python normali."""
+    if obj is None:
+        return {}
+    if isinstance(obj, dict):
+        return obj
+    try:
+        return obj.to_dict_recursive()
+    except Exception:
+        pass
+    try:
+        return dict(obj)
+    except Exception:
+        return {}
+
+
 def extract_subscription_period(subscription) -> tuple[str, str]:
+    subscription = stripe_obj_to_dict(subscription)
     current_period_start = subscription.get("current_period_start") or ""
     current_period_end = subscription.get("current_period_end") or ""
 
@@ -214,6 +233,7 @@ def extract_subscription_period(subscription) -> tuple[str, str]:
 
 
 def get_user_id_from_metadata(metadata) -> Optional[int]:
+    metadata = stripe_obj_to_dict(metadata)
     if not metadata:
         return None
 
@@ -229,6 +249,7 @@ def get_user_id_from_metadata(metadata) -> Optional[int]:
 
 
 def get_subscription_first_price_id(subscription) -> str:
+    subscription = stripe_obj_to_dict(subscription)
     try:
         items = subscription.get("items", {}).get("data", [])
         if not items:
@@ -654,6 +675,7 @@ async def stripe_webhook(request: Request):
 # =========================================================
 
 def handle_checkout_completed(session):
+    session = stripe_obj_to_dict(session)
     metadata = session.get("metadata", {}) or {}
 
     user_id = get_user_id_from_metadata(metadata)
@@ -692,6 +714,7 @@ def handle_checkout_completed(session):
 
 
 def handle_subscription_updated(subscription):
+    subscription = stripe_obj_to_dict(subscription)
     metadata = subscription.get("metadata", {}) or {}
 
     user_id = get_user_id_from_metadata(metadata)
@@ -741,6 +764,7 @@ def handle_subscription_updated(subscription):
 
 
 def handle_subscription_deleted(subscription):
+    subscription = stripe_obj_to_dict(subscription)
     metadata = subscription.get("metadata", {}) or {}
 
     user_id = get_user_id_from_metadata(metadata)
@@ -769,6 +793,7 @@ def handle_subscription_deleted(subscription):
 
 
 def handle_payment_failed(invoice):
+    invoice = stripe_obj_to_dict(invoice)
     subscription_id = invoice.get("subscription") or ""
     customer_id = invoice.get("customer") or ""
 
@@ -780,6 +805,7 @@ def handle_payment_failed(invoice):
 
 
 def handle_payment_succeeded(invoice):
+    invoice = stripe_obj_to_dict(invoice)
     subscription_id = invoice.get("subscription") or ""
     customer_id = invoice.get("customer") or ""
 
