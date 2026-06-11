@@ -1,8 +1,8 @@
 """
 usage_guard.py
-MatchIQ Tactical - Usage Guard PRO
+MatchIQ Tactical - Usage Guard PRO V1 Definitiva
 
-V8.0.1 Plan & Limits API
+V8.2 Pro Lock Definitivo
 
 Gestisce:
 - controllo limiti Free/Pro/Scout/Owner
@@ -40,6 +40,7 @@ OWNER_EMAILS = {
 # =========================================================
 
 PREMIUM_FEATURES = {
+    # Scout / Match
     "advanced_scout",
     "advanced_timeline",
     "pdf_export",
@@ -50,6 +51,15 @@ PREMIUM_FEATURES = {
     "full_scout",
     "pro_player_cards",
     "pro_tactical_signals",
+    "scout_export",
+
+    # Coach Pro
+    "coach_pdf",
+    "coach_whatsapp",
+    "coach_history",
+    "coach_storico",
+    "coach_unlimited_pagelle",
+    "coach_advanced_report",
 }
 
 
@@ -58,6 +68,12 @@ FEATURE_TO_DAILY_LIMIT = {
     "full_analysis": "full_analysis_daily",
     "live_matches": "live_matches_daily",
     "pdf_export": "pdf_export_daily",
+    "coach_pdf": "coach_pdf_daily",
+    "coach_whatsapp": "coach_whatsapp_daily",
+    "coach_pagelle": "coach_pagelle_daily",
+    "coach_report": "coach_reports_daily",
+    "coach_history": "coach_history_limit",
+    "coach_storico": "coach_history_limit",
 }
 
 
@@ -87,8 +103,15 @@ PLAN_FEATURES = {
         "advanced_signals_enabled": False,
         "ai_match_insight_enabled": False,
 
+        "coach_enabled": True,
+        "coach_pdf_enabled": False,
+        "coach_whatsapp_enabled": False,
+        "coach_pagelle_limit": 3,
+        "coach_history_limit": 0,
+        "coach_reports_limit": 1,
+
         "cta": "Accedi o crea un account gratuito per provare MatchIQ.",
-        "upgrade_message": "Accedi per usare la dashboard e sbloccare la preview Scout."
+        "upgrade_message": "Accedi per salvare il lavoro, provare Coach e sbloccare la preview Scout."
     },
 
     "free": {
@@ -112,8 +135,15 @@ PLAN_FEATURES = {
         "advanced_signals_enabled": False,
         "ai_match_insight_enabled": False,
 
+        "coach_enabled": True,
+        "coach_pdf_enabled": False,
+        "coach_whatsapp_enabled": False,
+        "coach_pagelle_limit": 5,
+        "coach_history_limit": 2,
+        "coach_reports_limit": 3,
+
         "cta": "Passa a Pro",
-        "upgrade_message": "Passa a Pro per sbloccare Scout completo, export, PDF e segnali avanzati."
+        "upgrade_message": "Passa a Pro per sbloccare PDF Coach, WhatsApp, storico esteso, Scout completo ed export."
     },
 
     "pro": {
@@ -137,8 +167,15 @@ PLAN_FEATURES = {
         "advanced_signals_enabled": True,
         "ai_match_insight_enabled": True,
 
+        "coach_enabled": True,
+        "coach_pdf_enabled": True,
+        "coach_whatsapp_enabled": True,
+        "coach_pagelle_limit": 999,
+        "coach_history_limit": 250,
+        "coach_reports_limit": 100,
+
         "cta": "Piano Pro attivo",
-        "upgrade_message": "Hai accesso alle funzioni Pro."
+        "upgrade_message": "Hai accesso a Coach Pro, Scout completo, PDF, WhatsApp, storico ed export."
     },
 
     "scout": {
@@ -162,8 +199,15 @@ PLAN_FEATURES = {
         "advanced_signals_enabled": True,
         "ai_match_insight_enabled": True,
 
+        "coach_enabled": True,
+        "coach_pdf_enabled": True,
+        "coach_whatsapp_enabled": True,
+        "coach_pagelle_limit": 999,
+        "coach_history_limit": 1000,
+        "coach_reports_limit": 250,
+
         "cta": "Piano Scout attivo",
-        "upgrade_message": "Hai accesso completo alle funzioni Scout."
+        "upgrade_message": "Hai accesso completo alle funzioni Scout e Coach avanzate."
     },
 
     "owner": {
@@ -186,6 +230,13 @@ PLAN_FEATURES = {
         "advanced_timeline_enabled": True,
         "advanced_signals_enabled": True,
         "ai_match_insight_enabled": True,
+
+        "coach_enabled": True,
+        "coach_pdf_enabled": True,
+        "coach_whatsapp_enabled": True,
+        "coach_pagelle_limit": 999999,
+        "coach_history_limit": 999999,
+        "coach_reports_limit": 999999,
 
         "cta": "Owner Pro",
         "upgrade_message": "Accesso owner completo."
@@ -335,6 +386,7 @@ def build_plan_features(plan):
 def build_frontend_limits(user):
     plan = get_effective_plan(user)
     features = build_plan_features(plan)
+    db_limits = get_plan_limits(plan if plan != "guest" else "free")
 
     return {
         "plan": plan,
@@ -352,6 +404,15 @@ def build_frontend_limits(user):
             "advanced_timeline_enabled": features["advanced_timeline_enabled"],
             "advanced_signals_enabled": features["advanced_signals_enabled"],
             "ai_match_insight_enabled": features["ai_match_insight_enabled"],
+
+            "coach_enabled": features["coach_enabled"],
+            "coach_pdf_enabled": features["coach_pdf_enabled"],
+            "coach_whatsapp_enabled": features["coach_whatsapp_enabled"],
+            "coach_pagelle_limit": features["coach_pagelle_limit"],
+            "coach_history_limit": features["coach_history_limit"],
+            "coach_reports_limit": features["coach_reports_limit"],
+
+            "daily": db_limits,
         },
         "cta": features["cta"],
         "upgrade_message": features["upgrade_message"]
@@ -365,6 +426,7 @@ def is_feature_enabled_for_user(user, feature):
     feature_map = {
         "export_report": "export_enabled",
         "scout_report": "export_enabled",
+        "scout_export": "export_enabled",
         "pdf_export": "pdf_enabled",
         "watchlist_cloud": "watchlist_enabled",
         "advanced_timeline": "advanced_timeline_enabled",
@@ -373,6 +435,13 @@ def is_feature_enabled_for_user(user, feature):
         "full_scout": "advanced_signals_enabled",
         "pro_player_cards": "advanced_signals_enabled",
         "pro_tactical_signals": "advanced_signals_enabled",
+
+        "coach_pdf": "coach_pdf_enabled",
+        "coach_whatsapp": "coach_whatsapp_enabled",
+        "coach_history": "coach_history_limit",
+        "coach_storico": "coach_history_limit",
+        "coach_unlimited_pagelle": "coach_pagelle_limit",
+        "coach_advanced_report": "coach_reports_limit",
     }
 
     key = feature_map.get(feature)
@@ -380,7 +449,15 @@ def is_feature_enabled_for_user(user, feature):
     if not key:
         return True
 
-    return bool(limits.get(key))
+    value = limits.get(key)
+
+    if isinstance(value, bool):
+        return value
+
+    if isinstance(value, (int, float)):
+        return value > 0
+
+    return bool(value)
 
 
 # =========================================================
@@ -510,7 +587,7 @@ def enforce_premium_feature(user, feature):
             "upgrade_required": True,
             "feature": feature,
             "plan": get_user_plan(user),
-            "message": "Questa funzione è disponibile solo con il piano Pro."
+            "message": "Funzione Pro: passa a MatchIQ Pro per sbloccare PDF, WhatsApp, storico, export e strumenti avanzati."
         }
     )
 
@@ -535,7 +612,7 @@ def enforce_scout_feature(user):
             "upgrade_required": True,
             "feature": "scout_plan",
             "plan": get_user_plan(user),
-            "message": "Questa funzione è disponibile solo con il piano Scout."
+            "message": "Funzione avanzata: disponibile con piano Scout/Owner."
         }
     )
 

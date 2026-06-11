@@ -1,6 +1,6 @@
 """
 database.py
-MatchIQ Tactical - Database Layer V8.1 Stripe Ready
+MatchIQ Tactical - Database Layer V8.2 Pro Lock Ready
 
 Compatibile con:
 - PostgreSQL Railway/Production
@@ -31,48 +31,108 @@ USE_POSTGRES = bool(DATABASE_URL)
 
 PLAN_LIMITS = {
     "free": {
-        "scout_daily": 10,
-        "full_analysis_daily": 15,
-        "live_matches_daily": 50,
+        # Free = prova vera, ma limitata.
+        "scout_daily": 5,
+        "full_analysis_daily": 5,
+        "live_matches_daily": 25,
         "pdf_export_daily": 0,
-        "saved_players": 10,
-        "saved_matches": 10,
+        "saved_players": 5,
+        "saved_matches": 5,
+
+        # Coach / report limits
+        "coach_pdf_daily": 1,
+        "coach_whatsapp_daily": 1,
+        "coach_pagelle_daily": 5,
+        "coach_history_limit": 2,
+        "coach_reports_daily": 3,
+
+        # Feature flags
         "advanced_timeline": False,
         "advanced_scout": False,
         "pdf_export": False,
+        "coach_pdf": False,
+        "coach_whatsapp": False,
+        "coach_pagelle": True,
+        "coach_history": False,
+        "scout_export": False,
+        "watchlist_cloud": False,
     },
     "pro": {
+        # Pro = uso da campo continuativo.
         "scout_daily": 250,
         "full_analysis_daily": 250,
         "live_matches_daily": 500,
         "pdf_export_daily": 30,
         "saved_players": 250,
         "saved_matches": 250,
+
+        # Coach / report limits
+        "coach_pdf_daily": 30,
+        "coach_whatsapp_daily": 100,
+        "coach_pagelle_daily": 999,
+        "coach_history_limit": 250,
+        "coach_reports_daily": 100,
+
+        # Feature flags
         "advanced_timeline": True,
         "advanced_scout": True,
         "pdf_export": True,
+        "coach_pdf": True,
+        "coach_whatsapp": True,
+        "coach_pagelle": True,
+        "coach_history": True,
+        "scout_export": True,
+        "watchlist_cloud": True,
     },
     "scout": {
+        # Scout = piano avanzato / futuro piano verticale.
         "scout_daily": 1000,
         "full_analysis_daily": 1000,
         "live_matches_daily": 2000,
         "pdf_export_daily": 100,
         "saved_players": 1000,
         "saved_matches": 1000,
+
+        "coach_pdf_daily": 100,
+        "coach_whatsapp_daily": 250,
+        "coach_pagelle_daily": 999,
+        "coach_history_limit": 1000,
+        "coach_reports_daily": 250,
+
         "advanced_timeline": True,
         "advanced_scout": True,
         "pdf_export": True,
+        "coach_pdf": True,
+        "coach_whatsapp": True,
+        "coach_pagelle": True,
+        "coach_history": True,
+        "scout_export": True,
+        "watchlist_cloud": True,
     },
     "owner": {
+        # Owner/Admin = tutto sbloccato.
         "scout_daily": 999999,
         "full_analysis_daily": 999999,
         "live_matches_daily": 999999,
         "pdf_export_daily": 999999,
         "saved_players": 999999,
         "saved_matches": 999999,
+
+        "coach_pdf_daily": 999999,
+        "coach_whatsapp_daily": 999999,
+        "coach_pagelle_daily": 999999,
+        "coach_history_limit": 999999,
+        "coach_reports_daily": 999999,
+
         "advanced_timeline": True,
         "advanced_scout": True,
         "pdf_export": True,
+        "coach_pdf": True,
+        "coach_whatsapp": True,
+        "coach_pagelle": True,
+        "coach_history": True,
+        "scout_export": True,
+        "watchlist_cloud": True,
     },
 }
 

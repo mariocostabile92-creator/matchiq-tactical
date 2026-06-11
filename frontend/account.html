@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical - Account Pro V1.7</title>
+<title>MatchIQ Tactical - Account Pro V1.8 Pro Lock</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -368,6 +368,33 @@ p{
     flex-wrap:wrap;
     gap:9px;
     margin-top:18px;
+}
+
+
+.pro-lock-summary{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-top:18px;
+}
+.pro-lock-item{
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:18px;
+    padding:13px;
+}
+.pro-lock-item strong{
+    display:block;
+    font-size:13px;
+    margin-bottom:6px;
+}
+.pro-lock-item span{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.35;
+}
+@media(max-width:900px){
+    .pro-lock-summary{grid-template-columns:1fr 1fr;}
 }
 
 .micro-trust span{
@@ -814,7 +841,7 @@ p{
 
             <p id="accountIntro" class="hero-lead">
                 Usa MatchIQ come assistente tattico per mister, staff, scout e società:
-                Coach report, PDF, WhatsApp, pagelle, storico, Scout Mode e analisi live.
+                Coach report, PDF, WhatsApp, pagelle, storico, Scout Mode completa, watchlist ed export.
             </p>
 
             <div class="micro-trust">
@@ -822,6 +849,26 @@ p{
                 <span>🧠 Coach report</span>
                 <span>🔍 Scout Mode</span>
                 <span>📄 PDF / WhatsApp</span>
+            </div>
+
+
+            <div class="pro-lock-summary">
+                <div class="pro-lock-item">
+                    <strong>Free</strong>
+                    <span>Prova reale con limiti chiari.</span>
+                </div>
+                <div class="pro-lock-item">
+                    <strong>Coach Pro</strong>
+                    <span>PDF, WhatsApp e storico esteso.</span>
+                </div>
+                <div class="pro-lock-item">
+                    <strong>Scout Pro</strong>
+                    <span>Preview Free, completo in Pro.</span>
+                </div>
+                <div class="pro-lock-item">
+                    <strong>Owner</strong>
+                    <span>Accesso completo senza limiti.</span>
+                </div>
             </div>
 
             <div class="account-grid">
@@ -875,7 +922,7 @@ p{
 
             <p>
                 Per usare MatchIQ tutta la stagione: Coach report, PDF, WhatsApp,
-                pagelle, storico esteso, Scout Mode e analisi live.
+                pagelle, storico esteso, Scout Mode completa, watchlist, export e analisi live.
             </p>
 
             <div class="price-wrap">
@@ -893,11 +940,11 @@ p{
             </div>
 
             <ul>
-                <li>✅ PDF Coach illimitati</li>
-                <li>✅ WhatsApp illimitate</li>
-                <li>✅ Pagelle illimitate</li>
+                <li>✅ PDF Coach sbloccati</li>
+                <li>✅ Sintesi WhatsApp sbloccate</li>
+                <li>✅ Pagelle Coach senza limite pratico</li>
                 <li>✅ Storico Coach esteso</li>
-                <li>✅ Scout e funzioni avanzate</li>
+                <li>✅ Scout completo, watchlist ed export</li>
                 <li>✅ Uso continuativo da campo</li>
             </ul>
 
@@ -1046,9 +1093,9 @@ p{
                     <li>✅ Analisi live preview</li>
                     <li>✅ Scout accessibile</li>
                     <li>✅ Coach report tecnico</li>
-                    <li>🔒 5 pagelle Coach</li>
-                    <li>🔒 2 partite nello storico</li>
-                    <li>🔒 1 PDF e 1 WhatsApp di prova</li>
+                    <li>🔒 5 pagelle Coach di prova</li>
+                    <li>🔒 Storico limitato a 2 partite</li>
+                    <li>🔒 PDF e WhatsApp bloccati dopo la prova</li>
                 </ul>
             </div>
 
@@ -1060,11 +1107,11 @@ p{
                 </p>
 
                 <ul class="compare-list">
-                    <li>✅ PDF Coach illimitati</li>
-                    <li>✅ WhatsApp illimitate</li>
-                    <li>✅ Pagelle illimitate</li>
+                    <li>✅ PDF Coach sbloccati</li>
+                    <li>✅ Sintesi WhatsApp sbloccate</li>
+                    <li>✅ Pagelle Coach senza limite pratico</li>
                     <li>✅ Storico Coach esteso</li>
-                    <li>✅ Scout Mode</li>
+                    <li>✅ Scout Mode completa</li>
                     <li>✅ Uso continuativo da campo</li>
                 </ul>
             </div>
@@ -1090,7 +1137,7 @@ p{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10340";
+const APP_VERSION = "10380";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
@@ -1290,9 +1337,9 @@ function renderAccount(){
         accountIntro.textContent = isOwner
             ? "Hai accesso completo a MatchIQ: Coach, Scout, live, admin users, analytics e funzioni Pro senza limiti."
             : isPro
-                ? "Il tuo piano Pro è attivo. Puoi usare Coach report, PDF, WhatsApp, pagelle, storico, Scout Mode e analisi live con limiti estesi."
+                ? "Il tuo piano Pro è attivo. Puoi usare Coach report, PDF, WhatsApp, pagelle, storico esteso, Scout Mode completa, watchlist, export e analisi live con limiti estesi."
                 : logged
-                    ? "Il tuo account è Free. Passa a Pro per sbloccare PDF, WhatsApp, pagelle, storico esteso e uso continuativo da campo."
+                    ? "Il tuo account è Free. Passa a Pro per sbloccare PDF Coach, WhatsApp, storico esteso, Scout completo, watchlist, export e uso continuativo da campo."
                     : "Stai usando MatchIQ come Guest. Accedi o registrati per salvare il piano, attivare Pro e usare tutte le funzioni avanzate.";
     }
 
