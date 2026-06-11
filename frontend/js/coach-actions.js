@@ -234,21 +234,9 @@ function addLineupPlayer(){
     }
 
     coachState.lineup.push(player);
-    window.window.activePitchSide = side;
     saveState();
     clearLineupForm();
-
-    console.log("[Coach Lineup] added", player, coachState.lineup);
-
-    if(typeof renderAll === "function"){
-        renderAll();
-    }
-    if(typeof renderLineup === "function"){
-        renderLineup();
-    }
-    if(typeof renderLineupPitch === "function"){
-        renderLineupPitch();
-    }
+    renderAll();
 
     showNotice(`Giocatore aggiunto: ${formatLineupPlayer(player)}.`, "ok", 2500);
 }
@@ -290,49 +278,34 @@ function syncRatingPlayerFromLineup(playerId){
 }
 
 
-/* Coach Lineup Pitch Hotfix V1.7.3 */
-function addLineupPlayer(){
-    if(!coachState.match){
-        showNotice("Prima crea una partita manuale.", "warn");
+/* Coach Lineup Pitch Hotfix V1.7.4 */
+function clearLineup(){
+    if(!getLineup().length){
+        showNotice("Formazione già vuota.", "warn");
         return;
     }
 
-    const name = getInputValue("lineupNameInput","");
-    if(!name){
-        showNotice("Inserisci il nome del giocatore.", "warn");
-        return;
-    }
+    if(!confirm("Vuoi svuotare tutta la formazione? Gli eventi già inseriti resteranno salvati.")) return;
 
-    const side = getInputValue("lineupTeamInput","home");
-
-    if(!Array.isArray(coachState.lineup)){
-        coachState.lineup = [];
-    }
-
-    const player = {
-        id: Date.now() + Math.random(),
-        number: getInputValue("lineupNumberInput",""),
-        name,
-        side,
-        team: getTeamName(side),
-        role: getInputValue("lineupRoleInput","Jolly"),
-        status: getInputValue("lineupStatusInput","Titolare"),
-        createdAt: new Date().toISOString()
-    };
-
-    coachState.lineup.push(player);
-    window.activePitchSide = side;
-
+    coachState.lineup = [];
     saveState();
-    clearLineupForm();
 
-    console.log("[Coach Lineup] added", player, coachState.lineup);
+    setInputValue("eventPlayerSelectInput","");
+    setInputValue("eventPlayerInput","");
 
-    renderAll();
+    if(typeof renderAll === "function"){
+        renderAll();
+    }
+
+    if(typeof renderLineup === "function"){
+        renderLineup();
+    }
 
     if(typeof renderLineupPitch === "function"){
         renderLineupPitch();
     }
 
-    showNotice(`Giocatore aggiunto: ${formatLineupPlayer(player)}.`, "ok", 2500);
+    console.log("[Coach Lineup] cleared", coachState.lineup);
+
+    showNotice("Formazione svuotata.", "ok");
 }
