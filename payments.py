@@ -26,6 +26,9 @@ from database import (
     update_user_plan,
     create_subscription,
     get_active_subscription,
+    get_user_by_email,
+    get_user_by_stripe_customer,
+    get_subscription_by_provider_id,
 )
 
 try:
@@ -246,6 +249,44 @@ def get_user_id_from_metadata(metadata) -> Optional[int]:
         return int(raw)
     except Exception:
         return None
+
+
+def resolve_user_id_from_stripe_object(obj) -> Optional[int]:
+    """Recupera user_id anche se Stripe non invia metadata.user_id."""
+    data = stripe_obj_to_dict(obj)
+    metadata = stripe_obj_to_dict(data.get("metadata", {}) or {})
+    user_id = get_user_id_from_metadata(metadata)
+    if user_id:
+        return user_id
+
+    subscription_id = data.get("id") or data.get("subscription") or data.get("subscription_id") or ""
+    if subscription_id:
+        try:
+            saved_subscription = stripe_obj_to_dict(get_subscription_by_provider_id(subscription_id))
+            if saved_subscription and saved_subscription.get("user_id"):
+                return int(saved_subscription["user_id"])
+        except Exception:
+            logger.exception("[STRIPE] fallback user_id da provider_subscription_id fallito")
+
+    customer_id = data.get("customer") or data.get("customer_id") or data.get("provider_customer_id") or ""
+    if customer_id:
+        try:
+            user = stripe_obj_to_dict(get_user_by_stripe_customer(customer_id))
+            if user and user.get("id"):
+                return int(user["id"])
+        except Exception:
+            logger.exception("[STRIPE] fallback user_id da stripe_customer_id fallito")
+
+    email = normalize_email(data.get("customer_email") or data.get("email") or data.get("receipt_email") or "")
+    if email:
+        try:
+            user = stripe_obj_to_dict(get_user_by_email(email))
+            if user and user.get("id"):
+                return int(user["id"])
+        except Exception:
+            logger.exception("[STRIPE] fallback user_id da email fallito")
+
+    return None
 
 
 def get_subscription_first_price_id(subscription) -> str:
@@ -715,12 +756,16 @@ def handle_checkout_completed(session):
 
 def handle_subscription_updated(subscription):
     subscription = stripe_obj_to_dict(subscription)
-    metadata = subscription.get("metadata", {}) or {}
+    metadata = stripe_obj_to_dict(subscription.get("metadata", {}) or {})
 
-    user_id = get_user_id_from_metadata(metadata)
+    user_id = resolve_user_id_from_stripe_object(subscription)
 
     if not user_id:
-        logger.warning("[STRIPE] subscription.updated senza user_id metadata")
+        logger.warning(
+            "[STRIPE] subscription.updated senza user_id recuperabile subscription=%s customer=%s",
+            subscription.get("id") or "",
+            subscription.get("customer") or ""
+        )
         return
 
     price_id = get_subscription_first_price_id(subscription)
@@ -765,12 +810,16 @@ def handle_subscription_updated(subscription):
 
 def handle_subscription_deleted(subscription):
     subscription = stripe_obj_to_dict(subscription)
-    metadata = subscription.get("metadata", {}) or {}
+    metadata = stripe_obj_to_dict(subscription.get("metadata", {}) or {})
 
-    user_id = get_user_id_from_metadata(metadata)
+    user_id = resolve_user_id_from_stripe_object(subscription)
 
     if not user_id:
-        logger.warning("[STRIPE] subscription.deleted senza user_id metadata")
+        logger.warning(
+            "[STRIPE] subscription.deleted senza user_id recuperabile subscription=%s customer=%s",
+            subscription.get("id") or "",
+            subscription.get("customer") or ""
+        )
         return
 
     customer_id = subscription.get("customer") or ""
