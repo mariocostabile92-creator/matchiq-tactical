@@ -387,7 +387,7 @@ function renderLineup(){
     renderLineupPitch();
 }
 
-/* Coach Lineup Pitch V1.7.2 */
+/* Coach Lineup Pitch V1.7.7 */
 function getPitchPosition(player, index, total){
     const role = String(player.role || "Jolly").toLowerCase();
     const rowMap = {
@@ -418,7 +418,11 @@ function getPitchPosition(player, index, total){
         x = 28;
     }
 
-    return {x, y};
+    const side = normalizeLineupSide(player.side, player);
+    return {
+        x,
+        y: side === "away" ? 100 - y : y
+    };
 }
 
 function renderLineupPitch(){
@@ -437,10 +441,16 @@ function renderLineupPitch(){
     const starters = players.filter(p => p.status !== "Panchina");
     const benchPlayers = players.filter(p => p.status === "Panchina");
 
+    const teamLabel = side === "home" ? getTeamName("home") : getTeamName("away");
+    const fieldLabel = getMatchField();
+
     const base = `
         <div class="pitch-half-line"></div>
         <div class="pitch-box-top"></div>
         <div class="pitch-box-bottom"></div>
+        <div class="pitch-empty-state" style="top:10%;font-size:12px;opacity:.78;">
+            ${esc(teamLabel)} Â· ${esc(fieldLabel)}
+        </div>
     `;
 
     if(!starters.length){

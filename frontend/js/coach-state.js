@@ -1,4 +1,4 @@
-APP_VERSION = "10402";
+APP_VERSION = "10403";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
@@ -10,10 +10,19 @@ let coachState = { match: null, events: [], ratings: [], lineup: [], report: "" 
 
 function ensureCoachStateShape(){
     if(!coachState || typeof coachState !== "object") coachState = { match:null, events:[], ratings:[], lineup:[], report:"" };
+    coachState.match = normalizeCoachMatch(coachState.match);
     if(!Array.isArray(coachState.events)) coachState.events = [];
     if(!Array.isArray(coachState.ratings)) coachState.ratings = [];
     if(!Array.isArray(coachState.lineup)) coachState.lineup = [];
     if(typeof coachState.report !== "string") coachState.report = coachState.report || "";
+}
+function normalizeCoachMatch(match){
+    if(!match || typeof match !== "object") return null;
+    const field = match.field || match.matchField || match.campo || match.stadium || match.venue || "";
+    return {
+        ...match,
+        field
+    };
 }
 function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 function esc(value){ return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
@@ -25,6 +34,7 @@ function goAccount(){ window.location.href=`/account.html?v=${APP_VERSION}`; }
 function getInputValue(id,fallback=""){ return document.getElementById(id)?.value?.trim() || fallback; }
 function setInputValue(id,value){ const el=document.getElementById(id); if(el) el.value=value || ""; }
 function getTeamName(side){ ensureCoachStateShape(); if(!coachState.match) return side==="home"?"Casa":"Trasferta"; return side==="home" ? coachState.match.homeTeam || "Casa" : coachState.match.awayTeam || "Trasferta"; }
+function getMatchField(){ ensureCoachStateShape(); return coachState.match?.field || "Campo non indicato"; }
 function getGoals(side){ ensureCoachStateShape(); return coachState.events.filter(e=>e.type==="gol" && e.side===side).length; }
 function getEventsByType(type){ ensureCoachStateShape(); return coachState.events.filter(e=>e.type===type); }
 function getEventCount(type, side=null){ ensureCoachStateShape(); return coachState.events.filter(e=>e.type===type && (!side || e.side===side)).length; }

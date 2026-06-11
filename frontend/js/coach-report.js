@@ -199,6 +199,7 @@ function generateCoachReport(){
 Partita: ${match.homeTeam} vs ${match.awayTeam}
 Categoria: ${match.category || "Dilettanti"}
 Data: ${match.date || "--"}
+Campo: ${getMatchField()}
 Risultato eventi registrati: ${homeGoals} - ${awayGoals}
 Moduli: ${match.homeShape || "--"} vs ${match.awayShape || "--"}
 Formazione inserita: ${getLineup().length} giocatori
@@ -369,6 +370,7 @@ function buildPrintableCoachReport(){
     const homeGoals = getGoals("home");
     const awayGoals = getGoals("away");
     const generatedAt = new Date().toLocaleString("it-IT");
+    const matchField = getMatchField();
     const best = getBestRating();
 
     const events = [...(coachState.events || [])]
@@ -495,7 +497,7 @@ body{
 
 .cover-meta{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(5,1fr);
     gap:9px;
     margin-top:18px;
 }
@@ -683,6 +685,10 @@ td{
             <div class="cover-card">
                 <div class="cover-label">Data</div>
                 <div class="cover-value">${escapePrintHtml(m.date || "--")}</div>
+            </div>
+            <div class="cover-card">
+                <div class="cover-label">Campo</div>
+                <div class="cover-value">${escapePrintHtml(matchField)}</div>
             </div>
             <div class="cover-card">
                 <div class="cover-label">Modulo casa</div>
