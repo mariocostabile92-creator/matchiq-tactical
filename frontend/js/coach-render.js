@@ -290,8 +290,10 @@ function renderHistory(){
 }
 
 function renderAll(){
+    ensureCoachStateShape();
     fillFormFromState();
     renderStatus();
+    if(typeof renderLineup === "function") renderLineup();
     renderTimeline();
     renderRatings();
     renderReport();
@@ -434,7 +436,6 @@ function renderLineupPitch(){
     const players = typeof getLineupBySide === "function" ? getLineupBySide(side) : [];
     const starters = players.filter(p => p.status !== "Panchina");
     const benchPlayers = players.filter(p => p.status === "Panchina");
-    console.log("[Coach Lineup] render pitch", side, players.length, starters.length);
 
     const base = `
         <div class="pitch-half-line"></div>
@@ -463,3 +464,14 @@ function renderLineupPitch(){
             : `<span class="bench-chip">Nessun panchinaro</span>`;
     }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const teamSelect = document.getElementById("eventTeamInput");
+    if(teamSelect){
+        teamSelect.addEventListener("change", () => {
+            setInputValue("eventPlayerSelectInput","");
+            setInputValue("eventPlayerInput","");
+            renderEventPlayerSelect();
+        });
+    }
+});
