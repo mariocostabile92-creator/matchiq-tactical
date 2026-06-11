@@ -36,8 +36,32 @@ async function trackCoachFeature(feature, metadata = {}){
     }
 }
 
+function normalizeCoachState(data){
+    if(!data || typeof data !== "object"){
+        return {
+            match: null,
+            events: [],
+            ratings: [],
+            lineup: [],
+            report: ""
+        };
+    }
+
+    return {
+        match: data.match || null,
+        events: Array.isArray(data.events) ? data.events : [],
+        ratings: Array.isArray(data.ratings) ? data.ratings : [],
+        lineup: Array.isArray(data.lineup) ? data.lineup : [],
+        report: data.report || ""
+    };
+}
+
 function saveState(){
     try{
+        if(!Array.isArray(coachState.events)) coachState.events = [];
+        if(!Array.isArray(coachState.ratings)) coachState.ratings = [];
+        if(!Array.isArray(coachState.lineup)) coachState.lineup = [];
+
         localStorage.setItem(STORAGE_KEY, JSON.stringify(coachState));
     }catch(e){
         console.warn("Salvataggio Coach non disponibile:", e);
@@ -50,14 +74,7 @@ function loadState(){
         if(!raw) return;
 
         const data = JSON.parse(raw);
-        if(!data || typeof data !== "object") return;
-
-        coachState = {
-            match: data.match || null,
-            events: Array.isArray(data.events) ? data.events : [],
-            ratings: Array.isArray(data.ratings) ? data.ratings : [],
-            report: data.report || ""
-        };
+        coachState = normalizeCoachState(data);
     }catch(e){
         console.warn("Caricamento Coach non disponibile:", e);
     }
@@ -93,6 +110,7 @@ function buildHistoryItem(){
         match: JSON.parse(JSON.stringify(match)),
         events: JSON.parse(JSON.stringify(coachState.events || [])),
         ratings: JSON.parse(JSON.stringify(coachState.ratings || [])),
+        lineup: JSON.parse(JSON.stringify(coachState.lineup || [])),
         report: coachState.report || "",
         homeGoals: getGoals("home"),
         awayGoals: getGoals("away")
@@ -126,11 +144,16 @@ function saveCurrentMatchToHistory(){
     trackCoachFeature("coach_history", {
         events: coachState.events.length,
         ratings: coachState.ratings.length,
+        lineup_count: Array.isArray(coachState.lineup) ? coachState.lineup.length : 0,
         has_report: Boolean(coachState.report)
     });
 
     renderHistory();
     renderStatus();
+
+    if(typeof renderLineup === "function"){
+        renderLineup();
+    }
 
     if(isCoachPro()){
         showNotice("Partita salvata nello storico Coach.", "ok");
@@ -146,6 +169,11 @@ function clearCoachHistory(){
 
     renderHistory();
     renderStatus();
+
+    if(typeof renderLineup === "function"){
+        renderLineup();
+    }
+
     showNotice("Storico Coach svuotato.", "ok");
 }
 
@@ -175,12 +203,13 @@ function reopenHistoryMatch(historyId){
         return;
     }
 
-    coachState = {
+    coachState = normalizeCoachState({
         match: item.match || null,
         events: Array.isArray(item.events) ? item.events : [],
         ratings: Array.isArray(item.ratings) ? item.ratings : [],
+        lineup: Array.isArray(item.lineup) ? item.lineup : [],
         report: item.report || ""
-    };
+    });
 
     saveState();
     renderAll();
@@ -201,5 +230,10 @@ function deleteHistoryMatch(historyId){
 
     renderHistory();
     renderStatus();
+
+    if(typeof renderLineup === "function"){
+        renderLineup();
+    }
+
     showNotice("Partita eliminata dallo storico.", "ok");
 }
