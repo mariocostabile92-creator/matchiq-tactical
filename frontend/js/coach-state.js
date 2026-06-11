@@ -1,4 +1,4 @@
-APP_VERSION = "10392";
+APP_VERSION = "10393";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 

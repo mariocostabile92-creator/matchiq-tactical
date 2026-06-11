@@ -843,3 +843,19 @@ renderAll = function(){
     originalRenderAll();
     renderCoachPlanCard();
 };
+
+
+/* Coach V1.6.1 - render retry */
+function coachPlanRenderRetryV161(){
+    try{
+        renderCoachPlanBadges();
+        renderReportButtonsState();
+    }catch(e){
+        console.warn("Coach plan render retry non riuscito:", e);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(coachPlanRenderRetryV161, 150);
+    setTimeout(coachPlanRenderRetryV161, 700);
+});
