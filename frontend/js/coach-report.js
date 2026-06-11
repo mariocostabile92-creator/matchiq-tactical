@@ -244,7 +244,7 @@ ${buildWhatsAppSummary()}
 La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
 
 <strong>Nota</strong>
-Report generato localmente da MatchIQ Coach V1.7.1: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
+Report generato localmente da MatchIQ Coach V1.6.2: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
 `.trim();
 
     coachState.report = report;
@@ -656,14 +656,6 @@ td{
         -webkit-print-color-adjust:exact;
     }
 }
-
-@media print{
-    .print-wrap{max-width:none;width:100%;}
-    .kpi-grid{grid-template-columns:repeat(6,1fr);}
-    .insight-grid{grid-template-columns:repeat(4,1fr);}
-    .cover{margin-bottom:12px;}
-}
-
 </style>
 </head>
 
@@ -676,7 +668,7 @@ td{
                 <div class="brand-title">MatchIQ Coach</div>
                 <div class="brand-sub">Report tecnico professionale per calcio dilettantistico</div>
             </div>
-            <div class="badge-print">COACH REPORT V1.5.1 PRO</div>
+            <div class="badge-print">COACH REPORT V1.6.2</div>
         </div>
 
         <div class="match-title">${escapePrintHtml(m.homeTeam)} vs ${escapePrintHtml(m.awayTeam)}</div>
