@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.6.1 - Onboarding</title>
+<title>MatchIQ Coach Mode V1.7 - Onboarding</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -51,7 +51,7 @@
 </style>
 
 <style>
-/* Coach V1.6.1 - Mobile compact polish */
+/* Coach V1.7 - Mobile compact polish */
 @media(max-width:900px){
     body{
         padding-bottom:118px;
@@ -282,6 +282,80 @@
 }
 </style>
 
+
+<style>
+/* Coach Lineup V1.7 */
+.lineup-roster-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-top:16px;
+}
+.lineup-list{
+    display:grid;
+    gap:10px;
+}
+.lineup-player-card{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:12px;
+    align-items:center;
+    padding:13px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.055);
+    border-radius:18px;
+}
+.lineup-number{
+    width:42px;
+    height:42px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    background:rgba(0,245,160,.12);
+    border:1px solid rgba(0,245,160,.22);
+    color:#00f5a0;
+    font-weight:1000;
+}
+.lineup-name{
+    font-weight:1000;
+    color:#fff;
+}
+.lineup-meta{
+    margin-top:4px;
+    color:#9fb0df;
+    font-size:13px;
+    font-weight:800;
+}
+.lineup-remove{
+    border:none;
+    background:rgba(255,82,82,.14);
+    color:#ff9b9b;
+    border-radius:12px;
+    width:38px;
+    height:38px;
+    font-size:20px;
+    font-weight:1000;
+    cursor:pointer;
+}
+.lineup-empty{
+    color:#9fb0df;
+    background:rgba(255,255,255,.045);
+    border:1px dashed rgba(255,255,255,.12);
+    border-radius:18px;
+    padding:16px;
+    font-weight:800;
+}
+@media(max-width:900px){
+    .lineup-roster-grid{
+        grid-template-columns:1fr;
+    }
+    .lineup-player-card{
+        grid-template-columns:auto 1fr auto;
+        padding:12px;
+    }
+}
+</style>
+
 </head>
 
 <body>
@@ -306,7 +380,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.6.1</span>
+            <span class="badge green">COACH MODE V1.7</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -492,6 +566,14 @@
                     </select>
                 </div>
 
+
+                <div class="field">
+                    <label>Giocatore da formazione</label>
+                    <select id="eventPlayerSelectInput" onchange="syncEventPlayerFromSelect()">
+                        <option value="">Seleziona giocatore</option>
+                    </select>
+                </div>
+
                 <div class="field">
                     <label>Giocatore opzionale</label>
                     <input id="eventPlayerInput" type="text" placeholder="Es. N.10 Rossi" />
@@ -557,9 +639,90 @@
         </div>
     </div>
 
+
     <div class="grid section">
         <div class="panel">
-            <span class="badge gold">3. PAGELLE</span>
+            <span class="badge green">3. FORMAZIONE</span>
+
+            <h2>Formazione squadra</h2>
+
+            <p>
+                Inserisci titolari e panchina. Da qui in poi potrai collegare eventi e pagelle ai giocatori reali della partita.
+            </p>
+
+            <div class="form-grid" style="margin-top:16px;">
+                <div class="field">
+                    <label>Numero</label>
+                    <input id="lineupNumberInput" type="number" min="0" max="99" placeholder="Es. 10" />
+                </div>
+
+                <div class="field">
+                    <label>Nome giocatore</label>
+                    <input id="lineupNameInput" type="text" placeholder="Es. Rossi Mario" />
+                </div>
+
+                <div class="field">
+                    <label>Squadra</label>
+                    <select id="lineupTeamInput">
+                        <option value="home">Casa</option>
+                        <option value="away">Trasferta</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Ruolo</label>
+                    <select id="lineupRoleInput">
+                        <option value="Portiere">Portiere</option>
+                        <option value="Difensore">Difensore</option>
+                        <option value="Centrocampista">Centrocampista</option>
+                        <option value="Esterno">Esterno</option>
+                        <option value="Attaccante">Attaccante</option>
+                        <option value="Jolly">Jolly</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Stato</label>
+                    <select id="lineupStatusInput">
+                        <option value="Titolare">Titolare</option>
+                        <option value="Panchina">Panchina</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="micro-row">
+                <button class="btn green" onclick="addLineupPlayer()">Aggiungi giocatore</button>
+                <button class="btn dark" onclick="clearLineupForm()">Pulisci campi</button>
+                <button class="btn red" onclick="clearLineup()">Svuota formazione</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <span class="badge blue">ROSA PARTITA</span>
+
+            <h2>Giocatori inseriti</h2>
+
+            <div class="lineup-roster-grid">
+                <div>
+                    <div class="status-label">Casa</div>
+                    <div id="homeLineupList" class="lineup-list">
+                        <div class="lineup-empty">Nessun giocatore casa inserito.</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="status-label">Trasferta</div>
+                    <div id="awayLineupList" class="lineup-list">
+                        <div class="lineup-empty">Nessun giocatore trasferta inserito.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid section">
+        <div class="panel">
+            <span class="badge gold">4. PAGELLE</span>
 
             <h2>Pagelle giocatori</h2>
 
@@ -567,6 +730,8 @@
                 Inserisci una valutazione rapida dei giocatori più importanti.
                 MatchIQ Coach userà queste pagelle nel report finale.
             </p>
+
+            <div id="ratingLineupQuickList" class="micro-row" style="margin-top:14px;"></div>
 
             <div class="form-grid" style="margin-top:16px;">
                 <div class="field">
@@ -636,7 +801,7 @@
     </div>
     <div class="grid section">
         <div class="panel">
-            <span class="badge blue">4. TIMELINE</span>
+            <span class="badge blue">5. TIMELINE</span>
 
             <h2>Eventi partita</h2>
 
@@ -648,7 +813,7 @@
         </div>
 
         <div class="panel">
-            <span class="badge green">5. REPORT</span>
+            <span class="badge green">6. REPORT</span>
 
             <h2>Report tecnico automatico</h2>
 
@@ -669,7 +834,7 @@
 
     <div class="grid section">
         <div class="panel">
-            <span class="badge gold">6. STORICO COACH</span>
+            <span class="badge gold">7. STORICO COACH</span>
 
             <h2>Archivio partite</h2>
 

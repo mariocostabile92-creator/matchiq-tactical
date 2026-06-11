@@ -201,6 +201,7 @@ Categoria: ${match.category || "Dilettanti"}
 Data: ${match.date || "--"}
 Risultato eventi registrati: ${homeGoals} - ${awayGoals}
 Moduli: ${match.homeShape || "--"} vs ${match.awayShape || "--"}
+Formazione inserita: ${getLineup().length} giocatori
 
 <strong>Sintesi partita</strong>
 La partita ha registrato ${totalEvents} eventi. Dal flusso manuale inserito emerge che ${dominantTeam} ha avuto il momento più influente della gara. Il report si basa sugli eventi registrati dallo staff e può essere usato come prima lettura post-partita.
@@ -244,7 +245,7 @@ ${buildWhatsAppSummary()}
 La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
 
 <strong>Nota</strong>
-Report generato localmente da MatchIQ Coach V1.6.2: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
+Report generato localmente da MatchIQ Coach V1.7.2: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
 `.trim();
 
     coachState.report = report;
@@ -698,6 +699,10 @@ td{
         <div class="summary-card">
             <div class="summary-label">Eventi registrati</div>
             <div class="summary-value">${coachState.events.length}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Formazione</div>
+            <div class="summary-value">${getLineup().length} giocatori</div>
         </div>
         <div class="summary-card">
             <div class="summary-label">Pagelle inserite</div>

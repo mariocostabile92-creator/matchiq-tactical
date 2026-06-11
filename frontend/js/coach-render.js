@@ -311,3 +311,75 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(coachPlanRenderRetryV162, 150);
     setTimeout(coachPlanRenderRetryV162, 700);
 });
+
+
+/* Coach Lineup V1.7 */
+function renderLineupList(side){
+    const box = document.getElementById(side === "home" ? "homeLineupList" : "awayLineupList");
+    if(!box) return;
+
+    const list = getLineupBySide(side);
+
+    if(!list.length){
+        box.innerHTML = `<div class="lineup-empty">Nessun giocatore ${side === "home" ? "casa" : "trasferta"} inserito.</div>`;
+        return;
+    }
+
+    const sorted = [...list].sort((a,b) => {
+        const sa = a.status === "Titolare" ? 0 : 1;
+        const sb = b.status === "Titolare" ? 0 : 1;
+        if(sa !== sb) return sa - sb;
+        return Number(a.number || 999) - Number(b.number || 999);
+    });
+
+    box.innerHTML = sorted.map(p => `
+        <div class="lineup-player-card">
+            <div class="lineup-number">${esc(p.number || "-")}</div>
+            <div>
+                <div class="lineup-name">${esc(p.name)}</div>
+                <div class="lineup-meta">${esc(p.role || "Jolly")} · ${esc(p.status || "Titolare")}</div>
+            </div>
+            <button class="lineup-remove" onclick="deleteLineupPlayer('${esc(p.id)}')">×</button>
+        </div>
+    `).join("");
+}
+
+function renderEventPlayerSelect(){
+    const select = document.getElementById("eventPlayerSelectInput");
+    if(!select) return;
+
+    const currentSide = getInputValue("eventTeamInput","home");
+    const currentValue = select.value;
+    const players = getLineupBySide(currentSide);
+
+    select.innerHTML = `<option value="">Seleziona giocatore</option>` + players.map(p => `
+        <option value="${esc(p.id)}">${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</option>
+    `).join("");
+
+    if(players.some(p => String(p.id) === String(currentValue))){
+        select.value = currentValue;
+    }
+}
+
+function renderRatingLineupHint(){
+    const box = document.getElementById("ratingLineupQuickList");
+    if(!box) return;
+
+    const players = getLineup();
+
+    if(!players.length){
+        box.innerHTML = `<div class="lineup-empty">Inserisci la formazione per compilare più velocemente le pagelle.</div>`;
+        return;
+    }
+
+    box.innerHTML = players.slice(0,18).map(p => `
+        <button class="btn dark" type="button" onclick="syncRatingPlayerFromLineup('${esc(p.id)}')">${esc(formatLineupPlayer(p))}</button>
+    `).join("");
+}
+
+function renderLineup(){
+    renderLineupList("home");
+    renderLineupList("away");
+    renderEventPlayerSelect();
+    renderRatingLineupHint();
+}

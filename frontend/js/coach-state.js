@@ -1,4 +1,4 @@
-APP_VERSION = "10393";
+APP_VERSION = "10395";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 
@@ -27,6 +27,7 @@ let coachState = {
     match: null,
     events: [],
     ratings: [],
+    lineup: [],
     report: ""
 };
 
@@ -224,4 +225,24 @@ function showCoachProNotice(feature){
     setTimeout(() => {
         goCoachUpgrade();
     }, 1200);
+}
+
+
+/* Coach Lineup V1.7 */
+function getLineup(){
+    return Array.isArray(coachState.lineup) ? coachState.lineup : [];
+}
+
+function getLineupBySide(side){
+    return getLineup().filter(p => p.side === side);
+}
+
+function getLineupPlayerById(playerId){
+    return getLineup().find(p => String(p.id) === String(playerId)) || null;
+}
+
+function formatLineupPlayer(p){
+    if(!p) return "";
+    const number = p.number ? `#${p.number} ` : "";
+    return `${number}${p.name}`;
 }
