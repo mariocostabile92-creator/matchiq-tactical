@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.5 - PDF</title>
+<title>MatchIQ Coach Mode V1.6 - Onboarding</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -13,6 +13,42 @@
 <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
 <link rel="stylesheet" href="/css/coach.css">
+
+<style>
+.coach-onboarding{
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+    gap:18px;
+    margin:22px 0;
+}
+.coach-guide-card,.coach-plan-card{
+    background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:28px;
+    padding:24px;
+    box-shadow:0 20px 60px rgba(0,0,0,.20);
+}
+.coach-guide-card h2,.coach-plan-card h2{margin:10px 0 10px;font-size:26px;}
+.coach-guide-card p,.coach-plan-card p{color:#aebee7;line-height:1.6;}
+.coach-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px;}
+.coach-step{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:13px;}
+.coach-step strong{display:block;color:#00f5a0;font-size:18px;margin-bottom:6px;}
+.coach-step span{display:block;color:#dbe6ff;font-size:12px;font-weight:900;line-height:1.35;}
+.plan-limit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px;}
+.plan-limit-card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:13px;}
+.plan-limit-label{color:#8fa3d7;font-size:11px;font-weight:1000;text-transform:uppercase;margin-bottom:5px;}
+.plan-limit-value{font-size:15px;font-weight:1000;color:#fff;}
+.coach-plan-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+.coach-plan-actions .btn{flex:1;min-width:130px;}
+@media(max-width:900px){
+    .coach-onboarding{grid-template-columns:1fr;gap:14px;margin:16px 0;}
+    .coach-guide-card,.coach-plan-card{padding:18px;border-radius:22px;}
+    .coach-steps{grid-template-columns:1fr;gap:8px;}
+    .coach-step{display:grid;grid-template-columns:42px 1fr;align-items:center;gap:10px;}
+    .plan-limit-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:420px){.plan-limit-grid{grid-template-columns:1fr;}}
+</style>
 </head>
 
 <body>
@@ -37,7 +73,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.5</span>
+            <span class="badge green">COACH MODE V1.6</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -51,6 +87,7 @@
                 <span>📌 Eventi rapidi</span>
                 <span>🧠 Report automatico</span>
                 <span>📱 Zero API live</span>
+                <span>📄 PDF Coach</span>
             </div>
 
             <div class="kpi-grid">
@@ -110,6 +147,38 @@
             </div>
         </div>
     </div>
+
+    <div class="coach-onboarding">
+        <div class="coach-guide-card">
+            <span class="badge green">PRIMA VOLTA?</span>
+            <h2>Segui questi 5 step</h2>
+            <p>Coach Mode serve per trasformare la partita in un report tecnico ordinato. Ti basta seguire il flusso dall’alto verso il basso.</p>
+            <div class="coach-steps">
+                <div class="coach-step"><strong>1</strong><span>Crea partita</span></div>
+                <div class="coach-step"><strong>2</strong><span>Segna eventi</span></div>
+                <div class="coach-step"><strong>3</strong><span>Aggiungi pagelle</span></div>
+                <div class="coach-step"><strong>4</strong><span>Genera report</span></div>
+                <div class="coach-step"><strong>5</strong><span>PDF / WhatsApp</span></div>
+            </div>
+        </div>
+
+        <div class="coach-plan-card" id="coachPlanCard">
+            <span class="badge gold" id="coachPlanBadgeLarge">PIANO</span>
+            <h2 id="coachPlanTitle">Limiti Coach</h2>
+            <p id="coachPlanDescription">Caricamento piano...</p>
+            <div class="plan-limit-grid">
+                <div class="plan-limit-card"><div class="plan-limit-label">Pagelle</div><div class="plan-limit-value" id="planLimitRatings">--</div></div>
+                <div class="plan-limit-card"><div class="plan-limit-label">Storico</div><div class="plan-limit-value" id="planLimitHistory">--</div></div>
+                <div class="plan-limit-card"><div class="plan-limit-label">PDF Coach</div><div class="plan-limit-value" id="planLimitPdf">--</div></div>
+                <div class="plan-limit-card"><div class="plan-limit-label">WhatsApp</div><div class="plan-limit-value" id="planLimitWhatsapp">--</div></div>
+            </div>
+            <div class="coach-plan-actions" id="coachPlanActions">
+                <button class="btn green" onclick="generateCoachReport()">Genera report</button>
+                <button class="btn pro" id="coachUpgradeBtn" onclick="goCoachUpgrade()">Passa a Pro</button>
+            </div>
+        </div>
+    </div>
+
     <div class="grid section">
         <div class="panel">
             <span class="badge blue">1. CREA PARTITA</span>

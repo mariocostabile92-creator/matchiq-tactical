@@ -1,4 +1,4 @@
-const APP_VERSION = "10210";
+APP_VERSION = "10392";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 
@@ -183,12 +183,12 @@ function canUseCoachWhatsapp(){
 }
 
 function getCoachPdfUsageText(){
-    if(isCoachPro()) return "PDF illimitati";
+    if(isCoachPro()) return "PDF sbloccati";
     return `PDF prova ${getCoachUsageCount(COACH_USAGE_KEYS.pdfExports)}/${getCoachLimits().maxPdfExports}`;
 }
 
 function getCoachWhatsappUsageText(){
-    if(isCoachPro()) return "WhatsApp illimitato";
+    if(isCoachPro()) return "WhatsApp sbloccato";
     return `WhatsApp prova ${getCoachUsageCount(COACH_USAGE_KEYS.whatsappCopies)}/${getCoachLimits().maxWhatsappCopies}`;
 }
 
@@ -204,16 +204,24 @@ function getCoachPlanLabel(){
     return isCoachPro() ? "PRO" : "FREE";
 }
 
+function getCoachPlanDescription(){
+    if(isCoachPro()){
+        return "Coach Pro attivo: PDF, WhatsApp, pagelle e storico sono sbloccati per uso continuativo.";
+    }
+
+    return "Piano Free: puoi provare Coach Mode con 5 pagelle, 2 partite nello storico, 1 PDF e 1 sintesi WhatsApp.";
+}
+
 function goCoachUpgrade(){
-    window.location.href = `/account.html?v=${APP_VERSION}`;
+    window.location.href = `/account.html?v=${APP_VERSION}&from=coach-pro-lock`;
 }
 
 function showCoachProNotice(feature){
-    const message = `🔒 Hai usato la prova gratuita di ${feature}. Passa a Pro per usarla in modo illimitato.`;
+    const message = `🔒 Hai usato la prova gratuita di ${feature}. Passa a Pro per usarla in modo continuativo.`;
 
     showNotice(message, "warn", 3500);
 
     setTimeout(() => {
-        window.location.href = `/account.html?v=${APP_VERSION}&from=coach-pro-lock`;
+        goCoachUpgrade();
     }, 1200);
 }
