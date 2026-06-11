@@ -425,15 +425,16 @@ function renderLineupPitch(){
     const homeTab = document.getElementById("pitchTabHome");
     const awayTab = document.getElementById("pitchTabAway");
 
-    if(homeTab) homeTab.classList.toggle("active", activePitchSide !== "away");
-    if(awayTab) awayTab.classList.toggle("active", activePitchSide === "away");
+    if(homeTab) homeTab.classList.toggle("active", (window.activePitchSide || "home") !== "away");
+    if(awayTab) awayTab.classList.toggle("active", (window.activePitchSide || "home") === "away");
 
     if(!pitch) return;
 
-    const side = activePitchSide === "away" ? "away" : "home";
-    const players = getLineupBySide(side);
+    const side = (window.activePitchSide || "home") === "away" ? "away" : "home";
+    const players = typeof getLineupBySide === "function" ? getLineupBySide(side) : [];
     const starters = players.filter(p => p.status !== "Panchina");
     const benchPlayers = players.filter(p => p.status === "Panchina");
+    console.log("[Coach Lineup] render pitch", side, players.length, starters.length);
 
     const base = `
         <div class="pitch-half-line"></div>

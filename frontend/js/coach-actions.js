@@ -234,12 +234,21 @@ function addLineupPlayer(){
     }
 
     coachState.lineup.push(player);
-    if(typeof activePitchSide !== "undefined"){
-        activePitchSide = side;
-    }
+    window.window.activePitchSide = side;
     saveState();
     clearLineupForm();
-    renderAll();
+
+    console.log("[Coach Lineup] added", player, coachState.lineup);
+
+    if(typeof renderAll === "function"){
+        renderAll();
+    }
+    if(typeof renderLineup === "function"){
+        renderLineup();
+    }
+    if(typeof renderLineupPitch === "function"){
+        renderLineupPitch();
+    }
 
     showNotice(`Giocatore aggiunto: ${formatLineupPlayer(player)}.`, "ok", 2500);
 }
@@ -278,4 +287,52 @@ function syncRatingPlayerFromLineup(playerId){
     setInputValue("ratingPlayerInput", formatLineupPlayer(player));
     setInputValue("ratingTeamInput", player.side);
     setInputValue("ratingRoleInput", player.role || "Jolly");
+}
+
+
+/* Coach Lineup Pitch Hotfix V1.7.3 */
+function addLineupPlayer(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+
+    const name = getInputValue("lineupNameInput","");
+    if(!name){
+        showNotice("Inserisci il nome del giocatore.", "warn");
+        return;
+    }
+
+    const side = getInputValue("lineupTeamInput","home");
+
+    if(!Array.isArray(coachState.lineup)){
+        coachState.lineup = [];
+    }
+
+    const player = {
+        id: Date.now() + Math.random(),
+        number: getInputValue("lineupNumberInput",""),
+        name,
+        side,
+        team: getTeamName(side),
+        role: getInputValue("lineupRoleInput","Jolly"),
+        status: getInputValue("lineupStatusInput","Titolare"),
+        createdAt: new Date().toISOString()
+    };
+
+    coachState.lineup.push(player);
+    window.activePitchSide = side;
+
+    saveState();
+    clearLineupForm();
+
+    console.log("[Coach Lineup] added", player, coachState.lineup);
+
+    renderAll();
+
+    if(typeof renderLineupPitch === "function"){
+        renderLineupPitch();
+    }
+
+    showNotice(`Giocatore aggiunto: ${formatLineupPlayer(player)}.`, "ok", 2500);
 }

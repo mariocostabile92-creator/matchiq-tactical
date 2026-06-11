@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.7.2 - Onboarding</title>
+<title>MatchIQ Coach Mode V1.7.3 - Onboarding</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="MatchIQ Coach">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -51,7 +52,7 @@
 </style>
 
 <style>
-/* Coach V1.7.2 - Mobile compact polish */
+/* Coach V1.7.3 - Mobile compact polish */
 @media(max-width:900px){
     body{
         padding-bottom:118px;
@@ -284,7 +285,7 @@
 
 
 <style>
-/* Coach Lineup V1.7.2 */
+/* Coach Lineup V1.7.3 */
 .lineup-roster-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -358,7 +359,7 @@
 
 
 <style>
-/* Coach Lineup Pitch V1.7.2 */
+/* Coach Lineup Pitch V1.7.3 */
 .lineup-pitch-layout{
     display:grid;
     grid-template-columns:.82fr 1.18fr;
@@ -548,6 +549,17 @@
 }
 </style>
 
+
+<style>
+/* Coach Lineup Hotfix V1.7.3 */
+.pitch-player{
+    pointer-events:auto;
+}
+.pitch-empty-state{
+    user-select:none;
+}
+</style>
+
 </head>
 
 <body>
@@ -572,7 +584,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.7.2</span>
+            <span class="badge green">COACH MODE V1.7.3</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
