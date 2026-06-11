@@ -382,4 +382,83 @@ function renderLineup(){
     renderLineupList("away");
     renderEventPlayerSelect();
     renderRatingLineupHint();
+    renderLineupPitch();
+}
+
+/* Coach Lineup Pitch V1.7.2 */
+function getPitchPosition(player, index, total){
+    const role = String(player.role || "Jolly").toLowerCase();
+    const rowMap = {
+        "portiere": 88,
+        "difensore": 70,
+        "centrocampista": 52,
+        "esterno": 38,
+        "attaccante": 20,
+        "jolly": 50
+    };
+
+    let y = rowMap[role] || 50;
+
+    const sameRole = getLineupBySide(player.side)
+        .filter(p => p.status === "Titolare" && String(p.role || "Jolly").toLowerCase() === role);
+
+    const roleIndex = sameRole.findIndex(p => String(p.id) === String(player.id));
+    const roleTotal = Math.max(1, sameRole.length);
+
+    let x = 50;
+    if(roleTotal === 1) x = 50;
+    else{
+        const spread = Math.min(68, 18 + roleTotal * 13);
+        x = 50 - (spread / 2) + (spread / (roleTotal - 1)) * roleIndex;
+    }
+
+    if(role === "esterno" && roleTotal === 1){
+        x = 28;
+    }
+
+    return {x, y};
+}
+
+function renderLineupPitch(){
+    const pitch = document.getElementById("lineupPitch");
+    const bench = document.getElementById("lineupBench");
+    const homeTab = document.getElementById("pitchTabHome");
+    const awayTab = document.getElementById("pitchTabAway");
+
+    if(homeTab) homeTab.classList.toggle("active", activePitchSide !== "away");
+    if(awayTab) awayTab.classList.toggle("active", activePitchSide === "away");
+
+    if(!pitch) return;
+
+    const side = activePitchSide === "away" ? "away" : "home";
+    const players = getLineupBySide(side);
+    const starters = players.filter(p => p.status !== "Panchina");
+    const benchPlayers = players.filter(p => p.status === "Panchina");
+
+    const base = `
+        <div class="pitch-half-line"></div>
+        <div class="pitch-box-top"></div>
+        <div class="pitch-box-bottom"></div>
+    `;
+
+    if(!starters.length){
+        pitch.innerHTML = base + `<div class="pitch-empty-state">Aggiungi titolari ${side === "home" ? "casa" : "trasferta"} per vedere la formazione sul campo.</div>`;
+    }else{
+        pitch.innerHTML = base + starters.map((p, index) => {
+            const pos = getPitchPosition(p, index, starters.length);
+            return `
+                <div class="pitch-player ${esc(side)}" style="left:${pos.x}%;top:${pos.y}%;">
+                    <div class="pitch-shirt">${esc(p.number || "-")}</div>
+                    <div class="pitch-name">${esc(p.name)}</div>
+                    <div class="pitch-role">${esc(p.role || "Jolly")}</div>
+                </div>
+            `;
+        }).join("");
+    }
+
+    if(bench){
+        bench.innerHTML = benchPlayers.length
+            ? benchPlayers.map(p => `<span class="bench-chip">${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</span>`).join("")
+            : `<span class="bench-chip">Nessun panchinaro</span>`;
+    }
 }

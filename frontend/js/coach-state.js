@@ -1,4 +1,4 @@
-APP_VERSION = "10395";
+APP_VERSION = "10397";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 
@@ -245,4 +245,13 @@ function formatLineupPlayer(p){
     if(!p) return "";
     const number = p.number ? `#${p.number} ` : "";
     return `${number}${p.name}`;
+}
+
+let activePitchSide = "home";
+
+function setPitchSide(side){
+    activePitchSide = side === "away" ? "away" : "home";
+    if(typeof renderLineupPitch === "function"){
+        renderLineupPitch();
+    }
 }

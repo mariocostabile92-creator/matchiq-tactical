@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.7 - Onboarding</title>
+<title>MatchIQ Coach Mode V1.7.2 - Onboarding</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -51,7 +51,7 @@
 </style>
 
 <style>
-/* Coach V1.7 - Mobile compact polish */
+/* Coach V1.7.2 - Mobile compact polish */
 @media(max-width:900px){
     body{
         padding-bottom:118px;
@@ -284,7 +284,7 @@
 
 
 <style>
-/* Coach Lineup V1.7 */
+/* Coach Lineup V1.7.2 */
 .lineup-roster-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -356,6 +356,198 @@
 }
 </style>
 
+
+<style>
+/* Coach Lineup Pitch V1.7.2 */
+.lineup-pitch-layout{
+    display:grid;
+    grid-template-columns:.82fr 1.18fr;
+    gap:16px;
+    align-items:start;
+}
+.pitch-tabs{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:10px 0 14px;
+}
+.pitch-tab{
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.055);
+    color:#dbe6ff;
+    border-radius:999px;
+    padding:10px 14px;
+    font-weight:1000;
+    cursor:pointer;
+}
+.pitch-tab.active{
+    background:linear-gradient(135deg,#00f5a0,#2f7cff);
+    color:#06111c;
+}
+.pitch-board{
+    position:relative;
+    min-height:560px;
+    border-radius:34px;
+    overflow:hidden;
+    border:1px solid rgba(0,245,160,.24);
+    background:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.08) 0 1px, transparent 2px),
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(135deg, rgba(0,245,160,.16), rgba(47,124,255,.08)),
+        #08251e;
+    background-size:100% 100%, 25% 100%, 100% 20%, 100% 100%, 100% 100%;
+    box-shadow:inset 0 0 80px rgba(0,0,0,.35), 0 22px 80px rgba(0,0,0,.25);
+}
+.pitch-board::before{
+    content:"";
+    position:absolute;
+    inset:18px;
+    border:2px solid rgba(255,255,255,.23);
+    border-radius:26px;
+    pointer-events:none;
+}
+.pitch-board::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:128px;
+    height:128px;
+    border:2px solid rgba(255,255,255,.20);
+    border-radius:50%;
+    pointer-events:none;
+}
+.pitch-half-line{
+    position:absolute;
+    left:18px;
+    right:18px;
+    top:50%;
+    height:2px;
+    background:rgba(255,255,255,.20);
+}
+.pitch-box-top,.pitch-box-bottom{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    width:48%;
+    height:86px;
+    border:2px solid rgba(255,255,255,.20);
+    pointer-events:none;
+}
+.pitch-box-top{top:18px;border-top:0;border-radius:0 0 22px 22px;}
+.pitch-box-bottom{bottom:18px;border-bottom:0;border-radius:22px 22px 0 0;}
+.pitch-player{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    width:96px;
+    min-height:66px;
+    border-radius:20px;
+    padding:9px 8px;
+    text-align:center;
+    background:linear-gradient(145deg,rgba(9,21,35,.92),rgba(16,38,55,.88));
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow:0 14px 34px rgba(0,0,0,.35);
+    z-index:2;
+}
+.pitch-player.home{
+    border-color:rgba(0,245,160,.45);
+}
+.pitch-player.away{
+    border-color:rgba(47,124,255,.45);
+}
+.pitch-shirt{
+    width:28px;
+    height:28px;
+    border-radius:10px;
+    display:grid;
+    place-items:center;
+    margin:0 auto 5px;
+    background:linear-gradient(135deg,#00f5a0,#2f7cff);
+    color:#06111c;
+    font-weight:1000;
+    font-size:12px;
+}
+.pitch-name{
+    color:#fff;
+    font-weight:1000;
+    font-size:12px;
+    line-height:1.15;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+.pitch-role{
+    color:#9fb0df;
+    font-size:10px;
+    font-weight:900;
+    margin-top:3px;
+}
+.pitch-empty-state{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:2;
+    width:min(360px,78%);
+    text-align:center;
+    background:rgba(4,12,24,.66);
+    border:1px dashed rgba(255,255,255,.18);
+    border-radius:24px;
+    padding:22px;
+    color:#c8d8ff;
+    font-weight:900;
+    line-height:1.45;
+}
+.bench-row{
+    margin-top:14px;
+    padding:14px;
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.045);
+}
+.bench-title{
+    color:#ffd978;
+    font-weight:1000;
+    margin-bottom:10px;
+    text-transform:uppercase;
+    font-size:12px;
+}
+.bench-list{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+.bench-chip{
+    border:1px solid rgba(255,217,120,.24);
+    background:rgba(255,217,120,.08);
+    color:#fff;
+    border-radius:999px;
+    padding:8px 10px;
+    font-weight:900;
+    font-size:12px;
+}
+.lineup-player-card{
+    transition:.18s ease;
+}
+.lineup-player-card:hover{
+    transform:translateY(-1px);
+    border-color:rgba(0,245,160,.28);
+}
+@media(max-width:1000px){
+    .lineup-pitch-layout{grid-template-columns:1fr;}
+    .pitch-board{min-height:520px;}
+}
+@media(max-width:520px){
+    .pitch-board{min-height:470px;border-radius:26px;}
+    .pitch-player{width:78px;min-height:58px;border-radius:16px;padding:7px 6px;}
+    .pitch-shirt{width:24px;height:24px;font-size:11px;}
+    .pitch-name{font-size:11px;}
+    .pitch-role{font-size:9px;}
+}
+</style>
+
 </head>
 
 <body>
@@ -380,7 +572,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.7</span>
+            <span class="badge green">COACH MODE V1.7.2</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -640,80 +832,99 @@
     </div>
 
 
-    <div class="grid section">
+    <div class="section">
         <div class="panel">
             <span class="badge green">3. FORMAZIONE</span>
 
-            <h2>Formazione squadra</h2>
+            <h2>Campo e formazione</h2>
 
             <p>
-                Inserisci titolari e panchina. Da qui in poi potrai collegare eventi e pagelle ai giocatori reali della partita.
+                Inserisci i giocatori e costruisci la formazione sul campo. I titolari compaiono nel pitch, la panchina resta sotto.
             </p>
 
-            <div class="form-grid" style="margin-top:16px;">
-                <div class="field">
-                    <label>Numero</label>
-                    <input id="lineupNumberInput" type="number" min="0" max="99" placeholder="Es. 10" />
-                </div>
-
-                <div class="field">
-                    <label>Nome giocatore</label>
-                    <input id="lineupNameInput" type="text" placeholder="Es. Rossi Mario" />
-                </div>
-
-                <div class="field">
-                    <label>Squadra</label>
-                    <select id="lineupTeamInput">
-                        <option value="home">Casa</option>
-                        <option value="away">Trasferta</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Ruolo</label>
-                    <select id="lineupRoleInput">
-                        <option value="Portiere">Portiere</option>
-                        <option value="Difensore">Difensore</option>
-                        <option value="Centrocampista">Centrocampista</option>
-                        <option value="Esterno">Esterno</option>
-                        <option value="Attaccante">Attaccante</option>
-                        <option value="Jolly">Jolly</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Stato</label>
-                    <select id="lineupStatusInput">
-                        <option value="Titolare">Titolare</option>
-                        <option value="Panchina">Panchina</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="micro-row">
-                <button class="btn green" onclick="addLineupPlayer()">Aggiungi giocatore</button>
-                <button class="btn dark" onclick="clearLineupForm()">Pulisci campi</button>
-                <button class="btn red" onclick="clearLineup()">Svuota formazione</button>
-            </div>
-        </div>
-
-        <div class="panel">
-            <span class="badge blue">ROSA PARTITA</span>
-
-            <h2>Giocatori inseriti</h2>
-
-            <div class="lineup-roster-grid">
+            <div class="lineup-pitch-layout" style="margin-top:16px;">
                 <div>
-                    <div class="status-label">Casa</div>
-                    <div id="homeLineupList" class="lineup-list">
-                        <div class="lineup-empty">Nessun giocatore casa inserito.</div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Numero</label>
+                            <input id="lineupNumberInput" type="number" min="0" max="99" placeholder="Es. 10" />
+                        </div>
+
+                        <div class="field">
+                            <label>Nome giocatore</label>
+                            <input id="lineupNameInput" type="text" placeholder="Es. Rossi Mario" />
+                        </div>
+
+                        <div class="field">
+                            <label>Squadra</label>
+                            <select id="lineupTeamInput">
+                                <option value="home">Casa</option>
+                                <option value="away">Trasferta</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Ruolo</label>
+                            <select id="lineupRoleInput">
+                                <option value="Portiere">Portiere</option>
+                                <option value="Difensore">Difensore</option>
+                                <option value="Centrocampista">Centrocampista</option>
+                                <option value="Esterno">Esterno</option>
+                                <option value="Attaccante">Attaccante</option>
+                                <option value="Jolly">Jolly</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Stato</label>
+                            <select id="lineupStatusInput">
+                                <option value="Titolare">Titolare</option>
+                                <option value="Panchina">Panchina</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="micro-row">
+                        <button class="btn green" onclick="addLineupPlayer()">Aggiungi giocatore</button>
+                        <button class="btn dark" onclick="clearLineupForm()">Pulisci</button>
+                        <button class="btn red" onclick="clearLineup()">Svuota</button>
+                    </div>
+
+                    <div class="lineup-roster-grid">
+                        <div>
+                            <div class="status-label">Casa</div>
+                            <div id="homeLineupList" class="lineup-list">
+                                <div class="lineup-empty">Nessun giocatore casa inserito.</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="status-label">Trasferta</div>
+                            <div id="awayLineupList" class="lineup-list">
+                                <div class="lineup-empty">Nessun giocatore trasferta inserito.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div>
-                    <div class="status-label">Trasferta</div>
-                    <div id="awayLineupList" class="lineup-list">
-                        <div class="lineup-empty">Nessun giocatore trasferta inserito.</div>
+                    <div class="pitch-tabs">
+                        <button id="pitchTabHome" class="pitch-tab active" type="button" onclick="setPitchSide('home')">Campo casa</button>
+                        <button id="pitchTabAway" class="pitch-tab" type="button" onclick="setPitchSide('away')">Campo trasferta</button>
+                    </div>
+
+                    <div class="pitch-board" id="lineupPitch">
+                        <div class="pitch-half-line"></div>
+                        <div class="pitch-box-top"></div>
+                        <div class="pitch-box-bottom"></div>
+                        <div class="pitch-empty-state">Aggiungi titolari per vedere la formazione sul campo.</div>
+                    </div>
+
+                    <div class="bench-row">
+                        <div class="bench-title">Panchina</div>
+                        <div id="lineupBench" class="bench-list">
+                            <span class="bench-chip">Nessun panchinaro</span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -234,6 +234,9 @@ function addLineupPlayer(){
     }
 
     coachState.lineup.push(player);
+    if(typeof activePitchSide !== "undefined"){
+        activePitchSide = side;
+    }
     saveState();
     clearLineupForm();
     renderAll();
