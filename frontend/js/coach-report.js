@@ -154,14 +154,6 @@ async function copyWhatsAppSummary(){
             renderAll();
         }
 
-        if(typeof trackCoachFeature === "function"){
-            trackCoachFeature("coach_whatsapp", {
-                events: coachState.events.length,
-                ratings: coachState.ratings.length,
-                has_report: Boolean(coachState.report)
-            });
-        }
-
         showNotice(
             isCoachPro()
                 ? "Sintesi WhatsApp copiata."
@@ -252,21 +244,13 @@ ${buildWhatsAppSummary()}
 La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
 
 <strong>Nota</strong>
-Report generato localmente da MatchIQ Coach V1.6: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
+Report generato localmente da MatchIQ Coach V1.7: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
 `.trim();
 
     coachState.report = report;
     saveState();
     renderReport();
     renderStatus();
-
-    if(typeof trackCoachFeature === "function"){
-        trackCoachFeature("coach_report", {
-            events: coachState.events.length,
-            ratings: coachState.ratings.length,
-            has_match: Boolean(coachState.match)
-        });
-    }
 
     showNotice("Report Coach generato.", "ok");
 }
@@ -375,6 +359,81 @@ function splitReportSections(reportHtml){
     return sections;
 }
 
+
+function getCoachMatchInsight(){
+    const totalEvents = coachState.events.length;
+    const goals = getEventsByType("gol").length;
+    const chances = getEventsByType("occasione").length;
+    const shots = getEventsByType("tiro").length;
+    const lost = getEventsByType("palla_persa").length;
+    const def = getEventsByType("errore_difensivo").length;
+
+    if(totalEvents <= 2){
+        return "Report iniziale: sono stati inseriti pochi eventi, quindi la lettura va usata come traccia sintetica post-partita.";
+    }
+    if(goals >= 4 || chances + shots >= 8){
+        return "Partita ricca di episodi offensivi: utile per analizzare rifinitura, finalizzazione e transizioni.";
+    }
+    if(def + lost >= 5){
+        return "Partita condizionata da errori e gestione del possesso: priorità a letture difensive e transizioni negative.";
+    }
+    if(chances + shots <= 2){
+        return "Partita poco produttiva negli ultimi metri: lavorare su area, profondità e ultimo passaggio.";
+    }
+    return "Partita equilibrata nei dati inseriti: il report aiuta a distinguere momenti positivi, criticità e priorità di lavoro.";
+}
+
+function buildCoachStaffSummary(){
+    const best = getBestRating();
+    const dominantSide = getDominantSide();
+    const dominantTeam = dominantSide === "balanced" ? "equilibrio generale" : getTeamName(dominantSide);
+    const training = buildTrainingAdvice().replace("Allenamento consigliato: ","");
+
+    return [
+        `Lettura generale: ${getCoachMatchInsight()}`,
+        `Momento influente: ${dominantTeam}.`,
+        `Migliore indicato: ${best ? `${best.player} con voto ${best.vote}` : "non inserito"}.`,
+        `Priorità lavoro: ${training}`
+    ];
+}
+
+function buildPrintableSectionCards(){
+    return buildCoachStaffSummary().map((text,index) => `
+        <div class="insight-card">
+            <div class="insight-number">${index + 1}</div>
+            <div class="insight-text">${escapePrintHtml(text)}</div>
+        </div>
+    `).join("");
+}
+
+function buildPrintableKpiCards(best){
+    const totalShots = getEventsByType("tiro").length;
+    const totalChances = getEventsByType("occasione").length;
+    const totalRecoveries = getEventsByType("recupero").length;
+    const totalLost = getEventsByType("palla_persa").length;
+
+    return `
+        <div class="kpi-card"><span>Eventi totali</span><strong>${coachState.events.length}</strong></div>
+        <div class="kpi-card"><span>Occasioni + tiri</span><strong>${totalChances + totalShots}</strong></div>
+        <div class="kpi-card"><span>Recuperi</span><strong>${totalRecoveries}</strong></div>
+        <div class="kpi-card"><span>Palle perse</span><strong>${totalLost}</strong></div>
+        <div class="kpi-card"><span>Pagelle</span><strong>${coachState.ratings.length}</strong></div>
+        <div class="kpi-card"><span>Migliore</span><strong>${best ? `${escapePrintHtml(best.player)} ${escapePrintHtml(best.vote)}` : "N/D"}</strong></div>
+    `;
+}
+
+function buildPrintableNextSteps(){
+    const tips = buildCoachTips()
+        .split("\n")
+        .map(x => x.replace(/^\d+\.\s*/, "").trim())
+        .filter(Boolean)
+        .slice(0,4);
+
+    const list = tips.length ? tips : ["Rivedere gli episodi principali con la squadra e trasformarli in obiettivi semplici per la prossima seduta."];
+    return list.map(x => `<li>${escapePrintHtml(x)}</li>`).join("");
+}
+
+
 function buildPrintableCoachReport(){
     if(!coachState.match || !coachState.report){
         return "";
@@ -396,30 +455,30 @@ function buildPrintableCoachReport(){
 
     const eventsHtml = events.length ? events.map(e => `
         <tr>
-            <td>${escapePrintHtml(e.minute)}'</td>
-            <td>${escapePrintHtml(e.icon)} ${escapePrintHtml(e.label)}</td>
+            <td class="minute">${escapePrintHtml(e.minute)}'</td>
+            <td><strong>${escapePrintHtml(e.icon)} ${escapePrintHtml(e.label)}</strong></td>
             <td>${escapePrintHtml(e.team)}</td>
             <td>${escapePrintHtml(e.player || "-")}</td>
             <td>${escapePrintHtml(e.note || "-")}</td>
         </tr>
-    `).join("") : `
-        <tr><td colspan="5">Nessun evento registrato.</td></tr>
-    `;
+    `).join("") : `<tr><td colspan="5">Nessun evento registrato.</td></tr>`;
 
-    const ratingsHtml = ratings.length ? ratings.map(r => `
-        <tr>
-            <td><strong>${escapePrintHtml(r.player)}</strong></td>
-            <td>${escapePrintHtml(r.team)}</td>
-            <td>${escapePrintHtml(r.role)}</td>
-            <td class="vote">${escapePrintHtml(r.vote)}</td>
-            <td>${escapePrintHtml(r.note || "-")}</td>
-        </tr>
-    `).join("") : `
-        <tr><td colspan="5">Nessuna pagella inserita.</td></tr>
-    `;
+    const ratingsHtml = ratings.length ? ratings.map(r => {
+        const vote = Number(r.vote || 0);
+        const voteClass = vote >= 7 ? "vote high" : vote < 6 ? "vote low" : "vote";
+        return `
+            <tr>
+                <td><strong>${escapePrintHtml(r.player)}</strong></td>
+                <td>${escapePrintHtml(r.team)}</td>
+                <td>${escapePrintHtml(r.role)}</td>
+                <td class="${voteClass}">${escapePrintHtml(r.vote)}</td>
+                <td>${escapePrintHtml(r.note || "-")}</td>
+            </tr>
+        `;
+    }).join("") : `<tr><td colspan="5">Nessuna pagella inserita.</td></tr>`;
 
     const sectionHtml = sections
-        .filter(section => !["REPORT MATCHIQ COACH", "Sintesi WhatsApp"].includes(section.title))
+        .filter(section => !["REPORT MATCHIQ COACH", "Sintesi WhatsApp", "Nota"].includes(section.title))
         .map(section => `
             <section class="print-section">
                 <h2>${escapePrintHtml(section.title)}</h2>
@@ -434,295 +493,83 @@ function buildPrintableCoachReport(){
 <meta charset="UTF-8">
 <title>MatchIQ Coach Report</title>
 <style>
-@page{
-    size:A4;
-    margin:14mm;
-}
-
-*{
-    box-sizing:border-box;
-}
-
-body{
-    margin:0;
-    font-family:Arial,Helvetica,sans-serif;
-    color:#101828;
-    background:#ffffff;
-}
-
-.print-wrap{
-    max-width:800px;
-    margin:0 auto;
-}
-
-.cover{
-    border-radius:22px;
-    padding:24px;
-    background:linear-gradient(135deg,#06111c,#102a43);
-    color:white;
-    margin-bottom:18px;
-}
-
-.brand-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:16px;
-    margin-bottom:28px;
-}
-
-.brand-title{
-    font-size:30px;
-    font-weight:900;
-    letter-spacing:-.7px;
-}
-
-.brand-sub{
-    color:#c8d8ff;
-    font-size:12px;
-    margin-top:5px;
-    font-weight:700;
-}
-
-.badge-print{
-    background:#18f08b;
-    color:#06111c;
-    border-radius:999px;
-    padding:8px 12px;
-    font-size:11px;
-    font-weight:900;
-    white-space:nowrap;
-}
-
-.match-title{
-    font-size:28px;
-    font-weight:900;
-    letter-spacing:-.5px;
-    margin-bottom:8px;
-}
-
-.score-line{
-    font-size:44px;
-    font-weight:900;
-    color:#18f08b;
-    margin-bottom:14px;
-}
-
-.cover-meta{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:9px;
-    margin-top:18px;
-}
-
-.cover-card{
-    background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.13);
-    border-radius:14px;
-    padding:11px;
-}
-
-.cover-label{
-    color:#b7c7ef;
-    font-size:10px;
-    text-transform:uppercase;
-    font-weight:900;
-    margin-bottom:5px;
-}
-
-.cover-value{
-    font-size:13px;
-    font-weight:900;
-}
-
-.summary-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:10px;
-    margin-bottom:14px;
-}
-
-.summary-card{
-    border:1px solid #e4e7ec;
-    border-radius:16px;
-    padding:13px;
-    background:#f9fafb;
-}
-
-.summary-label{
-    color:#667085;
-    font-size:10px;
-    text-transform:uppercase;
-    font-weight:900;
-    margin-bottom:6px;
-}
-
-.summary-value{
-    color:#101828;
-    font-size:14px;
-    font-weight:900;
-    line-height:1.35;
-}
-
-.print-section{
-    break-inside:avoid;
-    page-break-inside:avoid;
-    border:1px solid #e4e7ec;
-    border-radius:16px;
-    padding:15px 17px;
-    margin-bottom:12px;
-}
-
-.print-section h2{
-    margin:0 0 9px;
-    font-size:17px;
-    color:#06111c;
-    letter-spacing:-.2px;
-}
-
-.print-section p{
-    margin:0 0 6px;
-    color:#344054;
-    font-size:12.5px;
-    line-height:1.48;
-}
-
-.table-section{
-    break-inside:avoid;
-    page-break-inside:avoid;
-    margin-bottom:14px;
-}
-
-.table-title{
-    font-size:17px;
-    font-weight:900;
-    margin-bottom:8px;
-    color:#06111c;
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-    border:1px solid #e4e7ec;
-    border-radius:14px;
-    overflow:hidden;
-    font-size:11.5px;
-}
-
-th{
-    text-align:left;
-    background:#f2f4f7;
-    color:#475467;
-    padding:9px;
-    text-transform:uppercase;
-    font-size:10px;
-    font-weight:900;
-}
-
-td{
-    border-top:1px solid #e4e7ec;
-    padding:9px;
-    color:#344054;
-    vertical-align:top;
-}
-
-.vote{
-    font-size:16px;
-    font-weight:900;
-    color:#05603a;
-}
-
-.training-box{
-    border:2px solid #18f08b;
-    background:#ecfff5;
-    border-radius:18px;
-    padding:16px;
-    margin-bottom:14px;
-    break-inside:avoid;
-}
-
-.training-box h2{
-    color:#05603a;
-    margin:0 0 8px;
-    font-size:18px;
-}
-
-.training-box p{
-    color:#064e3b;
-    font-size:13px;
-    line-height:1.5;
-    margin:0;
-    font-weight:700;
-}
-
-.print-footer{
-    margin-top:18px;
-    padding-top:10px;
-    border-top:1px solid #e4e7ec;
-    color:#667085;
-    font-size:11px;
-    display:flex;
-    justify-content:space-between;
-    gap:12px;
-}
-
-@media print{
-    body{
-        print-color-adjust:exact;
-        -webkit-print-color-adjust:exact;
-    }
-}
+@page{size:A4;margin:12mm;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#101828;background:#ffffff;}
+.print-wrap{max-width:820px;margin:0 auto;}
+.cover{border-radius:24px;padding:26px;background:radial-gradient(circle at top right,rgba(24,240,139,.24),transparent 34%),linear-gradient(135deg,#06111c,#102a43 62%,#071226);color:white;margin-bottom:16px;overflow:hidden;}
+.brand-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:26px;}
+.brand-title{font-size:32px;font-weight:900;letter-spacing:-.8px;}
+.brand-sub{color:#c8d8ff;font-size:12px;margin-top:5px;font-weight:700;}
+.badge-print{background:#18f08b;color:#06111c;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:900;white-space:nowrap;}
+.match-title{font-size:29px;font-weight:900;letter-spacing:-.6px;margin-bottom:8px;}
+.score-line{font-size:48px;font-weight:900;color:#18f08b;margin-bottom:12px;}
+.cover-note{color:#dbeafe;font-size:13px;line-height:1.45;max-width:670px;}
+.cover-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:18px;}
+.cover-card{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:11px;}
+.cover-label{color:#b7c7ef;font-size:10px;text-transform:uppercase;font-weight:900;margin-bottom:5px;}
+.cover-value{font-size:13px;font-weight:900;}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.kpi-card{border:1px solid #e4e7ec;border-radius:16px;padding:13px;background:#f9fafb;}
+.kpi-card span{display:block;color:#667085;font-size:10px;text-transform:uppercase;font-weight:900;margin-bottom:6px;}
+.kpi-card strong{display:block;color:#101828;font-size:17px;font-weight:900;line-height:1.25;}
+.executive-box{border:1px solid #d0d5dd;background:#ffffff;border-radius:18px;padding:16px;margin-bottom:14px;break-inside:avoid;}
+.executive-box h2{margin:0 0 10px;color:#06111c;font-size:18px;}
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.insight-card{display:flex;gap:9px;border:1px solid #e4e7ec;border-radius:14px;background:#f9fafb;padding:11px;}
+.insight-number{width:24px;height:24px;border-radius:999px;background:#06111c;color:#18f08b;font-weight:900;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:12px;}
+.insight-text{color:#344054;font-size:12px;line-height:1.42;font-weight:700;}
+.training-box{border:2px solid #18f08b;background:#ecfff5;border-radius:18px;padding:16px;margin-bottom:14px;break-inside:avoid;}
+.training-box h2{color:#05603a;margin:0 0 8px;font-size:18px;}
+.training-box p{color:#064e3b;font-size:13px;line-height:1.5;margin:0;font-weight:700;}
+.next-steps{border:1px solid #ffd166;background:#fffbeb;border-radius:18px;padding:16px;margin-bottom:14px;break-inside:avoid;}
+.next-steps h2{margin:0 0 8px;color:#92400e;font-size:18px;}
+.next-steps ul{margin:0;padding-left:18px;color:#78350f;font-size:12.5px;line-height:1.5;font-weight:700;}
+.print-section{break-inside:avoid;page-break-inside:avoid;border:1px solid #e4e7ec;border-radius:16px;padding:15px 17px;margin-bottom:12px;}
+.print-section h2{margin:0 0 9px;font-size:17px;color:#06111c;letter-spacing:-.2px;}
+.print-section p{margin:0 0 6px;color:#344054;font-size:12.3px;line-height:1.48;}
+.table-section{break-inside:avoid;page-break-inside:avoid;margin-bottom:14px;}
+.table-title{font-size:17px;font-weight:900;margin-bottom:8px;color:#06111c;}
+table{width:100%;border-collapse:collapse;border:1px solid #e4e7ec;border-radius:14px;overflow:hidden;font-size:11.3px;}
+th{text-align:left;background:#f2f4f7;color:#475467;padding:9px;text-transform:uppercase;font-size:10px;font-weight:900;}
+td{border-top:1px solid #e4e7ec;padding:8px;color:#344054;vertical-align:top;}
+.minute{font-weight:900;color:#06111c;}
+.vote{font-size:16px;font-weight:900;color:#344054;}
+.vote.high{color:#05603a;}
+.vote.low{color:#b42318;}
+.whatsapp-box{border:1px solid #d0d5dd;border-radius:18px;padding:15px;margin-bottom:14px;background:#f8fafc;break-inside:avoid;}
+.whatsapp-box h2{margin:0 0 8px;font-size:17px;color:#06111c;}
+.whatsapp-text{white-space:pre-line;color:#344054;font-size:12px;line-height:1.5;}
+.print-footer{margin-top:18px;padding-top:10px;border-top:1px solid #e4e7ec;color:#667085;font-size:11px;display:flex;justify-content:space-between;gap:12px;}
+@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}.cover,.executive-box,.training-box,.next-steps,.table-section,.whatsapp-box{break-inside:avoid;page-break-inside:avoid;}}
 </style>
 </head>
-
 <body>
 <div class="print-wrap">
-
     <section class="cover">
         <div class="brand-row">
             <div>
                 <div class="brand-title">MatchIQ Coach</div>
-                <div class="brand-sub">Report tecnico professionale per calcio dilettantistico</div>
+                <div class="brand-sub">Report tecnico post-partita per staff, mister e società</div>
             </div>
-            <div class="badge-print">COACH REPORT V2</div>
+            <div class="badge-print">COACH REPORT V1.5 PRO</div>
         </div>
-
         <div class="match-title">${escapePrintHtml(m.homeTeam)} vs ${escapePrintHtml(m.awayTeam)}</div>
         <div class="score-line">${homeGoals} - ${awayGoals}</div>
-
+        <div class="cover-note">${escapePrintHtml(getCoachMatchInsight())}</div>
         <div class="cover-meta">
-            <div class="cover-card">
-                <div class="cover-label">Categoria</div>
-                <div class="cover-value">${escapePrintHtml(m.category || "Dilettanti")}</div>
-            </div>
-            <div class="cover-card">
-                <div class="cover-label">Data</div>
-                <div class="cover-value">${escapePrintHtml(m.date || "--")}</div>
-            </div>
-            <div class="cover-card">
-                <div class="cover-label">Modulo casa</div>
-                <div class="cover-value">${escapePrintHtml(m.homeShape || "--")}</div>
-            </div>
-            <div class="cover-card">
-                <div class="cover-label">Modulo trasferta</div>
-                <div class="cover-value">${escapePrintHtml(m.awayShape || "--")}</div>
-            </div>
+            <div class="cover-card"><div class="cover-label">Categoria</div><div class="cover-value">${escapePrintHtml(m.category || "Dilettanti")}</div></div>
+            <div class="cover-card"><div class="cover-label">Data</div><div class="cover-value">${escapePrintHtml(m.date || "--")}</div></div>
+            <div class="cover-card"><div class="cover-label">Modulo casa</div><div class="cover-value">${escapePrintHtml(m.homeShape || "--")}</div></div>
+            <div class="cover-card"><div class="cover-label">Modulo trasferta</div><div class="cover-value">${escapePrintHtml(m.awayShape || "--")}</div></div>
         </div>
     </section>
 
-    <section class="summary-grid">
-        <div class="summary-card">
-            <div class="summary-label">Eventi registrati</div>
-            <div class="summary-value">${coachState.events.length}</div>
-        </div>
-        <div class="summary-card">
-            <div class="summary-label">Pagelle inserite</div>
-            <div class="summary-value">${coachState.ratings.length}</div>
-        </div>
-        <div class="summary-card">
-            <div class="summary-label">Migliore</div>
-            <div class="summary-value">${best ? `${escapePrintHtml(best.player)} · ${escapePrintHtml(best.vote)}` : "Non inserito"}</div>
-        </div>
+    <section class="kpi-grid">${buildPrintableKpiCards(best)}</section>
+
+    <section class="executive-box">
+        <h2>Sintesi per staff</h2>
+        <div class="insight-grid">${buildPrintableSectionCards()}</div>
     </section>
 
     <section class="training-box">
@@ -730,49 +577,35 @@ td{
         <p>${escapePrintHtml(buildTrainingAdvice())}</p>
     </section>
 
+    <section class="next-steps">
+        <h2>Priorità per la prossima seduta</h2>
+        <ul>${buildPrintableNextSteps()}</ul>
+    </section>
+
     ${sectionHtml}
 
     <section class="table-section">
         <div class="table-title">Timeline eventi</div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Min.</th>
-                    <th>Evento</th>
-                    <th>Squadra</th>
-                    <th>Giocatore</th>
-                    <th>Nota</th>
-                </tr>
-            </thead>
-            <tbody>${eventsHtml}</tbody>
-        </table>
+        <table><thead><tr><th>Min.</th><th>Evento</th><th>Squadra</th><th>Giocatore</th><th>Nota</th></tr></thead><tbody>${eventsHtml}</tbody></table>
     </section>
 
     <section class="table-section">
         <div class="table-title">Pagelle giocatori</div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Giocatore</th>
-                    <th>Squadra</th>
-                    <th>Ruolo</th>
-                    <th>Voto</th>
-                    <th>Nota</th>
-                </tr>
-            </thead>
-            <tbody>${ratingsHtml}</tbody>
-        </table>
+        <table><thead><tr><th>Giocatore</th><th>Squadra</th><th>Ruolo</th><th>Voto</th><th>Nota</th></tr></thead><tbody>${ratingsHtml}</tbody></table>
+    </section>
+
+    <section class="whatsapp-box">
+        <h2>Sintesi WhatsApp pronta</h2>
+        <div class="whatsapp-text">${escapePrintHtml(buildWhatsAppSummary())}</div>
     </section>
 
     <footer class="print-footer">
         <span>Generated by MatchIQ Tactical · Coach Mode</span>
         <span>${escapePrintHtml(generatedAt)}</span>
     </footer>
-
 </div>
 </body>
-</html>
-`;
+</html>`;
 }
 
 function printCoachPdf(){
@@ -811,14 +644,6 @@ function printCoachPdf(){
 
     setTimeout(() => {
         printWindow.print();
-
-        if(typeof trackCoachFeature === "function"){
-            trackCoachFeature("coach_pdf", {
-                events: coachState.events.length,
-                ratings: coachState.ratings.length,
-                has_report: Boolean(coachState.report)
-            });
-        }
 
         if(!isCoachPro()){
             incrementCoachUsageCount(COACH_USAGE_KEYS.pdfExports);
