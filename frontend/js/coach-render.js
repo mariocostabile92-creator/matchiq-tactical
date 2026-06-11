@@ -387,7 +387,7 @@ function renderLineup(){
     renderLineupPitch();
 }
 
-/* Coach Lineup Pitch V1.7.2 */
+/* Coach Lineup Pitch V1.7.7 */
 function getPitchPosition(player, index, total){
     const role = String(player.role || "Jolly").toLowerCase();
     const rowMap = {
@@ -418,7 +418,11 @@ function getPitchPosition(player, index, total){
         x = 28;
     }
 
-    return {x, y};
+    const side = normalizeLineupSide(player.side, player);
+    return {
+        x,
+        y: side === "away" ? 100 - y : y
+    };
 }
 
 function renderLineupPitch(){
@@ -427,27 +431,33 @@ function renderLineupPitch(){
     const homeTab = document.getElementById("pitchTabHome");
     const awayTab = document.getElementById("pitchTabAway");
 
-    if(homeTab) homeTab.classList.toggle("active", (window.activePitchSide || "home") !== "away");
-    if(awayTab) awayTab.classList.toggle("active", (window.activePitchSide || "home") === "away");
+    if(homeTab) homeTab.classList.add("active");
+    if(awayTab) awayTab.classList.add("active");
 
     if(!pitch) return;
 
-    const side = (window.activePitchSide || "home") === "away" ? "away" : "home";
-    const players = typeof getLineupBySide === "function" ? getLineupBySide(side) : [];
+    const players = typeof getLineup === "function" ? getLineup() : [];
     const starters = players.filter(p => p.status !== "Panchina");
     const benchPlayers = players.filter(p => p.status === "Panchina");
+
+    const teamLabel = `${getTeamName("home")} vs ${getTeamName("away")}`;
+    const fieldLabel = getMatchField();
 
     const base = `
         <div class="pitch-half-line"></div>
         <div class="pitch-box-top"></div>
         <div class="pitch-box-bottom"></div>
+        <div class="pitch-empty-state" style="top:10%;font-size:12px;opacity:.78;">
+            ${esc(teamLabel)} Â· ${esc(fieldLabel)}
+        </div>
     `;
 
     if(!starters.length){
-        pitch.innerHTML = base + `<div class="pitch-empty-state">Aggiungi titolari ${side === "home" ? "casa" : "trasferta"} per vedere la formazione sul campo.</div>`;
+        pitch.innerHTML = base + `<div class="pitch-empty-state">Aggiungi titolari casa e trasferta per vedere la formazione sul campo.</div>`;
     }else{
         pitch.innerHTML = base + starters.map((p, index) => {
             const pos = getPitchPosition(p, index, starters.length);
+            const side = normalizeLineupSide(p.side, p);
             return `
                 <div class="pitch-player ${esc(side)}" style="left:${pos.x}%;top:${pos.y}%;">
                     <div class="pitch-shirt">${esc(p.number || "-")}</div>
