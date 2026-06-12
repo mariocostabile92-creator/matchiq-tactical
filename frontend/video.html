@@ -215,6 +215,24 @@ video{
     flex-direction:column;
     gap:10px;
 }
+.archive-tools{
+    display:grid;
+    grid-template-columns:1fr 150px auto;
+    gap:8px;
+    align-items:end;
+}
+.archive-tools input,
+.archive-tools select{
+    min-height:38px;
+    padding:9px 10px;
+    border-radius:12px;
+    font-size:12px;
+}
+.archive-count{
+    color:var(--muted);
+    font-size:12px;
+    font-weight:800;
+}
 .archive-empty{
     color:var(--muted);
     font-size:13px;
@@ -375,6 +393,7 @@ video{
 }
 @media(max-width:900px){
     .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid{grid-template-columns:1fr}
+    .archive-tools{grid-template-columns:1fr}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
     .wrap{width:100%;padding:24px 14px 42px}
     .frames{grid-template-columns:repeat(2,1fr)}
@@ -407,9 +426,9 @@ video{
         <div class="sub">Beta video report ? clip brevi ? PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10419">Home</a>
-        <a class="btn dark" href="/coach.html?v=10419">Coach</a>
-        <a class="btn dark" href="/account.html?v=10419">Account</a>
+        <a class="btn dark" href="/index.html?v=10420">Home</a>
+        <a class="btn dark" href="/coach.html?v=10420">Coach</a>
+        <a class="btn dark" href="/account.html?v=10420">Account</a>
     </nav>
 </header>
 
@@ -556,6 +575,22 @@ video{
                     <span class="badge">ARCHIVIO</span>
                     <h2>Report salvati</h2>
                 </div>
+                <div class="archive-tools">
+                    <div class="field">
+                        <label>Cerca report</label>
+                        <input id="archiveSearch" placeholder="Titolo, squadra o focus" oninput="renderArchive()" />
+                    </div>
+                    <div class="field">
+                        <label>Sorgente</label>
+                        <select id="archiveSource" onchange="renderArchive()">
+                            <option value="all">Tutti</option>
+                            <option value="cloud">Cloud</option>
+                            <option value="local">Locale</option>
+                        </select>
+                    </div>
+                    <button class="btn dark small" type="button" onclick="clearArchiveFilters()">Pulisci</button>
+                </div>
+                <div id="archiveCount" class="archive-count"></div>
                 <div id="archiveList" class="archive-empty">Nessun report video salvato su questo dispositivo.</div>
             </div>
         </div>
@@ -583,6 +618,9 @@ const reportBox = document.getElementById("reportBox");
 const archiveList = document.getElementById("archiveList");
 const videoShell = document.getElementById("videoShell");
 const reportMeta = document.getElementById("reportMeta");
+const archiveSearch = document.getElementById("archiveSearch");
+const archiveSource = document.getElementById("archiveSource");
+const archiveCount = document.getElementById("archiveCount");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -695,16 +733,63 @@ function escapeHtml(value){
     }[char]));
 }
 
-function renderArchive(){
+function getArchiveItems(){
     const cloudIds = new Set(cloudArchive.map(item => String(item.id)));
     const localItems = getArchive().filter(item => !item.cloud_report_id || !cloudIds.has(String(item.cloud_report_id)));
-    const items = [...cloudArchive, ...localItems];
+    return [...cloudArchive, ...localItems];
+}
 
-    if(!items.length){
+function archiveMatchesFilters(item){
+    const source = archiveSource ? archiveSource.value : "all";
+    if(source === "cloud" && !item.cloud) return false;
+    if(source === "local" && item.cloud) return false;
+
+    const query = String(archiveSearch ? archiveSearch.value : "").trim().toLowerCase();
+    if(!query) return true;
+
+    const haystack = [
+        item.title,
+        item.club,
+        item.category,
+        item.focus,
+        item.observed_team,
+        item.report_style,
+        item.date
+    ].join(" ").toLowerCase();
+
+    return haystack.includes(query);
+}
+
+function clearArchiveFilters(){
+    if(archiveSearch) archiveSearch.value = "";
+    if(archiveSource) archiveSource.value = "all";
+    renderArchive();
+}
+
+function renderArchive(){
+    const allItems = getArchiveItems();
+    const items = allItems.filter(archiveMatchesFilters);
+    const hasFilters = Boolean((archiveSearch && archiveSearch.value.trim()) || (archiveSource && archiveSource.value !== "all"));
+
+    if(archiveCount){
+        archiveCount.textContent = allItems.length
+            ? `${items.length} di ${allItems.length} report mostrati`
+            : "";
+    }
+
+    if(!allItems.length){
         archiveList.className = "archive-empty";
         archiveList.innerHTML = getAuthToken()
             ? "Nessun report video salvato nel tuo account."
             : "Nessun report video salvato su questo dispositivo.";
+        return;
+    }
+
+    if(!items.length){
+        archiveList.className = "archive-empty";
+        archiveList.innerHTML = hasFilters
+            ? "Nessun report corrisponde ai filtri selezionati."
+            : "Nessun report video da mostrare.";
         return;
     }
 
