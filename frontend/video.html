@@ -283,8 +283,35 @@ video{
 }
 .plan-card strong{display:block;margin-bottom:6px}
 .plan-card span{display:block;color:var(--muted);font-size:13px;line-height:1.45}
+.flow-strip{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin-top:16px;
+}
+.flow-step{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    padding:14px;
+    border-radius:18px;
+    background:linear-gradient(145deg,rgba(0,245,160,.09),rgba(47,124,255,.06));
+    border:1px solid rgba(0,245,160,.20);
+}
+.flow-step b{
+    display:grid;
+    place-items:center;
+    width:30px;
+    height:30px;
+    border-radius:999px;
+    flex:none;
+    color:#06111c;
+    background:var(--green);
+}
+.flow-step strong{display:block;margin-bottom:4px}
+.flow-step span{color:var(--muted);font-size:13px;line-height:1.45}
 @media(max-width:900px){
-    .hero,.form-grid,.mini-grid,.plan-strip{grid-template-columns:1fr}
+    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip{grid-template-columns:1fr}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
     .wrap{padding:24px 14px 42px}
     .frames{grid-template-columns:repeat(2,1fr)}
@@ -311,10 +338,9 @@ video{
         <div class="sub">Beta video report · clip brevi · PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/video-demo.html?v=10415">Demo</a>
-        <a class="btn dark" href="/index.html?v=10415">Home</a>
-        <a class="btn dark" href="/coach.html?v=10415">Coach</a>
-        <a class="btn dark" href="/account.html?v=10415">Account</a>
+        <a class="btn dark" href="/index.html?v=10416">Home</a>
+        <a class="btn dark" href="/coach.html?v=10416">Coach</a>
+        <a class="btn dark" href="/account.html?v=10416">Account</a>
     </nav>
 </header>
 
@@ -324,9 +350,15 @@ video{
             <span class="badge">VIDEO REPORT BETA</span>
             <h1>Carica una clip e genera un report tecnico PDF</h1>
             <p>
-                In questa prima versione MatchIQ analizza fotogrammi estratti dal video.
-                Funziona meglio con clip brevi, azioni chiare e riprese laterali o dall'alto.
+                Carichi una clip della partita, MatchIQ estrae fotogrammi e genera un report tecnico PDF
+                con sintesi, rischi, transizioni e indicazioni per il prossimo allenamento.
             </p>
+
+            <div class="flow-strip">
+                <div class="flow-step"><b>1</b><div><strong>Carica video</strong><span>Usa clip brevi, gol subiti, highlights o fasi tattiche specifiche.</span></div></div>
+                <div class="flow-step"><b>2</b><div><strong>Analisi AI</strong><span>Scegli focus, squadra osservata e stile report per guidare l'analisi.</span></div></div>
+                <div class="flow-step"><b>3</b><div><strong>PDF e archivio</strong><span>Scarica il report e ritrovalo nello storico cloud dell'account.</span></div></div>
+            </div>
 
             <div class="mini-grid">
                 <div class="mini"><strong>Clip consigliate</strong><span>1-10 minuti, highlights, gol subiti, azioni offensive o fase difensiva.</span></div>
