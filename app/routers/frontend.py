@@ -64,6 +64,11 @@ def serve_video():
     return frontend_file("video.html")
 
 
+@router.get("/video-demo.html")
+def serve_video_demo():
+    return frontend_file("video-demo.html")
+
+
 @router.get("/account.html")
 def serve_account():
     return frontend_file("account.html")
