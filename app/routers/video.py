@@ -220,6 +220,7 @@ def _draw_pdf_footer(canvas, doc):
     canvas.drawString(doc.leftMargin, 18, "MatchIQ Video Analyst")
     canvas.setFont("Helvetica", 7)
     canvas.setFillColor(colors.HexColor("#6b7280"))
+    canvas.drawCentredString(A4[0] / 2, 18, "Supporto tecnico allo staff: valutazione finale dell'allenatore.")
     canvas.drawRightString(A4[0] - doc.rightMargin, 18, f"Pagina {doc.page}")
     canvas.restoreState()
 
@@ -230,7 +231,7 @@ def _paragraph(value: str, style: ParagraphStyle) -> Paragraph:
 
 def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_count: int) -> str:
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=38, leftMargin=38, topMargin=40, bottomMargin=46)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=38, leftMargin=38, topMargin=34, bottomMargin=42)
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(
         name="MatchIQTitle",
@@ -258,14 +259,14 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
         fontName="Helvetica-Bold",
         fontSize=12,
         leading=15,
-        spaceBefore=10,
-        spaceAfter=5,
+        spaceBefore=8,
+        spaceAfter=3,
     ))
     styles.add(ParagraphStyle(
         name="MatchIQBody",
         parent=styles["BodyText"],
-        fontSize=9.4,
-        leading=13.2,
+        fontSize=9.1,
+        leading=12.2,
         textColor=colors.HexColor("#1f2937"),
     ))
     styles.add(ParagraphStyle(
@@ -310,7 +311,7 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
         ("BOTTOMPADDING", (0, 0), (-1, -1), 18),
     ]))
     story.append(cover)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 10))
 
     summary_rows = [
         ["Data", generated_at],
@@ -340,7 +341,7 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
         ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
     ]))
     story.append(summary)
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 9))
 
     limits_box = Table(
         [[
@@ -362,22 +363,16 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
         ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
     ]))
     story.append(limits_box)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 10))
 
     for block in str(report or "").split("\n"):
         block = block.strip()
         if not block:
-            story.append(Spacer(1, 8))
+            story.append(Spacer(1, 4))
             continue
         style = styles["MatchIQHeading"] if block[:2].strip(".").isdigit() or block.endswith(":") else styles["MatchIQBody"]
         story.append(_paragraph(block, style))
-        story.append(Spacer(1, 6))
-
-    story.append(Spacer(1, 12))
-    story.append(Paragraph(
-        "Documento generato con MatchIQ Video Analyst. Usalo come supporto allo staff tecnico: la valutazione finale resta dell'allenatore.",
-        styles["MatchIQSmall"],
-    ))
+        story.append(Spacer(1, 3))
 
     doc.build(story, onFirstPage=_draw_pdf_footer, onLaterPages=_draw_pdf_footer)
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
