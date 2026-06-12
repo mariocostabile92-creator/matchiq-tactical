@@ -37,8 +37,9 @@ body{
     justify-content:space-between;
     gap:14px;
     align-items:center;
-    padding:18px 26px;
-    background:rgba(4,8,18,.90);
+    min-height:78px;
+    padding:14px 26px;
+    background:rgba(4,8,18,.94);
     border-bottom:1px solid var(--border);
     backdrop-filter:blur(16px);
 }
@@ -63,7 +64,7 @@ body{
 .btn.dark{background:rgba(255,255,255,.08);border:1px solid var(--border);color:#fff}
 .btn.red{background:linear-gradient(135deg,var(--red),#8b1d35);color:#fff}
 .btn:disabled{opacity:.55;cursor:not-allowed}
-.wrap{max-width:1560px;margin:0 auto;padding:28px 32px 56px}
+.wrap{max-width:1560px;margin:0 auto;padding:42px 32px 56px}
 .hero{
     display:grid;
     grid-template-columns:minmax(720px,1.35fr) minmax(420px,.8fr);
@@ -285,11 +286,11 @@ video{
 @media(max-width:900px){
     .hero,.form-grid,.mini-grid,.plan-strip{grid-template-columns:1fr}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
-    .wrap{padding:18px 14px 42px}
+    .wrap{padding:24px 14px 42px}
     .frames{grid-template-columns:repeat(2,1fr)}
 }
 @media(min-width:901px) and (max-width:1180px){
-    .wrap{padding:24px 20px 50px}
+    .wrap{padding:34px 20px 50px}
     .hero{grid-template-columns:1fr}
     .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -310,9 +311,9 @@ video{
         <div class="sub">Beta video report · clip brevi · PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10413">Home</a>
-        <a class="btn dark" href="/coach.html?v=10413">Coach</a>
-        <a class="btn dark" href="/account.html?v=10413">Account</a>
+        <a class="btn dark" href="/index.html?v=10414">Home</a>
+        <a class="btn dark" href="/coach.html?v=10414">Coach</a>
+        <a class="btn dark" href="/account.html?v=10414">Account</a>
     </nav>
 </header>
 
@@ -847,6 +848,16 @@ function downloadBase64Pdf(pdfBase64, rawTitle){
 
 renderArchive();
 loadCloudArchive();
+
+if("scrollRestoration" in history){
+    history.scrollRestoration = "manual";
+}
+
+window.addEventListener("load", () => {
+    if(!location.hash){
+        window.scrollTo({top:0, left:0, behavior:"instant"});
+    }
+});
 
 if("serviceWorker" in navigator){
     window.addEventListener("load", () => {
