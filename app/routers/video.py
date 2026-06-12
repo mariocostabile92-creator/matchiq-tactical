@@ -210,73 +210,159 @@ def _call_openai(prompt: str, frames: List[str]) -> str:
     return data["choices"][0]["message"]["content"].strip()
 
 
+def _draw_pdf_footer(canvas, doc):
+    canvas.saveState()
+    canvas.setStrokeColor(colors.HexColor("#d8e4ef"))
+    canvas.setLineWidth(0.4)
+    canvas.line(doc.leftMargin, 30, A4[0] - doc.rightMargin, 30)
+    canvas.setFont("Helvetica-Bold", 7)
+    canvas.setFillColor(colors.HexColor("#0b8f6a"))
+    canvas.drawString(doc.leftMargin, 18, "MatchIQ Video Analyst")
+    canvas.setFont("Helvetica", 7)
+    canvas.setFillColor(colors.HexColor("#6b7280"))
+    canvas.drawRightString(A4[0] - doc.rightMargin, 18, f"Pagina {doc.page}")
+    canvas.restoreState()
+
+
+def _paragraph(value: str, style: ParagraphStyle) -> Paragraph:
+    return Paragraph(html.escape(str(value or "")), style)
+
+
 def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_count: int) -> str:
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=42, leftMargin=42, topMargin=42, bottomMargin=42)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=38, leftMargin=38, topMargin=40, bottomMargin=46)
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(
         name="MatchIQTitle",
         parent=styles["Title"],
-        textColor=colors.HexColor("#06111c"),
-        fontSize=21,
-        leading=25,
-        spaceAfter=8,
+        textColor=colors.white,
+        fontSize=23,
+        leading=27,
+        alignment=0,
+        spaceAfter=6,
     ))
     styles.add(ParagraphStyle(
         name="MatchIQKicker",
         parent=styles["Normal"],
-        textColor=colors.HexColor("#0b8f6a"),
-        fontSize=9,
+        textColor=colors.HexColor("#00f5a0"),
+        fontName="Helvetica-Bold",
+        fontSize=8,
         leading=12,
-        spaceAfter=8,
+        spaceAfter=6,
+        uppercase=True,
     ))
     styles.add(ParagraphStyle(
         name="MatchIQHeading",
         parent=styles["Heading3"],
-        textColor=colors.HexColor("#0b2b4f"),
-        fontSize=11,
-        leading=14,
-        spaceBefore=8,
-        spaceAfter=4,
+        textColor=colors.HexColor("#092642"),
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        leading=15,
+        spaceBefore=10,
+        spaceAfter=5,
     ))
     styles.add(ParagraphStyle(
         name="MatchIQBody",
         parent=styles["BodyText"],
-        fontSize=9,
-        leading=12,
-        textColor=colors.HexColor("#222222"),
+        fontSize=9.4,
+        leading=13.2,
+        textColor=colors.HexColor("#1f2937"),
+    ))
+    styles.add(ParagraphStyle(
+        name="MatchIQSmall",
+        parent=styles["BodyText"],
+        fontSize=8,
+        leading=10.5,
+        textColor=colors.HexColor("#475569"),
+    ))
+    styles.add(ParagraphStyle(
+        name="MatchIQWhiteSmall",
+        parent=styles["BodyText"],
+        fontSize=8,
+        leading=10.5,
+        textColor=colors.HexColor("#dbeafe"),
     ))
     story = []
+    generated_at = datetime.now().strftime("%d/%m/%Y %H:%M")
+    duration = _format_seconds(float(data.duration_seconds or 0))
+    frame_times = ", ".join(_format_seconds(t) for t in (data.frame_times or [])[:frame_count]) or "non disponibili"
+    report_title = _clean_text(title, 180) or "Video Report MatchIQ"
 
-    story.append(Paragraph("MATCHIQ VIDEO ANALYST", styles["MatchIQKicker"]))
-    story.append(Paragraph(html.escape(_clean_text(title, 180) or "Video Report"), styles["MatchIQTitle"]))
+    cover = Table(
+        [[
+            [
+                Paragraph("MATCHIQ VIDEO ANALYST", styles["MatchIQKicker"]),
+                _paragraph(report_title, styles["MatchIQTitle"]),
+                Paragraph(
+                    "Report tecnico generato da clip video: sintesi, rischi, transizioni e indicazioni operative per lo staff.",
+                    styles["MatchIQWhiteSmall"],
+                ),
+            ]
+        ]],
+        colWidths=[A4[0] - doc.leftMargin - doc.rightMargin],
+    )
+    cover.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#07101f")),
+        ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#0bbf8a")),
+        ("LEFTPADDING", (0, 0), (-1, -1), 18),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 18),
+        ("TOPPADDING", (0, 0), (-1, -1), 18),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 18),
+    ]))
+    story.append(cover)
+    story.append(Spacer(1, 14))
 
     summary_rows = [
-        ["Data", datetime.now().strftime("%d/%m/%Y %H:%M")],
+        ["Data", generated_at],
         ["Societa / squadra", _clean_text(data.club_name, 160) or "-"],
         ["Categoria", _clean_text(data.category, 80) or "-"],
         ["Focus", _clean_text(data.focus, 120) or "-"],
         ["Squadra osservata", _clean_text(data.observed_team, 160) or "-"],
         ["Stile report", _clean_text(data.report_style, 120) or "-"],
         ["Fotogrammi analizzati", str(frame_count)],
+        ["Durata clip", duration],
+        ["Tempi fotogrammi", frame_times],
     ]
-    summary = Table(summary_rows, colWidths=[112, 360])
+    summary = Table(summary_rows, colWidths=[128, 354])
     summary.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#e8fff6")),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e8fff6")),
+        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f1f5f9")),
         ("TEXTCOLOR", (0, 0), (0, -1), colors.HexColor("#075f4a")),
         ("TEXTCOLOR", (1, 0), (1, -1), colors.HexColor("#1d2433")),
         ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("LEADING", (0, 0), (-1, -1), 10),
-        ("GRID", (0, 0), (-1, -1), .35, colors.HexColor("#c9ded8")),
+        ("FONTSIZE", (0, 0), (-1, -1), 8.2),
+        ("LEADING", (0, 0), (-1, -1), 10.5),
+        ("GRID", (0, 0), (-1, -1), .35, colors.HexColor("#d8e4ef")),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 7),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
         ("TOPPADDING", (0, 0), (-1, -1), 6),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
     ]))
     story.append(summary)
-    story.append(Spacer(1, 18))
+    story.append(Spacer(1, 12))
+
+    limits_box = Table(
+        [[
+            Paragraph("<b>Nota di lettura</b>", styles["MatchIQSmall"]),
+            Paragraph(
+                "L'analisi deriva da fotogrammi estratti dalla clip. Se numeri, volti, palla o reparti non sono leggibili, il report resta prudente e segnala i limiti invece di inventare dettagli.",
+                styles["MatchIQSmall"],
+            ),
+        ]],
+        colWidths=[92, 390],
+    )
+    limits_box.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fff7dd")),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#f4d675")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 9),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    story.append(limits_box)
+    story.append(Spacer(1, 14))
 
     for block in str(report or "").split("\n"):
         block = block.strip()
@@ -284,10 +370,16 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
             story.append(Spacer(1, 8))
             continue
         style = styles["MatchIQHeading"] if block[:2].strip(".").isdigit() or block.endswith(":") else styles["MatchIQBody"]
-        story.append(Paragraph(html.escape(block), style))
+        story.append(_paragraph(block, style))
         story.append(Spacer(1, 6))
 
-    doc.build(story)
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(
+        "Documento generato con MatchIQ Video Analyst. Usalo come supporto allo staff tecnico: la valutazione finale resta dell'allenatore.",
+        styles["MatchIQSmall"],
+    ))
+
+    doc.build(story, onFirstPage=_draw_pdf_footer, onLaterPages=_draw_pdf_footer)
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
