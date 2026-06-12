@@ -60,6 +60,8 @@ PREMIUM_FEATURES = {
     "coach_storico",
     "coach_unlimited_pagelle",
     "coach_advanced_report",
+    "video_report",
+    "video_archive_cloud",
 }
 
 
@@ -74,6 +76,7 @@ FEATURE_TO_DAILY_LIMIT = {
     "coach_report": "coach_reports_daily",
     "coach_history": "coach_history_limit",
     "coach_storico": "coach_history_limit",
+    "video_report": "video_report_daily",
 }
 
 
@@ -109,6 +112,9 @@ PLAN_FEATURES = {
         "coach_pagelle_limit": 3,
         "coach_history_limit": 0,
         "coach_reports_limit": 1,
+        "video_report_limit": 0,
+        "video_archive_limit": 0,
+        "video_archive_cloud_enabled": False,
 
         "cta": "Accedi o crea un account gratuito per provare MatchIQ.",
         "upgrade_message": "Accedi per salvare il lavoro, provare Coach e sbloccare la preview Scout."
@@ -141,6 +147,9 @@ PLAN_FEATURES = {
         "coach_pagelle_limit": 5,
         "coach_history_limit": 2,
         "coach_reports_limit": 3,
+        "video_report_limit": 1,
+        "video_archive_limit": 3,
+        "video_archive_cloud_enabled": False,
 
         "cta": "Passa a Pro",
         "upgrade_message": "Passa a Pro per sbloccare PDF Coach, WhatsApp, storico esteso, Scout completo ed export."
@@ -173,6 +182,9 @@ PLAN_FEATURES = {
         "coach_pagelle_limit": 999,
         "coach_history_limit": 250,
         "coach_reports_limit": 100,
+        "video_report_limit": 10,
+        "video_archive_limit": 50,
+        "video_archive_cloud_enabled": True,
 
         "cta": "Piano Pro attivo",
         "upgrade_message": "Hai accesso a Coach Pro, Scout completo, PDF, WhatsApp, storico ed export."
@@ -205,6 +217,9 @@ PLAN_FEATURES = {
         "coach_pagelle_limit": 999,
         "coach_history_limit": 1000,
         "coach_reports_limit": 250,
+        "video_report_limit": 30,
+        "video_archive_limit": 200,
+        "video_archive_cloud_enabled": True,
 
         "cta": "Piano Scout attivo",
         "upgrade_message": "Hai accesso completo alle funzioni Scout e Coach avanzate."
@@ -237,6 +252,9 @@ PLAN_FEATURES = {
         "coach_pagelle_limit": 999999,
         "coach_history_limit": 999999,
         "coach_reports_limit": 999999,
+        "video_report_limit": 999999,
+        "video_archive_limit": 999999,
+        "video_archive_cloud_enabled": True,
 
         "cta": "Owner Pro",
         "upgrade_message": "Accesso owner completo."
@@ -411,6 +429,9 @@ def build_frontend_limits(user):
             "coach_pagelle_limit": features["coach_pagelle_limit"],
             "coach_history_limit": features["coach_history_limit"],
             "coach_reports_limit": features["coach_reports_limit"],
+            "video_report_limit": features["video_report_limit"],
+            "video_archive_limit": features["video_archive_limit"],
+            "video_archive_cloud_enabled": features["video_archive_cloud_enabled"],
 
             "daily": db_limits,
         },
@@ -442,6 +463,8 @@ def is_feature_enabled_for_user(user, feature):
         "coach_storico": "coach_history_limit",
         "coach_unlimited_pagelle": "coach_pagelle_limit",
         "coach_advanced_report": "coach_reports_limit",
+        "video_report": "video_report_limit",
+        "video_archive_cloud": "video_archive_cloud_enabled",
     }
 
     key = feature_map.get(feature)

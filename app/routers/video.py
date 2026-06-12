@@ -7,12 +7,15 @@ from typing import List, Optional
 
 import requests
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+from database import can_use_feature, delete_video_report, get_plan_limits, get_video_reports, save_video_report, track_api_usage
+from usage_guard import get_optional_user, require_user
 
 
 load_dotenv()
@@ -39,6 +42,19 @@ class VideoReportRequest(BaseModel):
     duration_seconds: Optional[float] = 0
     frame_times: List[float] = Field(default_factory=list)
     frames: List[str]
+
+
+class CloudVideoReportRequest(BaseModel):
+    title: Optional[str] = ""
+    club_name: Optional[str] = ""
+    category: Optional[str] = ""
+    focus: Optional[str] = ""
+    observed_team: Optional[str] = ""
+    report_style: Optional[str] = ""
+    frames_analyzed: Optional[int] = 0
+    report: Optional[str] = ""
+    pdf_base64: Optional[str] = ""
+    payload: Optional[dict] = Field(default_factory=dict)
 
 
 def _clean_text(value: str, limit: int = 1200) -> str:
@@ -275,8 +291,48 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
+def _public_video_report(row: dict):
+    return {
+        "id": row.get("id"),
+        "title": row.get("title") or "Video Report MatchIQ",
+        "club": row.get("club_name") or "",
+        "category": row.get("category") or "",
+        "focus": row.get("focus") or "",
+        "observed_team": row.get("observed_team") or "",
+        "report_style": row.get("report_style") or "",
+        "frames": int(row.get("frames_analyzed") or 0),
+        "report": row.get("report") or "",
+        "pdf_base64": row.get("pdf_base64") or "",
+        "date": row.get("created_at") or "",
+        "cloud": True,
+    }
+
+
+def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: str, pdf_base64: str, frames_count: int):
+    if not user:
+        return {"success": False, "reason": "login_required"}
+
+    return save_video_report(
+        user_id=user["id"],
+        title=_clean_text(data.title, 180) or "Video Report MatchIQ",
+        club_name=_clean_text(data.club_name, 160),
+        category=_clean_text(data.category, 80),
+        focus=_clean_text(data.focus, 160),
+        observed_team=_clean_text(data.observed_team, 160),
+        report_style=_clean_text(data.report_style, 120),
+        frames_analyzed=frames_count,
+        report=report,
+        pdf_base64=pdf_base64,
+        payload={
+            "duration_seconds": data.duration_seconds,
+            "frame_times": data.frame_times,
+            "notes": _clean_text(data.notes, 1200),
+        },
+    )
+
+
 @router.post("/analyze")
-def analyze_video_clip(data: VideoReportRequest):
+def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)):
     frames = _sanitize_frames(data.frames)
 
     if len(frames) < 2:
@@ -285,10 +341,31 @@ def analyze_video_clip(data: VideoReportRequest):
             detail="Servono almeno 2 fotogrammi validi per analizzare la clip"
         )
 
+    usage = None
+    if user:
+        usage = can_use_feature(user["id"], "video_report")
+        if not usage.get("allowed"):
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "success": False,
+                    "allowed": False,
+                    "upgrade_required": True,
+                    "feature": "video_report",
+                    "plan": usage.get("plan"),
+                    "used": usage.get("used", 0),
+                    "limit": usage.get("limit", 0),
+                    "message": "Hai raggiunto il limite giornaliero per i report video AI."
+                }
+            )
+
     prompt = _build_prompt(data, len(frames))
     report = _call_openai(prompt, frames)
     title = _clean_text(data.title, 180) or "Video Report MatchIQ"
     pdf_base64 = _build_pdf_base64(title, report, data, len(frames))
+    if user:
+        track_api_usage(user["id"], "/api/video/analyze", "video_report")
+    cloud_save = _save_cloud_report_for_user(user, data, report, pdf_base64, len(frames)) if user else None
 
     return {
         "ok": True,
@@ -298,4 +375,56 @@ def analyze_video_clip(data: VideoReportRequest):
         "report": report,
         "pdf_base64": pdf_base64,
         "generated_at": datetime.utcnow().isoformat(),
+        "cloud_saved": bool(cloud_save and cloud_save.get("success")),
+        "cloud_report_id": cloud_save.get("id") if cloud_save and cloud_save.get("success") else None,
+        "cloud_error": cloud_save.get("error") if cloud_save and not cloud_save.get("success") else None,
+        "usage": {
+            **usage,
+            "used": int((usage or {}).get("used") or 0) + 1,
+        } if usage else None,
     }
+
+
+@router.get("/reports")
+def list_video_reports(user=Depends(require_user)):
+    limits = get_plan_limits(user.get("plan", "free"))
+    limit = min(int(limits.get("video_archive_limit", 50) or 50), 200)
+    rows = get_video_reports(user["id"], limit=limit)
+    return {
+        "ok": True,
+        "reports": [_public_video_report(row) for row in rows],
+        "limit": limit,
+        "count": len(rows),
+    }
+
+
+@router.post("/reports")
+def create_video_report(data: CloudVideoReportRequest, user=Depends(require_user)):
+    result = save_video_report(
+        user_id=user["id"],
+        title=_clean_text(data.title, 180) or "Video Report MatchIQ",
+        club_name=_clean_text(data.club_name, 160),
+        category=_clean_text(data.category, 80),
+        focus=_clean_text(data.focus, 160),
+        observed_team=_clean_text(data.observed_team, 160),
+        report_style=_clean_text(data.report_style, 120),
+        frames_analyzed=int(data.frames_analyzed or 0),
+        report=_clean_text(data.report, 12000),
+        pdf_base64=str(data.pdf_base64 or ""),
+        payload=data.payload or {},
+    )
+
+    if not result.get("success"):
+        raise HTTPException(status_code=402, detail=result)
+
+    return {"ok": True, "id": result.get("id")}
+
+
+@router.delete("/reports/{report_id}")
+def remove_video_report(report_id: int, user=Depends(require_user)):
+    deleted = delete_video_report(user["id"], report_id)
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Report video non trovato")
+
+    return {"ok": True}

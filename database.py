@@ -14,6 +14,7 @@ usa query helper con placeholder corretti per SQLite (?) e PostgreSQL (%s).
 """
 
 import os
+import json
 import sqlite3
 import psycopg2
 import psycopg2.extras
@@ -45,6 +46,8 @@ PLAN_LIMITS = {
         "coach_pagelle_daily": 5,
         "coach_history_limit": 2,
         "coach_reports_daily": 3,
+        "video_report_daily": 1,
+        "video_archive_limit": 3,
 
         # Feature flags
         "advanced_timeline": False,
@@ -56,6 +59,7 @@ PLAN_LIMITS = {
         "coach_history": False,
         "scout_export": False,
         "watchlist_cloud": False,
+        "video_archive_cloud": False,
     },
     "pro": {
         # Pro = uso da campo continuativo.
@@ -72,6 +76,8 @@ PLAN_LIMITS = {
         "coach_pagelle_daily": 999,
         "coach_history_limit": 250,
         "coach_reports_daily": 100,
+        "video_report_daily": 10,
+        "video_archive_limit": 50,
 
         # Feature flags
         "advanced_timeline": True,
@@ -83,6 +89,7 @@ PLAN_LIMITS = {
         "coach_history": True,
         "scout_export": True,
         "watchlist_cloud": True,
+        "video_archive_cloud": True,
     },
     "scout": {
         # Scout = piano avanzato / futuro piano verticale.
@@ -98,6 +105,8 @@ PLAN_LIMITS = {
         "coach_pagelle_daily": 999,
         "coach_history_limit": 1000,
         "coach_reports_daily": 250,
+        "video_report_daily": 30,
+        "video_archive_limit": 200,
 
         "advanced_timeline": True,
         "advanced_scout": True,
@@ -108,6 +117,7 @@ PLAN_LIMITS = {
         "coach_history": True,
         "scout_export": True,
         "watchlist_cloud": True,
+        "video_archive_cloud": True,
     },
     "owner": {
         # Owner/Admin = tutto sbloccato.
@@ -123,6 +133,8 @@ PLAN_LIMITS = {
         "coach_pagelle_daily": 999999,
         "coach_history_limit": 999999,
         "coach_reports_daily": 999999,
+        "video_report_daily": 999999,
+        "video_archive_limit": 999999,
 
         "advanced_timeline": True,
         "advanced_scout": True,
@@ -133,6 +145,7 @@ PLAN_LIMITS = {
         "coach_history": True,
         "scout_export": True,
         "watchlist_cloud": True,
+        "video_archive_cloud": True,
     },
 }
 
@@ -329,6 +342,25 @@ def init_db():
             )
         """)
 
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS video_reports (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                title TEXT,
+                club_name TEXT,
+                category TEXT,
+                focus TEXT,
+                observed_team TEXT,
+                report_style TEXT,
+                frames_analyzed INTEGER NOT NULL DEFAULT 0,
+                report TEXT,
+                pdf_base64 TEXT,
+                payload TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
     else:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -424,6 +456,25 @@ def init_db():
         """)
 
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS video_reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT,
+                club_name TEXT,
+                category TEXT,
+                focus TEXT,
+                observed_team TEXT,
+                report_style TEXT,
+                frames_analyzed INTEGER NOT NULL DEFAULT 0,
+                report TEXT,
+                pdf_base64 TEXT,
+                payload TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS password_reset_tokens (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -502,6 +553,11 @@ def init_db():
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_expires
         ON email_verification_tokens(expires_at)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_video_reports_user_created
+        ON video_reports(user_id, created_at)
     """)
 
     conn.commit()
@@ -1122,6 +1178,111 @@ def get_scout_reports(user_id: int):
     rows = fetchall(cur)
     conn.close()
     return rows
+
+
+# =========================================================
+# VIDEO REPORTS
+# =========================================================
+
+def count_video_reports(user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        SELECT COUNT(*) AS total
+        FROM video_reports
+        WHERE user_id = ?
+    """), (user_id,))
+    row = fetchone(cur)
+    conn.close()
+    return int((row or {}).get("total") or 0)
+
+
+def save_video_report(
+    user_id: int,
+    title: str = "",
+    club_name: str = "",
+    category: str = "",
+    focus: str = "",
+    observed_team: str = "",
+    report_style: str = "",
+    frames_analyzed: int = 0,
+    report: str = "",
+    pdf_base64: str = "",
+    payload: dict = None,
+):
+    user = get_user_by_id(user_id)
+    limits = get_plan_limits(user.get("plan", "free") if user else "free")
+    archive_limit = int(limits.get("video_archive_limit", 0) or 0)
+
+    if archive_limit <= 0:
+        return {"success": False, "error": "Archivio video cloud non disponibile per questo piano", "limit": archive_limit}
+
+    if count_video_reports(user_id) >= archive_limit:
+        return {"success": False, "error": "Limite archivio video raggiunto", "limit": archive_limit}
+
+    now = utc_now()
+    payload_text = json.dumps(payload or {}, ensure_ascii=False)
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if USE_POSTGRES:
+        cur.execute("""
+            INSERT INTO video_reports (
+                user_id, title, club_name, category, focus, observed_team,
+                report_style, frames_analyzed, report, pdf_base64, payload, created_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            user_id, title, club_name, category, focus, observed_team,
+            report_style, int(frames_analyzed or 0), report, pdf_base64, payload_text, now,
+        ))
+        report_id = get_last_insert_id(cur)
+    else:
+        cur.execute("""
+            INSERT INTO video_reports (
+                user_id, title, club_name, category, focus, observed_team,
+                report_style, frames_analyzed, report, pdf_base64, payload, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            user_id, title, club_name, category, focus, observed_team,
+            report_style, int(frames_analyzed or 0), report, pdf_base64, payload_text, now,
+        ))
+        report_id = cur.lastrowid
+
+    conn.commit()
+    conn.close()
+    return {"success": True, "id": report_id}
+
+
+def get_video_reports(user_id: int, limit: int = 50):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        SELECT id, title, club_name, category, focus, observed_team, report_style,
+               frames_analyzed, report, pdf_base64, created_at
+        FROM video_reports
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT ?
+    """), (user_id, int(limit or 50)))
+    rows = fetchall(cur)
+    conn.close()
+    return rows
+
+
+def delete_video_report(user_id: int, report_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        DELETE FROM video_reports
+        WHERE user_id = ? AND id = ?
+    """), (user_id, report_id))
+    deleted = cur.rowcount
+    conn.commit()
+    conn.close()
+    return deleted > 0
 
 
 # =========================================================

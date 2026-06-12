@@ -241,9 +241,9 @@ video{
         <div class="sub">Beta video report · clip brevi · PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10410">Home</a>
-        <a class="btn dark" href="/coach.html?v=10410">Coach</a>
-        <a class="btn dark" href="/account.html?v=10410">Account</a>
+        <a class="btn dark" href="/index.html?v=10411">Home</a>
+        <a class="btn dark" href="/coach.html?v=10411">Coach</a>
+        <a class="btn dark" href="/account.html?v=10411">Account</a>
     </nav>
 </header>
 
@@ -363,6 +363,7 @@ let selectedVideoUrl = "";
 let extractedFrames = [];
 let extractedFrameTimes = [];
 let latestPdfBase64 = "";
+let cloudArchive = [];
 
 const videoInput = document.getElementById("videoInput");
 const videoPreview = document.getElementById("videoPreview");
@@ -377,6 +378,17 @@ function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
     box.textContent=message;
     box.className=`status show ${type}`;
+}
+
+function getAuthToken(){
+    return localStorage.getItem("matchiq_auth_token") || sessionStorage.getItem("matchiq_auth_token") || "";
+}
+
+function apiHeaders(){
+    const token = getAuthToken();
+    const headers = {"Content-Type":"application/json","Accept":"application/json"};
+    if(token) headers.Authorization = `Bearer ${token}`;
+    return headers;
 }
 
 function getArchive(){
@@ -406,11 +418,15 @@ function escapeHtml(value){
 }
 
 function renderArchive(){
-    const items = getArchive();
+    const cloudIds = new Set(cloudArchive.map(item => String(item.id)));
+    const localItems = getArchive().filter(item => !item.cloud_report_id || !cloudIds.has(String(item.cloud_report_id)));
+    const items = [...cloudArchive, ...localItems];
 
     if(!items.length){
         archiveList.className = "archive-empty";
-        archiveList.innerHTML = "Nessun report video salvato su questo dispositivo.";
+        archiveList.innerHTML = getAuthToken()
+            ? "Nessun report video salvato nel tuo account."
+            : "Nessun report video salvato su questo dispositivo.";
         return;
     }
 
@@ -420,17 +436,55 @@ function renderArchive(){
             <div>
                 <strong>${escapeHtml(item.title || "Video Report MatchIQ")}</strong>
                 <div class="archive-meta">
-                    ${escapeHtml(item.date || "")} · ${escapeHtml(item.focus || "Analisi tattica")} · ${escapeHtml(item.club || "Società non indicata")}<br>
+                    ${item.cloud ? "Cloud · " : "Locale · "}${escapeHtml(formatArchiveDate(item.date) || "")} · ${escapeHtml(item.focus || "Analisi tattica")} · ${escapeHtml(item.club || "Società non indicata")}<br>
                     ${Number(item.frames || 0)} fotogrammi analizzati
                 </div>
             </div>
             <div class="archive-actions">
-                <button class="btn dark small" onclick="loadArchivedReport('${item.id}')">Apri</button>
-                <button class="btn small" onclick="downloadArchivedPdf('${item.id}')">PDF</button>
-                <button class="btn red small" onclick="deleteArchivedReport('${item.id}')">Elimina</button>
+                <button class="btn dark small" onclick="loadArchivedReport('${archiveDomId(item)}')">Apri</button>
+                <button class="btn small" onclick="downloadArchivedPdf('${archiveDomId(item)}')">PDF</button>
+                <button class="btn red small" onclick="deleteArchivedReport('${archiveDomId(item)}')">Elimina</button>
             </div>
         </div>
     `).join("");
+}
+
+function archiveDomId(item){
+    return item.cloud ? `cloud_${item.id}` : `local_${item.id}`;
+}
+
+function formatArchiveDate(value){
+    if(!value) return "";
+    if(String(value).includes("T")){
+        const date = new Date(value);
+        if(!Number.isNaN(date.getTime())){
+            return date.toLocaleString("it-IT", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit"});
+        }
+    }
+    return value;
+}
+
+async function loadCloudArchive(){
+    const token = getAuthToken();
+    if(!token){
+        cloudArchive = [];
+        renderArchive();
+        return;
+    }
+
+    try{
+        const res = await fetch(`${API_BASE}/video/reports`, {
+            headers: {"Accept":"application/json", "Authorization":`Bearer ${token}`}
+        });
+        const data = await res.json();
+
+        if(res.ok && data.ok){
+            cloudArchive = (data.reports || []).map(item => ({...item, cloud:true}));
+            renderArchive();
+        }
+    }catch(err){
+        renderArchive();
+    }
 }
 
 function addToArchive(data, payload){
@@ -443,6 +497,7 @@ function addToArchive(data, payload){
         frames: data.frames_analyzed || extractedFrames.length,
         report: data.report || "",
         pdf_base64: data.pdf_base64 || "",
+        cloud_report_id: data.cloud_report_id || null,
         date: new Date().toLocaleString("it-IT", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit"})
     };
 
@@ -455,7 +510,13 @@ function addToArchive(data, payload){
 }
 
 function findArchivedReport(id){
-    return getArchive().find(item => item.id === id);
+    if(String(id).startsWith("cloud_")){
+        const cloudId = String(id).replace("cloud_", "");
+        return cloudArchive.find(item => String(item.id) === cloudId);
+    }
+
+    const localId = String(id).replace("local_", "");
+    return getArchive().find(item => String(item.id) === localId);
 }
 
 function loadArchivedReport(id){
@@ -476,8 +537,29 @@ function downloadArchivedPdf(id){
     downloadBase64Pdf(item.pdf_base64, item.title || "matchiq-video-report");
 }
 
-function deleteArchivedReport(id){
-    saveArchive(getArchive().filter(item => item.id !== id));
+async function deleteArchivedReport(id){
+    if(String(id).startsWith("cloud_")){
+        const token = getAuthToken();
+        const cloudId = String(id).replace("cloud_", "");
+
+        if(token){
+            try{
+                await fetch(`${API_BASE}/video/reports/${encodeURIComponent(cloudId)}`, {
+                    method:"DELETE",
+                    headers: {"Accept":"application/json", "Authorization":`Bearer ${token}`}
+                });
+            }catch(err){}
+        }
+
+        cloudArchive = cloudArchive.filter(item => String(item.id) !== cloudId);
+        saveArchive(getArchive().filter(item => String(item.cloud_report_id) !== cloudId));
+        renderArchive();
+        showStatus("Report eliminato dall'archivio cloud.", "ok");
+        return;
+    }
+
+    const localId = String(id).replace("local_", "");
+    saveArchive(getArchive().filter(item => String(item.id) !== localId));
     renderArchive();
     showStatus("Report eliminato dall'archivio locale.", "ok");
 }
@@ -605,7 +687,7 @@ async function analyzeVideo(){
     try{
         const res = await fetch(`${API_BASE}/video/analyze`,{
             method:"POST",
-            headers:{"Content-Type":"application/json","Accept":"application/json"},
+            headers:apiHeaders(),
             body:JSON.stringify(payload)
         });
 
@@ -625,7 +707,8 @@ async function analyzeVideo(){
         latestPdfBase64 = data.pdf_base64 || "";
         downloadPdfBtn.disabled = !latestPdfBase64;
         addToArchive(data, payload);
-        showStatus(`Report generato con ${data.frames_analyzed || extractedFrames.length} fotogrammi.`, "ok");
+        if(data.cloud_saved) loadCloudArchive();
+        showStatus(`Report generato con ${data.frames_analyzed || extractedFrames.length} fotogrammi${data.cloud_saved ? " e salvato nel cloud" : ""}.`, "ok");
     }catch(err){
         reportBox.textContent = "Errore generazione report.";
         showStatus(err.message || "Errore analisi video", "err");
@@ -669,6 +752,7 @@ function downloadBase64Pdf(pdfBase64, rawTitle){
 }
 
 renderArchive();
+loadCloudArchive();
 
 if("serviceWorker" in navigator){
     window.addEventListener("load", () => {
