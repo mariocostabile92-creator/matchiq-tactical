@@ -64,11 +64,15 @@ body{
 .btn.dark{background:rgba(255,255,255,.08);border:1px solid var(--border);color:#fff}
 .btn.red{background:linear-gradient(135deg,var(--red),#8b1d35);color:#fff}
 .btn:disabled{opacity:.55;cursor:not-allowed}
-.wrap{max-width:1560px;margin:0 auto;padding:42px 32px 56px}
+.wrap{
+    width:min(calc(100% - 48px),1760px);
+    margin:0 auto;
+    padding:42px 0 56px;
+}
 .hero{
     display:grid;
-    grid-template-columns:minmax(720px,1.35fr) minmax(420px,.8fr);
-    gap:22px;
+    grid-template-columns:minmax(820px,1fr) minmax(460px,540px);
+    gap:28px;
     align-items:start;
 }
 .panel{
@@ -372,13 +376,19 @@ video{
 @media(max-width:900px){
     .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid{grid-template-columns:1fr}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
-    .wrap{padding:24px 14px 42px}
+    .wrap{width:100%;padding:24px 14px 42px}
     .frames{grid-template-columns:repeat(2,1fr)}
 }
 @media(min-width:901px) and (max-width:1180px){
-    .wrap{padding:34px 20px 50px}
+    .wrap{width:min(calc(100% - 40px),1080px);padding:34px 0 50px}
     .hero{grid-template-columns:1fr}
     .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(min-width:1181px) and (max-width:1450px){
+    .wrap{width:min(calc(100% - 40px),1320px)}
+    .hero{grid-template-columns:minmax(700px,1fr) minmax(390px,440px);gap:22px}
+    .panel{padding:24px}
+    h1{font-size:clamp(34px,3vw,48px)}
 }
 @media(min-width:1181px){
     .panel:first-child{min-height:calc(100vh - 150px)}
@@ -397,9 +407,9 @@ video{
         <div class="sub">Beta video report ? clip brevi ? PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10418">Home</a>
-        <a class="btn dark" href="/coach.html?v=10418">Coach</a>
-        <a class="btn dark" href="/account.html?v=10418">Account</a>
+        <a class="btn dark" href="/index.html?v=10419">Home</a>
+        <a class="btn dark" href="/coach.html?v=10419">Coach</a>
+        <a class="btn dark" href="/account.html?v=10419">Account</a>
     </nav>
 </header>
 
