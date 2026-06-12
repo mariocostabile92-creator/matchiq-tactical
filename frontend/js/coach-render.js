@@ -440,14 +440,14 @@ function renderLineupPitch(){
     const starters = players.filter(p => p.status !== "Panchina");
     const benchPlayers = players.filter(p => p.status === "Panchina");
 
-    const teamLabel = `${getTeamName("home")} vs ${getTeamName("away")}`;
-    const fieldLabel = getMatchField();
+    const teamLabel = "";
+    const fieldLabel = "";
 
     const base = `
         <div class="pitch-half-line"></div>
         <div class="pitch-box-top"></div>
         <div class="pitch-box-bottom"></div>
-        <div class="pitch-empty-state" style="top:10%;font-size:12px;opacity:.78;">
+        <div class="pitch-empty-state" style="display:none;top:10%;font-size:12px;opacity:.78;">
             ${esc(teamLabel)} Â· ${esc(fieldLabel)}
         </div>
     `;
@@ -472,6 +472,14 @@ function renderLineupPitch(){
         bench.innerHTML = benchPlayers.length
             ? benchPlayers.map(p => `<span class="bench-chip">${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</span>`).join("")
             : `<span class="bench-chip">Nessun panchinaro</span>`;
+
+        if(benchPlayers.length){
+            bench.innerHTML = benchPlayers.map(p => {
+                const side = normalizeLineupSide(p.side, p);
+                const team = side === "home" ? "Casa" : "Trasferta";
+                return `<span class="bench-chip ${esc(side)}">${esc(team)} · ${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</span>`;
+            }).join("");
+        }
     }
 }
 
