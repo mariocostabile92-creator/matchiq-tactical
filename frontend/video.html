@@ -158,7 +158,6 @@ video{
 }
 .video-shell.has-video video{display:block}
 .video-shell.has-video .video-empty{display:none}
-}
 .frames{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -265,6 +264,26 @@ video{
 }
 .mini strong{display:block;margin-bottom:6px}
 .mini span{color:var(--muted);font-size:13px;line-height:1.45}
+.quality-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin-top:14px;
+}
+.quality-card{
+    padding:14px;
+    border-radius:18px;
+    background:rgba(2,8,19,.52);
+    border:1px solid rgba(255,255,255,.10);
+}
+.quality-card b{
+    display:block;
+    color:var(--green);
+    font-size:12px;
+    margin-bottom:7px;
+    text-transform:uppercase;
+}
+.quality-card span{display:block;color:#c4d2f5;font-size:13px;line-height:1.45}
 .plan-strip{
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
@@ -310,8 +329,30 @@ video{
 }
 .flow-step strong{display:block;margin-bottom:4px}
 .flow-step span{color:var(--muted);font-size:13px;line-height:1.45}
+.report-toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:4px 0 14px;
+}
+.report-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 10px;
+    border-radius:999px;
+    color:#dfe9ff;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.10);
+    font-size:11px;
+    font-weight:1000;
+}
+.report-pill.ready{
+    color:#06111c;
+    background:var(--green);
+}
 @media(max-width:900px){
-    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip{grid-template-columns:1fr}
+    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid{grid-template-columns:1fr}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
     .wrap{padding:24px 14px 42px}
     .frames{grid-template-columns:repeat(2,1fr)}
@@ -338,9 +379,9 @@ video{
         <div class="sub">Beta video report · clip brevi · PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10416">Home</a>
-        <a class="btn dark" href="/coach.html?v=10416">Coach</a>
-        <a class="btn dark" href="/account.html?v=10416">Account</a>
+        <a class="btn dark" href="/index.html?v=10417">Home</a>
+        <a class="btn dark" href="/coach.html?v=10417">Coach</a>
+        <a class="btn dark" href="/account.html?v=10417">Account</a>
     </nav>
 </header>
 
@@ -364,6 +405,12 @@ video{
                 <div class="mini"><strong>Clip consigliate</strong><span>1-10 minuti, highlights, gol subiti, azioni offensive o fase difensiva.</span></div>
                 <div class="mini"><strong>Output</strong><span>Sintesi tattica, rischi, transizioni, consigli allenamento e PDF scaricabile.</span></div>
                 <div class="mini"><strong>Beta prudente</strong><span>Se numeri e volti non sono leggibili, il report lo segnala come limite.</span></div>
+            </div>
+
+            <div class="quality-grid">
+                <div class="quality-card"><b>Ripresa utile</b><span>Laterale o dall'alto, campo visibile e azione riconoscibile.</span></div>
+                <div class="quality-card"><b>Focus chiaro</b><span>Più il focus è preciso, più il PDF diventa utile per staff e allenamento.</span></div>
+                <div class="quality-card"><b>Archivio pronto</b><span>Ogni analisi resta recuperabile con report e PDF, anche dopo la partita.</span></div>
             </div>
 
             <div class="plan-strip">
@@ -466,6 +513,10 @@ video{
         <div class="panel">
             <span class="badge">REPORT</span>
             <h2>Analisi generata</h2>
+            <div id="reportMeta" class="report-toolbar">
+                <span class="report-pill">Video non caricato</span>
+                <span class="report-pill">PDF non pronto</span>
+            </div>
             <div id="reportBox" class="report">Carica una clip, estrai i fotogrammi e genera il report.</div>
             <div class="archive">
                 <div>
@@ -498,11 +549,48 @@ const framesGrid = document.getElementById("framesGrid");
 const reportBox = document.getElementById("reportBox");
 const archiveList = document.getElementById("archiveList");
 const videoShell = document.getElementById("videoShell");
+const reportMeta = document.getElementById("reportMeta");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
     box.textContent=message;
     box.className=`status show ${type}`;
+}
+
+function updateReportMeta(state="empty", frameCount=null){
+    if(state === "video"){
+        reportMeta.innerHTML = `
+            <span class="report-pill ready">Video caricato</span>
+            <span class="report-pill">Fotogrammi da estrarre</span>
+            <span class="report-pill">PDF non pronto</span>
+        `;
+        return;
+    }
+
+    if(state === "frames"){
+        reportMeta.innerHTML = `
+            <span class="report-pill ready">${extractedFrames.length} fotogrammi</span>
+            <span class="report-pill ready">${escapeHtml(document.getElementById("videoFocus").value)}</span>
+            <span class="report-pill">PDF non pronto</span>
+        `;
+        return;
+    }
+
+    if(state === "report"){
+        const framesLabel = frameCount || extractedFrames.length || "Archivio";
+        const framesText = Number(framesLabel) ? `${framesLabel} fotogrammi` : String(framesLabel);
+        reportMeta.innerHTML = `
+            <span class="report-pill ready">${escapeHtml(framesText)}</span>
+            <span class="report-pill ready">Report generato</span>
+            <span class="report-pill ready">PDF pronto</span>
+        `;
+        return;
+    }
+
+    reportMeta.innerHTML = `
+        <span class="report-pill">Video non caricato</span>
+        <span class="report-pill">PDF non pronto</span>
+    `;
 }
 
 function getAuthToken(){
@@ -651,6 +739,7 @@ function loadArchivedReport(id){
     reportBox.textContent = item.report || "Report non disponibile.";
     latestPdfBase64 = item.pdf_base64 || "";
     downloadPdfBtn.disabled = !latestPdfBase64;
+    updateReportMeta("report", item.frames || "Archivio");
     showStatus("Report archivio aperto.", "ok");
 }
 
@@ -705,6 +794,7 @@ videoInput.addEventListener("change", () => {
     if(!file){
         extractBtn.disabled = true;
         videoShell.classList.remove("has-video");
+        updateReportMeta();
         return;
     }
 
@@ -712,6 +802,7 @@ videoInput.addEventListener("change", () => {
     videoPreview.src = selectedVideoUrl;
     videoShell.classList.add("has-video");
     extractBtn.disabled = false;
+    updateReportMeta("video");
     showStatus("Video pronto. Ora estrai i fotogrammi.", "ok");
 });
 
@@ -785,6 +876,7 @@ async function extractFrames(){
     `).join("");
     analyzeBtn.disabled = extractedFrames.length < 2;
     extractBtn.disabled = false;
+    updateReportMeta("frames");
     showStatus(`${extractedFrames.length} fotogrammi estratti. Puoi generare il report AI.`, "ok");
 }
 
@@ -836,6 +928,7 @@ async function analyzeVideo(){
         downloadPdfBtn.disabled = !latestPdfBase64;
         addToArchive(data, payload);
         if(data.cloud_saved) loadCloudArchive();
+        updateReportMeta("report", data.frames_analyzed || extractedFrames.length);
         showStatus(`Report generato con ${data.frames_analyzed || extractedFrames.length} fotogrammi${data.cloud_saved ? " e salvato nel cloud" : ""}.`, "ok");
     }catch(err){
         reportBox.textContent = "Errore generazione report.";

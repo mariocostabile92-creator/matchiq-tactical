@@ -1,4 +1,4 @@
-const CACHE_NAME = "matchiq-pwa-v16";
+const CACHE_NAME = "matchiq-pwa-v17";
 
 self.addEventListener("install", event => {
   self.skipWaiting();
