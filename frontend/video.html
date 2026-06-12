@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>MatchIQ Video Analyst Beta</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00f5a0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+    --bg:#050914;
+    --panel:rgba(255,255,255,.075);
+    --panel2:rgba(255,255,255,.045);
+    --border:rgba(255,255,255,.12);
+    --text:#fff;
+    --muted:#aebee7;
+    --green:#00f5a0;
+    --blue:#2f7cff;
+    --gold:#ffe28a;
+    --red:#ff4058;
+}
+body{
+    min-height:100vh;
+    font-family:Inter,Arial,sans-serif;
+    color:var(--text);
+    background:
+        radial-gradient(circle at 18% 0%,rgba(0,245,160,.20),transparent 31%),
+        radial-gradient(circle at 86% 10%,rgba(47,124,255,.23),transparent 30%),
+        linear-gradient(180deg,#07101f,#03050b 62%,#02030a);
+}
+.topbar{
+    position:sticky;
+    top:0;
+    z-index:20;
+    display:flex;
+    justify-content:space-between;
+    gap:14px;
+    align-items:center;
+    padding:18px 26px;
+    background:rgba(4,8,18,.90);
+    border-bottom:1px solid var(--border);
+    backdrop-filter:blur(16px);
+}
+.brand{font-weight:1000;font-size:22px}
+.sub{color:var(--muted);font-size:12px;font-weight:800;margin-top:3px}
+.nav{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+    border:0;
+    border-radius:14px;
+    padding:12px 16px;
+    font-weight:1000;
+    cursor:pointer;
+    color:#06111c;
+    background:linear-gradient(135deg,var(--green),var(--blue));
+    text-decoration:none;
+    display:inline-flex;
+    justify-content:center;
+    align-items:center;
+    gap:8px;
+    min-height:44px;
+}
+.btn.dark{background:rgba(255,255,255,.08);border:1px solid var(--border);color:#fff}
+.btn.red{background:linear-gradient(135deg,var(--red),#8b1d35);color:#fff}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 24px 56px}
+.hero{
+    display:grid;
+    grid-template-columns:1.05fr .95fr;
+    gap:18px;
+    align-items:stretch;
+}
+.panel{
+    background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+    border:1px solid var(--border);
+    border-radius:26px;
+    padding:24px;
+    box-shadow:0 24px 70px rgba(0,0,0,.25);
+}
+.badge{
+    display:inline-flex;
+    padding:8px 12px;
+    border-radius:999px;
+    color:var(--green);
+    background:rgba(0,245,160,.11);
+    border:1px solid rgba(0,245,160,.28);
+    font-size:12px;
+    font-weight:1000;
+    margin-bottom:14px;
+}
+h1{font-size:clamp(32px,4vw,54px);line-height:1.02;letter-spacing:-.8px;margin-bottom:14px}
+h2{font-size:24px;margin-bottom:10px}
+p{color:#c4d2f5;line-height:1.65}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field.full{grid-column:1/-1}
+label{color:#9fb0df;font-size:12px;font-weight:1000}
+input,select,textarea{
+    width:100%;
+    border:1px solid rgba(255,255,255,.13);
+    background:rgba(5,10,22,.88);
+    color:#fff;
+    border-radius:14px;
+    padding:13px 14px;
+    outline:none;
+    font-weight:800;
+}
+textarea{min-height:92px;resize:vertical}
+.upload{
+    margin-top:18px;
+    border:1px dashed rgba(0,245,160,.34);
+    border-radius:22px;
+    padding:18px;
+    background:rgba(0,245,160,.06);
+}
+video{
+    width:100%;
+    max-height:380px;
+    border-radius:22px;
+    background:#000;
+    margin-top:16px;
+    border:1px solid rgba(255,255,255,.12);
+}
+.frames{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-top:16px;
+}
+.frames img{
+    width:100%;
+    aspect-ratio:16/9;
+    object-fit:cover;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+}
+.status{
+    margin-top:14px;
+    padding:13px 14px;
+    border-radius:16px;
+    display:none;
+    font-weight:900;
+    font-size:13px;
+}
+.status.show{display:block}
+.status.ok{color:var(--green);background:rgba(0,245,160,.10);border:1px solid rgba(0,245,160,.25)}
+.status.warn{color:var(--gold);background:rgba(255,226,138,.10);border:1px solid rgba(255,226,138,.25)}
+.status.err{color:#ffb8b8;background:rgba(255,64,88,.10);border:1px solid rgba(255,64,88,.25)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.report{
+    white-space:pre-wrap;
+    color:#eaf0ff;
+    line-height:1.58;
+    font-size:14px;
+    max-height:680px;
+    overflow:auto;
+}
+.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.mini{
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:18px;
+    padding:15px;
+}
+.mini strong{display:block;margin-bottom:6px}
+.mini span{color:var(--muted);font-size:13px;line-height:1.45}
+@media(max-width:900px){
+    .hero,.form-grid,.mini-grid{grid-template-columns:1fr}
+    .topbar{align-items:flex-start;flex-direction:column;padding:16px}
+    .wrap{padding:18px 14px 42px}
+    .frames{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+    <div>
+        <div class="brand">MatchIQ Video Analyst</div>
+        <div class="sub">Beta video report · clip brevi · PDF AI</div>
+    </div>
+    <nav class="nav">
+        <a class="btn dark" href="/index.html?v=10405">Home</a>
+        <a class="btn dark" href="/coach.html?v=10405">Coach</a>
+        <a class="btn dark" href="/account.html?v=10405">Account</a>
+    </nav>
+</header>
+
+<main class="wrap">
+    <section class="hero">
+        <div class="panel">
+            <span class="badge">VIDEO REPORT BETA</span>
+            <h1>Carica una clip e genera un report tecnico PDF</h1>
+            <p>
+                In questa prima versione MatchIQ analizza fotogrammi estratti dal video.
+                Funziona meglio con clip brevi, azioni chiare e riprese laterali o dall'alto.
+            </p>
+
+            <div class="mini-grid">
+                <div class="mini"><strong>Clip consigliate</strong><span>1-10 minuti, highlights, gol subiti, azioni offensive o fase difensiva.</span></div>
+                <div class="mini"><strong>Output</strong><span>Sintesi tattica, rischi, transizioni, consigli allenamento e PDF scaricabile.</span></div>
+                <div class="mini"><strong>Beta prudente</strong><span>Se numeri e volti non sono leggibili, il report lo segnala come limite.</span></div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Titolo clip</label>
+                    <input id="videoTitle" placeholder="Es. Primo tempo ASD - Rivale" />
+                </div>
+                <div class="field">
+                    <label>Categoria</label>
+                    <select id="videoCategory">
+                        <option>Dilettanti</option>
+                        <option>Terza Categoria</option>
+                        <option>Seconda Categoria</option>
+                        <option>Prima Categoria</option>
+                        <option>Promozione</option>
+                        <option>Juniores</option>
+                        <option>Allievi</option>
+                        <option>Giovanissimi</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Focus analisi</label>
+                    <select id="videoFocus">
+                        <option>Analisi tattica generale</option>
+                        <option>Fase difensiva</option>
+                        <option>Fase offensiva</option>
+                        <option>Pressing e transizioni</option>
+                        <option>Gol subito</option>
+                        <option>Occasioni create</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Fotogrammi</label>
+                    <select id="frameCount">
+                        <option value="6">6 frame</option>
+                        <option value="8" selected>8 frame</option>
+                        <option value="10">10 frame</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Note staff</label>
+                    <textarea id="videoNotes" placeholder="Es. squadra in maglia verde, voglio capire perché subiamo transizioni centrali..."></textarea>
+                </div>
+            </div>
+
+            <div class="upload">
+                <label>Video clip</label>
+                <input id="videoInput" type="file" accept="video/*" />
+                <video id="videoPreview" controls playsinline></video>
+            </div>
+
+            <div class="actions">
+                <button class="btn" id="extractBtn" onclick="extractFrames()" disabled>Estrai fotogrammi</button>
+                <button class="btn" id="analyzeBtn" onclick="analyzeVideo()" disabled>Genera report AI</button>
+                <button class="btn dark" id="downloadPdfBtn" onclick="downloadPdf()" disabled>Scarica PDF</button>
+            </div>
+
+            <div id="statusBox" class="status"></div>
+            <div id="framesGrid" class="frames"></div>
+        </div>
+
+        <div class="panel">
+            <span class="badge">REPORT</span>
+            <h2>Analisi generata</h2>
+            <div id="reportBox" class="report">Carica una clip, estrai i fotogrammi e genera il report.</div>
+        </div>
+    </section>
+</main>
+
+<canvas id="captureCanvas" style="display:none"></canvas>
+
+<script>
+const API_BASE = `${window.location.origin}/api`;
+let selectedVideoUrl = "";
+let extractedFrames = [];
+let latestPdfBase64 = "";
+
+const videoInput = document.getElementById("videoInput");
+const videoPreview = document.getElementById("videoPreview");
+const extractBtn = document.getElementById("extractBtn");
+const analyzeBtn = document.getElementById("analyzeBtn");
+const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+const framesGrid = document.getElementById("framesGrid");
+const reportBox = document.getElementById("reportBox");
+
+function showStatus(message,type="ok"){
+    const box=document.getElementById("statusBox");
+    box.textContent=message;
+    box.className=`status show ${type}`;
+}
+
+videoInput.addEventListener("change", () => {
+    const file = videoInput.files && videoInput.files[0];
+    extractedFrames = [];
+    latestPdfBase64 = "";
+    framesGrid.innerHTML = "";
+    analyzeBtn.disabled = true;
+    downloadPdfBtn.disabled = true;
+    reportBox.textContent = "Video caricato. Estrai i fotogrammi per avviare l'analisi.";
+
+    if(selectedVideoUrl) URL.revokeObjectURL(selectedVideoUrl);
+
+    if(!file){
+        extractBtn.disabled = true;
+        return;
+    }
+
+    selectedVideoUrl = URL.createObjectURL(file);
+    videoPreview.src = selectedVideoUrl;
+    extractBtn.disabled = false;
+    showStatus("Video pronto. Ora estrai i fotogrammi.", "ok");
+});
+
+function seekVideo(video,time){
+    return new Promise((resolve,reject) => {
+        const onSeeked = () => {
+            video.removeEventListener("seeked", onSeeked);
+            resolve();
+        };
+        video.addEventListener("seeked", onSeeked);
+        video.currentTime = Math.max(0, Math.min(time, video.duration || 0));
+        setTimeout(() => {
+            video.removeEventListener("seeked", onSeeked);
+            resolve();
+        }, 3500);
+    });
+}
+
+async function extractFrames(){
+    if(!videoPreview.src){
+        showStatus("Carica prima un video.", "warn");
+        return;
+    }
+
+    extractBtn.disabled = true;
+    analyzeBtn.disabled = true;
+    extractedFrames = [];
+    framesGrid.innerHTML = "";
+    latestPdfBase64 = "";
+    downloadPdfBtn.disabled = true;
+    showStatus("Estraggo fotogrammi dalla clip...", "warn");
+
+    await new Promise(resolve => {
+        if(videoPreview.readyState >= 1) resolve();
+        else videoPreview.onloadedmetadata = resolve;
+    });
+
+    const duration = videoPreview.duration || 0;
+    if(!duration || Number.isNaN(duration)){
+        showStatus("Non riesco a leggere la durata del video.", "err");
+        extractBtn.disabled = false;
+        return;
+    }
+
+    const count = Number(document.getElementById("frameCount").value || 8);
+    const canvas = document.getElementById("captureCanvas");
+    const ctx = canvas.getContext("2d");
+    const sourceWidth = videoPreview.videoWidth || 1280;
+    const sourceHeight = videoPreview.videoHeight || 720;
+    const maxWidth = 720;
+    const ratio = Math.min(1, maxWidth / sourceWidth);
+
+    canvas.width = Math.round(sourceWidth * ratio);
+    canvas.height = Math.round(sourceHeight * ratio);
+
+    for(let i=0;i<count;i++){
+        const t = duration * ((i + 1) / (count + 1));
+        await seekVideo(videoPreview,t);
+        ctx.drawImage(videoPreview,0,0,canvas.width,canvas.height);
+        const frame = canvas.toDataURL("image/jpeg",0.72);
+        extractedFrames.push(frame);
+    }
+
+    framesGrid.innerHTML = extractedFrames.map((frame,i) => `<img src="${frame}" alt="Frame ${i+1}">`).join("");
+    analyzeBtn.disabled = extractedFrames.length < 2;
+    extractBtn.disabled = false;
+    showStatus(`${extractedFrames.length} fotogrammi estratti. Puoi generare il report AI.`, "ok");
+}
+
+async function analyzeVideo(){
+    if(extractedFrames.length < 2){
+        showStatus("Servono almeno 2 fotogrammi.", "warn");
+        return;
+    }
+
+    analyzeBtn.disabled = true;
+    downloadPdfBtn.disabled = true;
+    reportBox.textContent = "Analisi AI in corso...";
+    showStatus("Sto generando il report. Per clip lunghe può volerci qualche secondo.", "warn");
+
+    const payload = {
+        title: document.getElementById("videoTitle").value.trim(),
+        category: document.getElementById("videoCategory").value,
+        focus: document.getElementById("videoFocus").value,
+        notes: document.getElementById("videoNotes").value.trim(),
+        duration_seconds: videoPreview.duration || 0,
+        frames: extractedFrames
+    };
+
+    try{
+        const res = await fetch(`${API_BASE}/video/analyze`,{
+            method:"POST",
+            headers:{"Content-Type":"application/json","Accept":"application/json"},
+            body:JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if(!res.ok || data.ok === false){
+            throw new Error(data.detail || data.message || "Analisi non riuscita");
+        }
+
+        reportBox.textContent = data.report || "Report non disponibile.";
+        latestPdfBase64 = data.pdf_base64 || "";
+        downloadPdfBtn.disabled = !latestPdfBase64;
+        showStatus(`Report generato con ${data.frames_analyzed || extractedFrames.length} fotogrammi.`, "ok");
+    }catch(err){
+        reportBox.textContent = "Errore generazione report.";
+        showStatus(err.message || "Errore analisi video", "err");
+    }finally{
+        analyzeBtn.disabled = false;
+    }
+}
+
+function downloadPdf(){
+    if(!latestPdfBase64){
+        showStatus("PDF non ancora disponibile.", "warn");
+        return;
+    }
+
+    const bytes = atob(latestPdfBase64);
+    const buffer = new Uint8Array(bytes.length);
+    for(let i=0;i<bytes.length;i++) buffer[i] = bytes.charCodeAt(i);
+
+    const blob = new Blob([buffer], {type:"application/pdf"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const title = document.getElementById("videoTitle").value.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-") || "matchiq-video-report";
+    a.href = url;
+    a.download = `${title}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js").catch(err => console.warn("Service Worker non registrato:", err));
+    });
+}
+</script>
+</body>
+</html>

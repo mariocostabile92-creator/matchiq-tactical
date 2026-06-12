@@ -1514,6 +1514,7 @@ a{
   </div>
   <div class="nav-actions">
     <button class="btn green" onclick="openCoach()">Coach</button>
+    <button class="btn" onclick="openVideo()">Video AI</button>
     <button class="btn" onclick="openScoutHome()">Scout</button>
     <button class="btn dark" onclick="scrollToLive()">Live</button>
     <button class="btn pro" id="upgradeBtnTop" onclick="startCheckout('pro_monthly')">Passa a Pro</button>
@@ -1534,7 +1535,7 @@ a{
       <div class="badge-row"><span class="badge green" id="heroBadge">MATCHIQ V8.3.1</span><span class="badge blue">Mister · Staff · Società</span><span class="badge gold">Coach Free Trial</span></div>
       <h1>Trasforma una partita in un report tecnico pronto da condividere.</h1>
       <p><strong>MatchIQ Tactical</strong> è l’assistente tattico per mister, staff e società dilettantistiche: durante la gara segni eventi e pagelle, dopo il fischio finale generi un <strong>PDF Coach professionale</strong> o una sintesi WhatsApp pronta per staff, squadra e società.</p>
-      <div class="hero-actions"><button class="btn green" onclick="openCoach()">Crea report Coach</button><button class="btn pro" id="heroProBtn" onclick="startCheckout('pro_monthly')">Sblocca Coach Pro</button><button class="btn" onclick="openCoach()">Segna eventi partita</button><button class="btn dark" onclick="openScoutHome()">Apri Scout</button></div>
+      <div class="hero-actions"><button class="btn green" onclick="openCoach()">Crea report Coach</button><button class="btn" onclick="openVideo()">Analizza video</button><button class="btn pro" id="heroProBtn" onclick="startCheckout('pro_monthly')">Sblocca Coach Pro</button><button class="btn" onclick="openCoach()">Segna eventi partita</button><button class="btn dark" onclick="openScoutHome()">Apri Scout</button></div>
       <div class="coach-proof-grid">
         <div class="coach-proof-card"><strong>📄 PDF Coach V1.5</strong><span>Report A4 ordinato con sintesi, eventi, pagelle e focus allenamento.</span></div>
         <div class="coach-proof-card"><strong>📲 WhatsApp pronta</strong><span>Una sintesi breve da copiare e mandare a staff, squadra o dirigente.</span></div>
@@ -1573,7 +1574,7 @@ a{
   <section><div class="section-head"><div><div class="section-title">Cosa puoi fare con MatchIQ</div><div class="section-sub">Una sola webapp per desktop e telefono: lavori da PC, poi la usi come PWA direttamente al campo.</div></div></div>
     <div class="features-grid">
       <article class="feature-card"><div><div class="feature-icon">📝</div><h3>Coach Mode</h3><p>Crei la partita, registri eventi, note tattiche e pagelle. A fine gara generi un report tecnico post-partita.</p></div><div class="feature-actions"><button class="btn green" onclick="openCoach()">Apri Coach</button></div></article>
-      <article class="feature-card"><div><div class="feature-icon">📄</div><h3>PDF Coach / WhatsApp</h3><p>Trasformi la partita in un PDF A4 professionale o in una sintesi pronta da condividere.</p></div><div class="feature-actions"><button class="btn green" onclick="openCoach()">Crea report</button></div></article>
+      <article class="feature-card"><div><div class="feature-icon">🎥</div><h3>Video Analyst Beta</h3><p>Carichi una clip, MatchIQ estrae fotogrammi e genera un report tecnico PDF con AI.</p></div><div class="feature-actions"><button class="btn green" onclick="openVideo()">Apri Video AI</button></div></article>
       <article class="feature-card"><div><div class="feature-icon">🔎</div><h3>Scout Mode</h3><p>Supporto extra per osservare giocatori, segnali live e impatto durante la gara.</p></div><div class="feature-actions"><button class="btn dark" onclick="openScoutHome()">Apri Scout</button></div></article>
       <article class="feature-card"><div><div class="feature-icon">📊</div><h3>Analisi live</h3><p>Quando ci sono partite live, leggi momentum, pressione e segnali tattici in tempo reale.</p></div><div class="feature-actions"><button class="btn" onclick="scrollToLive()">Vedi live</button></div></article>
     </div>
@@ -1601,7 +1602,7 @@ a{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10405";
+const APP_VERSION = "10406";
 const BETA_STORAGE_KEY = "matchiq_beta_requests_v821";
 let accountPlan = {plan:"guest",label:"Guest",limits:{max_live_matches:3,scout_enabled:true,scout_preview:true,export_enabled:false,pdf_enabled:false},features:{}};
 function getAuthToken(){return localStorage.getItem("matchiq_auth_token")||sessionStorage.getItem("matchiq_auth_token")||"";}
@@ -1636,6 +1637,7 @@ function openAnalysis(matchId){window.location.href=`match.html?id=${encodeURICo
 function openScout(matchId){window.location.href=`scout.html?match_id=${encodeURIComponent(matchId)}&v=${APP_VERSION}`;}
 function openScoutHome(){window.location.href=`scout.html?v=${APP_VERSION}`;}
 function openCoach(){window.location.href=`coach.html?v=${APP_VERSION}`;}
+function openVideo(){window.location.href=`video.html?v=${APP_VERSION}`;}
 function openAccount(){window.location.href=`account.html?v=${APP_VERSION}`;}
 function openAdminBeta(){window.location.href=`admin-beta.html?v=${APP_VERSION}`;}
 function openAdminUsers(){window.location.href=`admin-users.html?v=${APP_VERSION}`;}

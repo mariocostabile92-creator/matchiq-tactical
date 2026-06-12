@@ -59,6 +59,11 @@ def serve_coach():
     return frontend_file("coach.html")
 
 
+@router.get("/video.html")
+def serve_video():
+    return frontend_file("video.html")
+
+
 @router.get("/account.html")
 def serve_account():
     return frontend_file("account.html")
