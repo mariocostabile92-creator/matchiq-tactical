@@ -351,6 +351,24 @@ video{
     color:#06111c;
     background:var(--green);
 }
+.sample-report{
+    margin-top:14px;
+    padding:14px;
+    border-radius:18px;
+    background:rgba(0,245,160,.07);
+    border:1px solid rgba(0,245,160,.18);
+}
+.sample-report strong{
+    display:block;
+    margin-bottom:7px;
+}
+.sample-report span{
+    display:block;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.45;
+    margin-bottom:12px;
+}
 @media(max-width:900px){
     .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid{grid-template-columns:1fr}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
@@ -376,12 +394,12 @@ video{
 <header class="topbar">
     <div>
         <div class="brand">MatchIQ Video Analyst</div>
-        <div class="sub">Beta video report · clip brevi · PDF AI</div>
+        <div class="sub">Beta video report ? clip brevi ? PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10417">Home</a>
-        <a class="btn dark" href="/coach.html?v=10417">Coach</a>
-        <a class="btn dark" href="/account.html?v=10417">Account</a>
+        <a class="btn dark" href="/index.html?v=10418">Home</a>
+        <a class="btn dark" href="/coach.html?v=10418">Coach</a>
+        <a class="btn dark" href="/account.html?v=10418">Account</a>
     </nav>
 </header>
 
@@ -409,7 +427,7 @@ video{
 
             <div class="quality-grid">
                 <div class="quality-card"><b>Ripresa utile</b><span>Laterale o dall'alto, campo visibile e azione riconoscibile.</span></div>
-                <div class="quality-card"><b>Focus chiaro</b><span>Più il focus è preciso, più il PDF diventa utile per staff e allenamento.</span></div>
+                <div class="quality-card"><b>Focus chiaro</b><span>Pi? il focus ? preciso, pi? il PDF diventa utile per staff e allenamento.</span></div>
                 <div class="quality-card"><b>Archivio pronto</b><span>Ogni analisi resta recuperabile con report e PDF, anche dopo la partita.</span></div>
             </div>
 
@@ -424,7 +442,7 @@ video{
                 </div>
                 <div class="plan-card">
                     <strong>Club / Academy</strong>
-                    <span>Più report, storico ampio, staff e branding società.</span>
+                    <span>Pi? report, storico ampio, staff e branding societ?.</span>
                 </div>
             </div>
 
@@ -434,7 +452,7 @@ video{
                     <input id="videoTitle" placeholder="Es. Primo tempo ASD - Rivale" />
                 </div>
                 <div class="field">
-                    <label>Società / squadra</label>
+                    <label>Societ? / squadra</label>
                     <input id="clubName" placeholder="Es. ASD MatchIQ" />
                 </div>
                 <div class="field">
@@ -464,7 +482,7 @@ video{
                 <div class="field">
                     <label>Fotogrammi</label>
                     <select id="frameCount">
-                        <option value="4" selected>4 frame · beta economica</option>
+                        <option value="4" selected>4 frame ? beta economica</option>
                         <option value="6">6 frame</option>
                         <option value="8">8 frame</option>
                     </select>
@@ -484,7 +502,7 @@ video{
                 </div>
                 <div class="field full">
                     <label>Note staff</label>
-                    <textarea id="videoNotes" placeholder="Es. squadra in maglia verde, voglio capire perché subiamo transizioni centrali..."></textarea>
+                    <textarea id="videoNotes" placeholder="Es. squadra in maglia verde, voglio capire perch? subiamo transizioni centrali..."></textarea>
                 </div>
             </div>
 
@@ -518,6 +536,11 @@ video{
                 <span class="report-pill">PDF non pronto</span>
             </div>
             <div id="reportBox" class="report">Carica una clip, estrai i fotogrammi e genera il report.</div>
+            <div class="sample-report">
+                <strong>Vuoi capire subito cosa produce?</strong>
+                <span>Apri un esempio sintetico di report tecnico senza caricare video e senza usare credito AI.</span>
+                <button class="btn dark small" type="button" onclick="loadSampleReport()">Apri esempio</button>
+            </div>
             <div class="archive">
                 <div>
                     <span class="badge">ARCHIVIO</span>
@@ -587,10 +610,42 @@ function updateReportMeta(state="empty", frameCount=null){
         return;
     }
 
+    if(state === "sample"){
+        reportMeta.innerHTML = `
+            <span class="report-pill ready">Esempio report</span>
+            <span class="report-pill ready">Focus tattico</span>
+            <span class="report-pill">PDF non generato</span>
+        `;
+        return;
+    }
+
     reportMeta.innerHTML = `
         <span class="report-pill">Video non caricato</span>
         <span class="report-pill">PDF non pronto</span>
     `;
+}
+
+function loadSampleReport(){
+    latestPdfBase64 = "";
+    downloadPdfBtn.disabled = true;
+    reportBox.textContent = `1. Sintesi video
+La clip mostra una squadra che perde compattezza dopo la prima pressione. Il recupero palla non ? immediato e tra centrocampo e difesa si apre uno spazio centrale sfruttabile dall'avversario.
+
+2. Fase difensiva
+La linea arretra in modo corretto, ma i centrocampisti arrivano in ritardo sulla seconda palla. Serve accorciare prima sul portatore e chiudere la corsia interna.
+
+3. Pressing e transizioni
+Il pressing parte bene sul lato palla, per? manca la copertura preventiva. Quando l'avversario supera la prima pressione, la squadra resta lunga.
+
+4. Indicazioni per il prossimo allenamento
+- Lavorare su riaggressione dopo palla persa.
+- Esercitare scivolamenti laterali con copertura del mediano.
+- Curare comunicazione tra difesa e centrocampo.
+
+5. Messaggio staff
+La squadra ha buone intenzioni nel pressing, ma deve restare pi? corta. Priorit?: distanze tra reparti e lettura della transizione negativa.`;
+    updateReportMeta("sample");
+    showStatus("Esempio report aperto. Carica una clip per generare un'analisi reale.", "ok");
 }
 
 function getAuthToken(){
@@ -650,7 +705,7 @@ function renderArchive(){
                 <strong>${escapeHtml(item.title || "Video Report MatchIQ")}</strong>
                 <div class="archive-meta">
                     <span class="archive-source ${item.cloud ? "" : "local"}">${item.cloud ? "Cloud" : "Locale"}</span>
-                    ${escapeHtml(formatArchiveDate(item.date) || "")} · ${escapeHtml(item.focus || "Analisi tattica")} · ${escapeHtml(item.club || "Società non indicata")}<br>
+                    ${escapeHtml(formatArchiveDate(item.date) || "")} ? ${escapeHtml(item.focus || "Analisi tattica")} ? ${escapeHtml(item.club || "Societ? non indicata")}<br>
                     ${Number(item.frames || 0)} fotogrammi analizzati
                 </div>
             </div>
@@ -871,7 +926,7 @@ async function extractFrames(){
     framesGrid.innerHTML = extractedFrames.map((frame,i) => `
         <div class="frame-card">
             <img src="${frame}" alt="Frame ${i+1}">
-            <span>Frame ${i+1} · ${formatTime(extractedFrameTimes[i])}</span>
+            <span>Frame ${i+1} ? ${formatTime(extractedFrameTimes[i])}</span>
         </div>
     `).join("");
     analyzeBtn.disabled = extractedFrames.length < 2;
@@ -889,7 +944,7 @@ async function analyzeVideo(){
     analyzeBtn.disabled = true;
     downloadPdfBtn.disabled = true;
     reportBox.textContent = "Analisi AI in corso...";
-    showStatus("Sto generando il report. Per clip lunghe può volerci qualche secondo.", "warn");
+    showStatus("Sto generando il report. Per clip lunghe pu? volerci qualche secondo.", "warn");
 
     const payload = {
         title: document.getElementById("videoTitle").value.trim(),
