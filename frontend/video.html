@@ -127,12 +127,24 @@ video{
     gap:10px;
     margin-top:16px;
 }
-.frames img{
+.frame-card{
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:14px;
+    overflow:hidden;
+}
+.frame-card img{
     width:100%;
     aspect-ratio:16/9;
     object-fit:cover;
-    border-radius:14px;
-    border:1px solid rgba(255,255,255,.12);
+    display:block;
+}
+.frame-card span{
+    display:block;
+    padding:7px 9px;
+    color:#cfe0ff;
+    font-size:11px;
+    font-weight:1000;
 }
 .status{
     margin-top:14px;
@@ -179,9 +191,9 @@ video{
         <div class="sub">Beta video report · clip brevi · PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10407">Home</a>
-        <a class="btn dark" href="/coach.html?v=10407">Coach</a>
-        <a class="btn dark" href="/account.html?v=10407">Account</a>
+        <a class="btn dark" href="/index.html?v=10408">Home</a>
+        <a class="btn dark" href="/coach.html?v=10408">Coach</a>
+        <a class="btn dark" href="/account.html?v=10408">Account</a>
     </nav>
 </header>
 
@@ -238,6 +250,19 @@ video{
                         <option value="8">8 frame</option>
                     </select>
                 </div>
+                <div class="field">
+                    <label>Squadra osservata</label>
+                    <input id="observedTeam" placeholder="Es. squadra in maglia verde" />
+                </div>
+                <div class="field">
+                    <label>Stile report</label>
+                    <select id="reportStyle">
+                        <option>Report staff completo</option>
+                        <option>Report rapido post-partita</option>
+                        <option>Indicazioni per allenamento</option>
+                        <option>Messaggio semplice per squadra</option>
+                    </select>
+                </div>
                 <div class="field full">
                     <label>Note staff</label>
                     <textarea id="videoNotes" placeholder="Es. squadra in maglia verde, voglio capire perché subiamo transizioni centrali..."></textarea>
@@ -274,6 +299,7 @@ video{
 const API_BASE = `${window.location.origin}/api`;
 let selectedVideoUrl = "";
 let extractedFrames = [];
+let extractedFrameTimes = [];
 let latestPdfBase64 = "";
 
 const videoInput = document.getElementById("videoInput");
@@ -293,6 +319,7 @@ function showStatus(message,type="ok"){
 videoInput.addEventListener("change", () => {
     const file = videoInput.files && videoInput.files[0];
     extractedFrames = [];
+    extractedFrameTimes = [];
     latestPdfBase64 = "";
     framesGrid.innerHTML = "";
     analyzeBtn.disabled = true;
@@ -336,6 +363,7 @@ async function extractFrames(){
     extractBtn.disabled = true;
     analyzeBtn.disabled = true;
     extractedFrames = [];
+    extractedFrameTimes = [];
     framesGrid.innerHTML = "";
     latestPdfBase64 = "";
     downloadPdfBtn.disabled = true;
@@ -370,9 +398,15 @@ async function extractFrames(){
         ctx.drawImage(videoPreview,0,0,canvas.width,canvas.height);
         const frame = canvas.toDataURL("image/jpeg",0.72);
         extractedFrames.push(frame);
+        extractedFrameTimes.push(Math.round(t));
     }
 
-    framesGrid.innerHTML = extractedFrames.map((frame,i) => `<img src="${frame}" alt="Frame ${i+1}">`).join("");
+    framesGrid.innerHTML = extractedFrames.map((frame,i) => `
+        <div class="frame-card">
+            <img src="${frame}" alt="Frame ${i+1}">
+            <span>Frame ${i+1} · ${formatTime(extractedFrameTimes[i])}</span>
+        </div>
+    `).join("");
     analyzeBtn.disabled = extractedFrames.length < 2;
     extractBtn.disabled = false;
     showStatus(`${extractedFrames.length} fotogrammi estratti. Puoi generare il report AI.`, "ok");
@@ -393,8 +427,11 @@ async function analyzeVideo(){
         title: document.getElementById("videoTitle").value.trim(),
         category: document.getElementById("videoCategory").value,
         focus: document.getElementById("videoFocus").value,
+        observed_team: document.getElementById("observedTeam").value.trim(),
+        report_style: document.getElementById("reportStyle").value,
         notes: document.getElementById("videoNotes").value.trim(),
         duration_seconds: videoPreview.duration || 0,
+        frame_times: extractedFrameTimes,
         frames: extractedFrames
     };
 
@@ -427,6 +464,13 @@ async function analyzeVideo(){
     }finally{
         analyzeBtn.disabled = false;
     }
+}
+
+function formatTime(seconds){
+    const total = Math.max(0, Math.round(Number(seconds || 0)));
+    const minutes = String(Math.floor(total / 60)).padStart(2,"0");
+    const rest = String(total % 60).padStart(2,"0");
+    return `${minutes}:${rest}`;
 }
 
 function downloadPdf(){
