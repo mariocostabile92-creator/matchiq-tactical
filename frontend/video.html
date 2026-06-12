@@ -179,9 +179,9 @@ video{
         <div class="sub">Beta video report · clip brevi · PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10405">Home</a>
-        <a class="btn dark" href="/coach.html?v=10405">Coach</a>
-        <a class="btn dark" href="/account.html?v=10405">Account</a>
+        <a class="btn dark" href="/index.html?v=10407">Home</a>
+        <a class="btn dark" href="/coach.html?v=10407">Coach</a>
+        <a class="btn dark" href="/account.html?v=10407">Account</a>
     </nav>
 </header>
 
@@ -233,9 +233,9 @@ video{
                 <div class="field">
                     <label>Fotogrammi</label>
                     <select id="frameCount">
+                        <option value="4" selected>4 frame · beta economica</option>
                         <option value="6">6 frame</option>
-                        <option value="8" selected>8 frame</option>
-                        <option value="10">10 frame</option>
+                        <option value="8">8 frame</option>
                     </select>
                 </div>
                 <div class="field full">
@@ -407,7 +407,14 @@ async function analyzeVideo(){
 
         const data = await res.json();
         if(!res.ok || data.ok === false){
-            throw new Error(data.detail || data.message || "Analisi non riuscita");
+            const message = data.detail || data.message || "Analisi non riuscita";
+            const lower = String(message).toLowerCase();
+
+            if(res.status === 402 || lower.includes("quota") || lower.includes("billing") || lower.includes("credito")){
+                throw new Error("Credito OpenAI API non disponibile. Aggiungi credito o controlla il limite di spesa su OpenAI Platform, poi riprova.");
+            }
+
+            throw new Error(message);
         }
 
         reportBox.textContent = data.report || "Report non disponibile.";

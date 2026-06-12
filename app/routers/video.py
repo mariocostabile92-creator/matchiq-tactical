@@ -22,7 +22,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_VIDEO_MODEL = os.getenv("OPENAI_VIDEO_MODEL", "gpt-4.1-mini").strip()
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
-MAX_FRAMES = int(os.getenv("VIDEO_REPORT_MAX_FRAMES", "8"))
+MAX_FRAMES = int(os.getenv("VIDEO_REPORT_MAX_FRAMES", "6"))
 MAX_FRAME_CHARS = int(os.getenv("VIDEO_REPORT_MAX_FRAME_CHARS", "900000"))
 
 
@@ -141,6 +141,25 @@ def _call_openai(prompt: str, frames: List[str]) -> str:
             detail = response.json().get("error", {}).get("message")
         except Exception:
             detail = response.text
+
+        detail_text = str(detail or "")
+        quota_markers = [
+            "quota",
+            "billing",
+            "credits",
+            "insufficient_quota",
+            "exceeded your current quota",
+        ]
+
+        if any(marker in detail_text.lower() for marker in quota_markers):
+            raise HTTPException(
+                status_code=402,
+                detail=(
+                    "Credito o quota OpenAI non disponibile. "
+                    "Aggiungi credito API o controlla il limite di spesa su OpenAI Platform."
+                )
+            )
+
         raise HTTPException(
             status_code=502,
             detail=f"Errore OpenAI: {detail or response.status_code}"
