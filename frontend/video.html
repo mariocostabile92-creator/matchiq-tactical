@@ -113,15 +113,50 @@ textarea{min-height:92px;resize:vertical}
     padding:18px;
     background:rgba(0,245,160,.06);
 }
+.video-shell{
+    position:relative;
+    margin-top:16px;
+    min-height:320px;
+    border-radius:22px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.12);
+    background:
+        linear-gradient(135deg,rgba(0,245,160,.10),rgba(47,124,255,.08)),
+        #070d1a;
+}
+.video-empty{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    padding:28px;
+    text-align:center;
+    color:#dbe7ff;
+}
+.video-empty strong{font-size:22px}
+.video-empty span{
+    max-width:420px;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.5;
+}
 video{
     width:100%;
     max-height:520px;
     aspect-ratio:16/9;
     object-fit:contain;
-    border-radius:22px;
+    display:none;
     background:#000;
-    margin-top:16px;
-    border:1px solid rgba(255,255,255,.12);
+}
+.video-shell.has-video{
+    min-height:0;
+    background:#000;
+}
+.video-shell.has-video video{display:block}
+.video-shell.has-video .video-empty{display:none}
 }
 .frames{
     display:grid;
@@ -197,6 +232,22 @@ video{
     font-size:12px;
     line-height:1.45;
 }
+.archive-source{
+    display:inline-flex;
+    align-items:center;
+    margin-right:6px;
+    padding:4px 8px;
+    border-radius:999px;
+    color:#06111c;
+    background:var(--green);
+    font-size:10px;
+    font-weight:1000;
+    text-transform:uppercase;
+}
+.archive-source.local{
+    color:#fff;
+    background:rgba(255,255,255,.16);
+}
 .archive-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .btn.small{
     min-height:34px;
@@ -259,9 +310,9 @@ video{
         <div class="sub">Beta video report · clip brevi · PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10412">Home</a>
-        <a class="btn dark" href="/coach.html?v=10412">Coach</a>
-        <a class="btn dark" href="/account.html?v=10412">Account</a>
+        <a class="btn dark" href="/index.html?v=10413">Home</a>
+        <a class="btn dark" href="/coach.html?v=10413">Coach</a>
+        <a class="btn dark" href="/account.html?v=10413">Account</a>
     </nav>
 </header>
 
@@ -359,7 +410,13 @@ video{
             <div class="upload">
                 <label>Video clip</label>
                 <input id="videoInput" type="file" accept="video/*" />
-                <video id="videoPreview" controls playsinline></video>
+                <div id="videoShell" class="video-shell">
+                    <div class="video-empty">
+                        <strong>Carica una clip per iniziare</strong>
+                        <span>Usa una ripresa laterale o dall'alto. Poi estrai i fotogrammi e genera il report PDF.</span>
+                    </div>
+                    <video id="videoPreview" controls playsinline></video>
+                </div>
             </div>
 
             <div class="actions">
@@ -406,6 +463,7 @@ const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 const framesGrid = document.getElementById("framesGrid");
 const reportBox = document.getElementById("reportBox");
 const archiveList = document.getElementById("archiveList");
+const videoShell = document.getElementById("videoShell");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -469,7 +527,8 @@ function renderArchive(){
             <div>
                 <strong>${escapeHtml(item.title || "Video Report MatchIQ")}</strong>
                 <div class="archive-meta">
-                    ${item.cloud ? "Cloud · " : "Locale · "}${escapeHtml(formatArchiveDate(item.date) || "")} · ${escapeHtml(item.focus || "Analisi tattica")} · ${escapeHtml(item.club || "Società non indicata")}<br>
+                    <span class="archive-source ${item.cloud ? "" : "local"}">${item.cloud ? "Cloud" : "Locale"}</span>
+                    ${escapeHtml(formatArchiveDate(item.date) || "")} · ${escapeHtml(item.focus || "Analisi tattica")} · ${escapeHtml(item.club || "Società non indicata")}<br>
                     ${Number(item.frames || 0)} fotogrammi analizzati
                 </div>
             </div>
@@ -611,11 +670,13 @@ videoInput.addEventListener("change", () => {
 
     if(!file){
         extractBtn.disabled = true;
+        videoShell.classList.remove("has-video");
         return;
     }
 
     selectedVideoUrl = URL.createObjectURL(file);
     videoPreview.src = selectedVideoUrl;
+    videoShell.classList.add("has-video");
     extractBtn.disabled = false;
     showStatus("Video pronto. Ora estrai i fotogrammi.", "ok");
 });
