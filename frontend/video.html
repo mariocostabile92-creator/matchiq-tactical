@@ -213,8 +213,26 @@ video{
 }
 .mini strong{display:block;margin-bottom:6px}
 .mini span{color:var(--muted);font-size:13px;line-height:1.45}
+.plan-strip{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin-top:16px;
+}
+.plan-card{
+    padding:15px;
+    border-radius:18px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.10);
+}
+.plan-card.featured{
+    background:linear-gradient(145deg,rgba(0,245,160,.13),rgba(47,124,255,.10));
+    border-color:rgba(0,245,160,.34);
+}
+.plan-card strong{display:block;margin-bottom:6px}
+.plan-card span{display:block;color:var(--muted);font-size:13px;line-height:1.45}
 @media(max-width:900px){
-    .hero,.form-grid,.mini-grid{grid-template-columns:1fr}
+    .hero,.form-grid,.mini-grid,.plan-strip{grid-template-columns:1fr}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
     .wrap{padding:18px 14px 42px}
     .frames{grid-template-columns:repeat(2,1fr)}
@@ -241,9 +259,9 @@ video{
         <div class="sub">Beta video report · clip brevi · PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10411">Home</a>
-        <a class="btn dark" href="/coach.html?v=10411">Coach</a>
-        <a class="btn dark" href="/account.html?v=10411">Account</a>
+        <a class="btn dark" href="/index.html?v=10412">Home</a>
+        <a class="btn dark" href="/coach.html?v=10412">Coach</a>
+        <a class="btn dark" href="/account.html?v=10412">Account</a>
     </nav>
 </header>
 
@@ -261,6 +279,21 @@ video{
                 <div class="mini"><strong>Clip consigliate</strong><span>1-10 minuti, highlights, gol subiti, azioni offensive o fase difensiva.</span></div>
                 <div class="mini"><strong>Output</strong><span>Sintesi tattica, rischi, transizioni, consigli allenamento e PDF scaricabile.</span></div>
                 <div class="mini"><strong>Beta prudente</strong><span>Se numeri e volti non sono leggibili, il report lo segnala come limite.</span></div>
+            </div>
+
+            <div class="plan-strip">
+                <div class="plan-card">
+                    <strong>Free beta</strong>
+                    <span>1 report video al giorno, archivio cloud iniziale.</span>
+                </div>
+                <div class="plan-card featured">
+                    <strong>Coach Pro</strong>
+                    <span>10 report video al giorno, storico cloud e PDF sempre recuperabili.</span>
+                </div>
+                <div class="plan-card">
+                    <strong>Club / Academy</strong>
+                    <span>Più report, storico ampio, staff e branding società.</span>
+                </div>
             </div>
 
             <div class="form-grid">
