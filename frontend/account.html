@@ -541,6 +541,71 @@ p{
     font-size:14px;
 }
 
+.plan-decision-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+    margin-top:18px;
+}
+
+.plan-decision-card{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-height:100%;
+    padding:20px;
+    border-radius:24px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.09);
+}
+
+.plan-decision-card.featured{
+    background:linear-gradient(145deg,rgba(24,240,139,.13),rgba(56,169,255,.08));
+    border-color:rgba(24,240,139,.34);
+    box-shadow:0 18px 45px rgba(0,0,0,.18);
+}
+
+.plan-decision-card.club{
+    background:linear-gradient(145deg,rgba(255,209,102,.12),rgba(139,92,246,.08));
+    border-color:rgba(255,209,102,.28);
+}
+
+.plan-decision-card h3{
+    font-size:22px;
+}
+
+.plan-decision-card p{
+    color:var(--soft);
+    font-size:14px;
+    line-height:1.5;
+}
+
+.plan-price{
+    font-size:28px;
+    font-weight:1000;
+    letter-spacing:-.4px;
+}
+
+.plan-price small{
+    font-size:13px;
+    color:var(--muted);
+}
+
+.plan-decision-card ul{
+    list-style:none;
+    display:grid;
+    gap:9px;
+    color:#dbe6ff;
+    font-size:13px;
+    line-height:1.45;
+    margin:0;
+}
+
+.plan-decision-card .btn{
+    margin-top:auto;
+    width:100%;
+}
+
 .founder-panel{
     margin-top:22px;
     background:
@@ -657,6 +722,10 @@ p{
     }
 
     .unlock-grid{
+        grid-template-columns:1fr;
+    }
+
+    .plan-decision-grid{
         grid-template-columns:1fr;
     }
 }
@@ -1079,7 +1148,57 @@ p{
     </div>
 
     <div class="card section hidden-for-pro" id="comparePanel">
-        <h2>Free vs Pro</h2>
+        <span class="badge beta">SCEGLI IL PIANO</span>
+
+        <h2>Quale piano ti serve?</h2>
+
+        <p>
+            Free serve per provare il flusso. Coach Pro è per usarlo ogni settimana.
+            Club / Academy è il percorso per staff, società e più squadre.
+        </p>
+
+        <div class="plan-decision-grid">
+            <div class="plan-decision-card">
+                <h3>Free beta</h3>
+                <div class="plan-price">0€ <small>/ prova</small></div>
+                <p>Per capire se MatchIQ entra nel tuo modo di lavorare.</p>
+                <ul>
+                    <li>✅ Coach report tecnico in prova</li>
+                    <li>✅ Video Analyst con limiti beta</li>
+                    <li>✅ Scout e live in preview</li>
+                    <li>🔒 Storico e PDF limitati</li>
+                </ul>
+                <button class="btn green" onclick="window.location.href='/coach.html?v='+APP_VERSION">Prova Coach</button>
+            </div>
+
+            <div class="plan-decision-card featured">
+                <h3>Coach Pro</h3>
+                <div class="plan-price">9,99€ <small>/ mese</small></div>
+                <p>Per mister e staff che vogliono usarlo con continuità durante la stagione.</p>
+                <ul>
+                    <li>✅ PDF Coach e Video Analyst scaricabili</li>
+                    <li>✅ WhatsApp, pagelle e storico esteso</li>
+                    <li>✅ Scout completo, watchlist ed export</li>
+                    <li>✅ Archivio cloud più utile nel tempo</li>
+                </ul>
+                <button class="btn gold" onclick="startCheckout('pro_monthly')">Attiva Coach Pro</button>
+            </div>
+
+            <div class="plan-decision-card club">
+                <h3>Club / Academy</h3>
+                <div class="plan-price">Su richiesta</div>
+                <p>Per società, settori giovanili e staff che seguono più gruppi.</p>
+                <ul>
+                    <li>✅ Più squadre e più report da gestire</li>
+                    <li>✅ Storico più ampio per staff e società</li>
+                    <li>✅ Branding e flussi pensati per club</li>
+                    <li>✅ Base per offerte B2B future</li>
+                </ul>
+                <button class="btn outline" onclick="window.location.href='mailto:mario.costabile92@outlook.it?subject=MatchIQ%20Club%20Academy'">Parliamone</button>
+            </div>
+        </div>
+
+        <h2 style="margin-top:26px">Free vs Pro</h2>
 
         <div class="compare-grid">
             <div class="compare-card">
@@ -1137,7 +1256,7 @@ p{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10380";
+const APP_VERSION = "10421";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
