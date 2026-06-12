@@ -167,6 +167,40 @@ video{
     max-height:680px;
     overflow:auto;
 }
+.archive{
+    margin-top:18px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+.archive-empty{
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.45;
+}
+.archive-item{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:12px;
+    align-items:center;
+    padding:14px;
+    border-radius:18px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.10);
+}
+.archive-item strong{display:block;margin-bottom:5px}
+.archive-meta{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.45;
+}
+.archive-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn.small{
+    min-height:34px;
+    padding:8px 11px;
+    border-radius:11px;
+    font-size:12px;
+}
 .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
 .mini{
     background:rgba(255,255,255,.055);
@@ -191,9 +225,9 @@ video{
         <div class="sub">Beta video report · clip brevi · PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10408">Home</a>
-        <a class="btn dark" href="/coach.html?v=10408">Coach</a>
-        <a class="btn dark" href="/account.html?v=10408">Account</a>
+        <a class="btn dark" href="/index.html?v=10409">Home</a>
+        <a class="btn dark" href="/coach.html?v=10409">Coach</a>
+        <a class="btn dark" href="/account.html?v=10409">Account</a>
     </nav>
 </header>
 
@@ -217,6 +251,10 @@ video{
                 <div class="field">
                     <label>Titolo clip</label>
                     <input id="videoTitle" placeholder="Es. Primo tempo ASD - Rivale" />
+                </div>
+                <div class="field">
+                    <label>Società / squadra</label>
+                    <input id="clubName" placeholder="Es. ASD MatchIQ" />
                 </div>
                 <div class="field">
                     <label>Categoria</label>
@@ -289,6 +327,13 @@ video{
             <span class="badge">REPORT</span>
             <h2>Analisi generata</h2>
             <div id="reportBox" class="report">Carica una clip, estrai i fotogrammi e genera il report.</div>
+            <div class="archive">
+                <div>
+                    <span class="badge">ARCHIVIO</span>
+                    <h2>Report salvati</h2>
+                </div>
+                <div id="archiveList" class="archive-empty">Nessun report video salvato su questo dispositivo.</div>
+            </div>
         </div>
     </section>
 </main>
@@ -297,6 +342,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
+const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
 let extractedFrameTimes = [];
@@ -309,11 +355,115 @@ const analyzeBtn = document.getElementById("analyzeBtn");
 const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 const framesGrid = document.getElementById("framesGrid");
 const reportBox = document.getElementById("reportBox");
+const archiveList = document.getElementById("archiveList");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
     box.textContent=message;
     box.className=`status show ${type}`;
+}
+
+function getArchive(){
+    try{
+        return JSON.parse(localStorage.getItem(VIDEO_ARCHIVE_KEY) || "[]");
+    }catch(err){
+        return [];
+    }
+}
+
+function saveArchive(items){
+    try{
+        localStorage.setItem(VIDEO_ARCHIVE_KEY, JSON.stringify(items.slice(0, 12)));
+    }catch(err){
+        localStorage.setItem(VIDEO_ARCHIVE_KEY, JSON.stringify(items.slice(0, 6)));
+    }
+}
+
+function escapeHtml(value){
+    return String(value || "").replace(/[&<>"']/g, char => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+    }[char]));
+}
+
+function renderArchive(){
+    const items = getArchive();
+
+    if(!items.length){
+        archiveList.className = "archive-empty";
+        archiveList.innerHTML = "Nessun report video salvato su questo dispositivo.";
+        return;
+    }
+
+    archiveList.className = "";
+    archiveList.innerHTML = items.map(item => `
+        <div class="archive-item">
+            <div>
+                <strong>${escapeHtml(item.title || "Video Report MatchIQ")}</strong>
+                <div class="archive-meta">
+                    ${escapeHtml(item.date || "")} · ${escapeHtml(item.focus || "Analisi tattica")} · ${escapeHtml(item.club || "Società non indicata")}<br>
+                    ${Number(item.frames || 0)} fotogrammi analizzati
+                </div>
+            </div>
+            <div class="archive-actions">
+                <button class="btn dark small" onclick="loadArchivedReport('${item.id}')">Apri</button>
+                <button class="btn small" onclick="downloadArchivedPdf('${item.id}')">PDF</button>
+                <button class="btn red small" onclick="deleteArchivedReport('${item.id}')">Elimina</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function addToArchive(data, payload){
+    const items = getArchive();
+    const entry = {
+        id: `video_${Date.now()}`,
+        title: data.title || payload.title || "Video Report MatchIQ",
+        club: payload.club_name || "-",
+        focus: payload.focus || "-",
+        frames: data.frames_analyzed || extractedFrames.length,
+        report: data.report || "",
+        pdf_base64: data.pdf_base64 || "",
+        date: new Date().toLocaleString("it-IT", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit"})
+    };
+
+    try{
+        saveArchive([entry, ...items]);
+        renderArchive();
+    }catch(err){
+        showStatus("Report generato, ma archivio locale pieno. Scarica il PDF per conservarlo.", "warn");
+    }
+}
+
+function findArchivedReport(id){
+    return getArchive().find(item => item.id === id);
+}
+
+function loadArchivedReport(id){
+    const item = findArchivedReport(id);
+    if(!item) return;
+    reportBox.textContent = item.report || "Report non disponibile.";
+    latestPdfBase64 = item.pdf_base64 || "";
+    downloadPdfBtn.disabled = !latestPdfBase64;
+    showStatus("Report archivio aperto.", "ok");
+}
+
+function downloadArchivedPdf(id){
+    const item = findArchivedReport(id);
+    if(!item || !item.pdf_base64){
+        showStatus("PDF archivio non disponibile.", "warn");
+        return;
+    }
+    downloadBase64Pdf(item.pdf_base64, item.title || "matchiq-video-report");
+}
+
+function deleteArchivedReport(id){
+    saveArchive(getArchive().filter(item => item.id !== id));
+    renderArchive();
+    showStatus("Report eliminato dall'archivio locale.", "ok");
 }
 
 videoInput.addEventListener("change", () => {
@@ -425,6 +575,7 @@ async function analyzeVideo(){
 
     const payload = {
         title: document.getElementById("videoTitle").value.trim(),
+        club_name: document.getElementById("clubName").value.trim(),
         category: document.getElementById("videoCategory").value,
         focus: document.getElementById("videoFocus").value,
         observed_team: document.getElementById("observedTeam").value.trim(),
@@ -457,6 +608,7 @@ async function analyzeVideo(){
         reportBox.textContent = data.report || "Report non disponibile.";
         latestPdfBase64 = data.pdf_base64 || "";
         downloadPdfBtn.disabled = !latestPdfBase64;
+        addToArchive(data, payload);
         showStatus(`Report generato con ${data.frames_analyzed || extractedFrames.length} fotogrammi.`, "ok");
     }catch(err){
         reportBox.textContent = "Errore generazione report.";
@@ -479,14 +631,19 @@ function downloadPdf(){
         return;
     }
 
-    const bytes = atob(latestPdfBase64);
+    const title = document.getElementById("videoTitle").value.trim() || "matchiq-video-report";
+    downloadBase64Pdf(latestPdfBase64, title);
+}
+
+function downloadBase64Pdf(pdfBase64, rawTitle){
+    const bytes = atob(pdfBase64);
     const buffer = new Uint8Array(bytes.length);
     for(let i=0;i<bytes.length;i++) buffer[i] = bytes.charCodeAt(i);
 
     const blob = new Blob([buffer], {type:"application/pdf"});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const title = document.getElementById("videoTitle").value.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-") || "matchiq-video-report";
+    const title = String(rawTitle || "matchiq-video-report").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-") || "matchiq-video-report";
     a.href = url;
     a.download = `${title}.pdf`;
     document.body.appendChild(a);
@@ -494,6 +651,8 @@ function downloadPdf(){
     a.remove();
     URL.revokeObjectURL(url);
 }
+
+renderArchive();
 
 if("serviceWorker" in navigator){
     window.addEventListener("load", () => {

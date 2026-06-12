@@ -30,6 +30,7 @@ MAX_FRAME_CHARS = int(os.getenv("VIDEO_REPORT_MAX_FRAME_CHARS", "900000"))
 
 class VideoReportRequest(BaseModel):
     title: Optional[str] = ""
+    club_name: Optional[str] = ""
     category: Optional[str] = "Dilettanti"
     focus: Optional[str] = "Analisi tattica generale"
     observed_team: Optional[str] = ""
@@ -64,6 +65,7 @@ def _sanitize_frames(frames: List[str]) -> List[str]:
 
 def _build_prompt(data: VideoReportRequest, frame_count: int) -> str:
     title = _clean_text(data.title, 180) or "Video partita"
+    club_name = _clean_text(data.club_name, 160) or "Non specificata"
     category = _clean_text(data.category, 80) or "Dilettanti"
     focus = _clean_text(data.focus, 160) or "Analisi tattica generale"
     observed_team = _clean_text(data.observed_team, 160) or "Non specificata"
@@ -77,6 +79,7 @@ Analizza questi fotogrammi estratti da una clip calcistica.
 
 Contesto:
 - Titolo clip: {title}
+- Societa o squadra: {club_name}
 - Categoria: {category}
 - Focus richiesto: {focus}
 - Squadra osservata: {observed_team}
@@ -234,6 +237,7 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
 
     summary_rows = [
         ["Data", datetime.now().strftime("%d/%m/%Y %H:%M")],
+        ["Societa / squadra", _clean_text(data.club_name, 160) or "-"],
         ["Categoria", _clean_text(data.category, 80) or "-"],
         ["Focus", _clean_text(data.focus, 120) or "-"],
         ["Squadra osservata", _clean_text(data.observed_team, 160) or "-"],
