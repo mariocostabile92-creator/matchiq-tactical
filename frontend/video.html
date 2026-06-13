@@ -43,7 +43,21 @@ body{
     border-bottom:1px solid var(--border);
     backdrop-filter:blur(16px);
 }
-.brand{font-weight:1000;font-size:22px}
+.brand-block{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+}
+.brand-block img{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    object-fit:contain;
+    flex:none;
+    filter:drop-shadow(0 10px 24px rgba(0,245,160,.18));
+}
+.brand{font-weight:1000;font-size:22px;line-height:1}
 .sub{color:var(--muted);font-size:12px;font-weight:800;margin-top:3px}
 .nav{display:flex;gap:10px;flex-wrap:wrap}
 .btn{
@@ -470,14 +484,17 @@ video{
 </head>
 <body>
 <header class="topbar">
-    <div>
+    <div class="brand-block">
+        <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
+        <div>
         <div class="brand">MatchIQ Video Analyst</div>
         <div class="sub">Beta video report ? clip brevi ? PDF AI</div>
+        </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10431">Home</a>
-        <a class="btn dark" href="/coach.html?v=10431">Coach</a>
-        <a class="btn dark" href="/account.html?v=10431">Account</a>
+        <a class="btn dark" href="/index.html?v=10432">Home</a>
+        <a class="btn dark" href="/coach.html?v=10432">Coach</a>
+        <a class="btn dark" href="/account.html?v=10432">Account</a>
     </nav>
 </header>
 
@@ -528,7 +545,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10431">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10432">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Societa</div>
@@ -538,7 +555,7 @@ video{
                         <div>Piu squadre e piu report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10431">Scopri piano club</a>
+                    <a href="/account.html?v=10432">Scopri piano club</a>
                 </div>
             </div>
 
