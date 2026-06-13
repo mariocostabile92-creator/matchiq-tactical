@@ -414,6 +414,70 @@ video{
 }
 .flow-step strong{display:block;margin-bottom:4px}
 .flow-step span{color:var(--muted);font-size:13px;line-height:1.45}
+.onboarding{
+    margin-top:16px;
+    padding:15px;
+    border-radius:20px;
+    background:linear-gradient(145deg,rgba(0,245,160,.10),rgba(47,124,255,.08));
+    border:1px solid rgba(0,245,160,.22);
+}
+.onboarding-head{
+    display:flex;
+    justify-content:space-between;
+    gap:14px;
+    align-items:flex-start;
+    margin-bottom:12px;
+}
+.onboarding-head strong{
+    display:block;
+    margin-bottom:5px;
+    font-size:15px;
+}
+.onboarding-head span{
+    display:block;
+    color:#c7d6f7;
+    font-size:13px;
+    line-height:1.45;
+}
+.onboarding-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    flex:none;
+}
+.onboarding-list{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+}
+.onboarding-item{
+    padding:10px;
+    border-radius:14px;
+    background:rgba(2,8,19,.42);
+    border:1px solid rgba(255,255,255,.10);
+}
+.onboarding-item b{
+    display:inline-grid;
+    place-items:center;
+    width:24px;
+    height:24px;
+    margin-bottom:8px;
+    border-radius:999px;
+    color:#06111c;
+    background:var(--green);
+    font-size:12px;
+}
+.onboarding-item strong{
+    display:block;
+    margin-bottom:4px;
+    font-size:12px;
+}
+.onboarding-item span{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.35;
+}
 .report-toolbar{
     display:flex;
     flex-wrap:wrap;
@@ -455,8 +519,11 @@ video{
     margin-bottom:12px;
 }
 @media(max-width:900px){
-    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid{grid-template-columns:1fr}
+    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid,.onboarding-list{grid-template-columns:1fr}
     .archive-tools{grid-template-columns:1fr}
+    .onboarding-head{flex-direction:column}
+    .onboarding-actions{width:100%}
+    .onboarding-actions .btn{flex:1}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
     .wrap{width:100%;padding:24px 14px 42px}
     .frames{grid-template-columns:repeat(2,1fr)}
@@ -492,9 +559,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10433">Home</a>
-        <a class="btn dark" href="/coach.html?v=10433">Coach</a>
-        <a class="btn dark" href="/account.html?v=10433">Account</a>
+        <a class="btn dark" href="/index.html?v=10434">Home</a>
+        <a class="btn dark" href="/coach.html?v=10434">Coach</a>
+        <a class="btn dark" href="/account.html?v=10434">Account</a>
     </nav>
 </header>
 
@@ -512,6 +579,25 @@ video{
                 <div class="flow-step"><b>1</b><div><strong>Carica video</strong><span>Usa clip brevi, gol subiti, highlights o fasi tattiche specifiche.</span></div></div>
                 <div class="flow-step"><b>2</b><div><strong>Analisi AI</strong><span>Scegli focus, squadra osservata e stile report per guidare l'analisi.</span></div></div>
                 <div class="flow-step"><b>3</b><div><strong>PDF e archivio</strong><span>Scarica il report e ritrovalo nello storico cloud dell'account.</span></div></div>
+            </div>
+
+            <div class="onboarding">
+                <div class="onboarding-head">
+                    <div>
+                        <strong>Come usarlo in partita</strong>
+                        <span>Parti da una clip breve: azione chiara, focus preciso e note staff rendono il PDF più utile.</span>
+                    </div>
+                    <div class="onboarding-actions">
+                        <button class="btn dark small" type="button" onclick="loadSampleReport()">Apri esempio</button>
+                        <button class="btn small" type="button" onclick="scrollToVideoUpload()">Carica clip</button>
+                    </div>
+                </div>
+                <div class="onboarding-list">
+                    <div class="onboarding-item"><b>1</b><strong>Scegli la clip</strong><span>Meglio 1-10 minuti o una fase specifica.</span></div>
+                    <div class="onboarding-item"><b>2</b><strong>Scrivi il focus</strong><span>Indica squadra, problema e obiettivo.</span></div>
+                    <div class="onboarding-item"><b>3</b><strong>Genera il PDF</strong><span>Controlla sintesi, rischi e allenamento.</span></div>
+                    <div class="onboarding-item"><b>4</b><strong>Recuperalo</strong><span>Ritrovi i report salvati nell'archivio.</span></div>
+                </div>
             </div>
 
             <div class="mini-grid">
@@ -545,7 +631,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10433">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10434">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -555,7 +641,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10433">Scopri piano club</a>
+                    <a href="/account.html?v=10434">Scopri piano club</a>
                 </div>
             </div>
 
@@ -619,7 +705,7 @@ video{
                 </div>
             </div>
 
-            <div class="upload">
+            <div class="upload" id="videoUploadSection">
                 <label>Video clip</label>
                 <input id="videoInput" type="file" accept="video/*" />
                 <div id="videoShell" class="video-shell">
@@ -778,6 +864,13 @@ Il pressing parte bene sul lato palla, però manca la copertura preventiva. Quan
 La squadra ha buone intenzioni nel pressing, ma deve restare più corta. Priorità: distanze tra reparti e lettura della transizione negativa.`;
     updateReportMeta("sample");
     showStatus("Esempio report aperto. Carica una clip per generare un'analisi reale.", "ok");
+}
+
+function scrollToVideoUpload(){
+    const target = document.getElementById("videoUploadSection");
+    if(target){
+        target.scrollIntoView({behavior:"smooth", block:"center"});
+    }
 }
 
 function getAuthToken(){
