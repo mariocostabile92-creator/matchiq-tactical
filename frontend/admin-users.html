@@ -31,6 +31,7 @@ body{font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at top
 .stat small{color:#8fa3d7;font-weight:900;font-size:12px}
 .stat strong{display:block;font-size:32px;margin-top:8px}
 .filters{display:grid;grid-template-columns:1.2fr .6fr .7fr .4fr auto;gap:12px;align-items:end}
+.filter-actions{display:flex;gap:8px;align-items:center}
 .field{display:flex;flex-direction:column;gap:7px}
 .field label{color:#8fa3d7;font-size:12px;font-weight:900}
 input,select{width:100%;border:1px solid rgba(255,255,255,.10);background:rgba(4,8,18,.85);color:#fff;border-radius:14px;padding:13px 14px;outline:none;font-weight:800}
@@ -63,6 +64,7 @@ td{color:#eaf0ff}
   .actions{width:100%}
   .btn{width:100%}
   .filters{grid-template-columns:1fr}
+  .filter-actions{flex-direction:column;align-items:stretch}
 }
 </style>
 </head>
@@ -138,7 +140,10 @@ td{color:#eaf0ff}
         </select>
       </div>
 
-      <button class="btn green" onclick="loadUsers()">Filtra</button>
+      <div class="filter-actions">
+        <button class="btn green" onclick="loadUsers()">Filtra</button>
+        <button class="btn cyan" onclick="exportVideoLeads()">Export Video CSV</button>
+      </div>
     </div>
   </div>
 
@@ -171,7 +176,7 @@ td{color:#eaf0ff}
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10426";
+const APP_VERSION = "10427";
 let usersCache = [];
 
 function adminHeaders(extra = {}){
@@ -222,6 +227,11 @@ function escapeHtml(value){
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
+}
+
+function csvCell(value){
+  const text=String(value??"");
+  return `"${text.replaceAll('"','""')}"`;
 }
 
 function planBadge(plan){
@@ -367,6 +377,36 @@ function contactVideoLead(userId){
   }
 
   window.location.href=videoLeadEmailUrl(user);
+}
+
+function exportVideoLeads(){
+  const leads=usersCache.filter(u=>Number(u.video_reports_total||0)>0 || Number(u.video_usage_today||0)>0);
+  if(!leads.length){
+    showNotice("Nessun lead Video AI nella lista corrente.","warn",5000);
+    return;
+  }
+
+  const header=["email","piano","usage_video_oggi","report_video_7g","report_video_totali","usage_oggi","creato"];
+  const rows=leads.map(u=>[
+    u.email||"",
+    normalizePlan(u.plan),
+    Number(u.video_usage_today||0),
+    Number(u.video_reports_last_7_days||0),
+    Number(u.video_reports_total||0),
+    Number(u.total_usage_today||0),
+    u.created_at||""
+  ]);
+  const csv=[header, ...rows].map(row=>row.map(csvCell).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`matchiq-video-leads-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showNotice(`Export creato: ${leads.length} lead Video AI.`,"ok",5000);
 }
 
 async function loadUsers(){
