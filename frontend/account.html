@@ -171,9 +171,13 @@ input{
 }
 
 .main{
-    max-width:1180px;
+    max-width:1280px;
     margin:0 auto;
     padding:30px 28px 108px;
+}
+
+body.account-active .main{
+    max-width:1460px;
 }
 
 .notice{
@@ -212,6 +216,19 @@ input{
     grid-template-columns:1.12fr .88fr;
     gap:22px;
     margin-bottom:22px;
+}
+
+body.account-active .hero{
+    grid-template-columns:minmax(560px,760px) minmax(360px,1fr);
+    align-items:start;
+}
+
+body.account-active .hero .cta-panel{
+    display:none;
+}
+
+body.account-active .card.hero-main{
+    max-width:760px;
 }
 
 .card,
@@ -703,6 +720,15 @@ p{
     display:block;
 }
 
+body.account-active .pro-only-panel.show,
+body.account-active .owner-panel.show{
+    max-width:none;
+}
+
+body.account-active .unlock-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+}
+
 .hidden-for-pro{
     display:block;
 }
@@ -1077,6 +1103,12 @@ p{
             </div>
 
             <div class="unlock-card">
+                <div class="unlock-icon">🎥</div>
+                <strong>Video Analyst</strong>
+                <span>10 report video al giorno e archivio cloud fino a 50 report.</span>
+            </div>
+
+            <div class="unlock-card">
                 <div class="unlock-icon">🔎</div>
                 <strong>Scout + Live</strong>
                 <span>Supporto avanzato per lettura partita e giocatori.</span>
@@ -1258,7 +1290,7 @@ p{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10428";
+const APP_VERSION = "10429";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
@@ -1412,6 +1444,8 @@ function renderAccount(){
     const plan = normalizePlan(rawPlan);
     const isOwner = accountState.is_owner || isOwnerEmail(email);
     const isPro = isOwner || isProLike(plan);
+
+    document.body.classList.toggle("account-active", isPro);
 
     const planBadge = document.getElementById("planBadge");
     const emailValue = document.getElementById("emailValue");
