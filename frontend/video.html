@@ -107,7 +107,7 @@ body{
     font-weight:1000;
     margin-bottom:14px;
 }
-h1{font-size:clamp(34px,3.2vw,58px);line-height:1.02;letter-spacing:-.8px;margin-bottom:14px;max-width:820px}
+h1{font-size:clamp(34px,3.2vw,58px);line-height:1.02;letter-spacing:0;margin-bottom:14px;max-width:820px}
 h2{font-size:24px;margin-bottom:10px}
 p{color:#c4d2f5;line-height:1.65;max-width:880px}
 .form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
@@ -525,8 +525,39 @@ video{
     .onboarding-actions{width:100%}
     .onboarding-actions .btn{flex:1}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
+    .nav{width:100%}
+    .nav .btn{flex:1;min-width:0}
     .wrap{width:100%;padding:24px 14px 42px}
+    .panel{border-radius:22px;padding:20px}
+    h1{font-size:36px}
     .frames{grid-template-columns:repeat(2,1fr)}
+    .archive-item{grid-template-columns:1fr}
+    .archive-actions{justify-content:flex-start}
+}
+@media(max-width:560px){
+    .topbar{gap:12px}
+    .brand-block img{width:40px;height:40px;border-radius:12px}
+    .brand{font-size:18px}
+    .sub{font-size:11px}
+    .nav{gap:7px}
+    .nav .btn{min-height:38px;padding:9px 10px;border-radius:11px;font-size:12px}
+    .wrap{padding:18px 10px 34px}
+    .panel{padding:16px;border-radius:18px}
+    .badge{font-size:10px;padding:6px 9px;margin-bottom:10px}
+    h1{font-size:30px;line-height:1.08}
+    h2{font-size:20px}
+    p{font-size:13px;line-height:1.55}
+    .flow-step,.mini,.quality-card,.plan-card,.onboarding,.upload,.sample-report,.archive-item{border-radius:14px}
+    .flow-step,.mini,.quality-card,.plan-card,.onboarding-item{padding:12px}
+    .onboarding{padding:12px}
+    .onboarding-actions .btn,.actions .btn{width:100%;flex:1 1 100%}
+    .form-grid{gap:10px;margin-top:14px}
+    input,select,textarea{border-radius:12px;padding:12px;font-size:13px}
+    .video-shell{min-height:210px;border-radius:16px}
+    .video-empty{padding:18px}
+    .video-empty strong{font-size:18px}
+    .frames{grid-template-columns:1fr;gap:9px}
+    .report{max-height:420px;font-size:13px}
 }
 @media(min-width:901px) and (max-width:1180px){
     .wrap{width:min(calc(100% - 40px),1080px);padding:34px 0 50px}
@@ -559,9 +590,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10435">Home</a>
-        <a class="btn dark" href="/coach.html?v=10435">Coach</a>
-        <a class="btn dark" href="/account.html?v=10435">Account</a>
+        <a class="btn dark" href="/index.html?v=10436">Home</a>
+        <a class="btn dark" href="/coach.html?v=10436">Coach</a>
+        <a class="btn dark" href="/account.html?v=10436">Account</a>
     </nav>
 </header>
 
@@ -631,7 +662,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10435">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10436">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -641,7 +672,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10435">Scopri piano club</a>
+                    <a href="/account.html?v=10436">Scopri piano club</a>
                 </div>
             </div>
 
