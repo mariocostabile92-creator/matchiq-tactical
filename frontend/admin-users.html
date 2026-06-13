@@ -16,6 +16,7 @@ body{font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at top
 .btn.dark{background:rgba(255,255,255,.08)}
 .btn.green{background:linear-gradient(135deg,#00c980,#2f6bff)}
 .btn.gold{background:linear-gradient(135deg,#f7b733,#fc4a1a);color:#06111c}
+.btn.cyan{background:linear-gradient(135deg,#00f5a0,#38bdf8);color:#06111c}
 .btn.red{background:linear-gradient(135deg,#ff4058,#8b1d35)}
 .btn:disabled{opacity:.65;cursor:not-allowed}
 .main{max-width:1600px;margin:0 auto;padding:30px}
@@ -170,7 +171,7 @@ td{color:#eaf0ff}
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10425";
+const APP_VERSION = "10426";
 let usersCache = [];
 
 function adminHeaders(extra = {}){
@@ -250,6 +251,28 @@ function subBadge(status){
   return`<span class="badge inactive">${escapeHtml(s)}</span>`;
 }
 
+function videoLeadEmailUrl(user){
+  const email=String(user?.email||"").trim();
+  const reports=Number(user?.video_reports_total||0);
+  const recent=Number(user?.video_reports_last_7_days||0);
+  const subject="MatchIQ Video Analyst - report video e piano Pro";
+  const body=[
+    "Ciao,",
+    "",
+    "ho visto che hai provato MatchIQ Video Analyst, la funzione che trasforma una clip partita in un report tecnico PDF per lo staff.",
+    "",
+    `Nel tuo account risultano ${reports} report video salvati${recent ? `, di cui ${recent} negli ultimi 7 giorni` : ""}.`,
+    "",
+    "Con il piano Pro puoi usare piu report video, archivio cloud e PDF sempre recuperabili, oltre alle funzioni Coach avanzate.",
+    "",
+    "Se vuoi, posso attivarti una breve demo o aiutarti a capire quale piano e piu adatto al tuo staff.",
+    "",
+    "Mario - MatchIQ Tactical"
+  ].join("\n");
+
+  return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 function updateStats(users){
   const total=users.length;
   const free=users.filter(u=>normalizePlan(u.plan)==="free").length;
@@ -323,6 +346,7 @@ function renderUsers(users){
               <option value="owner" ${plan==="owner"?"selected":""}>Owner</option>
             </select>
             <button class="btn green" onclick="updateUserPlan(${id})">Salva piano</button>
+            <button class="btn cyan" onclick="contactVideoLead(${id})">Email Pro Video</button>
             <button class="btn gold" onclick="resendVerification(${id})">Reinvia verifica</button>
             ${
               Number(u.is_active)===1 || u.is_active===true
@@ -333,6 +357,16 @@ function renderUsers(users){
         </td>
       </tr>`;
   }).join("");
+}
+
+function contactVideoLead(userId){
+  const user=usersCache.find(u=>Number(u.id)===Number(userId));
+  if(!user || !user.email){
+    showNotice("Email utente non disponibile.","warn",5000);
+    return;
+  }
+
+  window.location.href=videoLeadEmailUrl(user);
 }
 
 async function loadUsers(){
