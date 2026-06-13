@@ -1164,7 +1164,8 @@ p{
                 <p>Per capire se MatchIQ entra nel tuo modo di lavorare.</p>
                 <ul>
                     <li>✅ Coach report tecnico in prova</li>
-                    <li>✅ Video Analyst con limiti beta</li>
+                    <li>✅ 1 report Video Analyst al giorno</li>
+                    <li>✅ Archivio Video iniziale fino a 3 report</li>
                     <li>✅ Scout e live in preview</li>
                     <li>🔒 Storico e PDF limitati</li>
                 </ul>
@@ -1176,10 +1177,11 @@ p{
                 <div class="plan-price">9,99€ <small>/ mese</small></div>
                 <p>Per mister e staff che vogliono usarlo con continuità durante la stagione.</p>
                 <ul>
+                    <li>✅ 10 report Video Analyst al giorno</li>
                     <li>✅ PDF Coach e Video Analyst scaricabili</li>
                     <li>✅ WhatsApp, pagelle e storico esteso</li>
                     <li>✅ Scout completo, watchlist ed export</li>
-                    <li>✅ Archivio cloud più utile nel tempo</li>
+                    <li>✅ Archivio cloud fino a 50 report video</li>
                 </ul>
                 <button class="btn gold" onclick="startCheckout('pro_monthly')">Attiva Coach Pro</button>
             </div>
@@ -1256,7 +1258,7 @@ p{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10421";
+const APP_VERSION = "10428";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {
@@ -1456,9 +1458,9 @@ function renderAccount(){
         accountIntro.textContent = isOwner
             ? "Hai accesso completo a MatchIQ: Coach, Scout, live, admin users, analytics e funzioni Pro senza limiti."
             : isPro
-                ? "Il tuo piano Pro è attivo. Puoi usare Coach report, PDF, WhatsApp, pagelle, storico esteso, Scout Mode completa, watchlist, export e analisi live con limiti estesi."
+                ? "Il tuo piano Pro è attivo. Puoi usare Coach report, Video Analyst, PDF, WhatsApp, pagelle, storico esteso, Scout Mode completa, watchlist, export e analisi live con limiti estesi."
                 : logged
-                    ? "Il tuo account è Free. Passa a Pro per sbloccare PDF Coach, WhatsApp, storico esteso, Scout completo, watchlist, export e uso continuativo da campo."
+                    ? "Il tuo account è Free. Passa a Pro per sbloccare più report Video Analyst, PDF Coach, WhatsApp, storico esteso, Scout completo, watchlist, export e uso continuativo da campo."
                     : "Stai usando MatchIQ come Guest. Accedi o registrati per salvare il piano, attivare Pro e usare tutte le funzioni avanzate.";
     }
 
