@@ -89,6 +89,7 @@ td{color:#eaf0ff}
     <div class="stat"><small>Pro</small><strong id="statPro">--</strong></div>
     <div class="stat"><small>Scout/Owner</small><strong id="statScoutOwner">--</strong></div>
     <div class="stat"><small>Subscription attive</small><strong id="statSubActive">--</strong></div>
+    <div class="stat"><small>Lead Video AI</small><strong id="statVideoLeads">--</strong></div>
   </div>
 
   <div class="panel">
@@ -119,6 +120,10 @@ td{color:#eaf0ff}
           <option value="unverified">Email non verificata</option>
           <option value="sub_active">Subscription attiva</option>
           <option value="sub_missing">Senza subscription</option>
+          <option value="video_today">Video AI oggi</option>
+          <option value="video_7d">Video AI ultimi 7 giorni</option>
+          <option value="video_any">Ha usato Video AI</option>
+          <option value="free_video_lead">Free caldo Video AI</option>
         </select>
       </div>
 
@@ -165,7 +170,7 @@ td{color:#eaf0ff}
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10424";
+const APP_VERSION = "10425";
 let usersCache = [];
 
 function adminHeaders(extra = {}){
@@ -251,12 +256,14 @@ function updateStats(users){
   const pro=users.filter(u=>normalizePlan(u.plan)==="pro").length;
   const scoutOwner=users.filter(u=>["scout","owner"].includes(normalizePlan(u.plan))).length;
   const subActive=users.filter(u=>String(u.subscription_status||"").toLowerCase()==="active").length;
+  const videoLeads=users.filter(u=>Number(u.video_reports_total||0)>0 || Number(u.video_usage_today||0)>0).length;
 
   document.getElementById("statTotal").textContent=total;
   document.getElementById("statFree").textContent=free;
   document.getElementById("statPro").textContent=pro;
   document.getElementById("statScoutOwner").textContent=scoutOwner;
   document.getElementById("statSubActive").textContent=subActive;
+  document.getElementById("statVideoLeads").textContent=videoLeads;
 }
 
 function renderUsers(users){

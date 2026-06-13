@@ -133,6 +133,15 @@ def admin_users(
                 where.append("FALSE")
             elif status_value == "sub_missing":
                 where.append("TRUE")
+            elif status_value == "video_today":
+                where.append("COALESCE(video_usage.video_usage_today, 0) > 0")
+            elif status_value == "video_7d":
+                where.append("COALESCE(video_stats.video_reports_last_7_days, 0) > 0")
+            elif status_value == "video_any":
+                where.append("COALESCE(video_stats.video_reports_total, 0) > 0")
+            elif status_value == "free_video_lead":
+                where.append("COALESCE(users.plan, 'free') = 'free'")
+                where.append("COALESCE(video_stats.video_reports_total, 0) > 0")
 
         where_sql = "WHERE " + " AND ".join(where) if where else ""
         params.append(limit)
