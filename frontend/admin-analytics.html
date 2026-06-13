@@ -25,6 +25,7 @@ body{font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at top
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
 .stat{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px}
 .stat.coach{background:linear-gradient(145deg,rgba(0,245,160,.12),rgba(47,107,255,.06));border-color:rgba(0,245,160,.22)}
+.stat.video{background:linear-gradient(145deg,rgba(47,107,255,.16),rgba(0,245,160,.06));border-color:rgba(47,107,255,.28)}
 .stat small{color:#8fa3d7;font-weight:900;font-size:12px;text-transform:uppercase}
 .stat strong{display:block;font-size:34px;margin-top:8px}
 .stat span{display:block;color:#9fb2e7;font-size:12px;margin-top:6px}
@@ -74,9 +75,9 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
     <div class="subtitle">Metriche SaaS + Coach Mode · V9 Professional</div>
   </div>
   <div class="actions">
-    <button class="btn dark" onclick="location.href='/index.html?v=10422'">Home</button>
-    <button class="btn dark" onclick="location.href='/admin-beta.html?v=10422'">Admin Beta</button>
-    <button class="btn dark" onclick="location.href='/admin-users.html?v=10422'">Admin Users</button>
+    <button class="btn dark" onclick="location.href='/index.html?v=10423'">Home</button>
+    <button class="btn dark" onclick="location.href='/admin-beta.html?v=10423'">Admin Beta</button>
+    <button class="btn dark" onclick="location.href='/admin-users.html?v=10423'">Admin Users</button>
     <button class="btn green" onclick="loadAnalytics()">Aggiorna</button>
   </div>
 </div>
@@ -113,6 +114,24 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
     </div>
   </div>
 
+  <div class="panel">
+    <h2>Video Analyst Analytics</h2>
+    <div class="section-note">
+      Misura la nuova funzione AI: report video generati, utenti attivi, fotogrammi analizzati e chiamate AI.
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat video"><small>Report video oggi</small><strong id="videoReportsToday">--</strong><span>PDF generati</span></div>
+      <div class="stat video"><small>Report video 7g</small><strong id="videoReports7">--</strong><span>archivio cloud</span></div>
+      <div class="stat video"><small>Utenti video oggi</small><strong id="videoUsersToday">--</strong><span>utenti attivi</span></div>
+      <div class="stat video"><small>Utenti video 7g</small><strong id="videoUsers7">--</strong><span>utenti attivi</span></div>
+      <div class="stat video"><small>Frame oggi</small><strong id="videoFramesToday">--</strong><span>fotogrammi letti</span></div>
+      <div class="stat video"><small>Frame 7g</small><strong id="videoFrames7">--</strong><span>fotogrammi letti</span></div>
+      <div class="stat video"><small>AI oggi</small><strong id="videoApiToday">--</strong><span>analisi completate</span></div>
+      <div class="stat video"><small>AI 7g</small><strong id="videoApi7">--</strong><span>analisi completate</span></div>
+    </div>
+  </div>
+
   <div class="grid-3">
     <div class="panel">
       <h2>Coach feature oggi</h2>
@@ -128,6 +147,11 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
       <h2>Top utenti Coach</h2>
       <div class="table-wrap"><table><thead><tr><th>Email</th><th>Piano</th><th>Uso</th></tr></thead><tbody id="coachTopUsers"><tr><td colspan="3" class="loading">Caricamento...</td></tr></tbody></table></div>
     </div>
+  </div>
+
+  <div class="panel">
+    <h2>Top utenti Video Analyst</h2>
+    <div class="table-wrap"><table><thead><tr><th>Email</th><th>Piano</th><th>Report</th><th>Frame</th></tr></thead><tbody id="videoTopUsers"><tr><td colspan="4" class="loading">Caricamento...</td></tr></tbody></table></div>
   </div>
 
   <div class="grid-2">
@@ -161,10 +185,10 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
 </div>
 
 <nav class="bottom-nav">
-  <a href="/index.html?v=10422">🏠<br>Home</a>
-  <a href="/admin-users.html?v=10422">👥<br>Users</a>
-  <a href="/admin-beta.html?v=10422">🎯<br>Beta</a>
-  <a class="active" href="/admin-analytics.html?v=10422">📊<br>Analytics</a>
+  <a href="/index.html?v=10423">🏠<br>Home</a>
+  <a href="/admin-users.html?v=10423">👥<br>Users</a>
+  <a href="/admin-beta.html?v=10423">🎯<br>Beta</a>
+  <a class="active" href="/admin-analytics.html?v=10423">📊<br>Analytics</a>
 </nav>
 
 <script>
@@ -274,6 +298,22 @@ function renderTopUsers(rows){
     : `<tr><td colspan="3" class="loading">Nessun utente Coach tracciato.</td></tr>`;
 }
 
+function renderVideoTopUsers(rows){
+  const el=document.getElementById("videoTopUsers");
+  if(!el)return;
+
+  el.innerHTML=(rows||[]).length
+    ? rows.map(r=>`
+        <tr>
+          <td>${esc(r.email||"Guest/anonimo")}</td>
+          <td>${planBadge(r.plan)}</td>
+          <td><strong>${Number(r.reports||0)}</strong></td>
+          <td><strong>${Number(r.frames||0)}</strong></td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="4" class="loading">Nessun report video salvato negli ultimi 7 giorni.</td></tr>`;
+}
+
 function renderSummary(d){
   const c=d.coach||{};
   const el=document.getElementById("summaryBox");
@@ -308,6 +348,7 @@ async function loadAnalytics(){
     }
 
     const c=d.coach||{};
+    const v=d.video||{};
 
     setText("totalUsers",d.total_users||0);
     setText("usersToday",d.users_today||0);
@@ -327,11 +368,21 @@ async function loadAnalytics(){
     setText("coachHistory",c.history_today||0);
     setText("freeNearLimit",c.free_users_near_limit||0);
 
+    setText("videoReportsToday",v.reports_today||0);
+    setText("videoReports7",v.reports_last_7_days||0);
+    setText("videoUsersToday",v.active_users_today||0);
+    setText("videoUsers7",v.active_users_last_7_days||0);
+    setText("videoFramesToday",v.frames_today||0);
+    setText("videoFrames7",v.frames_last_7_days||0);
+    setText("videoApiToday",v.api_today||0);
+    setText("videoApi7",v.api_last_7_days||0);
+
     renderPlans(d.plans||[]);
     renderBeta(d.beta_by_status||[]);
     rows2("coachFeaturesToday",c.features_today||[],"Nessuna feature Coach tracciata oggi.");
     rows2("coachFeatures7",c.features_last_7_days||[],"Nessuna feature Coach tracciata negli ultimi 7 giorni.");
     renderTopUsers(c.top_users_last_7_days||c.top_users_today||[]);
+    renderVideoTopUsers(v.top_users_last_7_days||[]);
     rows2("usageFeatureToday",d.usage_by_feature_today||[]);
     rows2("usageFeature7",d.usage_by_feature_last_7_days||[]);
     renderSummary(d);

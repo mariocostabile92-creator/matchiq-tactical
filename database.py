@@ -713,6 +713,17 @@ def get_admin_analytics():
             "top_users_last_7_days": [],
             "free_users_near_limit": 0,
         },
+        "video": {
+            "reports_today": 0,
+            "reports_last_7_days": 0,
+            "active_users_today": 0,
+            "active_users_last_7_days": 0,
+            "frames_today": 0,
+            "frames_last_7_days": 0,
+            "api_today": 0,
+            "api_last_7_days": 0,
+            "top_users_last_7_days": [],
+        },
         "usage_by_feature_today": [],
         "usage_by_feature_last_7_days": [],
     }
@@ -926,6 +937,135 @@ def get_admin_analytics():
             ) t
         """), (today_key(),))
         data["coach"]["free_users_near_limit"] = int((fetchone(cur) or {}).get("total") or 0)
+
+        if USE_POSTGRES:
+            cur.execute("""
+                SELECT COUNT(*) AS total
+                FROM video_reports
+                WHERE created_at::timestamptz::date = CURRENT_DATE
+            """)
+            data["video"]["reports_today"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COUNT(*) AS total
+                FROM video_reports
+                WHERE created_at::timestamptz >= NOW() - INTERVAL '7 days'
+            """)
+            data["video"]["reports_last_7_days"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COUNT(DISTINCT user_id) AS total
+                FROM video_reports
+                WHERE created_at::timestamptz::date = CURRENT_DATE
+                  AND user_id IS NOT NULL
+            """)
+            data["video"]["active_users_today"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COUNT(DISTINCT user_id) AS total
+                FROM video_reports
+                WHERE created_at::timestamptz >= NOW() - INTERVAL '7 days'
+                  AND user_id IS NOT NULL
+            """)
+            data["video"]["active_users_last_7_days"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COALESCE(SUM(frames_analyzed),0) AS total
+                FROM video_reports
+                WHERE created_at::timestamptz::date = CURRENT_DATE
+            """)
+            data["video"]["frames_today"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COALESCE(SUM(frames_analyzed),0) AS total
+                FROM video_reports
+                WHERE created_at::timestamptz >= NOW() - INTERVAL '7 days'
+            """)
+            data["video"]["frames_last_7_days"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT u.email, LOWER(COALESCE(u.plan,'free')) AS plan,
+                       COUNT(v.id) AS reports, COALESCE(SUM(v.frames_analyzed),0) AS frames
+                FROM video_reports v
+                LEFT JOIN users u ON u.id = v.user_id
+                WHERE v.created_at::timestamptz >= NOW() - INTERVAL '7 days'
+                GROUP BY u.email, LOWER(COALESCE(u.plan,'free'))
+                ORDER BY reports DESC, frames DESC
+                LIMIT 8
+            """)
+        else:
+            cur.execute("""
+                SELECT COUNT(*) AS total
+                FROM video_reports
+                WHERE substr(created_at,1,10) = ?
+            """, (today_key(),))
+            data["video"]["reports_today"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COUNT(*) AS total
+                FROM video_reports
+                WHERE datetime(created_at) >= datetime('now','-7 days')
+            """)
+            data["video"]["reports_last_7_days"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COUNT(DISTINCT user_id) AS total
+                FROM video_reports
+                WHERE substr(created_at,1,10) = ?
+                  AND user_id IS NOT NULL
+            """, (today_key(),))
+            data["video"]["active_users_today"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COUNT(DISTINCT user_id) AS total
+                FROM video_reports
+                WHERE datetime(created_at) >= datetime('now','-7 days')
+                  AND user_id IS NOT NULL
+            """)
+            data["video"]["active_users_last_7_days"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COALESCE(SUM(frames_analyzed),0) AS total
+                FROM video_reports
+                WHERE substr(created_at,1,10) = ?
+            """, (today_key(),))
+            data["video"]["frames_today"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT COALESCE(SUM(frames_analyzed),0) AS total
+                FROM video_reports
+                WHERE datetime(created_at) >= datetime('now','-7 days')
+            """)
+            data["video"]["frames_last_7_days"] = int((fetchone(cur) or {}).get("total") or 0)
+
+            cur.execute("""
+                SELECT u.email, LOWER(COALESCE(u.plan,'free')) AS plan,
+                       COUNT(v.id) AS reports, COALESCE(SUM(v.frames_analyzed),0) AS frames
+                FROM video_reports v
+                LEFT JOIN users u ON u.id = v.user_id
+                WHERE datetime(v.created_at) >= datetime('now','-7 days')
+                GROUP BY u.email, LOWER(COALESCE(u.plan,'free'))
+                ORDER BY reports DESC, frames DESC
+                LIMIT 8
+            """)
+        data["video"]["top_users_last_7_days"] = fetchall(cur)
+
+        data["video"]["api_today"] = feature_today("video_report")
+        if USE_POSTGRES:
+            cur.execute("""
+                SELECT COALESCE(SUM(count),0) AS total
+                FROM api_usage
+                WHERE usage_date::date >= CURRENT_DATE - INTERVAL '7 days'
+                  AND feature = 'video_report'
+            """)
+        else:
+            cur.execute("""
+                SELECT COALESCE(SUM(count),0) AS total
+                FROM api_usage
+                WHERE date(usage_date) >= date('now','-7 days')
+                  AND feature = 'video_report'
+            """)
+        data["video"]["api_last_7_days"] = int((fetchone(cur) or {}).get("total") or 0)
 
         try:
             cur.execute("SELECT COUNT(*) AS total FROM beta_requests")
