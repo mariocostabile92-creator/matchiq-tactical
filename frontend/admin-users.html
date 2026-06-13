@@ -34,7 +34,7 @@ body{font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at top
 .field label{color:#8fa3d7;font-size:12px;font-weight:900}
 input,select{width:100%;border:1px solid rgba(255,255,255,.10);background:rgba(4,8,18,.85);color:#fff;border-radius:14px;padding:13px 14px;outline:none;font-weight:800}
 .table-wrap{overflow:auto;border-radius:22px;border:1px solid rgba(255,255,255,.08)}
-table{width:100%;border-collapse:collapse;min-width:1200px}
+table{width:100%;border-collapse:collapse;min-width:1320px}
 thead{background:rgba(255,255,255,.07)}
 th,td{padding:14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;font-size:13px;vertical-align:middle}
 th{color:#9fb2e7;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
@@ -53,6 +53,9 @@ td{color:#eaf0ff}
 .row-actions select{min-width:120px;padding:10px}
 .row-actions button{padding:10px 12px;border-radius:12px;font-size:12px}
 .muted{color:#8fa3d7;font-size:12px;line-height:1.5}
+.usage-pill{display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:6px 9px;border-radius:999px;background:rgba(47,107,255,.14);border:1px solid rgba(47,107,255,.28);color:#dbeafe;font-weight:1000}
+.video-cell strong{display:block;color:#fff}
+.video-cell .hot{color:#00f5a0}
 .loading{padding:30px;text-align:center;color:#9fb2e7;font-weight:900}
 @media(max-width:1000px){
   .topbar{flex-direction:column;align-items:flex-start}
@@ -147,12 +150,13 @@ td{color:#eaf0ff}
             <th>Provider</th>
             <th>Periodo</th>
             <th>Usage oggi</th>
+            <th>Video AI</th>
             <th>Creato</th>
             <th>Azioni</th>
           </tr>
         </thead>
         <tbody id="usersBody">
-          <tr><td colspan="11" class="loading">Caricamento utenti...</td></tr>
+          <tr><td colspan="12" class="loading">Caricamento utenti...</td></tr>
         </tbody>
       </table>
     </div>
@@ -161,7 +165,7 @@ td{color:#eaf0ff}
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10423";
+const APP_VERSION = "10424";
 let usersCache = [];
 
 function adminHeaders(extra = {}){
@@ -262,7 +266,7 @@ function renderUsers(users){
   updateStats(users);
 
   if(!users.length){
-    body.innerHTML=`<tr><td colspan="11" class="loading">Nessun utente trovato.</td></tr>`;
+    body.innerHTML=`<tr><td colspan="12" class="loading">Nessun utente trovato.</td></tr>`;
     return;
   }
 
@@ -297,7 +301,11 @@ function renderUsers(users){
           <div>${escapeHtml(periodStart)}</div>
           <div class="muted">→ ${escapeHtml(periodEnd)}</div>
         </td>
-        <td>${Number(u.total_usage_today||0)}</td>
+        <td><span class="usage-pill">${Number(u.total_usage_today||0)}</span></td>
+        <td class="video-cell">
+          <strong class="${Number(u.video_usage_today||0)>0?"hot":""}">${Number(u.video_usage_today||0)} oggi</strong>
+          <div class="muted">${Number(u.video_reports_last_7_days||0)} report 7g · ${Number(u.video_reports_total||0)} totali</div>
+        </td>
         <td>${escapeHtml(formatDate(u.created_at))}</td>
         <td>
           <div class="row-actions">
@@ -323,13 +331,13 @@ function renderUsers(users){
 async function loadUsers(){
   if(!hasAdminAccess()){
     const body=document.getElementById("usersBody");
-    if(body)body.innerHTML=`<tr><td colspan="11" class="loading">Accesso admin non configurato su questo dispositivo.</td></tr>`;
+    if(body)body.innerHTML=`<tr><td colspan="12" class="loading">Accesso admin non configurato su questo dispositivo.</td></tr>`;
     showNotice("Accesso admin non configurato: accedi con account Owner/Admin oppure configura il token interno.","err",9000);
     return;
   }
 
   const body=document.getElementById("usersBody");
-  if(body)body.innerHTML=`<tr><td colspan="11" class="loading">Caricamento utenti...</td></tr>`;
+  if(body)body.innerHTML=`<tr><td colspan="12" class="loading">Caricamento utenti...</td></tr>`;
 
   const search=document.getElementById("searchInput")?.value.trim()||"";
   const plan=document.getElementById("planFilter")?.value||"all";
@@ -355,7 +363,7 @@ async function loadUsers(){
 
   }catch(e){
     console.error(e);
-    if(body)body.innerHTML=`<tr><td colspan="11" class="loading">Errore: ${escapeHtml(e.message)}</td></tr>`;
+    if(body)body.innerHTML=`<tr><td colspan="12" class="loading">Errore: ${escapeHtml(e.message)}</td></tr>`;
     showNotice("Errore utenti: "+e.message,"err",9000);
   }
 }

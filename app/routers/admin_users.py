@@ -50,6 +50,9 @@ def normalize_admin_user_row(row):
     item["subscription_status"] = item.get("subscription_status") or ""
     item["provider"] = item.get("provider") or ""
     item["total_usage_today"] = int(item.get("total_usage_today") or 0)
+    item["video_reports_total"] = int(item.get("video_reports_total") or 0)
+    item["video_reports_last_7_days"] = int(item.get("video_reports_last_7_days") or 0)
+    item["video_usage_today"] = int(item.get("video_usage_today") or 0)
 
     return item
 
@@ -72,7 +75,10 @@ def admin_fetch_user(cur, user_id: int):
             '' AS subscription_plan,
             NULL AS current_period_start,
             NULL AS current_period_end,
-            0 AS total_usage_today
+            0 AS total_usage_today,
+            0 AS video_reports_total,
+            0 AS video_reports_last_7_days,
+            0 AS video_usage_today
         FROM users
         WHERE id = %s;
     """, (user_id,))
@@ -148,8 +154,32 @@ def admin_users(
                 '' AS subscription_plan,
                 NULL AS current_period_start,
                 NULL AS current_period_end,
-                0 AS total_usage_today
+                COALESCE(usage_today.total_usage_today, 0) AS total_usage_today,
+                COALESCE(video_stats.video_reports_total, 0) AS video_reports_total,
+                COALESCE(video_stats.video_reports_last_7_days, 0) AS video_reports_last_7_days,
+                COALESCE(video_usage.video_usage_today, 0) AS video_usage_today
             FROM users
+            LEFT JOIN (
+                SELECT user_id, COALESCE(SUM(count), 0) AS total_usage_today
+                FROM api_usage
+                WHERE usage_date = CURRENT_DATE::text
+                GROUP BY user_id
+            ) usage_today ON usage_today.user_id = users.id
+            LEFT JOIN (
+                SELECT
+                    user_id,
+                    COUNT(*) AS video_reports_total,
+                    COUNT(*) FILTER (WHERE created_at::timestamptz >= NOW() - INTERVAL '7 days') AS video_reports_last_7_days
+                FROM video_reports
+                GROUP BY user_id
+            ) video_stats ON video_stats.user_id = users.id
+            LEFT JOIN (
+                SELECT user_id, COALESCE(SUM(count), 0) AS video_usage_today
+                FROM api_usage
+                WHERE usage_date = CURRENT_DATE::text
+                  AND feature = 'video_report'
+                GROUP BY user_id
+            ) video_usage ON video_usage.user_id = users.id
             {where_sql}
             ORDER BY created_at DESC NULLS LAST, id DESC
             LIMIT %s;
@@ -360,4 +390,3 @@ def admin_resend_user_verification(user_id: int, admin_ok: bool = Depends(requir
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn: conn.close()
-
