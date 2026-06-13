@@ -332,12 +332,39 @@ video{
     background:rgba(255,255,255,.05);
     border:1px solid rgba(255,255,255,.10);
 }
+.plan-card.limited{
+    border-color:rgba(247,183,51,.25);
+    background:linear-gradient(145deg,rgba(247,183,51,.10),rgba(255,255,255,.04));
+}
 .plan-card.featured{
     background:linear-gradient(145deg,rgba(0,245,160,.13),rgba(47,124,255,.10));
     border-color:rgba(0,245,160,.34);
 }
 .plan-card strong{display:block;margin-bottom:6px}
 .plan-card span{display:block;color:var(--muted);font-size:13px;line-height:1.45}
+.plan-kicker{
+    display:inline-flex;
+    margin-bottom:8px;
+    padding:4px 8px;
+    border-radius:999px;
+    color:#06111c;
+    background:var(--green);
+    font-size:11px;
+    font-weight:1000;
+    text-transform:uppercase;
+}
+.plan-kicker.warn{
+    color:#271604;
+    background:var(--yellow);
+}
+.upgrade-list{
+    display:grid;
+    gap:7px;
+    margin-top:10px;
+    color:#dce7ff;
+    font-size:12px;
+    line-height:1.35;
+}
 .plan-card a{
     display:inline-flex;
     margin-top:10px;
@@ -448,9 +475,9 @@ video{
         <div class="sub">Beta video report ? clip brevi ? PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10430">Home</a>
-        <a class="btn dark" href="/coach.html?v=10430">Coach</a>
-        <a class="btn dark" href="/account.html?v=10430">Account</a>
+        <a class="btn dark" href="/index.html?v=10431">Home</a>
+        <a class="btn dark" href="/coach.html?v=10431">Coach</a>
+        <a class="btn dark" href="/account.html?v=10431">Account</a>
     </nav>
 </header>
 
@@ -483,19 +510,35 @@ video{
             </div>
 
             <div class="plan-strip">
-                <div class="plan-card">
+                <div class="plan-card limited">
+                    <div class="plan-kicker warn">Prova gratuita</div>
                     <strong>Free beta</strong>
-                    <span>1 report video al giorno, archivio cloud iniziale.</span>
+                    <span>Perfetta per testare il flusso, con limite giornaliero e archivio iniziale.</span>
+                    <div class="upgrade-list">
+                        <div>1 report video al giorno</div>
+                        <div>Storico limitato</div>
+                    </div>
                 </div>
                 <div class="plan-card featured">
+                    <div class="plan-kicker">Consigliato</div>
                     <strong>Coach Pro</strong>
-                    <span>10 report video al giorno, storico cloud e PDF sempre recuperabili.</span>
-                    <a href="/account.html?v=10430">Vedi cosa sblocca Pro</a>
+                    <span>Per usarlo in modo continuativo con staff, partite e PDF sempre recuperabili.</span>
+                    <div class="upgrade-list">
+                        <div>10 report video al giorno</div>
+                        <div>Archivio cloud fino a 50 report</div>
+                        <div>PDF tecnici pronti da condividere</div>
+                    </div>
+                    <a href="/account.html?v=10431">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
+                    <div class="plan-kicker">Societa</div>
                     <strong>Club / Academy</strong>
-                    <span>Pi? report, storico ampio, staff e branding societ?.</span>
-                    <a href="/account.html?v=10430">Scopri piano club</a>
+                    <span>Piu report, storico ampio, staff e branding societa.</span>
+                    <div class="upgrade-list">
+                        <div>Piu squadre e piu report</div>
+                        <div>Materiale pronto per staff e dirigenti</div>
+                    </div>
+                    <a href="/account.html?v=10431">Scopri piano club</a>
                 </div>
             </div>
 
