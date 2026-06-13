@@ -161,7 +161,7 @@ td{color:#eaf0ff}
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10321";
+const APP_VERSION = "10422";
 let usersCache = [];
 
 function adminHeaders(extra = {}){
@@ -171,7 +171,10 @@ function adminHeaders(extra = {}){
   return {"Accept":"application/json", ...extra};
 }
 
-function hasAdminToken(){
+function hasAdminAccess(){
+  if(window.MatchIQAuth && typeof MatchIQAuth.hasAdminAccess === "function"){
+    return MatchIQAuth.hasAdminAccess();
+  }
   return Boolean(window.MatchIQAuth && MatchIQAuth.getAdminToken && MatchIQAuth.getAdminToken());
 }
 
@@ -318,10 +321,10 @@ function renderUsers(users){
 }
 
 async function loadUsers(){
-  if(!hasAdminToken()){
+  if(!hasAdminAccess()){
     const body=document.getElementById("usersBody");
     if(body)body.innerHTML=`<tr><td colspan="11" class="loading">Accesso admin non configurato su questo dispositivo.</td></tr>`;
-    showNotice("Token interno mancante. UI pulita attiva: il token non viene più mostrato nel pannello.","err",9000);
+    showNotice("Accesso admin non configurato: accedi con account Owner/Admin oppure configura il token interno.","err",9000);
     return;
   }
 

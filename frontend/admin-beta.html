@@ -161,7 +161,7 @@ td{color:#eaf0ff;font-size:14px}
 </div>
 
 <script>
-const APP_VERSION = "10320";
+const APP_VERSION = "10422";
 const VALID_STATUSES = ["Nuovo","Contattato","Interessato","Convertito","Scartato"];
 let betaRequests = [];
 
@@ -176,7 +176,10 @@ function adminHeaders(extra={}){
   return {"Accept":"application/json",...extra};
 }
 
-function hasAdminToken(){
+function hasAdminAccess(){
+  if(window.MatchIQAuth && typeof MatchIQAuth.hasAdminAccess === "function"){
+    return MatchIQAuth.hasAdminAccess();
+  }
   return Boolean(window.MatchIQAuth && MatchIQAuth.getAdminToken && MatchIQAuth.getAdminToken());
 }
 
@@ -194,7 +197,7 @@ function clearMessage(){
 function handleAuthError(data,fallbackMessage){
   const detail=data?.detail||data?.message||fallbackMessage||"";
   if(String(detail).toLowerCase().includes("admin token")){
-    showMessage("Accesso admin non configurato su questo dispositivo. Il backend richiede ancora il token interno.", "error");
+    showMessage("Accesso admin non configurato: accedi con account Owner/Admin oppure configura il token interno.", "error");
     return true;
   }
   return false;
@@ -206,12 +209,12 @@ async function loadBetaRequests(){
   const tableBox=document.getElementById("tableBox");
   tableBox.innerHTML=`<div class="empty">Caricamento richieste beta...</div>`;
 
-  if(!hasAdminToken()){
+  if(!hasAdminAccess()){
     betaRequests=[];
     updateTotal(0);
     updateStats([]);
     tableBox.innerHTML=`<div class="empty">Accesso admin non configurato su questo dispositivo.</div>`;
-    showMessage("Token interno mancante. UI pulita attiva: il token non viene più mostrato nel pannello.", "error");
+    showMessage("Accesso admin non configurato: accedi con account Owner/Admin oppure configura il token interno.", "error");
     return;
   }
 
@@ -615,7 +618,7 @@ ${template.body}`;
 }
 
 async function exportBetaCSV(){
-  if(!hasAdminToken()){
+  if(!hasAdminAccess()){
     showMessage("Accesso admin non configurato su questo dispositivo.","error");
     return;
   }

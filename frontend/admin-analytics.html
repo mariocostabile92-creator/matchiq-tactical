@@ -74,9 +74,9 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
     <div class="subtitle">Metriche SaaS + Coach Mode · V9 Professional</div>
   </div>
   <div class="actions">
-    <button class="btn dark" onclick="location.href='/index.html?v=10322'">Home</button>
-    <button class="btn dark" onclick="location.href='/admin-beta.html?v=10322'">Admin Beta</button>
-    <button class="btn dark" onclick="location.href='/admin-users.html?v=10322'">Admin Users</button>
+    <button class="btn dark" onclick="location.href='/index.html?v=10422'">Home</button>
+    <button class="btn dark" onclick="location.href='/admin-beta.html?v=10422'">Admin Beta</button>
+    <button class="btn dark" onclick="location.href='/admin-users.html?v=10422'">Admin Users</button>
     <button class="btn green" onclick="loadAnalytics()">Aggiorna</button>
   </div>
 </div>
@@ -161,10 +161,10 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
 </div>
 
 <nav class="bottom-nav">
-  <a href="/index.html?v=10322">🏠<br>Home</a>
-  <a href="/admin-users.html?v=10322">👥<br>Users</a>
-  <a href="/admin-beta.html?v=10322">🎯<br>Beta</a>
-  <a class="active" href="/admin-analytics.html?v=10322">📊<br>Analytics</a>
+  <a href="/index.html?v=10422">🏠<br>Home</a>
+  <a href="/admin-users.html?v=10422">👥<br>Users</a>
+  <a href="/admin-beta.html?v=10422">🎯<br>Beta</a>
+  <a class="active" href="/admin-analytics.html?v=10422">📊<br>Analytics</a>
 </nav>
 
 <script>
@@ -177,7 +177,10 @@ function adminHeaders(extra = {}){
   return {"Accept":"application/json", ...extra};
 }
 
-function hasAdminToken(){
+function hasAdminAccess(){
+  if(window.MatchIQAuth && typeof MatchIQAuth.hasAdminAccess === "function"){
+    return MatchIQAuth.hasAdminAccess();
+  }
   return Boolean(window.MatchIQAuth && MatchIQAuth.getAdminToken && MatchIQAuth.getAdminToken());
 }
 
@@ -287,7 +290,7 @@ function renderSummary(d){
 }
 
 async function loadAnalytics(){
-  if(!hasAdminToken()){
+  if(!hasAdminAccess()){
     showNotice("Accesso admin non configurato su questo dispositivo. Il token interno non viene più mostrato nella UI.","err",9000);
     return;
   }

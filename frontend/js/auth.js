@@ -104,13 +104,19 @@ function getAdminToken(){
 }
 
 function adminHeaders(extra = {}){
-  const token = getAdminToken();
+  const adminToken = getAdminToken();
+  const authToken = getAuthToken();
 
   return {
     "Accept": "application/json",
-    ...(token ? {"X-Admin-Token": token} : {}),
+    ...(adminToken ? {"X-Admin-Token": adminToken} : {}),
+    ...(authToken ? {"Authorization": "Bearer " + authToken} : {}),
     ...extra
   };
+}
+
+function hasAdminAccess(){
+  return Boolean(getAdminToken() || (getAuthToken() && isOwnerOrAdmin()));
 }
 
 function requireLogin(redirect = true){
@@ -198,6 +204,7 @@ window.MatchIQAuth = {
   authHeaders,
   getAdminToken,
   adminHeaders,
+  hasAdminAccess,
   requireLogin,
   requireAdminPage,
   logout

@@ -14,6 +14,8 @@ from fastapi import APIRouter, Query, Depends, Body, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr
 
+from usage_guard import get_optional_user, is_owner_user
+
 logger = logging.getLogger("matchiq")
 router = APIRouter()
 
@@ -93,10 +95,17 @@ def validate_lead_status(status: str):
     return status in VALID_LEAD_STATUSES
 
 
-def require_admin_token(x_admin_token: Optional[str] = Header(None)):
+def require_admin_token(
+    x_admin_token: Optional[str] = Header(None),
+    authorization: Optional[str] = Header(None),
+):
     """Protezione temporanea per endpoint admin beta.
-    Configura ADMIN_API_TOKEN su Railway e invia lo stesso valore come header X-Admin-Token.
+    Accetta il token interno legacy oppure un login Owner/Admin valido.
     """
+    user = get_optional_user(authorization)
+    if is_owner_user(user):
+        return True
+
     expected = os.getenv("ADMIN_API_TOKEN", "").strip()
 
     if not expected:
