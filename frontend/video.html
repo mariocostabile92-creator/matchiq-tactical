@@ -254,10 +254,15 @@ video{
     font-size:12px;
     line-height:1.45;
 }
+.archive-badges{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin:7px 0;
+}
 .archive-source{
     display:inline-flex;
     align-items:center;
-    margin-right:6px;
     padding:4px 8px;
     border-radius:999px;
     color:#06111c;
@@ -269,6 +274,15 @@ video{
 .archive-source.local{
     color:#fff;
     background:rgba(255,255,255,.16);
+}
+.archive-source.pdf{
+    color:#06111c;
+    background:var(--blue);
+}
+.archive-source.missing{
+    color:#ffe28a;
+    background:rgba(247,183,51,.14);
+    border:1px solid rgba(247,183,51,.25);
 }
 .archive-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .btn.small{
@@ -434,9 +448,9 @@ video{
         <div class="sub">Beta video report ? clip brevi ? PDF AI</div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10429">Home</a>
-        <a class="btn dark" href="/coach.html?v=10429">Coach</a>
-        <a class="btn dark" href="/account.html?v=10429">Account</a>
+        <a class="btn dark" href="/index.html?v=10430">Home</a>
+        <a class="btn dark" href="/coach.html?v=10430">Coach</a>
+        <a class="btn dark" href="/account.html?v=10430">Account</a>
     </nav>
 </header>
 
@@ -476,12 +490,12 @@ video{
                 <div class="plan-card featured">
                     <strong>Coach Pro</strong>
                     <span>10 report video al giorno, storico cloud e PDF sempre recuperabili.</span>
-                    <a href="/account.html?v=10429">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10430">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <strong>Club / Academy</strong>
                     <span>Pi? report, storico ampio, staff e branding societ?.</span>
-                    <a href="/account.html?v=10429">Scopri piano club</a>
+                    <a href="/account.html?v=10430">Scopri piano club</a>
                 </div>
             </div>
 
@@ -808,15 +822,20 @@ function renderArchive(){
         <div class="archive-item">
             <div>
                 <strong>${escapeHtml(item.title || "Video Report MatchIQ")}</strong>
-                <div class="archive-meta">
+                <div class="archive-badges">
                     <span class="archive-source ${item.cloud ? "" : "local"}">${item.cloud ? "Cloud" : "Locale"}</span>
-                    ${escapeHtml(formatArchiveDate(item.date) || "")} ? ${escapeHtml(item.focus || "Analisi tattica")} ? ${escapeHtml(item.club || "Societ? non indicata")}<br>
-                    ${Number(item.frames || 0)} fotogrammi analizzati
+                    <span class="archive-source ${item.pdf_base64 ? "pdf" : "missing"}">${item.pdf_base64 ? "PDF pronto" : "PDF mancante"}</span>
+                    <span class="archive-source local">${Number(item.frames || 0)} frame</span>
+                </div>
+                <div class="archive-meta">
+                    ${escapeHtml(formatArchiveDate(item.date) || "Data non disponibile")} ·
+                    ${escapeHtml(item.focus || "Analisi tattica")} ·
+                    ${escapeHtml(item.club || "Societa non indicata")}
                 </div>
             </div>
             <div class="archive-actions">
                 <button class="btn dark small" onclick="loadArchivedReport('${archiveDomId(item)}')">Apri</button>
-                <button class="btn small" onclick="downloadArchivedPdf('${archiveDomId(item)}')">PDF</button>
+                <button class="btn small" ${item.pdf_base64 ? "" : "disabled"} onclick="downloadArchivedPdf('${archiveDomId(item)}')">PDF</button>
                 <button class="btn red small" onclick="deleteArchivedReport('${archiveDomId(item)}')">Elimina</button>
             </div>
         </div>
