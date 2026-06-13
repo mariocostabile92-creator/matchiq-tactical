@@ -488,13 +488,13 @@ video{
         <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
         <div>
         <div class="brand">MatchIQ Video Analyst</div>
-        <div class="sub">Beta video report ? clip brevi ? PDF AI</div>
+        <div class="sub">Beta video report · clip brevi · PDF AI</div>
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10432">Home</a>
-        <a class="btn dark" href="/coach.html?v=10432">Coach</a>
-        <a class="btn dark" href="/account.html?v=10432">Account</a>
+        <a class="btn dark" href="/index.html?v=10433">Home</a>
+        <a class="btn dark" href="/coach.html?v=10433">Coach</a>
+        <a class="btn dark" href="/account.html?v=10433">Account</a>
     </nav>
 </header>
 
@@ -522,7 +522,7 @@ video{
 
             <div class="quality-grid">
                 <div class="quality-card"><b>Ripresa utile</b><span>Laterale o dall'alto, campo visibile e azione riconoscibile.</span></div>
-                <div class="quality-card"><b>Focus chiaro</b><span>Pi? il focus ? preciso, pi? il PDF diventa utile per staff e allenamento.</span></div>
+                <div class="quality-card"><b>Focus chiaro</b><span>Più il focus è preciso, più il PDF diventa utile per staff e allenamento.</span></div>
                 <div class="quality-card"><b>Archivio pronto</b><span>Ogni analisi resta recuperabile con report e PDF, anche dopo la partita.</span></div>
             </div>
 
@@ -545,17 +545,17 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10432">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10433">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
-                    <div class="plan-kicker">Societa</div>
+                    <div class="plan-kicker">Società</div>
                     <strong>Club / Academy</strong>
-                    <span>Piu report, storico ampio, staff e branding societa.</span>
+                    <span>Più report, storico ampio, staff e branding società.</span>
                     <div class="upgrade-list">
-                        <div>Piu squadre e piu report</div>
+                        <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10432">Scopri piano club</a>
+                    <a href="/account.html?v=10433">Scopri piano club</a>
                 </div>
             </div>
 
@@ -565,7 +565,7 @@ video{
                     <input id="videoTitle" placeholder="Es. Primo tempo ASD - Rivale" />
                 </div>
                 <div class="field">
-                    <label>Societ? / squadra</label>
+                    <label>Società / squadra</label>
                     <input id="clubName" placeholder="Es. ASD MatchIQ" />
                 </div>
                 <div class="field">
@@ -595,7 +595,7 @@ video{
                 <div class="field">
                     <label>Fotogrammi</label>
                     <select id="frameCount">
-                        <option value="4" selected>4 frame ? beta economica</option>
+                        <option value="4" selected>4 frame · beta economica</option>
                         <option value="6">6 frame</option>
                         <option value="8">8 frame</option>
                     </select>
@@ -615,7 +615,7 @@ video{
                 </div>
                 <div class="field full">
                     <label>Note staff</label>
-                    <textarea id="videoNotes" placeholder="Es. squadra in maglia verde, voglio capire perch? subiamo transizioni centrali..."></textarea>
+                    <textarea id="videoNotes" placeholder="Es. squadra in maglia verde, voglio capire perché subiamo transizioni centrali..."></textarea>
                 </div>
             </div>
 
@@ -761,13 +761,13 @@ function loadSampleReport(){
     latestPdfBase64 = "";
     downloadPdfBtn.disabled = true;
     reportBox.textContent = `1. Sintesi video
-La clip mostra una squadra che perde compattezza dopo la prima pressione. Il recupero palla non ? immediato e tra centrocampo e difesa si apre uno spazio centrale sfruttabile dall'avversario.
+La clip mostra una squadra che perde compattezza dopo la prima pressione. Il recupero palla non è immediato e tra centrocampo e difesa si apre uno spazio centrale sfruttabile dall'avversario.
 
 2. Fase difensiva
 La linea arretra in modo corretto, ma i centrocampisti arrivano in ritardo sulla seconda palla. Serve accorciare prima sul portatore e chiudere la corsia interna.
 
 3. Pressing e transizioni
-Il pressing parte bene sul lato palla, per? manca la copertura preventiva. Quando l'avversario supera la prima pressione, la squadra resta lunga.
+Il pressing parte bene sul lato palla, però manca la copertura preventiva. Quando l'avversario supera la prima pressione, la squadra resta lunga.
 
 4. Indicazioni per il prossimo allenamento
 - Lavorare su riaggressione dopo palla persa.
@@ -775,7 +775,7 @@ Il pressing parte bene sul lato palla, per? manca la copertura preventiva. Quand
 - Curare comunicazione tra difesa e centrocampo.
 
 5. Messaggio staff
-La squadra ha buone intenzioni nel pressing, ma deve restare pi? corta. Priorit?: distanze tra reparti e lettura della transizione negativa.`;
+La squadra ha buone intenzioni nel pressing, ma deve restare più corta. Priorità: distanze tra reparti e lettura della transizione negativa.`;
     updateReportMeta("sample");
     showStatus("Esempio report aperto. Carica una clip per generare un'analisi reale.", "ok");
 }
@@ -1110,7 +1110,7 @@ async function extractFrames(){
     framesGrid.innerHTML = extractedFrames.map((frame,i) => `
         <div class="frame-card">
             <img src="${frame}" alt="Frame ${i+1}">
-            <span>Frame ${i+1} ? ${formatTime(extractedFrameTimes[i])}</span>
+            <span>Frame ${i+1} · ${formatTime(extractedFrameTimes[i])}</span>
         </div>
     `).join("");
     analyzeBtn.disabled = extractedFrames.length < 2;
@@ -1128,7 +1128,7 @@ async function analyzeVideo(){
     analyzeBtn.disabled = true;
     downloadPdfBtn.disabled = true;
     reportBox.textContent = "Analisi AI in corso...";
-    showStatus("Sto generando il report. Per clip lunghe pu? volerci qualche secondo.", "warn");
+    showStatus("Sto generando il report. Per clip lunghe può volerci qualche secondo.", "warn");
 
     const payload = {
         title: document.getElementById("videoTitle").value.trim(),
