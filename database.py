@@ -313,6 +313,18 @@ def init_db():
         """)
 
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS marketing_events (
+                id SERIAL PRIMARY KEY,
+                event_name TEXT NOT NULL,
+                page TEXT,
+                plan TEXT,
+                source TEXT,
+                metadata TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS subscriptions (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL,
@@ -426,6 +438,18 @@ def init_db():
         """)
 
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS marketing_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_name TEXT NOT NULL,
+                page TEXT,
+                plan TEXT,
+                source TEXT,
+                metadata TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS subscriptions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -503,6 +527,11 @@ def init_db():
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_api_usage_user_feature_date
         ON api_usage(user_id, feature, usage_date)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_marketing_events_name_created
+        ON marketing_events(event_name, created_at)
     """)
 
     cur.execute("""
@@ -697,6 +726,12 @@ def get_admin_analytics():
         "estimated_mrr": 0.0,
         "plans": [],
         "beta_by_status": [],
+        "marketing": {
+            "today_total": 0,
+            "last_7_days_total": 0,
+            "events_today": [],
+            "events_last_7_days": [],
+        },
         "coach": {
             "today_total": 0,
             "last_7_days_total": 0,
@@ -1081,10 +1116,117 @@ def get_admin_analytics():
             data["beta_converted"] = 0
             data["beta_by_status"] = []
 
+        try:
+            if USE_POSTGRES:
+                cur.execute("""
+                    SELECT COUNT(*) AS total
+                    FROM marketing_events
+                    WHERE created_at::timestamptz::date = CURRENT_DATE
+                """)
+                data["marketing"]["today_total"] = int((fetchone(cur) or {}).get("total") or 0)
+
+                cur.execute("""
+                    SELECT COUNT(*) AS total
+                    FROM marketing_events
+                    WHERE created_at::timestamptz >= NOW() - INTERVAL '7 days'
+                """)
+                data["marketing"]["last_7_days_total"] = int((fetchone(cur) or {}).get("total") or 0)
+
+                cur.execute("""
+                    SELECT event_name, COALESCE(plan,'') AS plan, COUNT(*) AS total
+                    FROM marketing_events
+                    WHERE created_at::timestamptz::date = CURRENT_DATE
+                    GROUP BY event_name, COALESCE(plan,'')
+                    ORDER BY total DESC
+                    LIMIT 12
+                """)
+                data["marketing"]["events_today"] = fetchall(cur)
+
+                cur.execute("""
+                    SELECT event_name, COALESCE(plan,'') AS plan, COUNT(*) AS total
+                    FROM marketing_events
+                    WHERE created_at::timestamptz >= NOW() - INTERVAL '7 days'
+                    GROUP BY event_name, COALESCE(plan,'')
+                    ORDER BY total DESC
+                    LIMIT 12
+                """)
+                data["marketing"]["events_last_7_days"] = fetchall(cur)
+            else:
+                cur.execute("""
+                    SELECT COUNT(*) AS total
+                    FROM marketing_events
+                    WHERE substr(created_at,1,10) = ?
+                """, (today_key(),))
+                data["marketing"]["today_total"] = int((fetchone(cur) or {}).get("total") or 0)
+
+                cur.execute("""
+                    SELECT COUNT(*) AS total
+                    FROM marketing_events
+                    WHERE datetime(created_at) >= datetime('now','-7 days')
+                """)
+                data["marketing"]["last_7_days_total"] = int((fetchone(cur) or {}).get("total") or 0)
+
+                cur.execute("""
+                    SELECT event_name, COALESCE(plan,'') AS plan, COUNT(*) AS total
+                    FROM marketing_events
+                    WHERE substr(created_at,1,10) = ?
+                    GROUP BY event_name, COALESCE(plan,'')
+                    ORDER BY total DESC
+                    LIMIT 12
+                """, (today_key(),))
+                data["marketing"]["events_today"] = fetchall(cur)
+
+                cur.execute("""
+                    SELECT event_name, COALESCE(plan,'') AS plan, COUNT(*) AS total
+                    FROM marketing_events
+                    WHERE datetime(created_at) >= datetime('now','-7 days')
+                    GROUP BY event_name, COALESCE(plan,'')
+                    ORDER BY total DESC
+                    LIMIT 12
+                """)
+                data["marketing"]["events_last_7_days"] = fetchall(cur)
+        except Exception:
+            data["marketing"] = {
+                "today_total": 0,
+                "last_7_days_total": 0,
+                "events_today": [],
+                "events_last_7_days": [],
+            }
+
         return data
 
     finally:
         conn.close()
+
+
+# =========================================================
+# MARKETING EVENTS
+# =========================================================
+
+def track_marketing_event(event_name: str, page: str = "", plan: str = "", source: str = "", metadata=None):
+    event_name = (event_name or "").strip()[:80]
+    if not event_name:
+        return {"ok": False, "message": "event_name obbligatorio"}
+
+    init_db()
+    now = utc_now()
+    metadata_json = json.dumps(metadata or {}, ensure_ascii=False)
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        INSERT INTO marketing_events (event_name, page, plan, source, metadata, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """), (
+        event_name,
+        (page or "")[:180],
+        (plan or "")[:80],
+        (source or "")[:80],
+        metadata_json[:4000],
+        now,
+    ))
+    conn.commit()
+    conn.close()
+    return {"ok": True}
 
 
 # =========================================================

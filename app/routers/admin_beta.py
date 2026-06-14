@@ -15,6 +15,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr
 
 from usage_guard import get_optional_user, is_owner_user
+from database import track_marketing_event
 
 logger = logging.getLogger("matchiq")
 router = APIRouter()
@@ -41,6 +42,14 @@ class BetaLeadUpdatePayload(BaseModel):
     status: Optional[str] = None
     internal_note: Optional[str] = None
     beta_code: Optional[str] = None
+
+
+class MarketingEventPayload(BaseModel):
+    event_name: str
+    page: Optional[str] = ""
+    plan: Optional[str] = ""
+    source: Optional[str] = "frontend"
+    metadata: Optional[dict] = {}
 
 
 def get_database_url():
@@ -322,6 +331,22 @@ def create_beta_request(payload: BetaRequestPayload):
         "message": "Database non disponibile, usa fallback frontend",
         "reason": result.get("reason")
     }
+
+
+@router.post("/api/marketing-event")
+def create_marketing_event(payload: MarketingEventPayload):
+    try:
+        result = track_marketing_event(
+            payload.event_name,
+            page=payload.page or "",
+            plan=payload.plan or "",
+            source=payload.source or "frontend",
+            metadata=payload.metadata or {}
+        )
+        return result
+    except Exception as e:
+        logger.warning("[MARKETING EVENT] Evento non salvato: %s", e)
+        return {"ok": False, "message": "Evento non salvato"}
 
 
 @router.get("/api/beta-requests")

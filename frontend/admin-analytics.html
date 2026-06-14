@@ -75,9 +75,9 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
     <div class="subtitle">Metriche SaaS + Coach Mode · V9 Professional</div>
   </div>
   <div class="actions">
-    <button class="btn dark" onclick="location.href='/index.html?v=10446'">Home</button>
-    <button class="btn dark" onclick="location.href='/admin-beta.html?v=10446'">Admin Beta</button>
-    <button class="btn dark" onclick="location.href='/admin-users.html?v=10446'">Admin Users</button>
+    <button class="btn dark" onclick="location.href='/index.html?v=10447'">Home</button>
+    <button class="btn dark" onclick="location.href='/admin-beta.html?v=10447'">Admin Beta</button>
+    <button class="btn dark" onclick="location.href='/admin-users.html?v=10447'">Admin Users</button>
     <button class="btn green" onclick="loadAnalytics()">Aggiorna</button>
   </div>
 </div>
@@ -92,6 +92,8 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
     <div class="stat"><small>Subscription attive</small><strong id="activeSubs">--</strong><span>abbonamenti attivi</span></div>
     <div class="stat"><small>MRR stimato</small><strong id="mrr">--</strong><span>stima mensile</span></div>
     <div class="stat"><small>Usage oggi</small><strong id="usageToday">--</strong><span>chiamate API</span></div>
+    <div class="stat video"><small>Funnel oggi</small><strong id="marketingToday">--</strong><span>azioni commerciali</span></div>
+    <div class="stat video"><small>Funnel 7 giorni</small><strong id="marketing7">--</strong><span>azioni recenti</span></div>
   </div>
 
   <div class="panel">
@@ -178,6 +180,20 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
     </div>
   </div>
 
+  <div class="grid-2">
+    <div class="panel">
+      <h2>Funnel commerciale oggi</h2>
+      <div class="section-note">Click Pro, aperture form e richieste inviate dalla home.</div>
+      <div class="table-wrap"><table><thead><tr><th>Evento</th><th>Piano</th><th>Totale</th></tr></thead><tbody id="marketingTodayBody"><tr><td colspan="3" class="loading">Caricamento...</td></tr></tbody></table></div>
+    </div>
+
+    <div class="panel">
+      <h2>Funnel commerciale 7 giorni</h2>
+      <div class="section-note">Ti dice se la pagina sta generando interesse reale.</div>
+      <div class="table-wrap"><table><thead><tr><th>Evento</th><th>Piano</th><th>Totale</th></tr></thead><tbody id="marketing7Body"><tr><td colspan="3" class="loading">Caricamento...</td></tr></tbody></table></div>
+    </div>
+  </div>
+
   <div class="panel">
     <h2>Riepilogo operativo</h2>
     <div id="summaryBox" class="muted loading">Caricamento riepilogo...</div>
@@ -185,10 +201,10 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
 </div>
 
 <nav class="bottom-nav">
-  <a href="/index.html?v=10446">🏠<br>Home</a>
-  <a href="/admin-users.html?v=10446">👥<br>Users</a>
-  <a href="/admin-beta.html?v=10446">🎯<br>Beta</a>
-  <a class="active" href="/admin-analytics.html?v=10446">📊<br>Analytics</a>
+  <a href="/index.html?v=10447">🏠<br>Home</a>
+  <a href="/admin-users.html?v=10447">👥<br>Users</a>
+  <a href="/admin-beta.html?v=10447">🎯<br>Beta</a>
+  <a class="active" href="/admin-analytics.html?v=10447">📊<br>Analytics</a>
 </nav>
 
 <script>
@@ -283,6 +299,36 @@ function renderBeta(rows){
     : `<tr><td colspan="2" class="loading">Nessun dato.</td></tr>`;
 }
 
+function marketingLabel(name){
+  const labels={
+    lead_form_open:"Apertura form",
+    lead_submit_attempt:"Tentativo invio lead",
+    lead_submit_success:"Lead inviato",
+    lead_submit_fallback:"Lead salvato fallback",
+    checkout_click:"Click checkout",
+    checkout_opened:"Checkout aperto",
+    checkout_login_required:"Checkout senza login",
+    checkout_already_pro:"Utente gia Pro",
+    checkout_error:"Errore checkout"
+  };
+  return labels[name]||name||"-";
+}
+
+function renderMarketing(rows,id){
+  const el=document.getElementById(id);
+  if(!el)return;
+
+  el.innerHTML=(rows||[]).length
+    ? rows.map(r=>`
+        <tr>
+          <td>${esc(marketingLabel(r.event_name))}</td>
+          <td>${esc(r.plan||"-")}</td>
+          <td><strong>${Number(r.total||0)}</strong></td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="3" class="loading">Nessun evento commerciale.</td></tr>`;
+}
+
 function renderTopUsers(rows){
   const el=document.getElementById("coachTopUsers");
   if(!el)return;
@@ -349,6 +395,7 @@ async function loadAnalytics(){
 
     const c=d.coach||{};
     const v=d.video||{};
+    const m=d.marketing||{};
 
     setText("totalUsers",d.total_users||0);
     setText("usersToday",d.users_today||0);
@@ -356,6 +403,8 @@ async function loadAnalytics(){
     setText("activeSubs",d.active_subscriptions||0);
     setText("mrr",money(d.estimated_mrr||0));
     setText("usageToday",d.usage_today||0);
+    setText("marketingToday",m.today_total||0);
+    setText("marketing7",m.last_7_days_total||0);
 
     setText("coachToday",c.today_total||0);
     setText("coach7",c.last_7_days_total||0);
@@ -379,6 +428,8 @@ async function loadAnalytics(){
 
     renderPlans(d.plans||[]);
     renderBeta(d.beta_by_status||[]);
+    renderMarketing(m.events_today||[],"marketingTodayBody");
+    renderMarketing(m.events_last_7_days||[],"marketing7Body");
     rows2("coachFeaturesToday",c.features_today||[],"Nessuna feature Coach tracciata oggi.");
     rows2("coachFeatures7",c.features_last_7_days||[],"Nessuna feature Coach tracciata negli ultimi 7 giorni.");
     renderTopUsers(c.top_users_last_7_days||c.top_users_today||[]);
