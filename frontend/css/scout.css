@@ -222,6 +222,46 @@
     .metric small{color:var(--muted);font-size:10px;font-weight:1000;text-transform:uppercase}
     .metric strong{display:block;margin-top:7px;font-size:20px}
 
+    .scout-insight-strip{
+      display:grid;
+      grid-template-columns:1fr 1fr 1.35fr 1fr;
+      gap:10px;
+      margin:-2px 0 14px;
+      padding:12px;
+      border:1px solid rgba(0,245,160,.22);
+      border-radius:18px;
+      background:
+        linear-gradient(135deg,rgba(0,245,160,.08),rgba(0,229,255,.04)),
+        rgba(9,14,26,.86);
+    }
+
+    .scout-insight-strip div{
+      min-width:0;
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:14px;
+      padding:10px 11px;
+      background:rgba(255,255,255,.035);
+    }
+
+    .scout-insight-strip small{
+      display:block;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:1000;
+      text-transform:uppercase;
+    }
+
+    .scout-insight-strip strong{
+      display:block;
+      margin-top:6px;
+      color:var(--text);
+      font-size:15px;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
     .players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 
     .player{
@@ -410,7 +450,7 @@
     .toast span{color:var(--muted);font-size:13px}
 
     @media(max-width:1180px){.layout{grid-template-columns:1fr}.players{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.pro-grid{grid-template-columns:1fr}}
-    @media(max-width:760px){body{padding:14px}.hero{flex-direction:column;align-items:stretch}.hero-score{text-align:left}.metrics,.modal-kpis,.profile-grid,.prob-grid{grid-template-columns:1fr}.impact-wrap{grid-template-columns:1fr}.modal-pro-head{grid-template-columns:1fr}.radar{width:220px;height:220px}}
+    @media(max-width:760px){body{padding:14px}.hero{flex-direction:column;align-items:stretch}.hero-score{text-align:left}.metrics,.modal-kpis,.profile-grid,.prob-grid{grid-template-columns:1fr}.scout-insight-strip{grid-template-columns:1fr 1fr}.impact-wrap{grid-template-columns:1fr}.modal-pro-head{grid-template-columns:1fr}.radar{width:220px;height:220px}}
 /* ======================================================
    MATCHIQ SCOUT MOBILE UX FIX V8.1.4
    Compact Scout Mode for smartphones

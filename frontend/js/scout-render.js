@@ -7,6 +7,7 @@ function renderAll(){
   renderMatches();
   renderHero();
   renderMetrics();
+  renderScoutInsights();
   renderPlayers();
   renderTimeline();
   renderTicker();
@@ -357,6 +358,28 @@ function renderMetrics(){
     if(el) el.textContent = valuePct(v);
   });
 }
+
+function renderScoutInsights(){
+  const playersCount = document.getElementById("scoutPlayersCount");
+  const strongSignals = document.getElementById("scoutStrongSignals");
+  const topPlayer = document.getElementById("scoutTopPlayer");
+  const watchCount = document.getElementById("scoutWatchCount");
+
+  if(!playersCount && !strongSignals && !topPlayer && !watchCount) return;
+
+  const players = Array.isArray(state.players) ? state.players : [];
+  const top = [...players].sort((a,b) => num(b.scout_score,0) - num(a.scout_score,0))[0];
+  const signals = players.filter(p =>
+    num(p.scout_score,0) >= 75 ||
+    ["hot","danger","pressure","watch"].includes(String(p.signal_type || "").toLowerCase())
+  ).length;
+
+  if(playersCount) playersCount.textContent = players.length ? String(players.length) : "--";
+  if(strongSignals) strongSignals.textContent = players.length ? String(signals) : "--";
+  if(topPlayer) topPlayer.textContent = top ? `${top.name} · ${Math.round(num(top.scout_score,0))}` : "--";
+  if(watchCount) watchCount.textContent = String(state.watchlist?.length || 0);
+}
+
 function renderPlayers(){
   const box = document.getElementById("players");
 
