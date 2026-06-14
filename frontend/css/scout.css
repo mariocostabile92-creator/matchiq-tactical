@@ -330,6 +330,43 @@
     .signal.pressure-signal{color:var(--yellow);background:rgba(255,200,87,.1)}
     .signal.watch-signal{color:var(--yellow);background:rgba(255,200,87,.1)}
 
+    .scout-verdict{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin:0 0 12px;
+      padding:9px 10px;
+      border-radius:13px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.035);
+      position:relative;
+      z-index:1;
+    }
+
+    .scout-verdict strong{
+      color:#eef5ff;
+      font-size:12px;
+      line-height:1.15;
+      white-space:nowrap;
+    }
+
+    .scout-verdict span{
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.25;
+      text-align:right;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .scout-verdict.high{border-color:rgba(0,245,160,.34);background:rgba(0,245,160,.08)}
+    .scout-verdict.danger{border-color:rgba(255,59,107,.32);background:rgba(255,59,107,.08)}
+    .scout-verdict.creative{border-color:rgba(0,229,255,.32);background:rgba(0,229,255,.07)}
+    .scout-verdict.pressure,.scout-verdict.watch{border-color:rgba(255,200,87,.32);background:rgba(255,200,87,.08)}
+    .scout-verdict.risk{border-color:rgba(255,140,66,.32);background:rgba(255,140,66,.08)}
+
     .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative;z-index:1}
     .stat{padding:9px;text-align:center;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid var(--soft)}
     .stat small{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}

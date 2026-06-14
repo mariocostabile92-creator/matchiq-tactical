@@ -380,6 +380,41 @@ function renderScoutInsights(){
   if(watchCount) watchCount.textContent = String(state.watchlist?.length || 0);
 }
 
+function scoutVerdict(p){
+  const score = num(p.scout_score,0);
+  const threat = num(p.threat,0);
+  const creativity = num(p.creativity,0);
+  const pressure = num(p.pressure,0);
+  const stamina = num(p.stamina,100);
+  const signal = String(p.signal_type || "").toLowerCase();
+
+  if(score >= 88 || signal === "hot"){
+    return {level:"high", label:"Priorità alta", reason:"da seguire subito"};
+  }
+
+  if(threat >= 75){
+    return {level:"danger", label:"Pericolo offensivo", reason:"può incidere vicino alla porta"};
+  }
+
+  if(creativity >= 72){
+    return {level:"creative", label:"Creatore utile", reason:"genera linee di passaggio"};
+  }
+
+  if(pressure >= 72){
+    return {level:"pressure", label:"Trigger pressing", reason:"alza intensità e recuperi"};
+  }
+
+  if(stamina < 45){
+    return {level:"risk", label:"Rischio calo", reason:"stamina sotto controllo"};
+  }
+
+  if(score >= 76){
+    return {level:"watch", label:"Da monitorare", reason:"profilo interessante"};
+  }
+
+  return {level:"neutral", label:"Osservazione base", reason:"mantieni in lista"};
+}
+
 function renderPlayers(){
   const box = document.getElementById("players");
 
@@ -454,6 +489,7 @@ function renderPlayers(){
 
       const watched = isWatched(p.id);
       const canWatch = typeof canUseWatchlist === "function" ? canUseWatchlist() : Boolean(state.account?.watchlist_enabled);
+      const verdict = scoutVerdict(p);
 
       return `
         <article class="player ${cardClass} ${watched ? "watch" : ""}" id="card-${escAttr(p.id)}">
@@ -468,6 +504,11 @@ function renderPlayers(){
 
             <div class="signal ${watched ? "watch-signal" : signalClass}">
               ${watched ? "⭐ WATCHLIST" : "⚡ " + esc(p.signal)}
+            </div>
+
+            <div class="scout-verdict ${escAttr(verdict.level)}">
+              <strong>${esc(verdict.label)}</strong>
+              <span>${esc(verdict.reason)}</span>
             </div>
 
             <div class="stats">
