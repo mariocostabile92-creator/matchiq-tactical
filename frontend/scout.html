@@ -5,18 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>MatchIQ Scout</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#00f5a0">
+  <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
-  <link rel="stylesheet" href="css/scout.css">
+  <link rel="stylesheet" href="css/scout.css?v=10438">
 
-  <script src="js/scout-state.js"></script>
-  <script src="js/scout-utils.js"></script>
-  <script src="js/scout-normalizers.js"></script>
-  <script src="js/scout-api.js"></script>
-  <script src="js/scout-storage.js"></script>
-  <script src="js/scout-render.js"></script>
-  <script src="js/scout-modal.js"></script>
-  <script src="js/scout-events.js"></script>
-  <script src="js/scout-core.js"></script>
+  <script src="js/scout-state.js?v=10438"></script>
+  <script src="js/scout-utils.js?v=10438"></script>
+  <script src="js/scout-normalizers.js?v=10438"></script>
+  <script src="js/scout-api.js?v=10438"></script>
+  <script src="js/scout-storage.js?v=10438"></script>
+  <script src="js/scout-render.js?v=10438"></script>
+  <script src="js/scout-modal.js?v=10438"></script>
+  <script src="js/scout-events.js?v=10438"></script>
+  <script src="js/scout-core.js?v=10438"></script>
 </head>
 
 <body>
@@ -32,10 +35,13 @@
 
   <div class="app">
     <header class="topbar">
-      <div>
-        <h1>MatchIQ Scout</h1>
-        <div class="subtitle" id="scoutSubtitle">
-          Scout Preview · player cards limitate · export, watchlist e simulazioni disponibili con Pro
+      <div class="brand-head">
+        <img class="brand-logo" src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
+        <div>
+          <h1>MatchIQ Scout</h1>
+          <div class="subtitle" id="scoutSubtitle">
+            Scout Preview · player cards limitate · export, watchlist e simulazioni disponibili con Pro
+          </div>
         </div>
       </div>
 
@@ -344,10 +350,10 @@
     <div class="toast-area" id="toastArea"></div>
 
   <nav class="bottom-nav">
-    <a href="/mobile.html">Home</a>
-    <a class="active" href="/scout.html">Scout</a>
-    <a href="/coach.html">Coach</a>
-    <a href="/account.html">Account</a>
+    <a href="/index.html?v=10438">Home</a>
+    <a class="active" href="/scout.html?v=10438">Scout</a>
+    <a href="/coach.html?v=10438">Coach</a>
+    <a href="/account.html?v=10438">Account</a>
   </nav>
 </body>
 </html>
