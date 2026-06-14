@@ -1013,24 +1013,24 @@ body.account-active .unlock-grid{
         <div class="cta-panel hidden-for-pro" id="ctaPanel">
             <span class="badge beta">MATCHIQ PRO</span>
 
-            <h2>MatchIQ Pro</h2>
+            <h2>Offerta Founder Pro</h2>
 
             <p>
-                Per usare MatchIQ tutta la stagione: Coach report, PDF, WhatsApp,
-                pagelle, storico esteso, Scout Mode completa, watchlist, export e analisi live.
+                Per i primi utenti paganti: tutto MatchIQ Pro a prezzo lancio,
+                con Coach, Video Analyst, Scout, PDF/HTML staff, WhatsApp e storico esteso.
             </p>
 
             <div class="price-wrap">
                 <div class="price-card">
-                    <div class="price-label">Piano mensile</div>
+                    <div class="price-label">Founder mensile</div>
                     <div class="price">9,99€ <small>/ mese</small></div>
-                    <div class="price-note">Ideale per provarlo durante le prossime partite.</div>
+                    <div class="price-note">Prezzo lancio per validare il prodotto con utenti reali.</div>
                 </div>
 
                 <div class="price-card featured">
-                    <div class="price-label">Piano annuale</div>
+                    <div class="price-label">Founder annuale</div>
                     <div class="price">79,99€ <small>/ anno</small></div>
-                    <div class="price-note">🔥 Risparmi 39,89€ rispetto al mensile.</div>
+                    <div class="price-note">Risparmi 39,89€ rispetto al mensile.</div>
                 </div>
             </div>
 
@@ -1040,6 +1040,7 @@ body.account-active .unlock-grid{
                 <li>✅ Pagelle Coach senza limite pratico</li>
                 <li>✅ Storico Coach esteso</li>
                 <li>✅ Scout completo, watchlist ed export</li>
+                <li>✅ Report HTML staff per Coach, Scout e Video</li>
                 <li>✅ Uso continuativo da campo</li>
             </ul>
 
@@ -1185,8 +1186,8 @@ body.account-active .unlock-grid{
         <h2>Quale piano ti serve?</h2>
 
         <p>
-            Free serve per provare il flusso. Coach Pro è per usarlo ogni settimana.
-            Club / Academy è il percorso per staff, società e più squadre.
+            Free serve per provare il flusso. Founder Pro è l’offerta di lancio per iniziare a pagare subito.
+            Club / Academy è il percorso per società, staff e più squadre.
         </p>
 
         <div class="plan-decision-grid">
@@ -1205,30 +1206,31 @@ body.account-active .unlock-grid{
             </div>
 
             <div class="plan-decision-card featured">
-                <h3>Coach Pro</h3>
+                <h3>Founder Pro</h3>
                 <div class="plan-price">9,99€ <small>/ mese</small></div>
-                <p>Per mister e staff che vogliono usarlo con continuità durante la stagione.</p>
+                <p>Per mister, staff e osservatori che vogliono usarlo davvero già dalle prossime partite.</p>
                 <ul>
+                    <li>✅ Prezzo lancio per i primi utenti paganti</li>
                     <li>✅ 10 report Video Analyst al giorno</li>
                     <li>✅ PDF Coach e Video Analyst scaricabili</li>
-                    <li>✅ WhatsApp, pagelle e storico esteso</li>
+                    <li>✅ Report HTML staff per Scout e player</li>
                     <li>✅ Scout completo, watchlist ed export</li>
                     <li>✅ Archivio cloud fino a 50 report video</li>
                 </ul>
-                <button class="btn gold" onclick="startCheckout('pro_monthly')">Attiva Coach Pro</button>
+                <button class="btn gold" onclick="startCheckout('pro_monthly')">Attiva Founder Pro</button>
             </div>
 
             <div class="plan-decision-card club">
                 <h3>Club / Academy</h3>
-                <div class="plan-price">Su richiesta</div>
+                <div class="plan-price">Demo privata</div>
                 <p>Per società, settori giovanili e staff che seguono più gruppi.</p>
                 <ul>
                     <li>✅ Più squadre e più report da gestire</li>
                     <li>✅ Storico più ampio per staff e società</li>
                     <li>✅ Branding e flussi pensati per club</li>
-                    <li>✅ Base per offerte B2B future</li>
+                    <li>✅ Onboarding e supporto diretto</li>
                 </ul>
-                <button class="btn outline" onclick="window.location.href='mailto:mario.costabile92@outlook.it?subject=MatchIQ%20Club%20Academy'">Parliamone</button>
+                <button class="btn outline" onclick="window.location.href='mailto:mario.costabile92@outlook.it?subject=MatchIQ%20Club%20Academy&body=Ciao%20Mario,%20vorrei%20una%20demo%20privata%20del%20piano%20Club%20/%20Academy.'">Richiedi demo club</button>
             </div>
         </div>
 
@@ -1290,7 +1292,7 @@ body.account-active .unlock-grid{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10443";
+const APP_VERSION = "10444";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
 
 let accountState = {

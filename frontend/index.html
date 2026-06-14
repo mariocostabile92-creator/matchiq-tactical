@@ -593,7 +593,7 @@ a{
 
 .pricing-grid{
     display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-columns:repeat(3,minmax(0,1fr));
     gap:18px;
     margin:18px 0 24px;
 }
@@ -603,6 +603,17 @@ a{
     border:1px solid rgba(255,226,138,.25);
     border-radius:28px;
     padding:26px;
+}
+
+.price-card.featured{
+    background:linear-gradient(145deg,rgba(24,240,139,.15),rgba(56,169,255,.08));
+    border-color:rgba(24,240,139,.38);
+    box-shadow:0 22px 55px rgba(0,0,0,.18);
+}
+
+.price-card.club{
+    background:linear-gradient(145deg,rgba(255,209,102,.14),rgba(139,92,246,.08));
+    border-color:rgba(255,209,102,.32);
 }
 
 .price-card h3{
@@ -1581,7 +1592,7 @@ a{
   </section>
   <section class="pro-active-panel" id="proActivePanel"><span class="badge green">✅ PIANO PRO ATTIVO</span><h2>Il tuo account Pro è già attivo</h2><p>Hai accesso alle funzioni avanzate e ai limiti estesi.</p></section>
   <section class="owner-control-panel" id="ownerControlPanel"><span class="badge gold">🛡️ OWNER CONTROL CENTER</span><h2>Console rapida amministratore</h2><p>Gestisci beta, utenti, piani e analytics.</p><div class="hero-actions"><button class="btn dark" onclick="openAdminBeta()">Admin Beta</button><button class="btn dark" onclick="openAdminUsers()">Admin Users</button><button class="btn analytics" onclick="openAdminAnalytics()">Admin Analytics</button></div></section>
-  <section id="pricing"><div class="section-head"><div><div class="section-title">Piani Free / Pro</div><div class="section-sub">Free ti fa provare Coach e Video Analyst. Pro è pensato per mister, staff e società che vogliono usarla tutta la stagione.</div></div></div><div class="pricing-grid"><div class="price-card"><span class="badge blue">FREE</span><h3>Free Trial</h3><div class="price">0€ <small>/ prova</small></div><ul><li>✅ Coach report tecnico</li><li>✅ 1 report Video Analyst al giorno</li><li>✅ Archivio Video fino a 3 report</li><li>✅ 5 pagelle Coach</li><li>✅ 2 partite nello storico</li><li>✅ Scout e analisi live in preview</li></ul><button class="btn green" onclick="openCoach()">Prova Coach</button></div><div class="price-card"><span class="badge gold">MATCHIQ PRO</span><h3>Coach Pro</h3><div class="price">9,99€ <small>/ mese</small></div><ul><li>✅ 10 report Video Analyst al giorno</li><li>✅ Archivio Video cloud fino a 50 report</li><li>✅ PDF Coach professionali</li><li>✅ Sintesi WhatsApp sbloccate</li><li>✅ Storico Coach esteso</li><li>✅ Scout completo, watchlist ed export</li></ul><button class="btn pro pricing-pro-btn" onclick="startCheckout('pro_monthly')">Sblocca Coach Pro</button></div></div></section>
+  <section id="pricing"><div class="section-head"><div><div class="section-title">Piani per iniziare a usare MatchIQ</div><div class="section-sub">Free serve per provare. Founder Pro è l’offerta di lancio per i primi utenti paganti. Club è per società e staff.</div></div></div><div class="pricing-grid"><div class="price-card"><span class="badge blue">FREE</span><h3>Free Trial</h3><div class="price">0€ <small>/ prova</small></div><ul><li>✅ Coach report tecnico in prova</li><li>✅ 1 report Video Analyst al giorno</li><li>✅ Archivio Video fino a 3 report</li><li>✅ Scout e analisi live in preview</li><li>🔒 PDF, storico ed export limitati</li></ul><button class="btn green" onclick="openCoach()">Prova Coach</button></div><div class="price-card featured"><span class="badge gold">OFFERTA FOUNDER</span><h3>Founder Pro</h3><div class="price">9,99€ <small>/ mese</small></div><ul><li>✅ Coach Pro completo</li><li>✅ 10 report Video Analyst al giorno</li><li>✅ PDF Coach e report HTML staff</li><li>✅ WhatsApp, pagelle e storico esteso</li><li>✅ Scout completo, watchlist ed export</li><li>✅ Prezzo lancio per i primi utenti</li></ul><button class="btn pro pricing-pro-btn" onclick="startCheckout('pro_monthly')">Attiva Founder Pro</button></div><div class="price-card club"><span class="badge gold">CLUB / ACADEMY</span><h3>Pacchetto società</h3><div class="price">Su richiesta</div><ul><li>✅ Più squadre e più report</li><li>✅ Staff, dirigenti e settore giovanile</li><li>✅ Archivio più ampio e flussi dedicati</li><li>✅ Onboarding e supporto diretto</li><li>✅ Base per accordi stagionali</li></ul><button class="btn dark" onclick="window.location.href='mailto:mario.costabile92@outlook.it?subject=MatchIQ%20Club%20Academy&body=Ciao%20Mario,%20vorrei%20informazioni%20sul%20piano%20Club%20/%20Academy%20di%20MatchIQ.'">Richiedi demo club</button></div></div></section>
   <section id="liveSection"><div class="section-head"><div><div class="section-title">Partite live</div><div class="section-sub">Se non ci sono live, usa Coach Mode per una partita dal campo.</div></div><div class="live-toolbar"><button class="btn" onclick="loadMatches(true)">Top leagues</button><button class="btn dark" onclick="loadMatches(false)">All live</button></div></div><div id="matchesContainer" class="matches-grid"><div class="loading">Caricamento partite live...</div></div></section>
   <section id="targetSection">
     <div class="section-head">
@@ -1602,7 +1613,7 @@ a{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10443";
+const APP_VERSION = "10444";
 const BETA_STORAGE_KEY = "matchiq_beta_requests_v821";
 let accountPlan = {plan:"guest",label:"Guest",limits:{max_live_matches:3,scout_enabled:true,scout_preview:true,export_enabled:false,pdf_enabled:false},features:{}};
 function getAuthToken(){return localStorage.getItem("matchiq_auth_token")||sessionStorage.getItem("matchiq_auth_token")||"";}
