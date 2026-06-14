@@ -626,13 +626,36 @@ function renderWatchlist(){
     return;
   }
 
-  box.innerHTML = state.watchlist.map(p => `
+  const top = [...state.watchlist].sort((a,b) => num(b.scout_score,0) - num(a.scout_score,0))[0];
+  const avgScore = Math.round(avgField(state.watchlist, "scout_score"));
+  const urgent = state.watchlist.filter(p => num(p.scout_score,0) >= 82 || num(p.threat,0) >= 75).length;
+
+  box.innerHTML = `
+    <div class="watch-summary">
+      <div>
+        <small>Media score</small>
+        <strong>${avgScore || "--"}</strong>
+      </div>
+      <div>
+        <small>Priorità</small>
+        <strong>${urgent}</strong>
+      </div>
+      <div>
+        <small>Top profilo</small>
+        <strong>${top ? esc(top.name) : "--"}</strong>
+      </div>
+    </div>
+  ` + state.watchlist.map(p => `
     <div class="watch-item">
       <div class="watch-item-top">
         <div>
           <div class="watch-name">${esc(p.name)}</div>
           <div class="watch-meta">
             ${esc(p.team)} · ${esc(p.role)} · Score ${Math.round(num(p.scout_score,0))}
+          </div>
+          <div class="watch-verdict">
+            ${esc(p.verdict_label || "Da monitorare")}
+            <span>${esc(p.verdict_reason || p.signal || "profilo salvato")}</span>
           </div>
         </div>
         <button class="watch-remove" onclick="removeWatchlist('${escAttr(p.id)}'); renderAll();">×</button>
