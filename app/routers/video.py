@@ -37,10 +37,16 @@ class VideoReportRequest(BaseModel):
     category: Optional[str] = "Dilettanti"
     focus: Optional[str] = "Analisi tattica generale"
     observed_team: Optional[str] = ""
+    home_team: Optional[str] = ""
+    away_team: Optional[str] = ""
+    home_formation: Optional[str] = ""
+    away_formation: Optional[str] = ""
+    lineup_notes: Optional[str] = ""
     report_style: Optional[str] = "Report staff completo"
     notes: Optional[str] = ""
     duration_seconds: Optional[float] = 0
     frame_times: List[float] = Field(default_factory=list)
+    frame_meta: List[dict] = Field(default_factory=list)
     tactical_lines: List[dict] = Field(default_factory=list)
     frames: List[str]
 
@@ -86,10 +92,16 @@ def _build_prompt(data: VideoReportRequest, frame_count: int) -> str:
     category = _clean_text(data.category, 80) or "Dilettanti"
     focus = _clean_text(data.focus, 160) or "Analisi tattica generale"
     observed_team = _clean_text(data.observed_team, 160) or "Non specificata"
+    home_team = _clean_text(data.home_team, 120) or "Non specificata"
+    away_team = _clean_text(data.away_team, 120) or "Non specificata"
+    home_formation = _clean_text(data.home_formation, 40) or "Non indicato"
+    away_formation = _clean_text(data.away_formation, 40) or "Non indicato"
+    lineup_notes = _clean_text(data.lineup_notes, 1400) or "Non inserite"
     report_style = _clean_text(data.report_style, 120) or "Report staff completo"
     notes = _clean_text(data.notes, 1200) or "Nessuna nota staff inserita."
     duration = round(float(data.duration_seconds or 0), 1)
     frame_times = ", ".join(_format_seconds(t) for t in (data.frame_times or [])[:frame_count]) or "non disponibili"
+    frame_meta = _format_frame_meta(data.frame_meta, frame_count)
     tactical_lines = _format_tactical_lines(data.tactical_lines)
 
     return f"""
@@ -101,10 +113,16 @@ Contesto:
 - Categoria: {category}
 - Focus richiesto: {focus}
 - Squadra osservata: {observed_team}
+- Squadra casa: {home_team}
+- Modulo casa: {home_formation}
+- Squadra trasferta: {away_team}
+- Modulo trasferta: {away_formation}
+- Formazioni o numeri inseriti dallo staff: {lineup_notes}
 - Stile report richiesto: {report_style}
 - Durata stimata clip: {duration} secondi
 - Fotogrammi disponibili: {frame_count}
 - Minuti indicativi dei fotogrammi: {frame_times}
+- Motivo selezione fotogrammi: {frame_meta}
 - Note staff: {notes}
 - Linee tattiche selezionate dall'utente: {tactical_lines}
 
@@ -112,6 +130,8 @@ Produci un report tecnico in italiano per un mister di calcio dilettantistico.
 Sii utile, concreto e prudente: se un dettaglio non e' visibile, dichiaralo come limite.
 Usa i minuti indicativi quando commenti un episodio, senza inventare cronologia non visibile.
 Se sono presenti linee tattiche selezionate, usale come priorita di lettura: commenta reparto, fase, distanze e spazio tra linee senza fingere misurazioni automatiche.
+Se sono presenti squadre, moduli o formazioni, usali per associare meglio ruoli e reparti. Non inventare nomi di giocatori non forniti; se un numero o volto non e' leggibile, dichiaralo.
+Per il focus richiesto, commenta prima i fotogrammi coerenti con quella fase e spiega se qualche frame e' poco adatto alla lettura tattica.
 La sezione 9 deve essere concreta e breve: indica solo i dati mancanti o le verifiche utili per migliorare la prossima analisi. Non scrivere frasi da assistente come "se desideri posso approfondire" e non chiudere con separatori o inviti generici.
 
 Formato richiesto:
@@ -139,6 +159,20 @@ def _format_tactical_lines(lines: List[dict]) -> str:
         frame_prefix = f"{frame_label}, " if frame_label else ""
         safe_lines.append(f"{frame_prefix}{phase} - {team} a {time_label}")
     return "; ".join(safe_lines) if safe_lines else "nessuna linea selezionata"
+
+
+def _format_frame_meta(items: List[dict], frame_count: int) -> str:
+    safe_items = []
+    for index, item in enumerate((items or [])[:frame_count]):
+        label = _clean_text(item.get("label", ""), 60) or "lettura tattica"
+        score = item.get("score", "")
+        green = item.get("green_ratio", "")
+        try:
+            score_label = str(round(float(score), 1))
+        except Exception:
+            score_label = "-"
+        safe_items.append(f"Frame {index + 1}: {label}, score {score_label}, campo {green}")
+    return "; ".join(safe_items) if safe_items else "non disponibili"
 
 
 def _sanitize_video_report(report: str) -> str:
@@ -365,6 +399,8 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
         ["Categoria", _clean_text(data.category, 80) or "-"],
         ["Focus", _clean_text(data.focus, 120) or "-"],
         ["Squadra osservata", _clean_text(data.observed_team, 160) or "-"],
+        ["Casa / modulo", f"{_clean_text(data.home_team, 120) or '-'} / {_clean_text(data.home_formation, 40) or '-'}"],
+        ["Trasferta / modulo", f"{_clean_text(data.away_team, 120) or '-'} / {_clean_text(data.away_formation, 40) or '-'}"],
         ["Stile report", _clean_text(data.report_style, 120) or "-"],
         ["Fotogrammi analizzati", str(frame_count)],
         ["Durata clip", duration],
@@ -460,8 +496,14 @@ def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: st
         payload={
             "duration_seconds": data.duration_seconds,
             "frame_times": data.frame_times,
+            "frame_meta": data.frame_meta[:12],
             "notes": _clean_text(data.notes, 1200),
             "tactical_lines": data.tactical_lines[:12],
+            "home_team": _clean_text(data.home_team, 120),
+            "away_team": _clean_text(data.away_team, 120),
+            "home_formation": _clean_text(data.home_formation, 40),
+            "away_formation": _clean_text(data.away_formation, 40),
+            "lineup_notes": _clean_text(data.lineup_notes, 1400),
         },
     )
 

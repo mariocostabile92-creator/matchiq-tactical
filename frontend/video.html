@@ -682,9 +682,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10450">Home</a>
-        <a class="btn dark" href="/coach.html?v=10450">Coach</a>
-        <a class="btn dark" href="/account.html?v=10450">Account</a>
+        <a class="btn dark" href="/index.html?v=10451">Home</a>
+        <a class="btn dark" href="/coach.html?v=10451">Coach</a>
+        <a class="btn dark" href="/account.html?v=10451">Account</a>
     </nav>
 </header>
 
@@ -754,7 +754,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10450">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10451">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -764,7 +764,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10450">Scopri piano club</a>
+                    <a href="/account.html?v=10451">Scopri piano club</a>
                 </div>
             </div>
 
@@ -794,6 +794,11 @@ video{
                     <label>Focus analisi</label>
                     <select id="videoFocus">
                         <option>Analisi tattica generale</option>
+                        <option>Linea difensiva</option>
+                        <option>Linea centrocampo</option>
+                        <option>Linea offensiva</option>
+                        <option>Ampiezza</option>
+                        <option>Spazio tra reparti</option>
                         <option>Fase difensiva</option>
                         <option>Fase offensiva</option>
                         <option>Pressing e transizioni</option>
@@ -814,6 +819,22 @@ video{
                     <input id="observedTeam" placeholder="Es. squadra in maglia verde" />
                 </div>
                 <div class="field">
+                    <label>Squadra casa</label>
+                    <input id="homeTeamName" placeholder="Es. Bayern U19" />
+                </div>
+                <div class="field">
+                    <label>Modulo casa</label>
+                    <input id="homeFormation" placeholder="Es. 4-3-3" />
+                </div>
+                <div class="field">
+                    <label>Squadra trasferta</label>
+                    <input id="awayTeamName" placeholder="Es. Manchester U19" />
+                </div>
+                <div class="field">
+                    <label>Modulo trasferta</label>
+                    <input id="awayFormation" placeholder="Es. 4-2-3-1" />
+                </div>
+                <div class="field">
                     <label>Stile report</label>
                     <select id="reportStyle">
                         <option>Report staff completo</option>
@@ -821,6 +842,10 @@ video{
                         <option>Indicazioni per allenamento</option>
                         <option>Messaggio semplice per squadra</option>
                     </select>
+                </div>
+                <div class="field full">
+                    <label>Formazioni / numeri giocatori</label>
+                    <textarea id="lineupNotes" placeholder="Es. Casa: 1 Rossi, 4 Bianchi, 9 Verdi. Trasferta: 1 Smith, 6 Brown, 11 Green. Se non li conosci lascia vuoto."></textarea>
                 </div>
                 <div class="field full">
                     <label>Note staff</label>
@@ -957,6 +982,7 @@ const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
 let extractedFrameTimes = [];
+let extractedFrameMeta = [];
 let latestPdfBase64 = "";
 let cloudArchive = [];
 let tacticalMode = false;
@@ -1015,7 +1041,7 @@ function renderFramesGrid(){
     framesGrid.innerHTML = extractedFrames.map((frame,i) => `
         <button type="button" class="frame-card ${i === selectedFrameIndex ? "active" : ""}" onclick="selectTacticalFrame(${i})">
             <img src="${frame}" alt="Frame ${i+1}">
-            <span>Frame ${i+1} - ${formatTime(extractedFrameTimes[i])}</span>
+            <span>Frame ${i+1} - ${formatTime(extractedFrameTimes[i])}${extractedFrameMeta[i]?.label ? ` - ${escapeHtml(extractedFrameMeta[i].label)}` : ""}</span>
         </button>
     `).join("");
 }
@@ -1600,6 +1626,7 @@ videoInput.addEventListener("change", () => {
     const file = videoInput.files && videoInput.files[0];
     extractedFrames = [];
     extractedFrameTimes = [];
+    extractedFrameMeta = [];
     tacticalLines = [];
     tacticalPendingPoint = null;
     tacticalMode = false;
@@ -1679,6 +1706,111 @@ function seekVideo(video,time){
     });
 }
 
+function normalizeFocus(value){
+    return String(value || "").toLowerCase();
+}
+
+function tacticalFrameLabel(focus, greenRatio, whiteRatio, edgeScore){
+    const f = normalizeFocus(focus);
+    if(greenRatio < .18) return "scartato: poco campo";
+    if(f.includes("pressing") || f.includes("transizion")) return "azione/pressione";
+    if(f.includes("ampiezza")) return "ampiezza campo";
+    if(f.includes("spazio") || f.includes("repart")) return "spazi tra reparti";
+    if(f.includes("linea")) return "linea/reparto";
+    if(whiteRatio > .018 || edgeScore > .08) return "campo aperto";
+    return "lettura tattica";
+}
+
+function scoreTacticalFrame(ctx, width, height, time, duration, focus){
+    const data = ctx.getImageData(0,0,width,height).data;
+    const step = 8;
+    let samples = 0;
+    let green = 0;
+    let white = 0;
+    let dark = 0;
+    let upperGreen = 0;
+    let lowerGreen = 0;
+    let centerGreen = 0;
+    let edge = 0;
+    let previousLum = null;
+
+    for(let y=0;y<height;y+=step){
+        for(let x=0;x<width;x+=step){
+            const index = (y * width + x) * 4;
+            const r = data[index];
+            const g = data[index+1];
+            const b = data[index+2];
+            const lum = (r + g + b) / 3;
+            const isGreen = g > r * 1.08 && g > b * 1.05 && g > 45;
+            const isWhite = r > 180 && g > 180 && b > 180;
+            samples++;
+            if(isGreen){
+                green++;
+                if(y < height * .46) upperGreen++;
+                if(y > height * .54) lowerGreen++;
+                if(x > width * .25 && x < width * .75) centerGreen++;
+            }
+            if(isWhite) white++;
+            if(lum < 45) dark++;
+            if(previousLum !== null && Math.abs(lum - previousLum) > 42) edge++;
+            previousLum = lum;
+        }
+    }
+
+    const greenRatio = green / Math.max(1,samples);
+    const whiteRatio = white / Math.max(1,samples);
+    const darkRatio = dark / Math.max(1,samples);
+    const edgeScore = edge / Math.max(1,samples);
+    const verticalBalance = 1 - Math.abs(upperGreen - lowerGreen) / Math.max(1,green);
+    const centerPitch = centerGreen / Math.max(1,green);
+    const closeupPenalty = greenRatio < .18 ? 42 : greenRatio < .28 ? 18 : 0;
+    const overlayPenalty = darkRatio > .28 ? 8 : 0;
+    const earlyLatePenalty = (time < duration * .03 || time > duration * .97) ? 8 : 0;
+    const f = normalizeFocus(focus);
+    let focusBonus = 0;
+
+    if(f.includes("linea") || f.includes("difens") || f.includes("offens") || f.includes("centrocampo")){
+        focusBonus += greenRatio * 48 + whiteRatio * 420 + verticalBalance * 18 + centerPitch * 10;
+    }else if(f.includes("ampiezza")){
+        focusBonus += greenRatio * 55 + verticalBalance * 18 + (1 - Math.abs(centerPitch - .48)) * 18;
+    }else if(f.includes("spazio") || f.includes("repart")){
+        focusBonus += greenRatio * 52 + verticalBalance * 24 + edgeScore * 90;
+    }else if(f.includes("pressing") || f.includes("transizion")){
+        focusBonus += greenRatio * 36 + edgeScore * 115 + whiteRatio * 220;
+    }else{
+        focusBonus += greenRatio * 45 + whiteRatio * 250 + edgeScore * 65 + verticalBalance * 12;
+    }
+
+    const score = focusBonus - closeupPenalty - overlayPenalty - earlyLatePenalty;
+    return {
+        score,
+        green_ratio: Number(greenRatio.toFixed(3)),
+        white_ratio: Number(whiteRatio.toFixed(3)),
+        edge_score: Number(edgeScore.toFixed(3)),
+        label: tacticalFrameLabel(focus, greenRatio, whiteRatio, edgeScore)
+    };
+}
+
+function selectBestTacticalCandidates(candidates, count, duration){
+    const sorted = [...candidates].sort((a,b) => b.meta.score - a.meta.score);
+    const selected = [];
+    const minGap = Math.max(8, duration / Math.max(8, count * 1.8));
+
+    for(const candidate of sorted){
+        if(selected.length >= count) break;
+        if(candidate.meta.green_ratio < .14 && sorted.some(item => item.meta.green_ratio >= .22)) continue;
+        const tooClose = selected.some(item => Math.abs(item.time - candidate.time) < minGap);
+        if(!tooClose) selected.push(candidate);
+    }
+
+    for(const candidate of sorted){
+        if(selected.length >= count) break;
+        if(!selected.includes(candidate)) selected.push(candidate);
+    }
+
+    return selected.slice(0,count).sort((a,b) => a.time - b.time);
+}
+
 async function extractFrames(){
     if(!videoPreview.src){
         showStatus("Carica prima un video.", "warn");
@@ -1689,10 +1821,11 @@ async function extractFrames(){
     analyzeBtn.disabled = true;
     extractedFrames = [];
     extractedFrameTimes = [];
+    extractedFrameMeta = [];
     framesGrid.innerHTML = "";
     latestPdfBase64 = "";
     downloadPdfBtn.disabled = true;
-    showStatus("Estraggo fotogrammi dalla clip...", "warn");
+    showStatus("Analizzo la clip e cerco i fotogrammi piu coerenti con il focus scelto...", "warn");
 
     await new Promise(resolve => {
         if(videoPreview.readyState >= 1) resolve();
@@ -1717,14 +1850,27 @@ async function extractFrames(){
     canvas.width = Math.round(sourceWidth * ratio);
     canvas.height = Math.round(sourceHeight * ratio);
 
-    for(let i=0;i<count;i++){
-        const t = duration * ((i + 1) / (count + 1));
+    const focus = document.getElementById("videoFocus").value;
+    const candidateCount = Math.min(32, Math.max(count * 4, 16));
+    const candidates = [];
+
+    for(let i=0;i<candidateCount;i++){
+        const t = duration * ((i + 1) / (candidateCount + 1));
         await seekVideo(videoPreview,t);
         ctx.drawImage(videoPreview,0,0,canvas.width,canvas.height);
         const frame = canvas.toDataURL("image/jpeg",0.72);
-        extractedFrames.push(frame);
-        extractedFrameTimes.push(Math.round(t));
+        const meta = scoreTacticalFrame(ctx, canvas.width, canvas.height, t, duration, focus);
+        candidates.push({
+            frame,
+            time: Math.round(t),
+            meta
+        });
     }
+
+    const selectedCandidates = selectBestTacticalCandidates(candidates, count, duration);
+    extractedFrames = selectedCandidates.map(item => item.frame);
+    extractedFrameTimes = selectedCandidates.map(item => item.time);
+    extractedFrameMeta = selectedCandidates.map(item => item.meta);
 
     selectedFrameIndex = extractedFrames.length ? 0 : -1;
     updateSelectedFrameLabel();
@@ -1733,7 +1879,7 @@ async function extractFrames(){
     analyzeBtn.disabled = extractedFrames.length < 2;
     extractBtn.disabled = false;
     updateReportMeta("frames");
-    showStatus(`${extractedFrames.length} fotogrammi estratti. Scegli un frame sotto al video e traccia le linee che ti interessano.`, "ok");
+    showStatus(`${extractedFrames.length} fotogrammi selezionati per "${focus}". Scegli un frame sotto al video e traccia le linee che ti interessano.`, "ok");
 }
 
 async function analyzeVideo(){
@@ -1753,10 +1899,16 @@ async function analyzeVideo(){
         category: document.getElementById("videoCategory").value,
         focus: document.getElementById("videoFocus").value,
         observed_team: document.getElementById("observedTeam").value.trim(),
+        home_team: document.getElementById("homeTeamName").value.trim(),
+        away_team: document.getElementById("awayTeamName").value.trim(),
+        home_formation: document.getElementById("homeFormation").value.trim(),
+        away_formation: document.getElementById("awayFormation").value.trim(),
+        lineup_notes: document.getElementById("lineupNotes").value.trim(),
         report_style: document.getElementById("reportStyle").value,
         notes: document.getElementById("videoNotes").value.trim(),
         duration_seconds: videoPreview.duration || 0,
         frame_times: extractedFrameTimes,
+        frame_meta: extractedFrameMeta,
         frames: extractedFrames,
         tactical_lines: buildTacticalNotes()
     };
