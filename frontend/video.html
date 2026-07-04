@@ -176,12 +176,33 @@ video{
 }
 .video-shell.has-video video{display:block}
 .video-shell.has-video .video-empty{display:none}
+.video-shell:fullscreen,
+.video-shell.matchiq-fullscreen{
+    width:100vw;
+    height:100vh;
+    max-width:none;
+    margin:0;
+    border:0;
+    border-radius:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#000;
+}
+.video-shell:fullscreen video,
+.video-shell.matchiq-fullscreen video{
+    width:100vw;
+    height:100vh;
+    max-height:none;
+    aspect-ratio:auto;
+}
 .tactical-canvas{
     position:absolute;
     inset:0;
     width:100%;
     height:100%;
     pointer-events:none;
+    touch-action:none;
     display:none;
     z-index:3;
 }
@@ -194,6 +215,54 @@ video{
     pointer-events:auto;
     cursor:crosshair;
 }
+.fullscreen-tools{
+    position:absolute;
+    left:50%;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 18px);
+    transform:translateX(-50%);
+    z-index:6;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:10px;
+    border-radius:999px;
+    background:rgba(4,8,18,.72);
+    border:1px solid rgba(255,255,255,.18);
+    backdrop-filter:blur(16px);
+}
+.video-shell:fullscreen .fullscreen-tools,
+.video-shell.matchiq-fullscreen .fullscreen-tools{display:flex}
+.video-shell:fullscreen .tactical-canvas,
+.video-shell.matchiq-fullscreen .tactical-canvas{
+    z-index:5;
+}
+.video-shell:fullscreen.has-video.tactical-visible .tactical-canvas,
+.video-shell.matchiq-fullscreen.has-video.tactical-visible .tactical-canvas,
+.video-shell:fullscreen.has-video.tactical-active .tactical-canvas,
+.video-shell.matchiq-fullscreen.has-video.tactical-active .tactical-canvas{
+    display:block;
+}
+.fullscreen-hint{
+    position:absolute;
+    left:50%;
+    top:calc(env(safe-area-inset-top,0px) + 18px);
+    transform:translateX(-50%);
+    z-index:6;
+    display:none;
+    max-width:min(680px,calc(100vw - 32px));
+    padding:10px 14px;
+    border-radius:999px;
+    background:rgba(4,8,18,.68);
+    border:1px solid rgba(0,245,160,.26);
+    color:#dfffee;
+    font-size:13px;
+    font-weight:900;
+    text-align:center;
+    backdrop-filter:blur(16px);
+}
+.video-shell:fullscreen .fullscreen-hint,
+.video-shell.matchiq-fullscreen .fullscreen-hint{display:block}
 .tactical-tools{
     display:none;
     margin-top:14px;
@@ -694,9 +763,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10453">Home</a>
-        <a class="btn dark" href="/coach.html?v=10453">Coach</a>
-        <a class="btn dark" href="/account.html?v=10453">Account</a>
+        <a class="btn dark" href="/index.html?v=10454">Home</a>
+        <a class="btn dark" href="/coach.html?v=10454">Coach</a>
+        <a class="btn dark" href="/account.html?v=10454">Account</a>
     </nav>
 </header>
 
@@ -766,7 +835,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10453">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10454">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -776,7 +845,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10453">Scopri piano club</a>
+                    <a href="/account.html?v=10454">Scopri piano club</a>
                 </div>
             </div>
 
@@ -875,6 +944,13 @@ video{
                     </div>
                     <video id="videoPreview" controls playsinline></video>
                     <canvas id="tacticalCanvas" class="tactical-canvas"></canvas>
+                    <div id="fullscreenHint" class="fullscreen-hint">Metti in pausa, scegli "Pausa e traccia" e clicca due punti sul video.</div>
+                    <div id="fullscreenTools" class="fullscreen-tools">
+                        <button id="fullscreenPlayBtn" class="btn dark small" type="button" onclick="toggleVideoPlayback()">Play</button>
+                        <button id="fullscreenTraceBtn" class="btn small" type="button" onclick="toggleTacticalMode()">Pausa e traccia</button>
+                        <button class="btn dark small" type="button" onclick="clearTacticalLines()">Pulisci</button>
+                        <button class="btn red small" type="button" onclick="exitVideoFullscreen()">Esci</button>
+                    </div>
                 </div>
                 <div id="tacticalTools" class="tactical-tools">
                     <div class="tactical-head">
@@ -884,6 +960,7 @@ video{
                         </div>
                         <div class="tactical-actions">
                             <button id="videoPlayBtn" class="btn dark small" type="button" onclick="toggleVideoPlayback()">Play video</button>
+                            <button id="videoFullscreenBtn" class="btn dark small" type="button" onclick="enterVideoFullscreen()">Schermo intero analisi</button>
                             <button class="btn dark small" type="button" onclick="clearTacticalLines()">Pulisci linee</button>
                         </div>
                     </div>
@@ -1009,6 +1086,7 @@ let cloudArchive = [];
 let tacticalMode = false;
 let tacticalLines = [];
 let tacticalPendingPoint = null;
+let suppressCanvasClick = false;
 let selectedFrameIndex = -1;
 let tacticalViewMode = "selected";
 
@@ -1032,6 +1110,9 @@ const tacticalToggleBtn = document.getElementById("tacticalToggleBtn");
 const selectedFrameBtn = document.getElementById("selectedFrameBtn");
 const tacticalViewModeSelect = document.getElementById("tacticalViewMode");
 const videoPlayBtn = document.getElementById("videoPlayBtn");
+const fullscreenPlayBtn = document.getElementById("fullscreenPlayBtn");
+const fullscreenTraceBtn = document.getElementById("fullscreenTraceBtn");
+const videoFullscreenBtn = document.getElementById("videoFullscreenBtn");
 const aiLinePanel = document.getElementById("aiLinePanel");
 const aiLineText = document.getElementById("aiLineText");
 const applyAiLinesBtn = document.getElementById("applyAiLinesBtn");
@@ -1173,6 +1254,8 @@ function updateTacticalCanvasVisibility(){
     videoShell.classList.toggle("tactical-visible", shouldShow);
     if(tacticalToggleBtn) tacticalToggleBtn.textContent = tacticalMode ? "Chiudi disegno" : "Pausa e traccia";
     if(videoPlayBtn) videoPlayBtn.textContent = videoPreview && !videoPreview.paused ? "Pausa video" : "Play video";
+    if(fullscreenTraceBtn) fullscreenTraceBtn.textContent = tacticalMode ? "Chiudi disegno" : "Pausa e traccia";
+    if(fullscreenPlayBtn) fullscreenPlayBtn.textContent = videoPreview && !videoPreview.paused ? "Pausa" : "Play";
 }
 
 function resizeTacticalCanvas(){
@@ -1223,6 +1306,41 @@ function toggleVideoPlayback(){
     }else{
         videoPreview.pause();
     }
+}
+
+function isVideoFullscreen(){
+    return document.fullscreenElement === videoShell || videoShell.classList.contains("matchiq-fullscreen");
+}
+
+async function enterVideoFullscreen(){
+    if(!videoPreview || !videoPreview.src){
+        showStatus("Carica prima un video.", "warn");
+        return;
+    }
+    try{
+        if(videoShell.requestFullscreen){
+            await videoShell.requestFullscreen();
+        }else if(videoShell.webkitRequestFullscreen){
+            videoShell.webkitRequestFullscreen();
+        }else{
+            videoShell.classList.add("matchiq-fullscreen");
+        }
+    }catch(err){
+        videoShell.classList.add("matchiq-fullscreen");
+    }
+    setTimeout(() => {
+        resizeTacticalCanvas();
+        updateTacticalCanvasVisibility();
+    }, 120);
+}
+
+async function exitVideoFullscreen(){
+    if(document.fullscreenElement && document.exitFullscreen){
+        await document.exitFullscreen().catch(() => {});
+    }
+    videoShell.classList.remove("matchiq-fullscreen");
+    resizeTacticalCanvas();
+    updateTacticalCanvasVisibility();
 }
 
 function getCanvasPoint(event){
@@ -1466,6 +1584,14 @@ function apiHeaders(){
     const headers = {"Content-Type":"application/json","Accept":"application/json"};
     if(token) headers.Authorization = `Bearer ${token}`;
     return headers;
+}
+
+function getApiErrorMessage(data, fallback="Operazione non riuscita"){
+    const detail = data && typeof data === "object" ? data.detail : null;
+    if(detail && typeof detail === "object"){
+        return detail.message || detail.reason || fallback;
+    }
+    return detail || data?.message || fallback;
 }
 
 function getArchive(){
@@ -1742,9 +1868,26 @@ videoInput.addEventListener("change", () => {
     showStatus("Video pronto. Ora estrai i fotogrammi.", "ok");
 });
 
-tacticalCanvas.addEventListener("click", handleTacticalCanvasClick);
+tacticalCanvas.addEventListener("click", event => {
+    if(suppressCanvasClick) return;
+    handleTacticalCanvasClick(event);
+});
+tacticalCanvas.addEventListener("pointerdown", event => {
+    if(!tacticalMode) return;
+    event.preventDefault();
+    suppressCanvasClick = true;
+    setTimeout(() => { suppressCanvasClick = false; }, 250);
+    handleTacticalCanvasClick(event);
+});
 tacticalCanvas.addEventListener("mousemove", event => {
     if(tacticalMode && tacticalPendingPoint) drawTacticalLines(getCanvasPoint(event));
+});
+document.addEventListener("fullscreenchange", () => {
+    videoShell.classList.remove("matchiq-fullscreen");
+    setTimeout(() => {
+        resizeTacticalCanvas();
+        updateTacticalCanvasVisibility();
+    }, 120);
 });
 videoPreview.addEventListener("loadedmetadata", resizeTacticalCanvas);
 videoPreview.addEventListener("play", () => {
@@ -1915,8 +2058,13 @@ async function selectCandidatesWithAI(candidates, count, duration, focus){
         body:JSON.stringify(payload)
     });
 
-    if(!res.ok) throw new Error("Selezione AI non disponibile");
     const data = await res.json();
+    if(!res.ok){
+        const message = getApiErrorMessage(data, "Selezione AI non disponibile");
+        const err = new Error(message);
+        err.stopExtraction = res.status === 401 || res.status === 402;
+        throw err;
+    }
     const selectedIndexes = Array.isArray(data.selected_indexes) ? data.selected_indexes : [];
     const selected = [];
 
@@ -2007,6 +2155,12 @@ async function extractFrames(){
         showStatus("Chiedo all'AI di scegliere i frame piu adatti alla fase selezionata...", "warn");
         selectedCandidates = await selectCandidatesWithAI(candidates, count, duration, focus);
     }catch(err){
+        if(err.stopExtraction){
+            extractBtn.disabled = false;
+            analyzeBtn.disabled = true;
+            showStatus(err.message || "Limite video AI raggiunto.", "err");
+            return;
+        }
         selectedCandidates = null;
     }
     if(!selectedCandidates){
@@ -2080,7 +2234,7 @@ async function analyzeVideo(){
 
         const data = await res.json();
         if(!res.ok || data.ok === false){
-            const message = data.detail || data.message || "Analisi non riuscita";
+            const message = getApiErrorMessage(data, "Analisi non riuscita");
             const lower = String(message).toLowerCase();
 
             if(res.status === 402 || lower.includes("quota") || lower.includes("billing") || lower.includes("credito")){

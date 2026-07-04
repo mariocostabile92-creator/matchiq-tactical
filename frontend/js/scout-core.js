@@ -1,5 +1,5 @@
 /* MatchIQ Scout - Core Module V8.1.2 SaaS Free/Pro Runtime */
-const APP_VERSION = "10453";
+const APP_VERSION = "10454";
 
 document.addEventListener("DOMContentLoaded", async () => {
   try{
@@ -117,7 +117,7 @@ function normalizeAccountLimits(data){
     is_pro: isPro,
     scout_enabled: Boolean(isPro || limits.scout_enabled),
     scout_preview: !isPro,
-    scout_max_players: Number(limits.scout_max_players ?? (isPro ? 999 : 4)),
+    scout_max_players: Number(limits.scout_max_players - (isPro ? 999 : 4)),
     export_enabled: Boolean(isPro || limits.export_enabled),
     watchlist_enabled: Boolean(isPro || limits.watchlist_enabled),
     simulate_enabled: Boolean(isPro || limits.simulate_enabled)

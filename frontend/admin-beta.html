@@ -161,7 +161,7 @@ td{color:#eaf0ff;font-size:14px}
 </div>
 
 <script>
-const APP_VERSION = "10453";
+const APP_VERSION = "10454";
 const VALID_STATUSES = ["Nuovo","Contattato","Interessato","Convertito","Scartato"];
 let betaRequests = [];
 
@@ -677,7 +677,7 @@ function formatDate(value){
 }
 
 function esc(value){
-  return String(value??"")
+  return String(value-"")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")

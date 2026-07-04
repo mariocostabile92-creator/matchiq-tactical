@@ -732,31 +732,39 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
             detail="Servono almeno 2 fotogrammi validi per analizzare la clip"
         )
 
-    usage = None
-    if user:
-        usage = can_use_feature(user["id"], "video_report")
-        if not usage.get("allowed"):
-            raise HTTPException(
-                status_code=402,
-                detail={
-                    "success": False,
-                    "allowed": False,
-                    "upgrade_required": True,
-                    "feature": "video_report",
-                    "plan": usage.get("plan"),
-                    "used": usage.get("used", 0),
-                    "limit": usage.get("limit", 0),
-                    "message": "Hai raggiunto il limite giornaliero per i report video AI."
-                }
-            )
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "success": False,
+                "allowed": False,
+                "login_required": True,
+                "message": "Accedi o registrati per generare report video AI."
+            }
+        )
+
+    usage = can_use_feature(user["id"], "video_report")
+    if not usage.get("allowed"):
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "success": False,
+                "allowed": False,
+                "upgrade_required": True,
+                "feature": "video_report",
+                "plan": usage.get("plan"),
+                "used": usage.get("used", 0),
+                "limit": usage.get("limit", 0),
+                "message": "Hai raggiunto il limite giornaliero per i report video AI. Passa a Pro per continuare."
+            }
+        )
 
     prompt = _build_prompt(data, len(frames))
     report = _sanitize_video_report(_call_openai(prompt, frames))
     title = _clean_text(data.title, 180) or "Video Report MatchIQ"
     pdf_base64 = _build_pdf_base64(title, report, data, len(frames))
-    if user:
-        track_api_usage(user["id"], "/api/video/analyze", "video_report")
-    cloud_save = _save_cloud_report_for_user(user, data, report, pdf_base64, len(frames)) if user else None
+    track_api_usage(user["id"], "/api/video/analyze", "video_report")
+    cloud_save = _save_cloud_report_for_user(user, data, report, pdf_base64, len(frames))
 
     return {
         "ok": True,
@@ -784,6 +792,33 @@ def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_u
         raise HTTPException(
             status_code=400,
             detail="Servono almeno 2 fotogrammi candidati per la selezione AI"
+        )
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "success": False,
+                "allowed": False,
+                "login_required": True,
+                "message": "Accedi o registrati per usare la selezione AI dei frame."
+            }
+        )
+
+    usage = can_use_feature(user["id"], "video_report")
+    if not usage.get("allowed"):
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "success": False,
+                "allowed": False,
+                "upgrade_required": True,
+                "feature": "video_report",
+                "plan": usage.get("plan"),
+                "used": usage.get("used", 0),
+                "limit": usage.get("limit", 0),
+                "message": "Hai raggiunto il limite giornaliero per i video AI. Passa a Pro per continuare."
+            }
         )
 
     result = _call_openai_frame_selector(data, frames)
@@ -821,9 +856,6 @@ def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_u
             "player_read": _clean_text(note.get("player_read", ""), 180),
             "line_suggestions": _normalize_line_suggestions(note.get("line_suggestions") or []),
         }
-
-    if user:
-        track_api_usage(user["id"], "/api/video/select-frames", "video_report")
 
     return {
         "ok": True,
