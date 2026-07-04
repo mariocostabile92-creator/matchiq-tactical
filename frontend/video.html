@@ -185,6 +185,10 @@ video{
     display:none;
     z-index:3;
 }
+.video-shell.has-video.tactical-visible .tactical-canvas{
+    display:block;
+    pointer-events:none;
+}
 .video-shell.has-video.tactical-active .tactical-canvas{
     display:block;
     pointer-events:auto;
@@ -205,6 +209,12 @@ video{
     align-items:center;
     gap:12px;
     margin-bottom:12px;
+}
+.tactical-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
 }
 .tactical-head strong{font-size:15px}
 .tactical-head span{display:block;color:var(--muted);font-size:12px;margin-top:3px;line-height:1.4}
@@ -672,9 +682,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10449">Home</a>
-        <a class="btn dark" href="/coach.html?v=10449">Coach</a>
-        <a class="btn dark" href="/account.html?v=10449">Account</a>
+        <a class="btn dark" href="/index.html?v=10450">Home</a>
+        <a class="btn dark" href="/coach.html?v=10450">Coach</a>
+        <a class="btn dark" href="/account.html?v=10450">Account</a>
     </nav>
 </header>
 
@@ -744,7 +754,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10449">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10450">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -754,7 +764,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10449">Scopri piano club</a>
+                    <a href="/account.html?v=10450">Scopri piano club</a>
                 </div>
             </div>
 
@@ -835,7 +845,10 @@ video{
                             <strong>Linee tattiche interattive</strong>
                             <span>Seleziona un fotogramma sotto al video, scegli cosa controllare e clicca due punti sul video per tracciare la linea.</span>
                         </div>
-                        <button class="btn dark small" type="button" onclick="clearTacticalLines()">Pulisci linee</button>
+                        <div class="tactical-actions">
+                            <button id="videoPlayBtn" class="btn dark small" type="button" onclick="toggleVideoPlayback()">Play video</button>
+                            <button class="btn dark small" type="button" onclick="clearTacticalLines()">Pulisci linee</button>
+                        </div>
                     </div>
                     <div class="tactical-grid">
                         <div class="field">
@@ -879,7 +892,7 @@ video{
                         </div>
                         <div class="field">
                             <label>Stato</label>
-                            <button id="tacticalToggleBtn" class="btn dark" type="button" onclick="toggleTacticalMode()">Attiva linee</button>
+                            <button id="tacticalToggleBtn" class="btn dark" type="button" onclick="toggleTacticalMode()">Pausa e traccia</button>
                         </div>
                     </div>
                     <div id="tacticalLineList" class="tactical-list"></div>
@@ -971,6 +984,7 @@ const tacticalLineList = document.getElementById("tacticalLineList");
 const tacticalToggleBtn = document.getElementById("tacticalToggleBtn");
 const selectedFrameBtn = document.getElementById("selectedFrameBtn");
 const tacticalViewModeSelect = document.getElementById("tacticalViewMode");
+const videoPlayBtn = document.getElementById("videoPlayBtn");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -1045,8 +1059,18 @@ function setTacticalViewMode(value){
 }
 
 function getVisibleTacticalLines(){
+    if(videoPreview && !videoPreview.paused && !tacticalMode) return [];
     if(tacticalViewMode === "all" || selectedFrameIndex < 0) return tacticalLines;
     return tacticalLines.filter(line => Number(line.frame_index) === selectedFrameIndex);
+}
+
+function updateTacticalCanvasVisibility(){
+    if(!videoShell) return;
+    const shouldShow = tacticalMode || (videoPreview && videoPreview.paused && tacticalLines.length > 0);
+    videoShell.classList.toggle("tactical-active", tacticalMode);
+    videoShell.classList.toggle("tactical-visible", shouldShow);
+    if(tacticalToggleBtn) tacticalToggleBtn.textContent = tacticalMode ? "Chiudi disegno" : "Pausa e traccia";
+    if(videoPlayBtn) videoPlayBtn.textContent = videoPreview && !videoPreview.paused ? "Pausa video" : "Play video";
 }
 
 function resizeTacticalCanvas(){
@@ -1063,8 +1087,6 @@ function resizeTacticalCanvas(){
 
 function toggleTacticalMode(){
     tacticalMode = !tacticalMode;
-    videoShell.classList.toggle("tactical-active", tacticalMode);
-    if(tacticalToggleBtn) tacticalToggleBtn.textContent = tacticalMode ? "Disattiva linee" : "Attiva linee";
     tacticalPendingPoint = null;
     if(tacticalMode){
         if(extractedFrameTimes.length && selectedFrameIndex < 0){
@@ -1072,9 +1094,32 @@ function toggleTacticalMode(){
         }
         videoPreview.pause();
         resizeTacticalCanvas();
+        updateTacticalCanvasVisibility();
         showStatus(`Linee attive su ${getSelectedFrameLabel()}: clicca due punti sul video.`, "ok");
     }else{
+        updateTacticalCanvasVisibility();
+        drawTacticalLines();
         showStatus("Modalita linee disattivata. Le linee restano salvate per il report.", "ok");
+    }
+}
+
+function closeTacticalDrawingForPlayback(){
+    tacticalMode = false;
+    tacticalPendingPoint = null;
+    updateTacticalCanvasVisibility();
+    drawTacticalLines();
+}
+
+function toggleVideoPlayback(){
+    if(!videoPreview || !videoPreview.src){
+        showStatus("Carica prima un video.", "warn");
+        return;
+    }
+    if(videoPreview.paused){
+        closeTacticalDrawingForPlayback();
+        videoPreview.play().catch(() => showStatus("Il browser ha bloccato il play automatico. Premi play nel video.", "warn"));
+    }else{
+        videoPreview.pause();
     }
 }
 
@@ -1107,6 +1152,7 @@ function handleTacticalCanvasClick(event){
     tacticalPendingPoint = null;
     renderTacticalLineList();
     drawTacticalLines();
+    updateTacticalCanvasVisibility();
     showStatus(`${context.phase} tracciata su ${getSelectedFrameLabel()}.`, "ok");
 }
 
@@ -1116,6 +1162,11 @@ function drawTacticalLines(previewPoint=null){
     const w = tacticalCanvas.width;
     const h = tacticalCanvas.height;
     ctx.clearRect(0,0,w,h);
+
+    if(videoPreview && !videoPreview.paused && !tacticalMode){
+        updateTacticalCanvasVisibility();
+        return;
+    }
 
     getVisibleTacticalLines().forEach(line => drawOneTacticalLine(ctx,line,w,h));
 
@@ -1176,6 +1227,7 @@ function removeTacticalLine(id){
     tacticalLines = tacticalLines.filter(line => line.id !== id);
     renderTacticalLineList();
     drawTacticalLines();
+    updateTacticalCanvasVisibility();
 }
 
 function clearTacticalLines(){
@@ -1183,6 +1235,7 @@ function clearTacticalLines(){
     tacticalPendingPoint = null;
     renderTacticalLineList();
     drawTacticalLines();
+    updateTacticalCanvasVisibility();
     showStatus("Linee tattiche pulite.", "ok");
 }
 
@@ -1564,6 +1617,7 @@ videoInput.addEventListener("change", () => {
         extractBtn.disabled = true;
         videoShell.classList.remove("has-video");
         videoShell.classList.remove("tactical-active");
+        videoShell.classList.remove("tactical-visible");
         if(tacticalTools) tacticalTools.classList.remove("show");
         updateReportMeta();
         return;
@@ -1573,7 +1627,7 @@ videoInput.addEventListener("change", () => {
     videoPreview.src = selectedVideoUrl;
     videoShell.classList.add("has-video");
     if(tacticalTools) tacticalTools.classList.add("show");
-    if(tacticalToggleBtn) tacticalToggleBtn.textContent = "Attiva linee";
+    updateTacticalCanvasVisibility();
     renderTacticalLineList();
     extractBtn.disabled = false;
     updateReportMeta("video");
@@ -1585,7 +1639,29 @@ tacticalCanvas.addEventListener("mousemove", event => {
     if(tacticalMode && tacticalPendingPoint) drawTacticalLines(getCanvasPoint(event));
 });
 videoPreview.addEventListener("loadedmetadata", resizeTacticalCanvas);
-videoPreview.addEventListener("pause", resizeTacticalCanvas);
+videoPreview.addEventListener("play", () => {
+    closeTacticalDrawingForPlayback();
+    updateTacticalCanvasVisibility();
+});
+videoPreview.addEventListener("pause", () => {
+    if(extractedFrameTimes.length && !tacticalMode){
+        const current = Number(videoPreview.currentTime || 0);
+        let nearest = 0;
+        let bestDistance = Number.POSITIVE_INFINITY;
+        extractedFrameTimes.forEach((time,index) => {
+            const distance = Math.abs(Number(time || 0) - current);
+            if(distance < bestDistance){
+                bestDistance = distance;
+                nearest = index;
+            }
+        });
+        selectedFrameIndex = nearest;
+        updateSelectedFrameLabel();
+        renderFramesGrid();
+    }
+    updateTacticalCanvasVisibility();
+    resizeTacticalCanvas();
+});
 window.addEventListener("resize", resizeTacticalCanvas);
 
 function seekVideo(video,time){
