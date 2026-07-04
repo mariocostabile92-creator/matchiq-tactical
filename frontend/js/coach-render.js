@@ -448,7 +448,7 @@ function renderLineupPitch(){
         <div class="pitch-box-top"></div>
         <div class="pitch-box-bottom"></div>
         <div class="pitch-empty-state" style="display:none;top:10%;font-size:12px;opacity:.78;">
-            ${esc(teamLabel)} Â· ${esc(fieldLabel)}
+            ${esc(teamLabel)} - ${esc(fieldLabel)}
         </div>
     `;
 

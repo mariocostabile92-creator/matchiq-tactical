@@ -112,6 +112,7 @@ Produci un report tecnico in italiano per un mister di calcio dilettantistico.
 Sii utile, concreto e prudente: se un dettaglio non e' visibile, dichiaralo come limite.
 Usa i minuti indicativi quando commenti un episodio, senza inventare cronologia non visibile.
 Se sono presenti linee tattiche selezionate, usale come priorita di lettura: commenta reparto, fase, distanze e spazio tra linee senza fingere misurazioni automatiche.
+La sezione 9 deve essere concreta e breve: indica solo i dati mancanti o le verifiche utili per migliorare la prossima analisi. Non scrivere frasi da assistente come "se desideri posso approfondire" e non chiudere con separatori o inviti generici.
 
 Formato richiesto:
 1. Sintesi video
@@ -122,7 +123,7 @@ Formato richiesto:
 6. Giocatori o zone coinvolte, solo se visibili
 7. Indicazioni per il prossimo allenamento
 8. Messaggio breve per la squadra
-9. Limiti dell'analisi video
+9. Limiti dell'analisi video e prossima verifica
 """.strip()
 
 
@@ -132,10 +133,37 @@ def _format_tactical_lines(lines: List[dict]) -> str:
         phase = _clean_text(item.get("phase", ""), 80) or "Linea tattica"
         team = _clean_text(item.get("team", ""), 80) or "Squadra osservata"
         time_label = _clean_text(item.get("time_label", ""), 20)
+        frame_label = _clean_text(item.get("frame_label", ""), 30)
         if not time_label:
             time_label = _format_seconds(item.get("time_seconds", 0))
-        safe_lines.append(f"{phase} - {team} a {time_label}")
+        frame_prefix = f"{frame_label}, " if frame_label else ""
+        safe_lines.append(f"{frame_prefix}{phase} - {team} a {time_label}")
     return "; ".join(safe_lines) if safe_lines else "nessuna linea selezionata"
+
+
+def _sanitize_video_report(report: str) -> str:
+    blocked_prefixes = (
+        "se desideri",
+        "se vuoi",
+        "posso approfondire",
+        "fammi sapere",
+        "resto a disposizione",
+    )
+    clean_lines = []
+
+    for raw_line in str(report or "").splitlines():
+        line = raw_line.strip()
+        lowered = line.lower()
+        if line in {"---", "--", "***"}:
+            continue
+        if any(lowered.startswith(prefix) for prefix in blocked_prefixes):
+            continue
+        clean_lines.append(raw_line.rstrip())
+
+    compact = "\n".join(clean_lines).strip()
+    while "\n\n\n" in compact:
+        compact = compact.replace("\n\n\n", "\n\n")
+    return compact
 
 
 def _format_seconds(value: float) -> str:
@@ -173,7 +201,8 @@ def _call_openai(prompt: str, frames: List[str]) -> str:
                 "content": (
                     "Sei MatchIQ Video Analyst, un assistente per staff tecnici. "
                     "Analizzi clip calcistiche da fotogrammi e produci report "
-                    "pratici, prudenti e orientati all'allenamento."
+                    "pratici, prudenti e orientati all'allenamento. "
+                    "Non usare chiusure da chatbot o inviti generici."
                 )
             },
             {
@@ -466,7 +495,7 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
             )
 
     prompt = _build_prompt(data, len(frames))
-    report = _call_openai(prompt, frames)
+    report = _sanitize_video_report(_call_openai(prompt, frames))
     title = _clean_text(data.title, 180) or "Video Report MatchIQ"
     pdf_base64 = _build_pdf_base64(title, report, data, len(frames))
     if user:

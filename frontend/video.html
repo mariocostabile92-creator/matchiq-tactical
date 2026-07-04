@@ -252,6 +252,20 @@ video{
     border:1px solid rgba(255,255,255,.10);
     border-radius:14px;
     overflow:hidden;
+    color:#fff;
+    text-align:left;
+    cursor:pointer;
+    padding:0;
+    font:inherit;
+    transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.frame-card:hover{
+    border-color:rgba(0,245,160,.45);
+    transform:translateY(-1px);
+}
+.frame-card.active{
+    border-color:rgba(0,245,160,.90);
+    box-shadow:0 0 0 2px rgba(0,245,160,.20);
 }
 .frame-card img{
     width:100%;
@@ -266,6 +280,7 @@ video{
     font-size:11px;
     font-weight:1000;
 }
+.frame-card.active span{color:#00f5a0}
 .status{
     margin-top:14px;
     padding:13px 14px;
@@ -657,9 +672,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10448">Home</a>
-        <a class="btn dark" href="/coach.html?v=10448">Coach</a>
-        <a class="btn dark" href="/account.html?v=10448">Account</a>
+        <a class="btn dark" href="/index.html?v=10449">Home</a>
+        <a class="btn dark" href="/coach.html?v=10449">Coach</a>
+        <a class="btn dark" href="/account.html?v=10449">Account</a>
     </nav>
 </header>
 
@@ -729,7 +744,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10448">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10449">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -739,7 +754,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10448">Scopri piano club</a>
+                    <a href="/account.html?v=10449">Scopri piano club</a>
                 </div>
             </div>
 
@@ -818,11 +833,15 @@ video{
                     <div class="tactical-head">
                         <div>
                             <strong>Linee tattiche interattive</strong>
-                            <span>Scegli cosa vuoi controllare, poi clicca due punti sul video per tracciare la linea.</span>
+                            <span>Seleziona un fotogramma sotto al video, scegli cosa controllare e clicca due punti sul video per tracciare la linea.</span>
                         </div>
                         <button class="btn dark small" type="button" onclick="clearTacticalLines()">Pulisci linee</button>
                     </div>
                     <div class="tactical-grid">
+                        <div class="field">
+                            <label>Fotogramma</label>
+                            <button id="selectedFrameBtn" class="btn dark" type="button" onclick="selectNearestTacticalFrame()">Scegli frame</button>
+                        </div>
                         <div class="field">
                             <label>Fase / reparto</label>
                             <select id="tacticalPhase">
@@ -849,6 +868,13 @@ video{
                                 <option value="#2f7cff">Blu</option>
                                 <option value="#ffe28a">Giallo</option>
                                 <option value="#ff4058">Rosso</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Mostra linee</label>
+                            <select id="tacticalViewMode" onchange="setTacticalViewMode(this.value)">
+                                <option value="selected">Frame selezionato</option>
+                                <option value="all">Tutti i frame</option>
                             </select>
                         </div>
                         <div class="field">
@@ -923,6 +949,8 @@ let cloudArchive = [];
 let tacticalMode = false;
 let tacticalLines = [];
 let tacticalPendingPoint = null;
+let selectedFrameIndex = -1;
+let tacticalViewMode = "selected";
 
 const videoInput = document.getElementById("videoInput");
 const videoPreview = document.getElementById("videoPreview");
@@ -941,6 +969,8 @@ const tacticalCanvas = document.getElementById("tacticalCanvas");
 const tacticalTools = document.getElementById("tacticalTools");
 const tacticalLineList = document.getElementById("tacticalLineList");
 const tacticalToggleBtn = document.getElementById("tacticalToggleBtn");
+const selectedFrameBtn = document.getElementById("selectedFrameBtn");
+const tacticalViewModeSelect = document.getElementById("tacticalViewMode");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -954,6 +984,69 @@ function getTacticalContext(){
         team: document.getElementById("tacticalTeam")?.value || "Squadra osservata",
         color: document.getElementById("tacticalColor")?.value || "#00f5a0"
     };
+}
+
+function getSelectedFrameLabel(){
+    if(selectedFrameIndex < 0 || typeof extractedFrameTimes[selectedFrameIndex] === "undefined") return "Frame non scelto";
+    return `Frame ${selectedFrameIndex + 1} - ${formatTime(extractedFrameTimes[selectedFrameIndex])}`;
+}
+
+function updateSelectedFrameLabel(){
+    if(!selectedFrameBtn) return;
+    selectedFrameBtn.textContent = selectedFrameIndex >= 0 ? getSelectedFrameLabel() : "Scegli frame";
+}
+
+function renderFramesGrid(){
+    if(!framesGrid) return;
+    framesGrid.innerHTML = extractedFrames.map((frame,i) => `
+        <button type="button" class="frame-card ${i === selectedFrameIndex ? "active" : ""}" onclick="selectTacticalFrame(${i})">
+            <img src="${frame}" alt="Frame ${i+1}">
+            <span>Frame ${i+1} - ${formatTime(extractedFrameTimes[i])}</span>
+        </button>
+    `).join("");
+}
+
+async function selectTacticalFrame(index){
+    if(index < 0 || index >= extractedFrameTimes.length) return;
+    selectedFrameIndex = index;
+    updateSelectedFrameLabel();
+    renderFramesGrid();
+    if(videoPreview.src){
+        videoPreview.pause();
+        await seekVideo(videoPreview, extractedFrameTimes[index]);
+        resizeTacticalCanvas();
+    }
+    showStatus(`${getSelectedFrameLabel()} selezionato. Ora attiva le linee e clicca due punti sul video.`, "ok");
+}
+
+function selectNearestTacticalFrame(){
+    if(!extractedFrameTimes.length){
+        showStatus("Prima estrai i fotogrammi dalla clip.", "warn");
+        return;
+    }
+    const current = Number(videoPreview.currentTime || 0);
+    let nearest = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    extractedFrameTimes.forEach((time,index) => {
+        const distance = Math.abs(Number(time || 0) - current);
+        if(distance < bestDistance){
+            bestDistance = distance;
+            nearest = index;
+        }
+    });
+    selectTacticalFrame(nearest);
+}
+
+function setTacticalViewMode(value){
+    tacticalViewMode = value === "all" ? "all" : "selected";
+    if(tacticalViewModeSelect) tacticalViewModeSelect.value = tacticalViewMode;
+    drawTacticalLines();
+    renderTacticalLineList();
+}
+
+function getVisibleTacticalLines(){
+    if(tacticalViewMode === "all" || selectedFrameIndex < 0) return tacticalLines;
+    return tacticalLines.filter(line => Number(line.frame_index) === selectedFrameIndex);
 }
 
 function resizeTacticalCanvas(){
@@ -974,9 +1067,12 @@ function toggleTacticalMode(){
     if(tacticalToggleBtn) tacticalToggleBtn.textContent = tacticalMode ? "Disattiva linee" : "Attiva linee";
     tacticalPendingPoint = null;
     if(tacticalMode){
+        if(extractedFrameTimes.length && selectedFrameIndex < 0){
+            selectNearestTacticalFrame();
+        }
         videoPreview.pause();
         resizeTacticalCanvas();
-        showStatus("Modalita linee attiva: clicca due punti sul video per tracciare una linea.", "ok");
+        showStatus(`Linee attive su ${getSelectedFrameLabel()}: clicca due punti sul video.`, "ok");
     }else{
         showStatus("Modalita linee disattivata. Le linee restano salvate per il report.", "ok");
     }
@@ -1002,14 +1098,16 @@ function handleTacticalCanvasClick(event){
     tacticalLines.push({
         id:`line_${Date.now()}_${Math.round(Math.random()*9999)}`,
         ...context,
-        time: Math.round(videoPreview.currentTime || 0),
+        frame_index: selectedFrameIndex,
+        frame_label: selectedFrameIndex >= 0 ? `Frame ${selectedFrameIndex + 1}` : "Video",
+        time: Math.round(selectedFrameIndex >= 0 ? extractedFrameTimes[selectedFrameIndex] : (videoPreview.currentTime || 0)),
         start: tacticalPendingPoint,
         end: point
     });
     tacticalPendingPoint = null;
     renderTacticalLineList();
     drawTacticalLines();
-    showStatus(`${context.phase} tracciata a ${formatTime(videoPreview.currentTime || 0)}.`, "ok");
+    showStatus(`${context.phase} tracciata su ${getSelectedFrameLabel()}.`, "ok");
 }
 
 function drawTacticalLines(previewPoint=null){
@@ -1019,7 +1117,7 @@ function drawTacticalLines(previewPoint=null){
     const h = tacticalCanvas.height;
     ctx.clearRect(0,0,w,h);
 
-    tacticalLines.forEach(line => drawOneTacticalLine(ctx,line,w,h));
+    getVisibleTacticalLines().forEach(line => drawOneTacticalLine(ctx,line,w,h));
 
     if(tacticalPendingPoint){
         const line = {
@@ -1066,7 +1164,11 @@ function drawOneTacticalLine(ctx,line,w,h,isPreview=false){
 function renderTacticalLineList(){
     if(!tacticalLineList) return;
     tacticalLineList.innerHTML = tacticalLines.length
-        ? tacticalLines.map(line => `<span class="line-chip">${escapeHtml(line.phase)} · ${escapeHtml(line.team)} · ${formatTime(line.time)} <button type="button" onclick="removeTacticalLine('${line.id}')">x</button></span>`).join("")
+        ? tacticalLines.map(line => {
+            const frameIndex = Number(line.frame_index);
+            const frameAction = Number.isFinite(frameIndex) && frameIndex >= 0 ? ` onclick="selectTacticalFrame(${frameIndex})"` : "";
+            return `<span class="line-chip"${frameAction}>${escapeHtml(line.frame_label || "Video")} - ${escapeHtml(line.phase)} - ${escapeHtml(line.team)} - ${formatTime(line.time)} <button type="button" onclick="event.stopPropagation();removeTacticalLine('${line.id}')">x</button></span>`;
+        }).join("")
         : `<span class="line-chip">Nessuna linea tracciata</span>`;
 }
 
@@ -1090,6 +1192,8 @@ function buildTacticalNotes(){
         index:index+1,
         phase:line.phase,
         team:line.team,
+        frame_index:line.frame_index,
+        frame_label:line.frame_label,
         time_seconds:line.time,
         time_label:formatTime(line.time),
         start:line.start,
@@ -1446,6 +1550,8 @@ videoInput.addEventListener("change", () => {
     tacticalLines = [];
     tacticalPendingPoint = null;
     tacticalMode = false;
+    selectedFrameIndex = -1;
+    updateSelectedFrameLabel();
     latestPdfBase64 = "";
     framesGrid.innerHTML = "";
     analyzeBtn.disabled = true;
@@ -1544,16 +1650,14 @@ async function extractFrames(){
         extractedFrameTimes.push(Math.round(t));
     }
 
-    framesGrid.innerHTML = extractedFrames.map((frame,i) => `
-        <div class="frame-card">
-            <img src="${frame}" alt="Frame ${i+1}">
-            <span>Frame ${i+1} · ${formatTime(extractedFrameTimes[i])}</span>
-        </div>
-    `).join("");
+    selectedFrameIndex = extractedFrames.length ? 0 : -1;
+    updateSelectedFrameLabel();
+    renderFramesGrid();
+    if(extractedFrames.length) await selectTacticalFrame(0);
     analyzeBtn.disabled = extractedFrames.length < 2;
     extractBtn.disabled = false;
     updateReportMeta("frames");
-    showStatus(`${extractedFrames.length} fotogrammi estratti. Puoi generare il report AI.`, "ok");
+    showStatus(`${extractedFrames.length} fotogrammi estratti. Scegli un frame sotto al video e traccia le linee che ti interessano.`, "ok");
 }
 
 async function analyzeVideo(){
