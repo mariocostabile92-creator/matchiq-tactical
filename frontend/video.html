@@ -229,6 +229,18 @@ video{
     gap:8px;
     margin-top:12px;
 }
+.ai-line-panel{
+    display:none;
+    margin-top:12px;
+    padding:12px;
+    border-radius:16px;
+    border:1px solid rgba(47,124,255,.28);
+    background:rgba(47,124,255,.08);
+}
+.ai-line-panel.show{display:block}
+.ai-line-panel strong{display:block;font-size:13px;margin-bottom:5px}
+.ai-line-panel p{margin:0 0 10px;color:var(--muted);font-size:12px;line-height:1.45}
+.ai-line-actions{display:flex;gap:8px;flex-wrap:wrap}
 .line-chip{
     display:inline-flex;
     align-items:center;
@@ -682,9 +694,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10452">Home</a>
-        <a class="btn dark" href="/coach.html?v=10452">Coach</a>
-        <a class="btn dark" href="/account.html?v=10452">Account</a>
+        <a class="btn dark" href="/index.html?v=10453">Home</a>
+        <a class="btn dark" href="/coach.html?v=10453">Coach</a>
+        <a class="btn dark" href="/account.html?v=10453">Account</a>
     </nav>
 </header>
 
@@ -754,7 +766,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10452">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10453">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -764,7 +776,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10452">Scopri piano club</a>
+                    <a href="/account.html?v=10453">Scopri piano club</a>
                 </div>
             </div>
 
@@ -920,6 +932,14 @@ video{
                             <button id="tacticalToggleBtn" class="btn dark" type="button" onclick="toggleTacticalMode()">Pausa e traccia</button>
                         </div>
                     </div>
+                    <div id="aiLinePanel" class="ai-line-panel">
+                        <strong>Suggerimenti linee AI</strong>
+                        <p id="aiLineText">Se l'AI riconosce una linea utile sul frame selezionato, puoi inserirla e poi correggerla a mano.</p>
+                        <div class="ai-line-actions">
+                            <button id="applyAiLinesBtn" class="btn small" type="button" onclick="applyAiLineSuggestionsForSelectedFrame()">Aggiungi linee AI</button>
+                            <button class="btn dark small" type="button" onclick="hideAiLineSuggestions()">Ignora</button>
+                        </div>
+                    </div>
                     <div id="tacticalLineList" class="tactical-list"></div>
                 </div>
             </div>
@@ -983,6 +1003,7 @@ let selectedVideoUrl = "";
 let extractedFrames = [];
 let extractedFrameTimes = [];
 let extractedFrameMeta = [];
+let aiLineSuggestions = {};
 let latestPdfBase64 = "";
 let cloudArchive = [];
 let tacticalMode = false;
@@ -1011,6 +1032,9 @@ const tacticalToggleBtn = document.getElementById("tacticalToggleBtn");
 const selectedFrameBtn = document.getElementById("selectedFrameBtn");
 const tacticalViewModeSelect = document.getElementById("tacticalViewMode");
 const videoPlayBtn = document.getElementById("videoPlayBtn");
+const aiLinePanel = document.getElementById("aiLinePanel");
+const aiLineText = document.getElementById("aiLineText");
+const applyAiLinesBtn = document.getElementById("applyAiLinesBtn");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -1056,6 +1080,7 @@ async function selectTacticalFrame(index){
         await seekVideo(videoPreview, extractedFrameTimes[index]);
         resizeTacticalCanvas();
     }
+    renderAiLineSuggestions();
     showStatus(`${getSelectedFrameLabel()} selezionato. Ora attiva le linee e clicca due punti sul video.`, "ok");
 }
 
@@ -1088,6 +1113,57 @@ function getVisibleTacticalLines(){
     if(videoPreview && !videoPreview.paused && !tacticalMode) return [];
     if(tacticalViewMode === "all" || selectedFrameIndex < 0) return tacticalLines;
     return tacticalLines.filter(line => Number(line.frame_index) === selectedFrameIndex);
+}
+
+function getAiSuggestionsForSelectedFrame(){
+    if(selectedFrameIndex < 0) return [];
+    return aiLineSuggestions[String(selectedFrameIndex)] || [];
+}
+
+function renderAiLineSuggestions(){
+    if(!aiLinePanel) return;
+    const suggestions = getAiSuggestionsForSelectedFrame();
+    if(!suggestions.length){
+        aiLinePanel.classList.remove("show");
+        return;
+    }
+    const readable = suggestions.map(item => `${item.phase || "Linea tattica"} (${item.confidence || "?"}%)`).join(", ");
+    if(aiLineText) aiLineText.textContent = `Sul ${getSelectedFrameLabel()} l'AI propone: ${readable}. Puoi inserirle e poi correggerle a mano.`;
+    if(applyAiLinesBtn) applyAiLinesBtn.disabled = false;
+    aiLinePanel.classList.add("show");
+}
+
+function hideAiLineSuggestions(){
+    if(aiLinePanel) aiLinePanel.classList.remove("show");
+}
+
+function applyAiLineSuggestionsForSelectedFrame(){
+    const suggestions = getAiSuggestionsForSelectedFrame();
+    if(!suggestions.length){
+        showStatus("Nessun suggerimento AI per questo frame.", "warn");
+        return;
+    }
+    suggestions.forEach(item => {
+        tacticalLines.push({
+            id:`ai_line_${Date.now()}_${Math.round(Math.random()*9999)}`,
+            phase:item.phase || "Linea tattica AI",
+            team:item.team || "Squadra osservata",
+            color:item.color || "#ff4058",
+            source:"AI",
+            confidence:item.confidence,
+            reason:item.reason || "",
+            frame_index:selectedFrameIndex,
+            frame_label:selectedFrameIndex >= 0 ? `Frame ${selectedFrameIndex + 1}` : "Video",
+            time: Math.round(selectedFrameIndex >= 0 ? extractedFrameTimes[selectedFrameIndex] : (videoPreview.currentTime || 0)),
+            start:item.start || {x:.25,y:.5},
+            end:item.end || {x:.75,y:.5}
+        });
+    });
+    renderTacticalLineList();
+    updateTacticalCanvasVisibility();
+    drawTacticalLines();
+    hideAiLineSuggestions();
+    showStatus(`${suggestions.length} linea/e AI aggiunte sul ${getSelectedFrameLabel()}. Puoi correggerle disegnando a mano.`, "ok");
 }
 
 function updateTacticalCanvasVisibility(){
@@ -1244,7 +1320,8 @@ function renderTacticalLineList(){
         ? tacticalLines.map(line => {
             const frameIndex = Number(line.frame_index);
             const frameAction = Number.isFinite(frameIndex) && frameIndex >= 0 ? ` onclick="selectTacticalFrame(${frameIndex})"` : "";
-            return `<span class="line-chip"${frameAction}>${escapeHtml(line.frame_label || "Video")} - ${escapeHtml(line.phase)} - ${escapeHtml(line.team)} - ${formatTime(line.time)} <button type="button" onclick="event.stopPropagation();removeTacticalLine('${line.id}')">x</button></span>`;
+            const sourceLabel = line.source === "AI" ? "AI - " : "";
+            return `<span class="line-chip"${frameAction}>${sourceLabel}${escapeHtml(line.frame_label || "Video")} - ${escapeHtml(line.phase)} - ${escapeHtml(line.team)} - ${formatTime(line.time)} <button type="button" onclick="event.stopPropagation();removeTacticalLine('${line.id}')">x</button></span>`;
         }).join("")
         : `<span class="line-chip">Nessuna linea tracciata</span>`;
 }
@@ -1273,6 +1350,9 @@ function buildTacticalNotes(){
         team:line.team,
         frame_index:line.frame_index,
         frame_label:line.frame_label,
+        source:line.source || "manuale",
+        confidence:line.confidence,
+        reason:line.reason,
         time_seconds:line.time,
         time_label:formatTime(line.time),
         start:line.start,
@@ -1627,6 +1707,7 @@ videoInput.addEventListener("change", () => {
     extractedFrames = [];
     extractedFrameTimes = [];
     extractedFrameMeta = [];
+    aiLineSuggestions = {};
     tacticalLines = [];
     tacticalPendingPoint = null;
     tacticalMode = false;
@@ -1852,6 +1933,7 @@ async function selectCandidatesWithAI(candidates, count, duration, focus){
                     ai_reason:aiNote.ai_reason,
                     team_colors:aiNote.team_colors || [],
                     visible_numbers:aiNote.visible_numbers || [],
+                    line_suggestions:aiNote.line_suggestions || [],
                     player_read:aiNote.player_read || "",
                     selector:"AI"
                 }
@@ -1874,6 +1956,7 @@ async function extractFrames(){
     extractedFrames = [];
     extractedFrameTimes = [];
     extractedFrameMeta = [];
+    aiLineSuggestions = {};
     framesGrid.innerHTML = "";
     latestPdfBase64 = "";
     downloadPdfBtn.disabled = true;
@@ -1932,6 +2015,12 @@ async function extractFrames(){
     extractedFrames = selectedCandidates.map(item => item.frame);
     extractedFrameTimes = selectedCandidates.map(item => item.time);
     extractedFrameMeta = selectedCandidates.map(item => item.meta);
+    aiLineSuggestions = {};
+    extractedFrameMeta.forEach((meta,index) => {
+        if(Array.isArray(meta.line_suggestions) && meta.line_suggestions.length){
+            aiLineSuggestions[String(index)] = meta.line_suggestions;
+        }
+    });
 
     selectedFrameIndex = extractedFrames.length ? 0 : -1;
     updateSelectedFrameLabel();

@@ -209,6 +209,48 @@ def _format_frame_meta(items: List[dict], frame_count: int) -> str:
     return "; ".join(safe_items) if safe_items else "non disponibili"
 
 
+def _safe_unit(value, fallback: float = 0.5) -> float:
+    try:
+        number = float(value)
+    except Exception:
+        number = fallback
+    return max(0.0, min(1.0, number))
+
+
+def _safe_color(value: str, fallback: str = "#ff4058") -> str:
+    value = str(value or "").strip()
+    if len(value) == 7 and value.startswith("#"):
+        try:
+            int(value[1:], 16)
+            return value
+        except Exception:
+            return fallback
+    return fallback
+
+
+def _normalize_line_suggestions(items: List[dict]) -> List[dict]:
+    safe_lines = []
+    for item in (items or [])[:2]:
+        start = item.get("start") or {}
+        end = item.get("end") or {}
+        safe_lines.append({
+            "phase": _clean_text(item.get("phase", ""), 80) or "Linea tattica",
+            "team": _clean_text(item.get("team", ""), 80) or "Squadra osservata",
+            "color": _safe_color(item.get("color"), "#ff4058"),
+            "confidence": item.get("confidence"),
+            "reason": _clean_text(item.get("reason", ""), 220),
+            "start": {
+                "x": _safe_unit(start.get("x"), 0.25),
+                "y": _safe_unit(start.get("y"), 0.5),
+            },
+            "end": {
+                "x": _safe_unit(end.get("x"), 0.75),
+                "y": _safe_unit(end.get("y"), 0.5),
+            },
+        })
+    return safe_lines
+
+
 def _sanitize_video_report(report: str) -> str:
     blocked_prefixes = (
         "se desideri",
@@ -294,6 +336,8 @@ Regole importanti:
 - Se il focus e' linea difensiva, centrocampo, offensiva, ampiezza o spazio tra reparti, preferisci immagini con campo aperto e piu giocatori visibili. Penalizza primi piani, arbitro isolato, replay, inquadrature ferme su un singolo giocatore.
 - Se il focus e' pressing o transizioni, preferisci frame con palla, portatore, avversari vicini e densita attorno alla zona palla.
 - Non inventare nomi dei giocatori. Rileva solo numeri o colori chiaramente leggibili.
+- Le line_suggestions devono usare coordinate normalizzate da 0 a 1 rispetto all'immagine: x sinistra-destra, y alto-basso.
+- Suggerisci al massimo 2 linee per frame e solo quando la lettura e' plausibile. Se il frame e' primo piano o poco tattico, lascia line_suggestions vuoto.
 - Restituisci solo JSON valido, senza markdown.
 
 Schema JSON:
@@ -308,7 +352,18 @@ Schema JSON:
       "reason": "Linea e piu reparti visibili",
       "team_colors": ["bianco", "verde"],
       "visible_numbers": ["9", "18"],
-      "player_read": "numeri parzialmente leggibili"
+      "player_read": "numeri parzialmente leggibili",
+      "line_suggestions": [
+        {{
+          "phase": "Linea difensiva",
+          "team": "Squadra osservata",
+          "color": "#ff4058",
+          "confidence": 72,
+          "reason": "Tre giocatori in linea nella zona difensiva",
+          "start": {{"x": 0.22, "y": 0.54}},
+          "end": {{"x": 0.78, "y": 0.58}}
+        }}
+      ]
     }}
   ],
   "team_guess": {{
@@ -764,6 +819,7 @@ def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_u
             "team_colors": note.get("team_colors") if isinstance(note.get("team_colors"), list) else [],
             "visible_numbers": note.get("visible_numbers") if isinstance(note.get("visible_numbers"), list) else [],
             "player_read": _clean_text(note.get("player_read", ""), 180),
+            "line_suggestions": _normalize_line_suggestions(note.get("line_suggestions") or []),
         }
 
     if user:
