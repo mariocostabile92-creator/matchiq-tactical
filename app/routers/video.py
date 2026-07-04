@@ -1,6 +1,7 @@
 import base64
 import html
 import io
+import json
 import os
 from datetime import datetime
 from typing import List, Optional
@@ -28,6 +29,7 @@ OPENAI_VIDEO_MODEL = os.getenv("OPENAI_VIDEO_MODEL", "gpt-4.1-mini").strip()
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
 MAX_FRAMES = int(os.getenv("VIDEO_REPORT_MAX_FRAMES", "6"))
+MAX_SELECTION_FRAMES = int(os.getenv("VIDEO_SELECTION_MAX_FRAMES", "16"))
 MAX_FRAME_CHARS = int(os.getenv("VIDEO_REPORT_MAX_FRAME_CHARS", "900000"))
 
 
@@ -48,6 +50,21 @@ class VideoReportRequest(BaseModel):
     frame_times: List[float] = Field(default_factory=list)
     frame_meta: List[dict] = Field(default_factory=list)
     tactical_lines: List[dict] = Field(default_factory=list)
+    frames: List[str]
+
+
+class FrameSelectionRequest(BaseModel):
+    focus: Optional[str] = "Analisi tattica generale"
+    observed_team: Optional[str] = ""
+    home_team: Optional[str] = ""
+    away_team: Optional[str] = ""
+    home_formation: Optional[str] = ""
+    away_formation: Optional[str] = ""
+    lineup_notes: Optional[str] = ""
+    duration_seconds: Optional[float] = 0
+    frame_times: List[float] = Field(default_factory=list)
+    frame_meta: List[dict] = Field(default_factory=list)
+    desired_count: Optional[int] = 6
     frames: List[str]
 
 
@@ -73,6 +90,23 @@ def _sanitize_frames(frames: List[str]) -> List[str]:
     safe_frames = []
 
     for frame in frames[:MAX_FRAMES]:
+        frame = str(frame or "").strip()
+
+        if not frame.startswith("data:image/"):
+            continue
+
+        if len(frame) > MAX_FRAME_CHARS:
+            continue
+
+        safe_frames.append(frame)
+
+    return safe_frames
+
+
+def _sanitize_selection_frames(frames: List[str]) -> List[str]:
+    safe_frames = []
+
+    for frame in frames[:MAX_SELECTION_FRAMES]:
         frame = str(frame or "").strip()
 
         if not frame.startswith("data:image/"):
@@ -208,6 +242,131 @@ def _format_seconds(value: float) -> str:
     minutes = total // 60
     seconds = total % 60
     return f"{minutes:02d}:{seconds:02d}"
+
+
+def _extract_json_object(value: str) -> dict:
+    text = str(value or "").strip()
+    if text.startswith("```"):
+        text = text.strip("`")
+        if text.lower().startswith("json"):
+            text = text[4:].strip()
+    try:
+        return json.loads(text)
+    except Exception:
+        start = text.find("{")
+        end = text.rfind("}")
+        if start >= 0 and end > start:
+            return json.loads(text[start:end + 1])
+    return {}
+
+
+def _build_frame_selection_prompt(data: FrameSelectionRequest, frame_count: int) -> str:
+    focus = _clean_text(data.focus, 160) or "Analisi tattica generale"
+    observed_team = _clean_text(data.observed_team, 160) or "Non specificata"
+    home_team = _clean_text(data.home_team, 120) or "Non specificata"
+    away_team = _clean_text(data.away_team, 120) or "Non specificata"
+    home_formation = _clean_text(data.home_formation, 40) or "Non indicato"
+    away_formation = _clean_text(data.away_formation, 40) or "Non indicato"
+    lineup_notes = _clean_text(data.lineup_notes, 1400) or "Non inserite"
+    desired_count = max(2, min(MAX_FRAMES, int(data.desired_count or MAX_FRAMES)))
+    frame_times = ", ".join(
+        f"index {idx}: {_format_seconds(t)}"
+        for idx, t in enumerate((data.frame_times or [])[:frame_count])
+    ) or "non disponibili"
+    local_meta = _format_frame_meta(data.frame_meta, frame_count)
+
+    return f"""
+Seleziona i migliori fotogrammi per analisi calcistica.
+
+Obiettivo:
+- Focus richiesto: {focus}
+- Fotogrammi da scegliere: {desired_count}
+- Squadra osservata: {observed_team}
+- Squadra casa: {home_team}
+- Modulo casa: {home_formation}
+- Squadra trasferta: {away_team}
+- Modulo trasferta: {away_formation}
+- Formazioni o numeri staff: {lineup_notes}
+- Tempi candidati: {frame_times}
+- Pre-score locale: {local_meta}
+
+Regole importanti:
+- Se il focus e' linea difensiva, centrocampo, offensiva, ampiezza o spazio tra reparti, preferisci immagini con campo aperto e piu giocatori visibili. Penalizza primi piani, arbitro isolato, replay, inquadrature ferme su un singolo giocatore.
+- Se il focus e' pressing o transizioni, preferisci frame con palla, portatore, avversari vicini e densita attorno alla zona palla.
+- Non inventare nomi dei giocatori. Rileva solo numeri o colori chiaramente leggibili.
+- Restituisci solo JSON valido, senza markdown.
+
+Schema JSON:
+{{
+  "selected_indexes": [0, 3, 7],
+  "frame_notes": [
+    {{
+      "index": 0,
+      "phase": "Linea difensiva",
+      "quality": 88,
+      "camera": "campo aperto",
+      "reason": "Linea e piu reparti visibili",
+      "team_colors": ["bianco", "verde"],
+      "visible_numbers": ["9", "18"],
+      "player_read": "numeri parzialmente leggibili"
+    }}
+  ],
+  "team_guess": {{
+    "home_colors": "non certo",
+    "away_colors": "non certo"
+  }}
+}}
+""".strip()
+
+
+def _call_openai_frame_selector(data: FrameSelectionRequest, frames: List[str]) -> dict:
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY non configurata")
+
+    prompt = _build_frame_selection_prompt(data, len(frames))
+    content = [{"type": "text", "text": prompt}]
+    for frame in frames:
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": frame}
+        })
+
+    payload = {
+        "model": OPENAI_VIDEO_MODEL,
+        "temperature": 0.1,
+        "max_tokens": 1200,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "Sei MatchIQ Frame Selector. Scegli fotogrammi calcistici utili "
+                    "per una fase tattica e restituisci solo JSON valido."
+                )
+            },
+            {"role": "user", "content": content},
+        ],
+    }
+
+    response = requests.post(
+        OPENAI_API_URL,
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=90,
+    )
+
+    if response.status_code >= 400:
+        try:
+            detail = response.json().get("error", {}).get("message")
+        except Exception:
+            detail = response.text
+        raise HTTPException(status_code=502, detail=f"Errore selezione AI: {detail or response.status_code}")
+
+    message = response.json()["choices"][0]["message"]["content"]
+    return _extract_json_object(message)
 
 
 def _call_openai(prompt: str, frames: List[str]) -> str:
@@ -559,6 +718,62 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
             **usage,
             "used": int((usage or {}).get("used") or 0) + 1,
         } if usage else None,
+    }
+
+
+@router.post("/select-frames")
+def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_user)):
+    frames = _sanitize_selection_frames(data.frames)
+
+    if len(frames) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Servono almeno 2 fotogrammi candidati per la selezione AI"
+        )
+
+    result = _call_openai_frame_selector(data, frames)
+    desired_count = max(2, min(MAX_FRAMES, int(data.desired_count or MAX_FRAMES)))
+    selected_indexes = []
+
+    for value in result.get("selected_indexes") or []:
+        try:
+            index = int(value)
+        except Exception:
+            continue
+        if 0 <= index < len(frames) and index not in selected_indexes:
+            selected_indexes.append(index)
+        if len(selected_indexes) >= desired_count:
+            break
+
+    if len(selected_indexes) < 2:
+        raise HTTPException(
+            status_code=502,
+            detail="La selezione AI non ha restituito fotogrammi validi"
+        )
+
+    notes_by_index = {}
+    for note in result.get("frame_notes") or []:
+        try:
+            index = int(note.get("index"))
+        except Exception:
+            continue
+        notes_by_index[str(index)] = {
+            "label": _clean_text(note.get("phase") or note.get("camera") or "selezione AI", 80),
+            "ai_quality": note.get("quality"),
+            "ai_reason": _clean_text(note.get("reason", ""), 220),
+            "team_colors": note.get("team_colors") if isinstance(note.get("team_colors"), list) else [],
+            "visible_numbers": note.get("visible_numbers") if isinstance(note.get("visible_numbers"), list) else [],
+            "player_read": _clean_text(note.get("player_read", ""), 180),
+        }
+
+    if user:
+        track_api_usage(user["id"], "/api/video/select-frames", "video_report")
+
+    return {
+        "ok": True,
+        "selected_indexes": selected_indexes,
+        "frame_notes": notes_by_index,
+        "team_guess": result.get("team_guess") or {},
     }
 
 

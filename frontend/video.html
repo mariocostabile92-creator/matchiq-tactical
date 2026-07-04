@@ -682,9 +682,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10451">Home</a>
-        <a class="btn dark" href="/coach.html?v=10451">Coach</a>
-        <a class="btn dark" href="/account.html?v=10451">Account</a>
+        <a class="btn dark" href="/index.html?v=10452">Home</a>
+        <a class="btn dark" href="/coach.html?v=10452">Coach</a>
+        <a class="btn dark" href="/account.html?v=10452">Account</a>
     </nav>
 </header>
 
@@ -754,7 +754,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10451">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10452">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -764,7 +764,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10451">Scopri piano club</a>
+                    <a href="/account.html?v=10452">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1041,7 +1041,7 @@ function renderFramesGrid(){
     framesGrid.innerHTML = extractedFrames.map((frame,i) => `
         <button type="button" class="frame-card ${i === selectedFrameIndex ? "active" : ""}" onclick="selectTacticalFrame(${i})">
             <img src="${frame}" alt="Frame ${i+1}">
-            <span>Frame ${i+1} - ${formatTime(extractedFrameTimes[i])}${extractedFrameMeta[i]?.label ? ` - ${escapeHtml(extractedFrameMeta[i].label)}` : ""}</span>
+            <span>Frame ${i+1} - ${formatTime(extractedFrameTimes[i])}${extractedFrameMeta[i]?.label ? ` - ${escapeHtml(extractedFrameMeta[i].label)}` : ""}${extractedFrameMeta[i]?.selector === "AI" ? " - AI" : ""}</span>
         </button>
     `).join("");
 }
@@ -1811,6 +1811,58 @@ function selectBestTacticalCandidates(candidates, count, duration){
     return selected.slice(0,count).sort((a,b) => a.time - b.time);
 }
 
+async function selectCandidatesWithAI(candidates, count, duration, focus){
+    if(!candidates.length) return null;
+    const payload = {
+        focus,
+        observed_team: document.getElementById("observedTeam").value.trim(),
+        home_team: document.getElementById("homeTeamName").value.trim(),
+        away_team: document.getElementById("awayTeamName").value.trim(),
+        home_formation: document.getElementById("homeFormation").value.trim(),
+        away_formation: document.getElementById("awayFormation").value.trim(),
+        lineup_notes: document.getElementById("lineupNotes").value.trim(),
+        duration_seconds: duration,
+        desired_count: count,
+        frame_times: candidates.map(item => item.time),
+        frame_meta: candidates.map(item => item.meta),
+        frames: candidates.map(item => item.frame)
+    };
+
+    const res = await fetch(`${API_BASE}/video/select-frames`,{
+        method:"POST",
+        headers:apiHeaders(),
+        body:JSON.stringify(payload)
+    });
+
+    if(!res.ok) throw new Error("Selezione AI non disponibile");
+    const data = await res.json();
+    const selectedIndexes = Array.isArray(data.selected_indexes) ? data.selected_indexes : [];
+    const selected = [];
+
+    selectedIndexes.forEach(rawIndex => {
+        const index = Number(rawIndex);
+        if(Number.isInteger(index) && candidates[index] && !selected.includes(candidates[index])){
+            const aiNote = data.frame_notes?.[String(index)] || {};
+            selected.push({
+                ...candidates[index],
+                meta:{
+                    ...candidates[index].meta,
+                    label:aiNote.label || candidates[index].meta.label || "selezione AI",
+                    ai_quality:aiNote.ai_quality,
+                    ai_reason:aiNote.ai_reason,
+                    team_colors:aiNote.team_colors || [],
+                    visible_numbers:aiNote.visible_numbers || [],
+                    player_read:aiNote.player_read || "",
+                    selector:"AI"
+                }
+            });
+        }
+    });
+
+    if(selected.length < 2) return null;
+    return selected.slice(0,count).sort((a,b) => a.time - b.time);
+}
+
 async function extractFrames(){
     if(!videoPreview.src){
         showStatus("Carica prima un video.", "warn");
@@ -1867,7 +1919,16 @@ async function extractFrames(){
         });
     }
 
-    const selectedCandidates = selectBestTacticalCandidates(candidates, count, duration);
+    let selectedCandidates = null;
+    try{
+        showStatus("Chiedo all'AI di scegliere i frame piu adatti alla fase selezionata...", "warn");
+        selectedCandidates = await selectCandidatesWithAI(candidates, count, duration, focus);
+    }catch(err){
+        selectedCandidates = null;
+    }
+    if(!selectedCandidates){
+        selectedCandidates = selectBestTacticalCandidates(candidates, count, duration);
+    }
     extractedFrames = selectedCandidates.map(item => item.frame);
     extractedFrameTimes = selectedCandidates.map(item => item.time);
     extractedFrameMeta = selectedCandidates.map(item => item.meta);
