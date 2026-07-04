@@ -176,6 +176,71 @@ video{
 }
 .video-shell.has-video video{display:block}
 .video-shell.has-video .video-empty{display:none}
+.tactical-canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    display:none;
+    z-index:3;
+}
+.video-shell.has-video.tactical-active .tactical-canvas{
+    display:block;
+    pointer-events:auto;
+    cursor:crosshair;
+}
+.tactical-tools{
+    display:none;
+    margin-top:14px;
+    padding:14px;
+    border-radius:18px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.10);
+}
+.tactical-tools.show{display:block}
+.tactical-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:12px;
+}
+.tactical-head strong{font-size:15px}
+.tactical-head span{display:block;color:var(--muted);font-size:12px;margin-top:3px;line-height:1.4}
+.tactical-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+}
+.tactical-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+}
+.line-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:8px 10px;
+    border-radius:999px;
+    background:rgba(0,245,160,.10);
+    border:1px solid rgba(0,245,160,.24);
+    color:#dfffee;
+    font-size:12px;
+    font-weight:900;
+}
+.line-chip button{
+    border:0;
+    width:20px;
+    height:20px;
+    border-radius:999px;
+    color:#fff;
+    background:rgba(255,64,88,.72);
+    cursor:pointer;
+    font-weight:1000;
+}
 .frames{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -530,6 +595,8 @@ video{
     .wrap{width:100%;padding:24px 14px 42px}
     .panel{border-radius:22px;padding:20px}
     h1{font-size:36px}
+    .tactical-head{align-items:flex-start;flex-direction:column}
+    .tactical-grid{grid-template-columns:1fr}
     .frames{grid-template-columns:repeat(2,1fr)}
     .archive-item{grid-template-columns:1fr}
     .archive-actions{justify-content:flex-start}
@@ -590,9 +657,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10447">Home</a>
-        <a class="btn dark" href="/coach.html?v=10447">Coach</a>
-        <a class="btn dark" href="/account.html?v=10447">Account</a>
+        <a class="btn dark" href="/index.html?v=10448">Home</a>
+        <a class="btn dark" href="/coach.html?v=10448">Coach</a>
+        <a class="btn dark" href="/account.html?v=10448">Account</a>
     </nav>
 </header>
 
@@ -662,7 +729,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10447">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10448">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -672,7 +739,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10447">Scopri piano club</a>
+                    <a href="/account.html?v=10448">Scopri piano club</a>
                 </div>
             </div>
 
@@ -745,6 +812,51 @@ video{
                         <span>Usa una ripresa laterale o dall'alto. Poi estrai i fotogrammi e genera il report PDF.</span>
                     </div>
                     <video id="videoPreview" controls playsinline></video>
+                    <canvas id="tacticalCanvas" class="tactical-canvas"></canvas>
+                </div>
+                <div id="tacticalTools" class="tactical-tools">
+                    <div class="tactical-head">
+                        <div>
+                            <strong>Linee tattiche interattive</strong>
+                            <span>Scegli cosa vuoi controllare, poi clicca due punti sul video per tracciare la linea.</span>
+                        </div>
+                        <button class="btn dark small" type="button" onclick="clearTacticalLines()">Pulisci linee</button>
+                    </div>
+                    <div class="tactical-grid">
+                        <div class="field">
+                            <label>Fase / reparto</label>
+                            <select id="tacticalPhase">
+                                <option value="Linea difensiva">Linea difensiva</option>
+                                <option value="Linea centrocampo">Linea centrocampo</option>
+                                <option value="Linea offensiva">Linea offensiva</option>
+                                <option value="Pressing">Pressing</option>
+                                <option value="Ampiezza">Ampiezza</option>
+                                <option value="Spazio tra reparti">Spazio tra reparti</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Squadra</label>
+                            <select id="tacticalTeam">
+                                <option>Squadra osservata</option>
+                                <option>Avversario</option>
+                                <option>Entrambe</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Colore</label>
+                            <select id="tacticalColor">
+                                <option value="#00f5a0">Verde</option>
+                                <option value="#2f7cff">Blu</option>
+                                <option value="#ffe28a">Giallo</option>
+                                <option value="#ff4058">Rosso</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Stato</label>
+                            <button id="tacticalToggleBtn" class="btn dark" type="button" onclick="toggleTacticalMode()">Attiva linee</button>
+                        </div>
+                    </div>
+                    <div id="tacticalLineList" class="tactical-list"></div>
                 </div>
             </div>
 
@@ -808,6 +920,9 @@ let extractedFrames = [];
 let extractedFrameTimes = [];
 let latestPdfBase64 = "";
 let cloudArchive = [];
+let tacticalMode = false;
+let tacticalLines = [];
+let tacticalPendingPoint = null;
 
 const videoInput = document.getElementById("videoInput");
 const videoPreview = document.getElementById("videoPreview");
@@ -822,11 +937,164 @@ const reportMeta = document.getElementById("reportMeta");
 const archiveSearch = document.getElementById("archiveSearch");
 const archiveSource = document.getElementById("archiveSource");
 const archiveCount = document.getElementById("archiveCount");
+const tacticalCanvas = document.getElementById("tacticalCanvas");
+const tacticalTools = document.getElementById("tacticalTools");
+const tacticalLineList = document.getElementById("tacticalLineList");
+const tacticalToggleBtn = document.getElementById("tacticalToggleBtn");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
     box.textContent=message;
     box.className=`status show ${type}`;
+}
+
+function getTacticalContext(){
+    return {
+        phase: document.getElementById("tacticalPhase")?.value || "Linea difensiva",
+        team: document.getElementById("tacticalTeam")?.value || "Squadra osservata",
+        color: document.getElementById("tacticalColor")?.value || "#00f5a0"
+    };
+}
+
+function resizeTacticalCanvas(){
+    if(!tacticalCanvas || !videoPreview) return;
+    const rect = videoPreview.getBoundingClientRect();
+    tacticalCanvas.width = Math.max(1, Math.round(rect.width));
+    tacticalCanvas.height = Math.max(1, Math.round(rect.height));
+    tacticalCanvas.style.width = `${rect.width}px`;
+    tacticalCanvas.style.height = `${rect.height}px`;
+    tacticalCanvas.style.left = `${videoPreview.offsetLeft}px`;
+    tacticalCanvas.style.top = `${videoPreview.offsetTop}px`;
+    drawTacticalLines();
+}
+
+function toggleTacticalMode(){
+    tacticalMode = !tacticalMode;
+    videoShell.classList.toggle("tactical-active", tacticalMode);
+    if(tacticalToggleBtn) tacticalToggleBtn.textContent = tacticalMode ? "Disattiva linee" : "Attiva linee";
+    tacticalPendingPoint = null;
+    if(tacticalMode){
+        videoPreview.pause();
+        resizeTacticalCanvas();
+        showStatus("Modalita linee attiva: clicca due punti sul video per tracciare una linea.", "ok");
+    }else{
+        showStatus("Modalita linee disattivata. Le linee restano salvate per il report.", "ok");
+    }
+}
+
+function getCanvasPoint(event){
+    const rect = tacticalCanvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+    return {x:Math.max(0,Math.min(1,x)), y:Math.max(0,Math.min(1,y))};
+}
+
+function handleTacticalCanvasClick(event){
+    if(!tacticalMode) return;
+    const point = getCanvasPoint(event);
+    if(!tacticalPendingPoint){
+        tacticalPendingPoint = point;
+        drawTacticalLines(point);
+        showStatus("Primo punto preso. Clicca il secondo punto per completare la linea.", "warn");
+        return;
+    }
+    const context = getTacticalContext();
+    tacticalLines.push({
+        id:`line_${Date.now()}_${Math.round(Math.random()*9999)}`,
+        ...context,
+        time: Math.round(videoPreview.currentTime || 0),
+        start: tacticalPendingPoint,
+        end: point
+    });
+    tacticalPendingPoint = null;
+    renderTacticalLineList();
+    drawTacticalLines();
+    showStatus(`${context.phase} tracciata a ${formatTime(videoPreview.currentTime || 0)}.`, "ok");
+}
+
+function drawTacticalLines(previewPoint=null){
+    if(!tacticalCanvas) return;
+    const ctx = tacticalCanvas.getContext("2d");
+    const w = tacticalCanvas.width;
+    const h = tacticalCanvas.height;
+    ctx.clearRect(0,0,w,h);
+
+    tacticalLines.forEach(line => drawOneTacticalLine(ctx,line,w,h));
+
+    if(tacticalPendingPoint){
+        const line = {
+            phase:"Punto iniziale",
+            color:getTacticalContext().color,
+            start:tacticalPendingPoint,
+            end:previewPoint || tacticalPendingPoint
+        };
+        drawOneTacticalLine(ctx,line,w,h,true);
+    }
+}
+
+function drawOneTacticalLine(ctx,line,w,h,isPreview=false){
+    const sx = line.start.x * w;
+    const sy = line.start.y * h;
+    const ex = line.end.x * w;
+    const ey = line.end.y * h;
+    ctx.save();
+    ctx.strokeStyle = line.color || "#00f5a0";
+    ctx.lineWidth = isPreview ? 3 : 4;
+    ctx.globalAlpha = isPreview ? .75 : .95;
+    ctx.setLineDash(isPreview ? [8,8] : []);
+    ctx.beginPath();
+    ctx.moveTo(sx,sy);
+    ctx.lineTo(ex,ey);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = line.color || "#00f5a0";
+    [ [sx,sy], [ex,ey] ].forEach(([x,y]) => {
+        ctx.beginPath();
+        ctx.arc(x,y,6,0,Math.PI*2);
+        ctx.fill();
+    });
+    if(!isPreview){
+        ctx.font = "700 13px Arial";
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "rgba(0,0,0,.8)";
+        ctx.shadowBlur = 6;
+        ctx.fillText(line.phase || "Linea", Math.min(sx,ex)+8, Math.min(sy,ey)-8);
+    }
+    ctx.restore();
+}
+
+function renderTacticalLineList(){
+    if(!tacticalLineList) return;
+    tacticalLineList.innerHTML = tacticalLines.length
+        ? tacticalLines.map(line => `<span class="line-chip">${escapeHtml(line.phase)} · ${escapeHtml(line.team)} · ${formatTime(line.time)} <button type="button" onclick="removeTacticalLine('${line.id}')">x</button></span>`).join("")
+        : `<span class="line-chip">Nessuna linea tracciata</span>`;
+}
+
+function removeTacticalLine(id){
+    tacticalLines = tacticalLines.filter(line => line.id !== id);
+    renderTacticalLineList();
+    drawTacticalLines();
+}
+
+function clearTacticalLines(){
+    tacticalLines = [];
+    tacticalPendingPoint = null;
+    renderTacticalLineList();
+    drawTacticalLines();
+    showStatus("Linee tattiche pulite.", "ok");
+}
+
+function buildTacticalNotes(){
+    if(!tacticalLines.length) return [];
+    return tacticalLines.map((line,index) => ({
+        index:index+1,
+        phase:line.phase,
+        team:line.team,
+        time_seconds:line.time,
+        time_label:formatTime(line.time),
+        start:line.start,
+        end:line.end
+    }));
 }
 
 function updateReportMeta(state="empty", frameCount=null){
@@ -1175,6 +1443,9 @@ videoInput.addEventListener("change", () => {
     const file = videoInput.files && videoInput.files[0];
     extractedFrames = [];
     extractedFrameTimes = [];
+    tacticalLines = [];
+    tacticalPendingPoint = null;
+    tacticalMode = false;
     latestPdfBase64 = "";
     framesGrid.innerHTML = "";
     analyzeBtn.disabled = true;
@@ -1186,6 +1457,8 @@ videoInput.addEventListener("change", () => {
     if(!file){
         extractBtn.disabled = true;
         videoShell.classList.remove("has-video");
+        videoShell.classList.remove("tactical-active");
+        if(tacticalTools) tacticalTools.classList.remove("show");
         updateReportMeta();
         return;
     }
@@ -1193,10 +1466,21 @@ videoInput.addEventListener("change", () => {
     selectedVideoUrl = URL.createObjectURL(file);
     videoPreview.src = selectedVideoUrl;
     videoShell.classList.add("has-video");
+    if(tacticalTools) tacticalTools.classList.add("show");
+    if(tacticalToggleBtn) tacticalToggleBtn.textContent = "Attiva linee";
+    renderTacticalLineList();
     extractBtn.disabled = false;
     updateReportMeta("video");
     showStatus("Video pronto. Ora estrai i fotogrammi.", "ok");
 });
+
+tacticalCanvas.addEventListener("click", handleTacticalCanvasClick);
+tacticalCanvas.addEventListener("mousemove", event => {
+    if(tacticalMode && tacticalPendingPoint) drawTacticalLines(getCanvasPoint(event));
+});
+videoPreview.addEventListener("loadedmetadata", resizeTacticalCanvas);
+videoPreview.addEventListener("pause", resizeTacticalCanvas);
+window.addEventListener("resize", resizeTacticalCanvas);
 
 function seekVideo(video,time){
     return new Promise((resolve,reject) => {
@@ -1293,7 +1577,8 @@ async function analyzeVideo(){
         notes: document.getElementById("videoNotes").value.trim(),
         duration_seconds: videoPreview.duration || 0,
         frame_times: extractedFrameTimes,
-        frames: extractedFrames
+        frames: extractedFrames,
+        tactical_lines: buildTacticalNotes()
     };
 
     try{

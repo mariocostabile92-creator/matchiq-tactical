@@ -1,5 +1,5 @@
 /* MatchIQ Scout - Core Module V8.1.2 SaaS Free/Pro Runtime */
-const APP_VERSION = "10447";
+const APP_VERSION = "10448";
 
 document.addEventListener("DOMContentLoaded", async () => {
   try{

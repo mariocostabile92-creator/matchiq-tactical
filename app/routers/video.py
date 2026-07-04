@@ -41,6 +41,7 @@ class VideoReportRequest(BaseModel):
     notes: Optional[str] = ""
     duration_seconds: Optional[float] = 0
     frame_times: List[float] = Field(default_factory=list)
+    tactical_lines: List[dict] = Field(default_factory=list)
     frames: List[str]
 
 
@@ -89,6 +90,7 @@ def _build_prompt(data: VideoReportRequest, frame_count: int) -> str:
     notes = _clean_text(data.notes, 1200) or "Nessuna nota staff inserita."
     duration = round(float(data.duration_seconds or 0), 1)
     frame_times = ", ".join(_format_seconds(t) for t in (data.frame_times or [])[:frame_count]) or "non disponibili"
+    tactical_lines = _format_tactical_lines(data.tactical_lines)
 
     return f"""
 Analizza questi fotogrammi estratti da una clip calcistica.
@@ -104,10 +106,12 @@ Contesto:
 - Fotogrammi disponibili: {frame_count}
 - Minuti indicativi dei fotogrammi: {frame_times}
 - Note staff: {notes}
+- Linee tattiche selezionate dall'utente: {tactical_lines}
 
 Produci un report tecnico in italiano per un mister di calcio dilettantistico.
 Sii utile, concreto e prudente: se un dettaglio non e' visibile, dichiaralo come limite.
 Usa i minuti indicativi quando commenti un episodio, senza inventare cronologia non visibile.
+Se sono presenti linee tattiche selezionate, usale come priorita di lettura: commenta reparto, fase, distanze e spazio tra linee senza fingere misurazioni automatiche.
 
 Formato richiesto:
 1. Sintesi video
@@ -120,6 +124,18 @@ Formato richiesto:
 8. Messaggio breve per la squadra
 9. Limiti dell'analisi video
 """.strip()
+
+
+def _format_tactical_lines(lines: List[dict]) -> str:
+    safe_lines = []
+    for item in (lines or [])[:12]:
+        phase = _clean_text(item.get("phase", ""), 80) or "Linea tattica"
+        team = _clean_text(item.get("team", ""), 80) or "Squadra osservata"
+        time_label = _clean_text(item.get("time_label", ""), 20)
+        if not time_label:
+            time_label = _format_seconds(item.get("time_seconds", 0))
+        safe_lines.append(f"{phase} - {team} a {time_label}")
+    return "; ".join(safe_lines) if safe_lines else "nessuna linea selezionata"
 
 
 def _format_seconds(value: float) -> str:
@@ -287,6 +303,7 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
     generated_at = datetime.now().strftime("%d/%m/%Y %H:%M")
     duration = _format_seconds(float(data.duration_seconds or 0))
     frame_times = ", ".join(_format_seconds(t) for t in (data.frame_times or [])[:frame_count]) or "non disponibili"
+    tactical_lines = _format_tactical_lines(data.tactical_lines)
     report_title = _clean_text(title, 180) or "Video Report MatchIQ"
 
     cover = Table(
@@ -323,6 +340,7 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
         ["Fotogrammi analizzati", str(frame_count)],
         ["Durata clip", duration],
         ["Tempi fotogrammi", frame_times],
+        ["Linee tattiche", tactical_lines],
     ]
     summary = Table(summary_rows, colWidths=[128, 354])
     summary.setStyle(TableStyle([
@@ -414,6 +432,7 @@ def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: st
             "duration_seconds": data.duration_seconds,
             "frame_times": data.frame_times,
             "notes": _clean_text(data.notes, 1200),
+            "tactical_lines": data.tactical_lines[:12],
         },
     )
 
