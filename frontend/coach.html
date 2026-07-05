@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.7.9 - Onboarding</title>
+<title>MatchIQ Coach Mode V1.8.0 - Onboarding</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -41,8 +41,104 @@
 .plan-limit-value{font-size:15px;font-weight:1000;color:#fff;}
 .coach-plan-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
 .coach-plan-actions .btn{flex:1;min-width:130px;}
+.coach-live-board{
+    display:grid;
+    grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);
+    gap:18px;
+    margin:22px 0;
+}
+.coach-live-card{
+    background:linear-gradient(145deg,rgba(0,245,160,.10),rgba(47,124,255,.06));
+    border:1px solid rgba(0,245,160,.22);
+    border-radius:28px;
+    padding:22px;
+    box-shadow:0 20px 60px rgba(0,0,0,.20);
+}
+.coach-live-top{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:14px;
+    align-items:center;
+}
+.coach-live-clock{
+    font-size:clamp(42px,7vw,86px);
+    line-height:1;
+    font-weight:1000;
+    letter-spacing:0;
+}
+.coach-live-minute{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:78px;
+    min-height:54px;
+    border-radius:18px;
+    background:rgba(0,245,160,.13);
+    border:1px solid rgba(0,245,160,.28);
+    color:#00f5a0;
+    font-size:28px;
+    font-weight:1000;
+}
+.coach-live-controls,.coach-live-note{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:16px;
+}
+.coach-live-period{
+    min-width:110px;
+    max-width:140px;
+}
+.coach-live-actions{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+    margin-top:18px;
+}
+.coach-live-btn{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;
+    padding:14px 10px;
+    min-height:86px;
+    background:rgba(255,255,255,.065);
+    color:#fff;
+    cursor:pointer;
+    font-weight:1000;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:7px;
+}
+.coach-live-btn strong{font-size:16px}
+.coach-live-btn span{font-size:11px;color:#aebee7;line-height:1.25}
+.coach-live-btn.good{border-color:rgba(0,245,160,.30);background:rgba(0,245,160,.10)}
+.coach-live-btn.warn{border-color:rgba(255,226,138,.32);background:rgba(255,226,138,.10)}
+.coach-live-btn.danger{border-color:rgba(255,64,88,.30);background:rgba(255,64,88,.10)}
+.coach-ai-panel{
+    background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:28px;
+    padding:22px;
+}
+.coach-ai-tip{
+    padding:14px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.045);
+    margin-top:10px;
+}
+.coach-ai-tip strong{display:block;font-size:15px;margin-bottom:5px}
+.coach-ai-tip span{display:block;color:#aebee7;font-size:13px;line-height:1.45}
+.coach-ai-tip.ok{border-color:rgba(0,245,160,.30)}
+.coach-ai-tip.warn{border-color:rgba(255,226,138,.34)}
+.coach-ai-tip.danger{border-color:rgba(255,64,88,.34)}
+.coach-ai-tip.info{border-color:rgba(47,124,255,.30)}
 @media(max-width:900px){
     .coach-onboarding{grid-template-columns:1fr;gap:14px;margin:16px 0;}
+    .coach-live-board{grid-template-columns:1fr;gap:14px;margin:16px 0;}
+    .coach-live-card,.coach-ai-panel{padding:18px;border-radius:22px;}
+    .coach-live-actions{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .coach-live-btn{min-height:98px;}
     .coach-guide-card,.coach-plan-card{padding:18px;border-radius:22px;}
     .coach-steps{grid-template-columns:1fr;gap:8px;}
     .coach-step{display:grid;grid-template-columns:42px 1fr;align-items:center;gap:10px;}
@@ -604,7 +700,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.7.9</span>
+            <span class="badge green">COACH MODE V1.8.0</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -707,6 +803,58 @@
                 <button class="btn green" onclick="generateCoachReport()">Genera report</button>
                 <button class="btn pro" id="coachUpgradeBtn" onclick="goCoachUpgrade()">Passa a Pro</button>
             </div>
+        </div>
+    </div>
+
+    <div class="coach-live-board">
+        <div class="coach-live-card">
+            <span class="badge green">COACH LIVE ASSISTANT</span>
+            <div class="coach-live-top">
+                <div>
+                    <h2>Plancia da panchina</h2>
+                    <p>Usa timer, pulsanti grandi e nota vocale mentre la partita e in corso. Gli eventi finiscono subito nella timeline e nel report.</p>
+                    <div class="coach-live-clock" id="coachLiveClock">00:00</div>
+                </div>
+                <div class="coach-live-minute" id="coachLiveMinute">0'</div>
+            </div>
+
+            <div class="coach-live-controls">
+                <select id="coachLivePeriod" class="coach-live-period" onchange="setCoachLivePeriod(this.value)">
+                    <option value="1T">1T</option>
+                    <option value="2T">2T</option>
+                    <option value="ET1">Supplementare 1</option>
+                    <option value="ET2">Supplementare 2</option>
+                </select>
+                <button class="btn green" id="coachLiveToggle" type="button" onclick="toggleCoachLiveClock()">Avvia timer</button>
+                <button class="btn dark" type="button" onclick="resetCoachLiveClock()">Azzera timer</button>
+            </div>
+
+            <div class="coach-live-actions">
+                <button class="coach-live-btn good" type="button" onclick="addLiveEvent('gol','Gol','GOL')"><strong>Gol</strong><span>Segna rete e minuto</span></button>
+                <button class="coach-live-btn danger" type="button" onclick="addLiveEvent('occasione','Occasione','OCC')"><strong>Occasione</strong><span>Grande chance</span></button>
+                <button class="coach-live-btn danger" type="button" onclick="addLiveEvent('palla_persa','Palla persa','PERSA')"><strong>Palla persa</strong><span>Uscita o transizione</span></button>
+                <button class="coach-live-btn good" type="button" onclick="addLiveEvent('recupero','Recupero palla','REC')"><strong>Recupero</strong><span>Pressing riuscito</span></button>
+                <button class="coach-live-btn danger" type="button" onclick="addLiveEvent('errore_difensivo','Errore difensivo','ERR')"><strong>Errore dif.</strong><span>Copertura o marcatura</span></button>
+                <button class="coach-live-btn warn" type="button" onclick="addLiveEvent('pressing','Pressing','PRESS')"><strong>Pressing</strong><span>Fase da ricordare</span></button>
+                <button class="coach-live-btn warn" type="button" onclick="addLiveEvent('cambio','Cambio','CAMBIO')"><strong>Cambio</strong><span>Sostituzione o modulo</span></button>
+                <button class="coach-live-btn" type="button" onclick="startCoachVoiceNote()"><strong>Voce</strong><span>Detta nota tattica</span></button>
+            </div>
+
+            <div class="coach-live-note">
+                <input id="coachVoiceInput" type="text" placeholder="Nota rapida: es. subiamo transizioni centrali..." />
+                <button class="btn dark" type="button" onclick="addLiveNote()">Aggiungi nota</button>
+            </div>
+        </div>
+
+        <div class="coach-ai-panel">
+            <span class="badge blue">AI ASSISTANT LIVE</span>
+            <h2>Cosa sta leggendo MatchIQ</h2>
+            <p>Legge gli eventi inseriti e ti suggerisce cosa non perdere nel report tecnico.</p>
+            <div class="status-box" style="margin-top:14px;">
+                <div class="status-label">Ultimo evento live</div>
+                <div class="status-value" id="coachLiveLast">Nessun evento live</div>
+            </div>
+            <div id="coachLiveInsights"></div>
         </div>
     </div>
 
@@ -1118,11 +1266,11 @@
     <a class="active" href="/coach.html">Coach</a>
     <a href="/account.html">Account</a>
 </nav>
-<script src="/js/coach-state.js?v=10405"></script>
-<script src="/js/coach-storage.js?v=10405"></script>
-<script src="/js/coach-actions.js?v=10405"></script>
-<script src="/js/coach-report.js?v=10405"></script>
-<script src="/js/coach-render.js?v=10405"></script>
-<script src="/js/coach-core.js?v=10405"></script>
+<script src="/js/coach-state.js?v=10455"></script>
+<script src="/js/coach-storage.js?v=10455"></script>
+<script src="/js/coach-actions.js?v=10455"></script>
+<script src="/js/coach-report.js?v=10455"></script>
+<script src="/js/coach-render.js?v=10455"></script>
+<script src="/js/coach-core.js?v=10455"></script>
 </body>
 </html>

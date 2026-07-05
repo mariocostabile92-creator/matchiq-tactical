@@ -274,7 +274,7 @@ function renderHistory(){
                     <div class="history-date">${esc(saved)}</div>
                 </div>
                 <div class="history-meta">
-                    ${esc(m.category || "Dilettanti")} · Risultato eventi ${esc(item.homeGoals ?? 0)}-${esc(item.awayGoals ?? 0)} ·
+                    ${esc(m.category || "Dilettanti")} · Risultato eventi ${esc(item.homeGoals - 0)}-${esc(item.awayGoals - 0)} ·
                     ${esc((item.events || []).length)} eventi · ${esc((item.ratings || []).length)} pagelle
                 </div>
                 <div class="history-actions">
@@ -289,10 +289,71 @@ function renderHistory(){
     box.innerHTML = limitHint + cards;
 }
 
+function buildCoachLiveInsights(){
+    ensureCoachStateShape();
+    const tips = [];
+    const lastEvents = coachState.events.slice(0,8);
+    const lostHome = getEventCount("palla_persa","home");
+    const lostAway = getEventCount("palla_persa","away");
+    const defHome = getEventCount("errore_difensivo","home");
+    const defAway = getEventCount("errore_difensivo","away");
+    const shotsHome = getEventCount("tiro","home") + getEventCount("occasione","home");
+    const shotsAway = getEventCount("tiro","away") + getEventCount("occasione","away");
+    const recoveries = getEventCount("recupero");
+    const recentLost = lastEvents.filter(e => e.type === "palla_persa").length;
+    const recentDef = lastEvents.filter(e => e.type === "errore_difensivo").length;
+
+    if(recentLost >= 2) tips.push({level:"warn", title:"Transizioni da controllare", text:"Negli ultimi eventi ci sono piu palle perse. Segna zona e lato: servira nel report."});
+    if(recentDef >= 1) tips.push({level:"danger", title:"Coperture preventive", text:"Hai registrato un errore difensivo recente. Controlla distanze tra difesa e centrocampo."});
+    if(lostHome >= 3) tips.push({level:"warn", title:getTeamName("home"), text:"Troppe palle perse registrate: utile lavorare su scelta semplice e sostegno vicino."});
+    if(lostAway >= 3) tips.push({level:"warn", title:getTeamName("away"), text:"Troppe palle perse registrate: probabile fase di uscita o transizione da rivedere."});
+    if(defHome >= 2) tips.push({level:"danger", title:getTeamName("home"), text:"Due errori difensivi: inserisci nota su marcature, seconde palle o linea."});
+    if(defAway >= 2) tips.push({level:"danger", title:getTeamName("away"), text:"Due errori difensivi: possibile tema forte per il report post partita."});
+    if(shotsHome + shotsAway <= 1 && coachState.events.length >= 5) tips.push({level:"info", title:"Produzione offensiva bassa", text:"Poche occasioni registrate. Valuta ampiezza, riempimento area e ultimo passaggio."});
+    if(recoveries >= 4) tips.push({level:"ok", title:"Pressing utile", text:"Molti recuperi palla: segnalo come punto positivo e tema da consolidare."});
+
+    if(!tips.length){
+        tips.push({level:"info", title:"Assistente pronto", text:"Registra 4-5 eventi e MatchIQ iniziera a leggere pattern utili per il mister."});
+    }
+
+    return tips.slice(0,4);
+}
+
+function renderLiveAssistant(){
+    ensureCoachStateShape();
+
+    const clock = document.getElementById("coachLiveClock");
+    const period = document.getElementById("coachLivePeriod");
+    const toggle = document.getElementById("coachLiveToggle");
+    const minute = document.getElementById("coachLiveMinute");
+    const last = document.getElementById("coachLiveLast");
+    const insights = document.getElementById("coachLiveInsights");
+
+    if(clock) clock.textContent = formatCoachClock(getCoachLiveElapsedSeconds());
+    if(period) period.value = coachState.live?.period || "1T";
+    if(toggle) toggle.textContent = coachState.live?.running ? "Pausa timer" : "Avvia timer";
+    if(minute) minute.textContent = `${getLiveMinuteLabel()}'`;
+
+    if(last){
+        const event = coachState.events[0];
+        last.textContent = event ? `${event.minute}' ${event.label} - ${event.team}` : "Nessun evento live";
+    }
+
+    if(insights){
+        insights.innerHTML = buildCoachLiveInsights().map(item => `
+            <div class="coach-ai-tip ${esc(item.level)}">
+                <strong>${esc(item.title)}</strong>
+                <span>${esc(item.text)}</span>
+            </div>
+        `).join("");
+    }
+}
+
 function renderAll(){
     ensureCoachStateShape();
     fillFormFromState();
     renderStatus();
+    renderLiveAssistant();
     if(typeof renderLineup === "function") renderLineup();
     renderTimeline();
     renderRatings();

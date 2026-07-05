@@ -5,6 +5,9 @@ function boot(){
     }
 
     loadState();
+    if(coachState.live?.running){
+        ensureCoachLiveTicker();
+    }
     renderAll();
 }
 

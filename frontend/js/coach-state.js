@@ -1,4 +1,4 @@
-APP_VERSION = "10405";
+APP_VERSION = "10455";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
@@ -6,7 +6,8 @@ const COACH_FREE_LIMITS = { maxRatings: 5, maxHistory: 2, maxPdfExports: 1, maxW
 const COACH_PRO_LIMITS = { maxRatings: 999, maxHistory: 50, maxPdfExports: 999, maxWhatsappCopies: 999 };
 const COACH_USAGE_KEYS = { pdfExports: "matchiq_coach_pdf_exports_v16", whatsappCopies: "matchiq_coach_whatsapp_copies_v16" };
 
-let coachState = { match: null, events: [], ratings: [], lineup: [], report: "" };
+let coachState = { match: null, events: [], ratings: [], lineup: [], report: "", live: null };
+let coachLiveTimer = null;
 
 function ensureCoachStateShape(){
     if(!coachState || typeof coachState !== "object") coachState = { match:null, events:[], ratings:[], lineup:[], report:"" };
@@ -15,6 +16,7 @@ function ensureCoachStateShape(){
     if(!Array.isArray(coachState.ratings)) coachState.ratings = [];
     if(!Array.isArray(coachState.lineup)) coachState.lineup = [];
     if(typeof coachState.report !== "string") coachState.report = coachState.report || "";
+    coachState.live = normalizeCoachLive(coachState.live);
 }
 function normalizeCoachMatch(match){
     if(!match || typeof match !== "object") return null;
@@ -25,6 +27,38 @@ function normalizeCoachMatch(match){
     };
 }
 function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function normalizeCoachLive(live){
+    const base = live && typeof live === "object" ? live : {};
+    return {
+        running: Boolean(base.running),
+        startedAt: base.startedAt || null,
+        elapsed: Math.max(0, Number(base.elapsed || 0) || 0),
+        period: base.period || "1T"
+    };
+}
+function getCoachLiveElapsedSeconds(){
+    ensureCoachStateShape();
+    const live = coachState.live;
+    const base = Math.max(0, Number(live.elapsed || 0) || 0);
+    if(!live.running || !live.startedAt) return base;
+    return base + Math.max(0, Math.floor((Date.now() - new Date(live.startedAt).getTime()) / 1000));
+}
+function formatCoachClock(totalSeconds){
+    const total = Math.max(0, Math.floor(Number(totalSeconds || 0)));
+    const minutes = String(Math.floor(total / 60)).padStart(2,"0");
+    const seconds = String(total % 60).padStart(2,"0");
+    return `${minutes}:${seconds}`;
+}
+function getCoachLiveMinute(){
+    const elapsedMinutes = Math.max(0, Math.floor(getCoachLiveElapsedSeconds() / 60));
+    const period = coachState.live?.period || "1T";
+    const offset = period === "2T" ? 45 : period === "ET1" ? 90 : period === "ET2" ? 105 : 0;
+    return Math.min(130, offset + elapsedMinutes);
+}
+function getLiveMinuteLabel(){
+    const minute = getCoachLiveMinute();
+    return minute > 0 ? minute : 0;
+}
 function esc(value){ return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
 function showNotice(message,type="ok",timeout=4500){ const el=document.getElementById("pageNotice"); if(!el)return; el.textContent=message; el.className=`notice show ${type}`; if(timeout){ setTimeout(()=>{ el.className="notice"; },timeout); } }
 function isMobileDevice(){ return window.matchMedia && window.matchMedia("(max-width: 900px)").matches; }

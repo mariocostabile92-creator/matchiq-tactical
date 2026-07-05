@@ -99,6 +99,12 @@ function buildCoachTips(){
     return tips.map((t,i)=>`${i+1}. ${t}`).join("\n");
 }
 
+function buildLiveAssistantReportText(){
+    const tips = typeof buildCoachLiveInsights === "function" ? buildCoachLiveInsights() : [];
+    if(!tips.length) return "- Nessun suggerimento live generato.";
+    return tips.map(item => `- ${item.title}: ${item.text}`).join("\n");
+}
+
 function buildCriticalIssues(){
     const issues=[];
     const homeLost=getEventCount("palla_persa","home");
@@ -233,6 +239,9 @@ ${buildRatingsReportText()}
 <strong>Consigli per il mister</strong>
 ${buildCoachTips()}
 
+<strong>Assistente live MatchIQ</strong>
+${buildLiveAssistantReportText()}
+
 <strong>Criticità tattiche</strong>
 ${buildCriticalIssues()}
 
@@ -305,7 +314,7 @@ function stripReportHtml(html){
 }
 
 function escapePrintHtml(value){
-    return String(value ?? "")
+    return String(value - "")
         .replaceAll("&","&amp;")
         .replaceAll("<","&lt;")
         .replaceAll(">","&gt;")
