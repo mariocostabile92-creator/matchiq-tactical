@@ -105,6 +105,12 @@ function buildLiveAssistantReportText(){
     return tips.map(item => `- ${item.title}: ${item.text}`).join("\n");
 }
 
+function buildHalftimeReportText(){
+    const talk = typeof buildCoachHalftimeTalk === "function" ? buildCoachHalftimeTalk() : [];
+    if(!talk.length) return "- Nessun messaggio intervallo generato.";
+    return talk.map((line,index) => `${index + 1}. ${line}`).join("\n");
+}
+
 function buildCriticalIssues(){
     const issues=[];
     const homeLost=getEventCount("palla_persa","home");
@@ -242,6 +248,9 @@ ${buildCoachTips()}
 <strong>Assistente live MatchIQ</strong>
 ${buildLiveAssistantReportText()}
 
+<strong>Cosa dire all'intervallo</strong>
+${buildHalftimeReportText()}
+
 <strong>Criticità tattiche</strong>
 ${buildCriticalIssues()}
 
@@ -255,7 +264,7 @@ ${buildWhatsAppSummary()}
 La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
 
 <strong>Nota</strong>
-Report generato localmente da MatchIQ Coach V1.7.2: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
+Report generato localmente da MatchIQ Coach V1.8.1: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
 `.trim();
 
     coachState.report = report;
@@ -314,7 +323,7 @@ function stripReportHtml(html){
 }
 
 function escapePrintHtml(value){
-    return String(value - "")
+    return String(value ?? "")
         .replaceAll("&","&amp;")
         .replaceAll("<","&lt;")
         .replaceAll(">","&gt;")
@@ -342,6 +351,8 @@ function splitReportSections(reportHtml){
         "Momenti chiave",
         "Pagelle giocatori",
         "Consigli per il mister",
+        "Assistente live MatchIQ",
+        "Cosa dire all'intervallo",
         "Criticità tattiche",
         "Allenamento consigliato",
         "Sintesi WhatsApp",

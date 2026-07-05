@@ -93,8 +93,113 @@ function addLiveNote(note){
         showNotice("Scrivi o detta una nota per aggiungerla alla timeline.", "warn");
         return;
     }
-    addQuickEvent("nota", "Nota staff", "NOTE", {minute:"live", live:true, note:value, source:"voice"});
+    addSmartCoachNote(value, "voice");
     setInputValue("coachVoiceInput", "");
+}
+
+function normalizeCoachSpeechText(text){
+    return String(text || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[.,;:!?]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function extractCoachMinuteFromText(text){
+    const clean = normalizeCoachSpeechText(text);
+    const direct = clean.match(/\b(?:minuto|min|al|all)\s*(\d{1,3})\b/);
+    if(direct) return Math.max(0, Math.min(130, Number(direct[1]) || 0));
+    const lone = clean.match(/\b(\d{1,3})\s*(?:'| minuto|min)\b/);
+    if(lone) return Math.max(0, Math.min(130, Number(lone[1]) || 0));
+    return "live";
+}
+
+function inferCoachSideFromText(text){
+    const clean = normalizeCoachSpeechText(text);
+    if(/\b(loro|avversari|avversario|trasferta|ospiti|subiamo|ci attaccano|ci pressano)\b/.test(clean)) return "away";
+    if(/\b(noi|nostra|nostro|casa|noi siamo|attacchiamo|pressiamo|recuperiamo)\b/.test(clean)) return "home";
+    return getInputValue("eventTeamInput", "home");
+}
+
+function inferCoachPlayerFromText(text){
+    const clean = normalizeCoachSpeechText(text);
+    const number = clean.match(/\b(?:numero|n)\s*(\d{1,2})\b/);
+    if(number) return `#${number[1]}`;
+    const player = clean.match(/\b(?:giocatore|il|la)\s+([a-z]{3,}(?:\s+[a-z]{3,})?)\b/);
+    if(player && !["nostra","nostro","loro","casa","trasferta"].includes(player[1])) return player[1];
+    return "";
+}
+
+function inferCoachEventFromText(text){
+    const clean = normalizeCoachSpeechText(text);
+    const rules = [
+        {type:"gol", label:"Gol", icon:"GOL", pattern:/\b(gol|rete|segnato|pareggio|vantaggio)\b/},
+        {type:"occasione", label:"Occasione", icon:"OCC", pattern:/\b(occasione|chance|tiro pericoloso|traversa|palo|parata|quasi gol)\b/},
+        {type:"palla_persa", label:"Palla persa", icon:"PERSA", pattern:/\b(palla persa|perdiamo palla|perso palla|uscita sporca|errore in uscita|transizione negativa)\b/},
+        {type:"recupero", label:"Recupero palla", icon:"REC", pattern:/\b(recupero|riconquista|rubiamo|palla recuperata|pressing riuscito)\b/},
+        {type:"errore_difensivo", label:"Errore difensivo", icon:"ERR", pattern:/\b(errore difensivo|marcatura|copertura|linea bassa|linea troppo bassa|difesa scoperta|buco|imbucata)\b/},
+        {type:"pressing", label:"Pressing", icon:"PRESS", pattern:/\b(pressing|pressione|pressiamo|pressano|aggressione|riaggressione)\b/},
+        {type:"transizione", label:"Transizione", icon:"TRANS", pattern:/\b(transizione|ripartenza|contropiede|rest defense|preventiva)\b/},
+        {type:"ampiezza", label:"Ampiezza", icon:"WIDTH", pattern:/\b(ampiezza|larghi|stretto|larga|esterno libero|cambio lato)\b/},
+        {type:"seconda_palla", label:"Seconda palla", icon:"2BALL", pattern:/\b(seconda palla|duello|rimbalzo|spizzata)\b/},
+        {type:"cambio", label:"Cambio", icon:"CAMBIO", pattern:/\b(cambio|sostituzione|entra|esce|modulo)\b/}
+    ];
+    return rules.find(rule => rule.pattern.test(clean)) || {type:"nota", label:"Nota staff", icon:"NOTE"};
+}
+
+function buildCoachPromptFromEvent(event){
+    if(!event) return "";
+    const sideName = event.team || getTeamName(event.side);
+    const suggestions = {
+        palla_persa: `Domanda MatchIQ: la palla persa di ${sideName} nasce da uscita bassa, scelta forzata o mancanza di sostegno?`,
+        errore_difensivo: `Domanda MatchIQ: l'errore difensivo di ${sideName} riguarda linea, marcatura o copertura preventiva?`,
+        pressing: `Domanda MatchIQ: il pressing di ${sideName} e organizzato o solo reazione individuale?`,
+        transizione: `Domanda MatchIQ: questa transizione nasce da perdita centrale, lato scoperto o squadra lunga?`,
+        ampiezza: `Domanda MatchIQ: l'ampiezza crea vantaggio a destra, sinistra o cambio lato?`,
+        seconda_palla: `Domanda MatchIQ: sulla seconda palla manca aggressione, distanza o comunicazione?`,
+        occasione: `Domanda MatchIQ: occasione costruita da combinazione, palla lunga, errore o palla inattiva?`
+    };
+    return suggestions[event.type] || "";
+}
+
+function addSmartCoachNote(text, source="smart"){
+    const value = String(text || "").trim();
+    if(!value){
+        showNotice("Scrivi o detta una nota per aggiungerla alla timeline.", "warn");
+        return null;
+    }
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return null;
+    }
+
+    const inferred = inferCoachEventFromText(value);
+    const minute = extractCoachMinuteFromText(value);
+    const side = inferCoachSideFromText(value);
+    const player = inferCoachPlayerFromText(value);
+    const event = buildCoachEvent(inferred.type, inferred.label, inferred.icon, {
+        minute,
+        live: minute === "live",
+        side,
+        player,
+        note:value,
+        source
+    });
+    event.aiPrompt = buildCoachPromptFromEvent(event);
+    coachState.events.unshift(event);
+    saveState();
+    renderAll();
+    showNotice(`MatchIQ ha capito: ${event.label} per ${event.team}.`, "ok", 2800);
+    return event;
+}
+
+function applyCoachAssistantQuestion(button){
+    const question = button?.dataset?.question || button?.textContent || "";
+    setInputValue("coachVoiceInput", question);
+    const input = document.getElementById("coachVoiceInput");
+    if(input) input.focus();
 }
 
 function deleteEvent(eventId){
@@ -199,7 +304,7 @@ function startCoachVoiceNote(){
     recognition.onresult = event => {
         const text = event.results?.[0]?.[0]?.transcript || "";
         setInputValue("coachVoiceInput", text);
-        addLiveNote(text);
+        addSmartCoachNote(text, "voice");
     };
     recognition.onerror = () => showNotice("Non sono riuscito a leggere la voce. Riprova o scrivi la nota.", "warn");
     recognition.start();

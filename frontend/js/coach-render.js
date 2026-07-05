@@ -319,6 +319,91 @@ function buildCoachLiveInsights(){
     return tips.slice(0,4);
 }
 
+function getCoachEventSummary(){
+    return {
+        lostHome:getEventCount("palla_persa","home"),
+        lostAway:getEventCount("palla_persa","away"),
+        defHome:getEventCount("errore_difensivo","home"),
+        defAway:getEventCount("errore_difensivo","away"),
+        chancesHome:getEventCount("occasione","home") + getEventCount("tiro","home"),
+        chancesAway:getEventCount("occasione","away") + getEventCount("tiro","away"),
+        recoveriesHome:getEventCount("recupero","home"),
+        recoveriesAway:getEventCount("recupero","away"),
+        pressing:getEventCount("pressing"),
+        transitions:getEventCount("transizione"),
+        width:getEventCount("ampiezza"),
+        secondBalls:getEventCount("seconda_palla")
+    };
+}
+
+function buildCoachHalftimeTalk(){
+    ensureCoachStateShape();
+    const s = getCoachEventSummary();
+    const talk = [];
+    const home = getTeamName("home");
+    const away = getTeamName("away");
+
+    if(s.lostHome >= 2) talk.push(`${home}: uscita palla da semplificare, serve piu sostegno vicino e meno forzature centrali.`);
+    if(s.lostAway >= 2) talk.push(`${away}: perdita palla ricorrente, possibile tema da attaccare con pressione orientata.`);
+    if(s.defHome >= 1) talk.push(`${home}: controllare linea difensiva, marcature preventive e distanza tra difesa e centrocampo.`);
+    if(s.defAway >= 1) talk.push(`${away}: spazio alle spalle o coperture fragili, insistiamo sulle corse in profondita.`);
+    if(s.chancesHome + s.chancesAway <= 1 && coachState.events.length >= 4) talk.push("Poche occasioni: chiedere piu ampiezza, attacco area e ultimo passaggio piu pulito.");
+    if(s.recoveriesHome >= 3) talk.push(`${home}: pressing utile, dopo recupero serve prima giocata in avanti.`);
+    if(s.recoveriesAway >= 3) talk.push(`${away}: recupera molti palloni, serve uscire dalla pressione con appoggio e cambio lato.`);
+    if(s.width >= 1) talk.push("Tema ampiezza presente: verificare se il vantaggio nasce su lato forte o cambio gioco.");
+    if(s.secondBalls >= 1) talk.push("Seconde palle decisive: alzare aggressivita e accorciare subito dopo il duello.");
+
+    if(!talk.length){
+        talk.push("Primo messaggio: restare ordinati, comunicare di piu e registrare 3-4 episodi chiave per far leggere meglio la gara a MatchIQ.");
+    }
+
+    return talk.slice(0,5);
+}
+
+function buildCoachAssistantQuestions(){
+    ensureCoachStateShape();
+    const questions = [];
+    const last = coachState.events[0];
+    if(last?.aiPrompt) questions.push(last.aiPrompt);
+
+    const s = getCoachEventSummary();
+    if(s.lostHome + s.lostAway >= 2) questions.push("Vuoi segnare il lato dove perdiamo piu palloni: destra, sinistra o centrale?");
+    if(s.defHome + s.defAway >= 1) questions.push("Vuoi aggiungere se il problema e linea bassa, marcatura o copertura preventiva?");
+    if(s.pressing >= 1) questions.push("Il pressing funziona meglio alto, medio o dopo palla persa?");
+    if(s.chancesHome + s.chancesAway === 0 && coachState.events.length >= 5) questions.push("Vuoi segnare perche non arrivano occasioni: ampiezza, profondita o rifinitura?");
+
+    if(!questions.length){
+        questions.push("Registra una nota vocale naturale: MatchIQ prova a trasformarla in evento tattico.");
+    }
+
+    return [...new Set(questions)].slice(0,4);
+}
+
+function renderCoachAutopilot(){
+    const talkBox = document.getElementById("coachHalftimeTalk");
+    const questionsBox = document.getElementById("coachAssistantQuestions");
+    const voiceHint = document.getElementById("coachVoiceAutopilotHint");
+
+    if(talkBox){
+        talkBox.innerHTML = buildCoachHalftimeTalk().map((line,index) => `
+            <div class="coach-ai-tip ok">
+                <strong>${index + 1}. Messaggio intervallo</strong>
+                <span>${esc(line)}</span>
+            </div>
+        `).join("");
+    }
+
+    if(questionsBox){
+        questionsBox.innerHTML = buildCoachAssistantQuestions().map(question => `
+            <button class="coach-question-chip" type="button" data-question="${esc(question)}" onclick="applyCoachAssistantQuestion(this)">${esc(question)}</button>
+        `).join("");
+    }
+
+    if(voiceHint){
+        voiceHint.textContent = "Puoi dire: palla persa nostra al 18, pressing alto loro, linea troppo bassa, seconda palla persa, occasione loro.";
+    }
+}
+
 function renderLiveAssistant(){
     ensureCoachStateShape();
 
@@ -347,6 +432,8 @@ function renderLiveAssistant(){
             </div>
         `).join("");
     }
+
+    renderCoachAutopilot();
 }
 
 function renderAll(){

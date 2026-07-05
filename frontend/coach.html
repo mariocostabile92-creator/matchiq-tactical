@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.8.0 - Onboarding</title>
+<title>MatchIQ Coach Mode V1.8.1 - Onboarding</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -133,6 +133,45 @@
 .coach-ai-tip.warn{border-color:rgba(255,226,138,.34)}
 .coach-ai-tip.danger{border-color:rgba(255,64,88,.34)}
 .coach-ai-tip.info{border-color:rgba(47,124,255,.30)}
+.coach-smart-panel{
+    margin-top:16px;
+    padding:15px;
+    border-radius:20px;
+    border:1px solid rgba(0,245,160,.18);
+    background:rgba(0,0,0,.14);
+}
+.coach-smart-panel h3{
+    margin:0 0 6px;
+    font-size:16px;
+}
+.coach-smart-panel p{
+    margin:0 0 10px;
+    color:#aebee7;
+    font-size:12px;
+    line-height:1.45;
+}
+.coach-question-list{
+    display:grid;
+    gap:8px;
+    margin-top:10px;
+}
+.coach-question-chip{
+    text-align:left;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    padding:10px 12px;
+    background:rgba(255,255,255,.055);
+    color:#fff;
+    cursor:pointer;
+    font-weight:900;
+    line-height:1.35;
+}
+.coach-voice-hint{
+    margin-top:8px;
+    color:#8fa3d7;
+    font-size:11px;
+    line-height:1.4;
+}
 @media(max-width:900px){
     .coach-onboarding{grid-template-columns:1fr;gap:14px;margin:16px 0;}
     .coach-live-board{grid-template-columns:1fr;gap:14px;margin:16px 0;}
@@ -700,7 +739,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.8.0</span>
+            <span class="badge green">COACH MODE V1.8.1</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -838,12 +877,17 @@
                 <button class="coach-live-btn warn" type="button" onclick="addLiveEvent('pressing','Pressing','PRESS')"><strong>Pressing</strong><span>Fase da ricordare</span></button>
                 <button class="coach-live-btn warn" type="button" onclick="addLiveEvent('cambio','Cambio','CAMBIO')"><strong>Cambio</strong><span>Sostituzione o modulo</span></button>
                 <button class="coach-live-btn" type="button" onclick="startCoachVoiceNote()"><strong>Voce</strong><span>Detta nota tattica</span></button>
+                <button class="coach-live-btn danger" type="button" onclick="addSmartCoachNote('linea difensiva troppo bassa nostra','tap')"><strong>Linea bassa</strong><span>Difesa da alzare</span></button>
+                <button class="coach-live-btn warn" type="button" onclick="addSmartCoachNote('perdiamo seconde palle centrali','tap')"><strong>2a palla</strong><span>Duelli e rimbalzi</span></button>
+                <button class="coach-live-btn warn" type="button" onclick="addSmartCoachNote('manca ampiezza in possesso','tap')"><strong>Ampiezza</strong><span>Squadra stretta</span></button>
+                <button class="coach-live-btn danger" type="button" onclick="addSmartCoachNote('subiamo transizione centrale','tap')"><strong>Transizione</strong><span>Rest defense</span></button>
             </div>
 
             <div class="coach-live-note">
                 <input id="coachVoiceInput" type="text" placeholder="Nota rapida: es. subiamo transizioni centrali..." />
                 <button class="btn dark" type="button" onclick="addLiveNote()">Aggiungi nota</button>
             </div>
+            <div class="coach-voice-hint" id="coachVoiceAutopilotHint"></div>
         </div>
 
         <div class="coach-ai-panel">
@@ -855,6 +899,16 @@
                 <div class="status-value" id="coachLiveLast">Nessun evento live</div>
             </div>
             <div id="coachLiveInsights"></div>
+            <div class="coach-smart-panel">
+                <h3>Cosa dire all'intervallo</h3>
+                <p>MatchIQ prepara messaggi pratici mentre registri eventi e note.</p>
+                <div id="coachHalftimeTalk"></div>
+            </div>
+            <div class="coach-smart-panel">
+                <h3>Domande intelligenti</h3>
+                <p>Tocca una domanda, completa la nota e salvala: meno scrittura, piu contesto utile.</p>
+                <div class="coach-question-list" id="coachAssistantQuestions"></div>
+            </div>
         </div>
     </div>
 
@@ -1266,11 +1320,11 @@
     <a class="active" href="/coach.html">Coach</a>
     <a href="/account.html">Account</a>
 </nav>
-<script src="/js/coach-state.js?v=10455"></script>
-<script src="/js/coach-storage.js?v=10455"></script>
-<script src="/js/coach-actions.js?v=10455"></script>
-<script src="/js/coach-report.js?v=10455"></script>
-<script src="/js/coach-render.js?v=10455"></script>
-<script src="/js/coach-core.js?v=10455"></script>
+<script src="/js/coach-state.js?v=10456"></script>
+<script src="/js/coach-storage.js?v=10456"></script>
+<script src="/js/coach-actions.js?v=10456"></script>
+<script src="/js/coach-report.js?v=10456"></script>
+<script src="/js/coach-render.js?v=10456"></script>
+<script src="/js/coach-core.js?v=10456"></script>
 </body>
 </html>
