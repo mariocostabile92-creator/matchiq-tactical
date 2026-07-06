@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.8.1 - Onboarding</title>
+<title>MatchIQ Coach Mode V1.8.2 - Onboarding</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -739,7 +739,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.8.1</span>
+            <span class="badge green">COACH MODE V1.8.2</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -877,10 +877,10 @@
                 <button class="coach-live-btn warn" type="button" onclick="addLiveEvent('pressing','Pressing','PRESS')"><strong>Pressing</strong><span>Fase da ricordare</span></button>
                 <button class="coach-live-btn warn" type="button" onclick="addLiveEvent('cambio','Cambio','CAMBIO')"><strong>Cambio</strong><span>Sostituzione o modulo</span></button>
                 <button class="coach-live-btn" type="button" onclick="startCoachVoiceNote()"><strong>Voce</strong><span>Detta nota tattica</span></button>
-                <button class="coach-live-btn danger" type="button" onclick="addSmartCoachNote('linea difensiva troppo bassa nostra','tap')"><strong>Linea bassa</strong><span>Difesa da alzare</span></button>
-                <button class="coach-live-btn warn" type="button" onclick="addSmartCoachNote('perdiamo seconde palle centrali','tap')"><strong>2a palla</strong><span>Duelli e rimbalzi</span></button>
-                <button class="coach-live-btn warn" type="button" onclick="addSmartCoachNote('manca ampiezza in possesso','tap')"><strong>Ampiezza</strong><span>Squadra stretta</span></button>
-                <button class="coach-live-btn danger" type="button" onclick="addSmartCoachNote('subiamo transizione centrale','tap')"><strong>Transizione</strong><span>Rest defense</span></button>
+                <button class="coach-live-btn danger" type="button" onclick="addTacticalLiveEvent('errore_difensivo','Linea bassa','LINEA','Linea difensiva troppo bassa: controllare distanze e profondita.', 'home')"><strong>Linea bassa</strong><span>Difesa da alzare</span></button>
+                <button class="coach-live-btn warn" type="button" onclick="addTacticalLiveEvent('seconda_palla','Seconda palla','2BALL','Seconda palla persa: accorciare dopo il duello e aggredire la respinta.', 'home')"><strong>2a palla</strong><span>Duelli e rimbalzi</span></button>
+                <button class="coach-live-btn warn" type="button" onclick="addTacticalLiveEvent('ampiezza','Ampiezza','WIDTH','Manca ampiezza in possesso: aprire lato debole e dare piu linee di passaggio.', 'home')"><strong>Ampiezza</strong><span>Squadra stretta</span></button>
+                <button class="coach-live-btn danger" type="button" onclick="addTacticalLiveEvent('transizione','Transizione subita','TRANS','Transizione centrale subita: controllare rest defense e coperture preventive.', 'home')"><strong>Transizione</strong><span>Rest defense</span></button>
             </div>
 
             <div class="coach-live-note">
@@ -1320,11 +1320,11 @@
     <a class="active" href="/coach.html">Coach</a>
     <a href="/account.html">Account</a>
 </nav>
-<script src="/js/coach-state.js?v=10456"></script>
-<script src="/js/coach-storage.js?v=10456"></script>
-<script src="/js/coach-actions.js?v=10456"></script>
-<script src="/js/coach-report.js?v=10456"></script>
-<script src="/js/coach-render.js?v=10456"></script>
-<script src="/js/coach-core.js?v=10456"></script>
+<script src="/js/coach-state.js?v=10457"></script>
+<script src="/js/coach-storage.js?v=10457"></script>
+<script src="/js/coach-actions.js?v=10457"></script>
+<script src="/js/coach-report.js?v=10457"></script>
+<script src="/js/coach-render.js?v=10457"></script>
+<script src="/js/coach-core.js?v=10457"></script>
 </body>
 </html>

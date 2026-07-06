@@ -87,6 +87,16 @@ function addLiveEvent(type, label, icon, note=""){
     addQuickEvent(type, label, icon, {minute:"live", live:true, note, source:"live"});
 }
 
+function addTacticalLiveEvent(type, label, icon, note, side="home"){
+    addQuickEvent(type, label, icon, {
+        minute:"live",
+        live:true,
+        side,
+        note,
+        source:"smart-tap"
+    });
+}
+
 function addLiveNote(note){
     const value = String(note || getInputValue("coachVoiceInput", "") || "").trim();
     if(!value){
@@ -127,7 +137,7 @@ function inferCoachPlayerFromText(text){
     const clean = normalizeCoachSpeechText(text);
     const number = clean.match(/\b(?:numero|n)\s*(\d{1,2})\b/);
     if(number) return `#${number[1]}`;
-    const player = clean.match(/\b(?:giocatore|il|la)\s+([a-z]{3,}(?:\s+[a-z]{3,})?)\b/);
+    const player = clean.match(/\b(?:giocatore|calciatore|nome)\s+([a-z]{3,}(?:\s+[a-z]{3,})?)\b/);
     if(player && !["nostra","nostro","loro","casa","trasferta"].includes(player[1])) return player[1];
     return "";
 }
@@ -200,6 +210,11 @@ function applyCoachAssistantQuestion(button){
     setInputValue("coachVoiceInput", question);
     const input = document.getElementById("coachVoiceInput");
     if(input) input.focus();
+}
+
+function setCoachVoiceHint(message){
+    const hint = document.getElementById("coachVoiceAutopilotHint");
+    if(hint) hint.textContent = message || "";
 }
 
 function deleteEvent(eventId){
@@ -291,23 +306,57 @@ function ensureCoachLiveTicker(){
 }
 
 function startCoachVoiceNote(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+
+    const input = document.getElementById("coachVoiceInput");
+    if(input){
+        input.placeholder = "Parla o scrivi: es. palla persa nostra al 18...";
+        input.focus();
+    }
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SpeechRecognition){
-        showNotice("Dettatura non disponibile su questo browser. Usa il campo nota rapida.", "warn", 4500);
+        setCoachVoiceHint("Dettatura non disponibile qui: scrivi la frase nel campo e premi Aggiungi nota.");
+        showNotice("Dettatura non disponibile qui. Ho aperto il campo nota rapida.", "warn", 4500);
         return;
     }
     const recognition = new SpeechRecognition();
     recognition.lang = "it-IT";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
+    let gotResult = false;
+    setCoachVoiceHint("Microfono pronto: detta una frase breve, poi MatchIQ la trasforma in evento.");
     showNotice("Sto ascoltando: detta una nota tattica breve.", "ok", 2500);
+    recognition.onaudiostart = () => setCoachVoiceHint("Ti sto ascoltando...");
     recognition.onresult = event => {
+        gotResult = true;
         const text = event.results?.[0]?.[0]?.transcript || "";
         setInputValue("coachVoiceInput", text);
-        addSmartCoachNote(text, "voice");
+        if(text.trim()){
+            addSmartCoachNote(text, "voice");
+            setCoachVoiceHint(`Nota letta: "${text}"`);
+        }else{
+            setCoachVoiceHint("Non ho ricevuto testo. Riprova o scrivi la nota.");
+        }
     };
-    recognition.onerror = () => showNotice("Non sono riuscito a leggere la voce. Riprova o scrivi la nota.", "warn");
-    recognition.start();
+    recognition.onerror = () => {
+        setCoachVoiceHint("Microfono non disponibile o permesso negato: scrivi la nota e premi Aggiungi nota.");
+        showNotice("Non sono riuscito a leggere la voce. Scrivi la nota nel campo rapido.", "warn");
+    };
+    recognition.onend = () => {
+        if(!gotResult){
+            setCoachVoiceHint("Dettatura chiusa senza testo. Puoi riprovare o scrivere la nota.");
+        }
+    };
+    try{
+        recognition.start();
+    }catch{
+        setCoachVoiceHint("Il browser non ha avviato il microfono. Scrivi la nota e premi Aggiungi nota.");
+        showNotice("Il microfono non si e avviato. Usa il campo nota rapida.", "warn");
+    }
 }
 
 function clearRatingForm(){
