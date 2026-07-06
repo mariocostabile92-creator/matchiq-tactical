@@ -26,11 +26,12 @@ function createManualMatch(){
 function clearCurrentMatch(){
     if(!confirm("Vuoi resettare partita, eventi, formazione e report Coach Mode?")) return;
     stopCoachLiveClock(false);
-    coachState = {match:null, events:[], ratings:[], lineup:[], report:"", live:null};
+    coachState = {match:null, events:[], ratings:[], lineup:[], report:"", live:null, memory:null};
     localStorage.removeItem(STORAGE_KEY);
     [
         "homeTeamInput","awayTeamInput","matchFieldInput","homeShapeInput","awayShapeInput","preNotesInput",
-        "eventMinuteInput","eventPlayerInput","eventPlayerSelectInput","eventNoteInput","coachVoiceInput"
+        "eventMinuteInput","eventPlayerInput","eventPlayerSelectInput","eventNoteInput","coachVoiceInput",
+        "precheckObjectiveInput","precheckRiskInput","precheckObserveInput","precheckOpponentInput","precheckTrainingFocusInput"
     ].forEach(id => setInputValue(id, ""));
     setInputValue("categoryInput", "Dilettanti");
     setInputValue("matchDateInput", todayISO());
@@ -38,6 +39,39 @@ function clearCurrentMatch(){
     clearRatingForm();
     renderAll();
     showNotice("Partita resettata.", "ok");
+}
+
+function getCoachEventTags(event){
+    const type = String(event?.type || "").toLowerCase();
+    const note = normalizeCoachSpeechText(event?.note || event?.label || "");
+    const tags = [];
+    const add = tag => { if(tag && !tags.includes(tag)) tags.push(tag); };
+
+    const map = {
+        gol:["finalizzazione","momento chiave"],
+        tiro:["produzione offensiva"],
+        occasione:["rifinitura","area"],
+        palla_persa:["transizione negativa","uscita palla"],
+        recupero:["riaggressione","pressing"],
+        errore_difensivo:["fase difensiva","coperture"],
+        pressing:["pressing","intensita"],
+        transizione:["rest defense","transizioni"],
+        ampiezza:["ampiezza","lato debole"],
+        seconda_palla:["duelli","seconde palle"],
+        squadra_lunga:["distanze reparti","compattezza"],
+        uscita_lato:["costruzione laterale","sostegno"],
+        profondita:["profondita","attacco spazio"],
+        comunicazione:["comunicazione","guida reparto"],
+        cambio:["gestione gara"],
+        cartellino:["gestione emotiva"]
+    };
+    (map[type] || ["nota staff"]).forEach(add);
+    if(/\b(linea|difesa|copertura|marcatura)\b/.test(note)) add("fase difensiva");
+    if(/\b(pressing|pressione|riaggressione)\b/.test(note)) add("pressing");
+    if(/\b(ampiezza|lato|esterno|cambio gioco)\b/.test(note)) add("ampiezza");
+    if(/\b(profondita|spalle|imbucata)\b/.test(note)) add("profondita");
+    if(/\b(comunicazione|parlare|guida|chiamata)\b/.test(note)) add("comunicazione");
+    return tags.slice(0,4);
 }
 
 function buildCoachEvent(type, label, icon, options={}){
@@ -50,7 +84,7 @@ function buildCoachEvent(type, label, icon, options={}){
     const selectedPlayer = selectedPlayerId ? getLineupPlayerById(selectedPlayerId) : null;
     const player = options.player || (selectedPlayer ? formatLineupPlayer(selectedPlayer) : getInputValue("eventPlayerInput", ""));
     const note = options.note !== undefined ? String(options.note || "") : getInputValue("eventNoteInput", "");
-    return {
+    const event = {
         id: Date.now() + Math.random(),
         type,
         label,
@@ -66,6 +100,8 @@ function buildCoachEvent(type, label, icon, options={}){
         source: options.source || (options.voice ? "voice" : "quick"),
         createdAt: new Date().toISOString()
     };
+    event.tags = Array.isArray(options.tags) ? options.tags : getCoachEventTags(event);
+    return event;
 }
 
 function addQuickEvent(type, label, icon, options={}){
@@ -210,6 +246,50 @@ function applyCoachAssistantQuestion(button){
     setInputValue("coachVoiceInput", question);
     const input = document.getElementById("coachVoiceInput");
     if(input) input.focus();
+}
+
+function answerCoachFollowUp(button){
+    const answer = button?.dataset?.answer || button?.textContent || "";
+    if(!answer) return;
+    addSmartCoachNote(answer, "follow-up");
+}
+
+function fillCoachPrecheckFromState(){
+    ensureCoachStateShape();
+    const pre = coachState.memory?.precheck || {};
+    setInputValue("precheckObjectiveInput", pre.objective);
+    setInputValue("precheckRiskInput", pre.risk);
+    setInputValue("precheckObserveInput", pre.observe);
+    setInputValue("precheckOpponentInput", pre.opponent);
+    setInputValue("precheckTrainingFocusInput", pre.trainingFocus);
+}
+
+function saveCoachPrecheck(){
+    ensureCoachStateShape();
+    coachState.memory.precheck = {
+        objective: getInputValue("precheckObjectiveInput", ""),
+        risk: getInputValue("precheckRiskInput", ""),
+        observe: getInputValue("precheckObserveInput", ""),
+        opponent: getInputValue("precheckOpponentInput", ""),
+        trainingFocus: getInputValue("precheckTrainingFocusInput", "")
+    };
+    saveState();
+    renderAll();
+    showNotice("Checklist pre-partita salvata nella memoria Coach.", "ok");
+}
+
+function fillCoachPrecheckFromMatch(){
+    ensureCoachStateShape();
+    const match = coachState.match || {};
+    const home = match.homeTeam || "Squadra casa";
+    const away = match.awayTeam || "avversario";
+    const shapeText = [match.homeShape, match.awayShape].filter(Boolean).join(" vs ") || "moduli non indicati";
+    setInputValue("precheckObjectiveInput", getInputValue("precheckObjectiveInput", `Tenere ordine tra i reparti, ridurre errori gratuiti e trasformare gli episodi chiave in report utile per lo staff.`));
+    setInputValue("precheckRiskInput", getInputValue("precheckRiskInput", `Attenzione a transizioni, seconde palle e distanze squadra con ${shapeText}.`));
+    setInputValue("precheckObserveInput", getInputValue("precheckObserveInput", `Osservare uscita palla, pressing dopo perdita, coperture preventive e comportamento della linea difensiva.`));
+    setInputValue("precheckOpponentInput", getInputValue("precheckOpponentInput", `${home} contro ${away}: segnare subito lato forte, giocatori pericolosi e momenti in cui l'avversario alza pressione.`));
+    setInputValue("precheckTrainingFocusInput", getInputValue("precheckTrainingFocusInput", `Dopo gara preparare esercizi su tema ricorrente piu evidente: possesso sotto pressione, compattezza o finalizzazione.`));
+    saveCoachPrecheck();
 }
 
 function setCoachVoiceHint(message){

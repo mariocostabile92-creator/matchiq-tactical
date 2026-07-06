@@ -1,4 +1,4 @@
-APP_VERSION = "10460";
+APP_VERSION = "10461";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
@@ -6,17 +6,18 @@ const COACH_FREE_LIMITS = { maxRatings: 5, maxHistory: 2, maxPdfExports: 1, maxW
 const COACH_PRO_LIMITS = { maxRatings: 999, maxHistory: 50, maxPdfExports: 999, maxWhatsappCopies: 999 };
 const COACH_USAGE_KEYS = { pdfExports: "matchiq_coach_pdf_exports_v16", whatsappCopies: "matchiq_coach_whatsapp_copies_v16" };
 
-let coachState = { match: null, events: [], ratings: [], lineup: [], report: "", live: null };
+let coachState = { match: null, events: [], ratings: [], lineup: [], report: "", live: null, memory: null };
 let coachLiveTimer = null;
 
 function ensureCoachStateShape(){
-    if(!coachState || typeof coachState !== "object") coachState = { match:null, events:[], ratings:[], lineup:[], report:"" };
+    if(!coachState || typeof coachState !== "object") coachState = { match:null, events:[], ratings:[], lineup:[], report:"", memory:null };
     coachState.match = normalizeCoachMatch(coachState.match);
     if(!Array.isArray(coachState.events)) coachState.events = [];
     if(!Array.isArray(coachState.ratings)) coachState.ratings = [];
     if(!Array.isArray(coachState.lineup)) coachState.lineup = [];
     if(typeof coachState.report !== "string") coachState.report = coachState.report || "";
     coachState.live = normalizeCoachLive(coachState.live);
+    coachState.memory = normalizeCoachMemory(coachState.memory);
 }
 function normalizeCoachMatch(match){
     if(!match || typeof match !== "object") return null;
@@ -34,6 +35,22 @@ function normalizeCoachLive(live){
         startedAt: base.startedAt || null,
         elapsed: Math.max(0, Number(base.elapsed || 0) || 0),
         period: base.period || "1T"
+    };
+}
+function normalizeCoachMemory(memory){
+    const base = memory && typeof memory === "object" ? memory : {};
+    const precheck = base.precheck && typeof base.precheck === "object" ? base.precheck : {};
+    return {
+        precheck: {
+            objective: String(precheck.objective || ""),
+            risk: String(precheck.risk || ""),
+            observe: String(precheck.observe || ""),
+            opponent: String(precheck.opponent || ""),
+            trainingFocus: String(precheck.trainingFocus || "")
+        },
+        tags: Array.isArray(base.tags) ? base.tags : [],
+        teamNotes: Array.isArray(base.teamNotes) ? base.teamNotes : [],
+        trainingPlan: Array.isArray(base.trainingPlan) ? base.trainingPlan : []
     };
 }
 function getCoachLiveElapsedSeconds(){

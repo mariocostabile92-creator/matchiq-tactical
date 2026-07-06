@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.9.1 - Onboarding</title>
+<title>MatchIQ Coach Mode V2.0.0 - Onboarding</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -253,12 +253,64 @@
     border:1px solid rgba(0,245,160,.30);
     background:rgba(0,245,160,.10);
 }
+.coach-precheck-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    margin-top:14px;
+}
+.coach-precheck-status{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:16px;
+    border:1px solid rgba(0,245,160,.22);
+    background:rgba(0,245,160,.08);
+}
+.coach-precheck-status strong{color:#00f5a0;font-size:18px;}
+.coach-precheck-status span{color:#aebee7;font-size:12px;line-height:1.35;}
+.event-tags,.memory-tags,.coach-answer-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:8px;
+}
+.event-tags span,.memory-tags span,.coach-answer-row button{
+    border:1px solid rgba(0,245,160,.22);
+    border-radius:999px;
+    padding:6px 9px;
+    background:rgba(0,245,160,.08);
+    color:#dbe6ff;
+    font-size:11px;
+    font-weight:900;
+}
+.coach-answer-row button{
+    cursor:pointer;
+    background:rgba(255,255,255,.055);
+}
+.training-plan-list{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+}
+.training-plan-card{
+    padding:14px;
+    border-radius:18px;
+    border:1px solid rgba(255,226,138,.24);
+    background:rgba(255,226,138,.08);
+}
+.training-plan-card strong,.training-plan-card span,.training-plan-card small{display:block;}
+.training-plan-card span{color:#dbe6ff;font-size:13px;line-height:1.45;margin-top:7px;}
+.training-plan-card small{color:#aebee7;font-size:11px;line-height:1.4;margin-top:8px;}
 @media(max-width:900px){
     .coach-onboarding{grid-template-columns:1fr;gap:14px;margin:16px 0;}
     .coach-live-board{grid-template-columns:1fr;gap:14px;margin:16px 0;}
     .coach-live-card,.coach-ai-panel{padding:18px;border-radius:22px;}
     .coach-live-actions{grid-template-columns:repeat(2,minmax(0,1fr));}
     .coach-live-btn{min-height:98px;}
+    .coach-precheck-grid,.training-plan-list{grid-template-columns:1fr;}
     .coach-guide-card,.coach-plan-card{padding:18px;border-radius:22px;}
     .coach-steps{grid-template-columns:1fr;gap:8px;}
     .coach-step{display:grid;grid-template-columns:42px 1fr;align-items:center;gap:10px;}
@@ -820,7 +872,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.9.1</span>
+            <span class="badge green">COACH MODE V2.0.0</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -922,6 +974,43 @@
             <div class="coach-plan-actions" id="coachPlanActions">
                 <button class="btn green" onclick="generateCoachReport()">Genera report</button>
                 <button class="btn pro" id="coachUpgradeBtn" onclick="goCoachUpgrade()">Passa a Pro</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="panel">
+            <span class="badge green">AI PRE-PARTITA</span>
+            <h2>Checklist intelligente</h2>
+            <p>Compila pochi punti prima del match: MatchIQ li usa per fare domande migliori, leggere gli eventi e preparare il report.</p>
+            <div class="coach-precheck-grid">
+                <div class="field">
+                    <label>Obiettivo gara</label>
+                    <input id="precheckObjectiveInput" type="text" placeholder="Es. restare corti e uscire puliti dal pressing" />
+                </div>
+                <div class="field">
+                    <label>Rischio principale</label>
+                    <input id="precheckRiskInput" type="text" placeholder="Es. transizioni centrali e seconde palle" />
+                </div>
+                <div class="field">
+                    <label>Cose da osservare</label>
+                    <input id="precheckObserveInput" type="text" placeholder="Es. linea difensiva, ampiezza, uscita lato" />
+                </div>
+                <div class="field">
+                    <label>Avversario</label>
+                    <input id="precheckOpponentInput" type="text" placeholder="Es. punta forte, esterno veloce, pressione alta" />
+                </div>
+                <div class="field full">
+                    <label>Focus allenamento dopo gara</label>
+                    <input id="precheckTrainingFocusInput" type="text" placeholder="Es. preparare esercizi su possesso sotto pressione" />
+                </div>
+            </div>
+            <div class="micro-row">
+                <button class="btn green" type="button" onclick="saveCoachPrecheck()">Salva checklist</button>
+                <button class="btn dark" type="button" onclick="fillCoachPrecheckFromMatch()">Checklist rapida AI</button>
+            </div>
+            <div class="coach-precheck-status" id="coachPrecheckStatus">
+                <strong>0/5</strong><span>Completa la checklist prima della gara per guidare meglio l'AI.</span>
             </div>
         </div>
     </div>
@@ -1357,6 +1446,24 @@
     </div>
     <div class="grid section">
         <div class="panel">
+            <span class="badge blue">MEMORIA SQUADRA</span>
+            <h2>Pattern che si ripetono</h2>
+            <p>MatchIQ trasforma eventi e note in tag tattici, cosi lo staff vede subito cosa torna spesso.</p>
+            <div id="teamMemoryList">
+                <div class="empty">Nessun tag tattico ancora disponibile.</div>
+            </div>
+        </div>
+        <div class="panel">
+            <span class="badge gold">ALLENAMENTO AI</span>
+            <h2>Piano automatico</h2>
+            <p>Dalla partita al campo: gli eventi piu ricorrenti diventano esercizi pratici per la settimana.</p>
+            <div id="trainingPlanList" class="training-plan-list">
+                <div class="empty">Registra eventi per generare il piano.</div>
+            </div>
+        </div>
+    </div>
+    <div class="grid section">
+        <div class="panel">
             <span class="badge blue">5. TIMELINE</span>
 
             <h2>Eventi partita</h2>
@@ -1427,11 +1534,11 @@
     <a class="active" href="/coach.html">Coach</a>
     <a href="/account.html">Account</a>
 </nav>
-<script src="/js/coach-state.js?v=10460"></script>
-<script src="/js/coach-storage.js?v=10460"></script>
-<script src="/js/coach-actions.js?v=10460"></script>
-<script src="/js/coach-report.js?v=10460"></script>
-<script src="/js/coach-render.js?v=10460"></script>
-<script src="/js/coach-core.js?v=10460"></script>
+<script src="/js/coach-state.js?v=10461"></script>
+<script src="/js/coach-storage.js?v=10461"></script>
+<script src="/js/coach-actions.js?v=10461"></script>
+<script src="/js/coach-report.js?v=10461"></script>
+<script src="/js/coach-render.js?v=10461"></script>
+<script src="/js/coach-core.js?v=10461"></script>
 </body>
 </html>

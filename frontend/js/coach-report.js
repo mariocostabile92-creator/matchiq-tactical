@@ -105,6 +105,46 @@ function buildLiveAssistantReportText(){
     return tips.map(item => `- ${item.title}: ${item.text}`).join("\n");
 }
 
+function buildPrecheckReportText(){
+    const pre = coachState.memory?.precheck || {};
+    const rows = [
+        ["Obiettivo gara", pre.objective],
+        ["Rischio principale", pre.risk],
+        ["Cose da osservare", pre.observe],
+        ["Avversario", pre.opponent],
+        ["Focus allenamento", pre.trainingFocus]
+    ].filter(row => row[1]);
+    if(!rows.length) return "- Checklist pre-partita non compilata.";
+    return rows.map(row => `- ${row[0]}: ${row[1]}`).join("\n");
+}
+
+function buildTagMemoryReportText(){
+    const tags = typeof getCoachTagMemory === "function" ? getCoachTagMemory() : [];
+    if(!tags.length) return "- Nessun tag tattico ancora disponibile.";
+    return tags.slice(0,6).map(item => `- ${item.tag}: ${item.count} segnali`).join("\n");
+}
+
+function buildTeamMemoryReportText(){
+    const memory = typeof buildTeamMemory === "function" ? buildTeamMemory() : {notes:[]};
+    if(!memory.notes.length) return "- Memoria squadra ancora in costruzione.";
+    return memory.notes.map(note => `- ${note}`).join("\n");
+}
+
+function buildPlayerMemoryReportText(){
+    const archive = typeof buildPlayerArchive === "function" ? buildPlayerArchive() : [];
+    if(!archive.length) return "- Nessuna memoria giocatore ancora disponibile.";
+    return archive.slice(0,6).map(player => {
+        const avg = player.avg ? player.avg.toFixed(1) : "--";
+        return `- ${player.name}: media ${avg}, ${player.ratings.length} pagelle, ${player.events} eventi collegati.`;
+    }).join("\n");
+}
+
+function buildTrainingPlanReportText(){
+    const plan = typeof buildTrainingPlan === "function" ? buildTrainingPlan() : [];
+    if(!plan.length) return "- Piano allenamento non disponibile.";
+    return plan.map((item,index) => `${index + 1}. ${item.title}: ${item.drill} Obiettivo: ${item.target}`).join("\n");
+}
+
 function buildHalftimeReportText(){
     const talk = typeof buildCoachHalftimeTalk === "function" ? buildCoachHalftimeTalk() : [];
     if(!talk.length) return "- Nessun messaggio intervallo generato.";
@@ -280,6 +320,12 @@ ${buildCoachTips()}
 <strong>Assistente live MatchIQ</strong>
 ${buildLiveAssistantReportText()}
 
+<strong>Checklist pre-partita</strong>
+${buildPrecheckReportText()}
+
+<strong>Tag tattici automatici</strong>
+${buildTagMemoryReportText()}
+
 <strong>Cosa dire all'intervallo</strong>
 ${buildHalftimeReportText()}
 
@@ -292,6 +338,15 @@ ${buildCriticalIssues()}
 <strong>Allenamento consigliato</strong>
 ${buildTrainingAdvice()}
 
+<strong>Piano allenamento automatico</strong>
+${buildTrainingPlanReportText()}
+
+<strong>Memoria squadra</strong>
+${buildTeamMemoryReportText()}
+
+<strong>Memoria giocatori</strong>
+${buildPlayerMemoryReportText()}
+
 <strong>Sintesi WhatsApp</strong>
 ${buildWhatsAppSummary()}
 
@@ -302,7 +357,7 @@ ${buildTeamStaffSummary()}
 La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
 
 <strong>Nota</strong>
-Report generato localmente da MatchIQ Coach V1.9.0: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
+Report generato localmente da MatchIQ Coach V2.0.0: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
 `.trim();
 
     coachState.report = report;

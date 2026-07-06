@@ -183,6 +183,7 @@ function renderTimeline(){
                         ${esc(e.team)}${e.player ? " · " + esc(e.player) : ""}
                     </div>
                     ${e.note ? `<div class="event-note">${esc(e.note)}</div>` : ""}
+                    ${Array.isArray(e.tags) && e.tags.length ? `<div class="event-tags">${e.tags.map(tag => `<span>${esc(tag)}</span>`).join("")}</div>` : ""}
                 </div>
 
                 <button class="delete-event" onclick="deleteEvent('${esc(e.id)}')">×</button>
@@ -402,6 +403,81 @@ function buildCoachReminders(){
     return reminders.slice(0,5);
 }
 
+function getCoachTagMemory(){
+    ensureCoachStateShape();
+    const counts = new Map();
+    const addTag = tag => {
+        const clean = String(tag || "").trim();
+        if(!clean) return;
+        counts.set(clean, (counts.get(clean) || 0) + 1);
+    };
+    const readTags = e => {
+        const tags = Array.isArray(e.tags) && e.tags.length ? e.tags : (typeof getCoachEventTags === "function" ? getCoachEventTags(e) : []);
+        tags.forEach(addTag);
+    };
+    coachState.events.forEach(readTags);
+    loadHistory().forEach(h => (h.events || []).forEach(readTags));
+    return [...counts.entries()].sort((a,b) => b[1] - a[1]).slice(0,8).map(([tag,count]) => ({tag,count}));
+}
+
+function buildTeamMemory(){
+    const tags = getCoachTagMemory();
+    const history = loadHistory();
+    const notes = [];
+    if(tags.length) notes.push(`Tema piu ricorrente: ${tags[0].tag} (${tags[0].count} segnali tra partita e storico).`);
+    if(history.length) notes.push(`Storico attivo: ${history.length} partite salvate, utile per capire se il problema si ripete.`);
+    if(coachState.events.length >= 6) notes.push("Partita corrente gia leggibile: gli eventi sono sufficienti per una prima sintesi staff.");
+    if(!notes.length) notes.push("Inserisci eventi e note vocali: MatchIQ iniziera a costruire memoria squadra.");
+    return {tags, notes};
+}
+
+function buildTrainingPlan(){
+    const s = getCoachEventSummary();
+    const plan = [];
+    const push = (title, drill, target) => plan.push({title, drill, target});
+    if(s.lostHome + s.lostAway >= 2) push("Possesso sotto pressione", "Rondo posizionale 6v3 con uscita pulita e terzo uomo.", "Ridurre palla persa e forzature centrali.");
+    if(s.defHome + s.defAway >= 1 || s.longTeam >= 1) push("Linea e coperture", "Reparto difensivo + centrocampo su scivolamenti, palla scoperta e copertura preventiva.", "Tenere squadra corta e proteggere profondita.");
+    if(s.secondBalls >= 1) push("Seconde palle", "Duello, accorcio immediato e prima giocata dopo recupero.", "Vincere rimbalzi e riaggressione.");
+    if(s.width >= 1 || s.chancesHome + s.chancesAway <= 1) push("Ampiezza e rifinitura", "Sviluppo lato forte, cambio lato e attacco area con tre riferimenti.", "Creare piu soluzioni negli ultimi metri.");
+    if(s.pressing >= 1 || s.recoveriesHome + s.recoveriesAway >= 3) push("Pressing organizzato", "Trigger di pressione su retropassaggio, controllo orientato male e palla laterale.", "Trasformare recupero in occasione.");
+    if(s.communication >= 1) push("Comunicazione reparto", "Situazionale con chiamate obbligatorie: uomo, solo, sali, copri.", "Aumentare guida e responsabilita.");
+    if(!plan.length) push("Seduta base MatchIQ", "20 minuti possesso, 20 transizioni, 20 finalizzazione.", "Dare continuita ai principi senza sovraccaricare.");
+    return plan.slice(0,4);
+}
+
+function renderCoachPrecheck(){
+    if(typeof fillCoachPrecheckFromState === "function") fillCoachPrecheckFromState();
+    const box = document.getElementById("coachPrecheckStatus");
+    if(!box) return;
+    const pre = coachState.memory?.precheck || {};
+    const filled = Object.values(pre).filter(Boolean).length;
+    box.innerHTML = filled
+        ? `<strong>${filled}/5</strong><span> punti pre-partita salvati nella memoria MatchIQ.</span>`
+        : `<strong>0/5</strong><span>Completa la checklist prima della gara per guidare meglio l'AI.</span>`;
+}
+
+function renderTeamMemory(){
+    const box = document.getElementById("teamMemoryList");
+    if(!box) return;
+    const memory = buildTeamMemory();
+    const tagHtml = memory.tags.length
+        ? `<div class="memory-tags">${memory.tags.map(item => `<span>${esc(item.tag)} <strong>${esc(item.count)}</strong></span>`).join("")}</div>`
+        : `<div class="empty">Nessun tag tattico ancora disponibile.</div>`;
+    box.innerHTML = `${tagHtml}<div class="memory-note-list">${memory.notes.map(note => `<div class="coach-ai-tip ok"><strong>Memoria squadra</strong><span>${esc(note)}</span></div>`).join("")}</div>`;
+}
+
+function renderTrainingPlan(){
+    const box = document.getElementById("trainingPlanList");
+    if(!box) return;
+    box.innerHTML = buildTrainingPlan().map((item,index) => `
+        <div class="training-plan-card">
+            <strong>${index + 1}. ${esc(item.title)}</strong>
+            <span>${esc(item.drill)}</span>
+            <small>${esc(item.target)}</small>
+        </div>
+    `).join("");
+}
+
 function buildPlayerArchive(){
     ensureCoachStateShape();
     const map = new Map();
@@ -451,7 +527,7 @@ function renderPlayerArchive(){
         <div class="player-archive-card">
             <div>
                 <strong>${esc(player.name)}</strong>
-                <span>${player.ratings.length} pagelle - ${player.events} eventi collegati</span>
+                <span>${player.matches || player.ratings.length} partite - ${player.ratings.length} pagelle - ${player.events} eventi collegati</span>
                 <small>${esc(player.notes.filter(Boolean).slice(0,1)[0] || "Nessuna nota recente")}</small>
             </div>
             <div class="player-archive-score">${player.avg ? esc(player.avg.toFixed(1)) : "--"}</div>
@@ -475,9 +551,10 @@ function renderCoachAutopilot(){
     }
 
     if(questionsBox){
+        const quickAnswers = ["Lato destro", "Lato sinistro", "Problema centrale", "Serve comunicazione"];
         questionsBox.innerHTML = buildCoachAssistantQuestions().map(question => `
             <button class="coach-question-chip" type="button" data-question="${esc(question)}" onclick="applyCoachAssistantQuestion(this)">${esc(question)}</button>
-        `).join("");
+        `).join("") + `<div class="coach-answer-row">${quickAnswers.map(answer => `<button type="button" data-answer="${esc(answer)}" onclick="answerCoachFollowUp(this)">${esc(answer)}</button>`).join("")}</div>`;
     }
 
     if(remindersBox){
@@ -529,12 +606,15 @@ function renderLiveAssistant(){
 function renderAll(){
     ensureCoachStateShape();
     fillFormFromState();
+    renderCoachPrecheck();
     renderStatus();
     renderLiveAssistant();
     if(typeof renderLineup === "function") renderLineup();
     renderTimeline();
     renderRatings();
     renderPlayerArchive();
+    renderTeamMemory();
+    renderTrainingPlan();
     renderReport();
     renderHistory();
     renderCoachPlanCard();
