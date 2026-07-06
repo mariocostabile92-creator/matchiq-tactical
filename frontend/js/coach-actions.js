@@ -217,6 +217,20 @@ function setCoachVoiceHint(message){
     if(hint) hint.textContent = message || "";
 }
 
+function setCoachVoiceStatus(message, mode="idle"){
+    const status = document.getElementById("coachVoiceStatus");
+    if(status){
+        status.className = `coach-voice-status ${mode === "listening" ? "listening" : mode === "blocked" ? "blocked" : ""}`;
+        status.innerHTML = `<span class="coach-voice-dot"></span><span>${esc(message || "")}</span>`;
+    }
+    const voiceBtn = document.getElementById("coachVoiceBtn");
+    if(voiceBtn){
+        const label = mode === "listening" ? "Ascolto..." : "Voce";
+        const sub = mode === "listening" ? "Parla adesso" : "Detta nota tattica";
+        voiceBtn.innerHTML = `<strong>${label}</strong><span>${sub}</span>`;
+    }
+}
+
 function deleteEvent(eventId){
     ensureCoachStateShape();
     coachState.events = coachState.events.filter(e => String(e.id) !== String(eventId));
@@ -319,6 +333,7 @@ function startCoachVoiceNote(){
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SpeechRecognition){
+        setCoachVoiceStatus("Questo browser non permette la dettatura qui. Scrivi la frase nel campo sopra e premi Aggiungi nota.", "blocked");
         setCoachVoiceHint("Dettatura non disponibile qui: scrivi la frase nel campo e premi Aggiungi nota.");
         showNotice("Dettatura non disponibile qui. Ho aperto il campo nota rapida.", "warn", 4500);
         return;
@@ -328,35 +343,59 @@ function startCoachVoiceNote(){
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     let gotResult = false;
+    setCoachVoiceStatus("Sto provando ad aprire il microfono. Se compare una richiesta del browser, premi Consenti.", "listening");
     setCoachVoiceHint("Microfono pronto: detta una frase breve, poi MatchIQ la trasforma in evento.");
     showNotice("Sto ascoltando: detta una nota tattica breve.", "ok", 2500);
-    recognition.onaudiostart = () => setCoachVoiceHint("Ti sto ascoltando...");
+    recognition.onaudiostart = () => {
+        setCoachVoiceStatus("Ti sto ascoltando. Parla adesso vicino al microfono.", "listening");
+        setCoachVoiceHint("Ti sto ascoltando...");
+    };
     recognition.onresult = event => {
         gotResult = true;
         const text = event.results?.[0]?.[0]?.transcript || "";
         setInputValue("coachVoiceInput", text);
         if(text.trim()){
             addSmartCoachNote(text, "voice");
+            setCoachVoiceStatus(`Nota letta: "${esc(text)}". MatchIQ l'ha trasformata in evento.`, "idle");
             setCoachVoiceHint(`Nota letta: "${text}"`);
         }else{
+            setCoachVoiceStatus("Non ho ricevuto testo. Riprova o scrivi la nota nel campo.", "blocked");
             setCoachVoiceHint("Non ho ricevuto testo. Riprova o scrivi la nota.");
         }
     };
-    recognition.onerror = () => {
-        setCoachVoiceHint("Microfono non disponibile o permesso negato: scrivi la nota e premi Aggiungi nota.");
-        showNotice("Non sono riuscito a leggere la voce. Scrivi la nota nel campo rapido.", "warn");
+    recognition.onerror = event => {
+        const reason = event?.error === "not-allowed" || event?.error === "service-not-allowed"
+            ? "Microfono bloccato: clicca sul lucchetto vicino all'indirizzo, abilita Microfono e ricarica la pagina. Intanto puoi scrivere la nota."
+            : "Non sono riuscito a leggere la voce. Scrivi la nota nel campo rapido o riprova.";
+        setCoachVoiceStatus(reason, "blocked");
+        setCoachVoiceHint(reason);
+        showNotice("Microfono non attivo. Usa il campo nota o abilita il permesso.", "warn");
     };
     recognition.onend = () => {
         if(!gotResult){
+            setCoachVoiceStatus("Dettatura chiusa senza testo. Riprova con Voce oppure scrivi la nota e premi Aggiungi nota.", "blocked");
             setCoachVoiceHint("Dettatura chiusa senza testo. Puoi riprovare o scrivere la nota.");
         }
     };
     try{
         recognition.start();
     }catch{
+        setCoachVoiceStatus("Il browser non ha avviato il microfono. Scrivi la nota e premi Aggiungi nota.", "blocked");
         setCoachVoiceHint("Il browser non ha avviato il microfono. Scrivi la nota e premi Aggiungi nota.");
         showNotice("Il microfono non si e avviato. Usa il campo nota rapida.", "warn");
     }
+}
+
+function bindCoachVoiceInput(){
+    const input = document.getElementById("coachVoiceInput");
+    if(!input || input.dataset.boundVoice === "1") return;
+    input.dataset.boundVoice = "1";
+    input.addEventListener("keydown", event => {
+        if(event.key === "Enter"){
+            event.preventDefault();
+            addLiveNote();
+        }
+    });
 }
 
 function clearRatingForm(){

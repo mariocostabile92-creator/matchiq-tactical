@@ -8,6 +8,9 @@ function boot(){
     if(coachState.live?.running){
         ensureCoachLiveTicker();
     }
+    if(typeof bindCoachVoiceInput === "function"){
+        bindCoachVoiceInput();
+    }
     renderAll();
 }
 
