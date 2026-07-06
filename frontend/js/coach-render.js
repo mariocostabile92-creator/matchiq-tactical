@@ -332,7 +332,11 @@ function getCoachEventSummary(){
         pressing:getEventCount("pressing"),
         transitions:getEventCount("transizione"),
         width:getEventCount("ampiezza"),
-        secondBalls:getEventCount("seconda_palla")
+        secondBalls:getEventCount("seconda_palla"),
+        longTeam:getEventCount("squadra_lunga"),
+        sideBuild:getEventCount("uscita_lato"),
+        depth:getEventCount("profondita"),
+        communication:getEventCount("comunicazione")
     };
 }
 
@@ -352,6 +356,10 @@ function buildCoachHalftimeTalk(){
     if(s.recoveriesAway >= 3) talk.push(`${away}: recupera molti palloni, serve uscire dalla pressione con appoggio e cambio lato.`);
     if(s.width >= 1) talk.push("Tema ampiezza presente: verificare se il vantaggio nasce su lato forte o cambio gioco.");
     if(s.secondBalls >= 1) talk.push("Seconde palle decisive: alzare aggressivita e accorciare subito dopo il duello.");
+    if(s.longTeam >= 1) talk.push("Squadra lunga: accorciare reparti e proteggere meglio la zona centrale.");
+    if(s.sideBuild >= 1) talk.push("Uscita laterale da pulire: dare sostegno vicino e terzo uomo.");
+    if(s.depth >= 1) talk.push("Profondita efficace: continuare a minacciare lo spazio alle spalle.");
+    if(s.communication >= 1) talk.push("Comunicazione da alzare: guida della linea e chiamate preventive.");
 
     if(!talk.length){
         talk.push("Primo messaggio: restare ordinati, comunicare di piu e registrare 3-4 episodi chiave per far leggere meglio la gara a MatchIQ.");
@@ -379,9 +387,82 @@ function buildCoachAssistantQuestions(){
     return [...new Set(questions)].slice(0,4);
 }
 
+function buildCoachReminders(){
+    const s = getCoachEventSummary();
+    const reminders = [];
+    if(s.lostHome + s.lostAway >= 3) reminders.push("Tema ricorrente: troppe palle perse. Inseriscilo nelle priorita allenamento.");
+    if(s.defHome + s.defAway >= 2) reminders.push("Tema ricorrente: errori difensivi. Aggiungi lavoro su coperture preventive.");
+    if(s.secondBalls >= 2) reminders.push("Tema ricorrente: seconde palle. Programma esercizio su duelli e riaggressione.");
+    if(s.longTeam >= 1) reminders.push("Tema tattico: squadra lunga. Lavora su distanze tra reparti e coperture.");
+    if(s.sideBuild >= 1) reminders.push("Tema tattico: uscita laterale. Prepara esercizio su sostegno, terzo uomo e cambio gioco.");
+    if(s.communication >= 1) reminders.push("Tema mentale: comunicazione. Inserisci richiami su guida, marcature e responsabilita.");
+    if(s.chancesHome + s.chancesAway <= 1 && coachState.events.length >= 6) reminders.push("Tema ricorrente: poca produzione offensiva. Lavora su ampiezza e riempimento area.");
+    if(s.pressing >= 2 || s.recoveriesHome + s.recoveriesAway >= 4) reminders.push("Punto forte: pressing e recupero palla. Trasformalo in principio stabile.");
+    if(!reminders.length) reminders.push("Nessun tema ricorrente forte: continua a registrare eventi e note vocali.");
+    return reminders.slice(0,5);
+}
+
+function buildPlayerArchive(){
+    ensureCoachStateShape();
+    const map = new Map();
+    const add = (key, payload) => {
+        if(!key) return;
+        const clean = String(key).toLowerCase().trim();
+        if(!clean) return;
+        if(!map.has(clean)){
+            map.set(clean, {name:key, matches:0, ratings:[], events:0, notes:[]});
+        }
+        const item = map.get(clean);
+        if(payload.rating !== undefined) item.ratings.push(Number(payload.rating || 0));
+        if(payload.event) item.events += 1;
+        if(payload.note) item.notes.push(payload.note);
+        if(payload.match) item.matches += 1;
+    };
+
+    coachState.ratings.forEach(r => add(r.player, {rating:r.vote, note:r.note, match:true}));
+    coachState.events.forEach(e => {
+        if(e.player) add(e.player, {event:true, note:e.note});
+    });
+    loadHistory().forEach(h => {
+        (h.ratings || []).forEach(r => add(r.player, {rating:r.vote, note:r.note, match:true}));
+        (h.events || []).forEach(e => { if(e.player) add(e.player, {event:true, note:e.note}); });
+    });
+
+    return [...map.values()]
+        .map(item => {
+            const avg = item.ratings.length
+                ? item.ratings.reduce((a,b) => a + b, 0) / item.ratings.length
+                : 0;
+            return {...item, avg};
+        })
+        .sort((a,b) => b.avg - a.avg || b.events - a.events)
+        .slice(0,10);
+}
+
+function renderPlayerArchive(){
+    const box = document.getElementById("playerArchiveList");
+    if(!box) return;
+    const archive = buildPlayerArchive();
+    if(!archive.length){
+        box.innerHTML = `<div class="empty">Ancora nessuno storico giocatore. Aggiungi pagelle o eventi con nome giocatore.</div>`;
+        return;
+    }
+    box.innerHTML = archive.map(player => `
+        <div class="player-archive-card">
+            <div>
+                <strong>${esc(player.name)}</strong>
+                <span>${player.ratings.length} pagelle - ${player.events} eventi collegati</span>
+                <small>${esc(player.notes.filter(Boolean).slice(0,1)[0] || "Nessuna nota recente")}</small>
+            </div>
+            <div class="player-archive-score">${player.avg ? esc(player.avg.toFixed(1)) : "--"}</div>
+        </div>
+    `).join("");
+}
+
 function renderCoachAutopilot(){
     const talkBox = document.getElementById("coachHalftimeTalk");
     const questionsBox = document.getElementById("coachAssistantQuestions");
+    const remindersBox = document.getElementById("coachAutoReminders");
     const voiceHint = document.getElementById("coachVoiceAutopilotHint");
 
     if(talkBox){
@@ -396,6 +477,15 @@ function renderCoachAutopilot(){
     if(questionsBox){
         questionsBox.innerHTML = buildCoachAssistantQuestions().map(question => `
             <button class="coach-question-chip" type="button" data-question="${esc(question)}" onclick="applyCoachAssistantQuestion(this)">${esc(question)}</button>
+        `).join("");
+    }
+
+    if(remindersBox){
+        remindersBox.innerHTML = buildCoachReminders().map(reminder => `
+            <div class="coach-ai-tip warn">
+                <strong>Promemoria staff</strong>
+                <span>${esc(reminder)}</span>
+            </div>
         `).join("");
     }
 
@@ -444,6 +534,7 @@ function renderAll(){
     if(typeof renderLineup === "function") renderLineup();
     renderTimeline();
     renderRatings();
+    renderPlayerArchive();
     renderReport();
     renderHistory();
     renderCoachPlanCard();

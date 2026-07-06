@@ -454,6 +454,89 @@ function getBestRating(){
     return [...coachState.ratings].sort((a,b) => Number(b.vote || 0) - Number(a.vote || 0))[0];
 }
 
+function getPlayerEventImpact(player){
+    const name = String(player?.name || player?.player || "").toLowerCase();
+    const number = String(player?.number || "").trim();
+    const side = normalizeLineupSide(player?.side || "home", player);
+    const events = coachState.events.filter(e => {
+        if(e.side !== side) return false;
+        const text = `${e.player || ""} ${e.note || ""}`.toLowerCase();
+        return (name && text.includes(name)) || (number && text.includes(`#${number}`)) || (number && text.includes(` ${number} `));
+    });
+    const positive = events.filter(e => ["gol","occasione","tiro","recupero","pressing","ampiezza"].includes(e.type)).length;
+    const negative = events.filter(e => ["palla_persa","errore_difensivo","cartellino"].includes(e.type)).length;
+    const goals = events.filter(e => e.type === "gol").length;
+    const chances = events.filter(e => e.type === "occasione" || e.type === "tiro").length;
+    const recoveries = events.filter(e => e.type === "recupero" || e.type === "pressing").length;
+    const errors = events.filter(e => e.type === "palla_persa" || e.type === "errore_difensivo").length;
+    return {events, positive, negative, goals, chances, recoveries, errors};
+}
+
+function buildAiRatingForPlayer(player){
+    const p = normalizeLineupPlayer(player);
+    const impact = getPlayerEventImpact(p);
+    let vote = 6;
+    vote += impact.goals * 1.2;
+    vote += impact.chances * 0.35;
+    vote += impact.recoveries * 0.25;
+    vote -= impact.errors * 0.45;
+    vote = Math.max(4.5, Math.min(9, Math.round(vote * 2) / 2));
+
+    const strengths = [];
+    const improve = [];
+    if(impact.goals) strengths.push("incide negli episodi decisivi");
+    if(impact.chances) strengths.push("partecipa alla produzione offensiva");
+    if(impact.recoveries) strengths.push("porta intensita e recupero palla");
+    if(!strengths.length) strengths.push("prestazione ordinata da confermare con osservazione staff");
+    if(impact.errors) improve.push("gestire meglio scelta e coperture nei momenti critici");
+    if(Number(vote) <= 6) improve.push("aumentare continuita, comunicazione e presenza nel gioco");
+    if(!improve.length) improve.push("consolidare quanto fatto bene nel prossimo allenamento");
+
+    return {
+        id:Date.now()+Math.random(),
+        player:formatLineupPlayer(p),
+        side:p.side,
+        team:getTeamName(p.side),
+        role:p.role || "Jolly",
+        vote,
+        note:`Bozza AI: punti forti: ${strengths.slice(0,2).join(", ")}. Da migliorare: ${improve[0]}. Consiglio: lavoro specifico su ruolo e principi della partita.`,
+        ai:true,
+        createdAt:new Date().toISOString()
+    };
+}
+
+function generateAiRatings(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+    ensureCoachStateShape();
+    const players = getLineup().filter(p => p.status !== "Panchina").slice(0,18);
+    if(!players.length){
+        showNotice("Inserisci la formazione: MatchIQ usa i giocatori per proporre le pagelle.", "warn");
+        return;
+    }
+
+    let added = 0;
+    players.forEach(player => {
+        if(!canAddCoachRating()) return;
+        const exists = coachState.ratings.some(r => String(r.player || "").toLowerCase() === formatLineupPlayer(player).toLowerCase());
+        if(exists) return;
+        coachState.ratings.push(buildAiRatingForPlayer(player));
+        added += 1;
+    });
+
+    if(!added){
+        showNotice("Le pagelle sono gia presenti oppure hai raggiunto il limite del piano.", "warn");
+        renderAll();
+        return;
+    }
+
+    saveState();
+    renderAll();
+    showNotice(`Pagelle AI create: ${added}. Controllale e correggile prima del report.`, "ok", 3500);
+}
+
 function clearLineupForm(){
     setInputValue("lineupNumberInput", "");
     setInputValue("lineupNameInput", "");

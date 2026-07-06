@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V1.8.3 - Onboarding</title>
+<title>MatchIQ Coach Mode V1.9.0 - Onboarding</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -211,6 +211,47 @@
 }
 .coach-voice-status.blocked .coach-voice-dot{
     background:#ffe28a;
+}
+.player-archive-list{
+    display:grid;
+    gap:10px;
+}
+.player-archive-card{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:center;
+    padding:13px;
+    border-radius:16px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.10);
+}
+.player-archive-card strong,
+.player-archive-card span,
+.player-archive-card small{
+    display:block;
+}
+.player-archive-card span{
+    color:#aebee7;
+    font-size:12px;
+    margin-top:4px;
+}
+.player-archive-card small{
+    color:#8fa3d7;
+    font-size:11px;
+    margin-top:5px;
+}
+.player-archive-score{
+    min-width:52px;
+    height:52px;
+    border-radius:16px;
+    display:grid;
+    place-items:center;
+    font-size:18px;
+    font-weight:1000;
+    color:#00f5a0;
+    border:1px solid rgba(0,245,160,.30);
+    background:rgba(0,245,160,.10);
 }
 @media(max-width:900px){
     .coach-onboarding{grid-template-columns:1fr;gap:14px;margin:16px 0;}
@@ -779,7 +820,7 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V1.8.3</span>
+            <span class="badge green">COACH MODE V1.9.0</span>
 
             <h1>Il match analyst AI per i dilettanti</h1>
 
@@ -921,6 +962,10 @@
                 <button class="coach-live-btn warn" type="button" onclick="addTacticalLiveEvent('seconda_palla','Seconda palla','2BALL','Seconda palla persa: accorciare dopo il duello e aggredire la respinta.', 'home')"><strong>2a palla</strong><span>Duelli e rimbalzi</span></button>
                 <button class="coach-live-btn warn" type="button" onclick="addTacticalLiveEvent('ampiezza','Ampiezza','WIDTH','Manca ampiezza in possesso: aprire lato debole e dare piu linee di passaggio.', 'home')"><strong>Ampiezza</strong><span>Squadra stretta</span></button>
                 <button class="coach-live-btn danger" type="button" onclick="addTacticalLiveEvent('transizione','Transizione subita','TRANS','Transizione centrale subita: controllare rest defense e coperture preventive.', 'home')"><strong>Transizione</strong><span>Rest defense</span></button>
+                <button class="coach-live-btn danger" type="button" onclick="addTacticalLiveEvent('squadra_lunga','Squadra lunga','LONG','Squadra lunga tra i reparti: accorciare e proteggere zona centrale.', 'home')"><strong>Squadra lunga</strong><span>Distanze reparti</span></button>
+                <button class="coach-live-btn warn" type="button" onclick="addTacticalLiveEvent('uscita_lato','Uscita laterale','OUT','Uscita palla sporca sul lato: dare sostegno e terzo uomo.', 'home')"><strong>Uscita lato</strong><span>Costruzione</span></button>
+                <button class="coach-live-btn good" type="button" onclick="addTacticalLiveEvent('profondita','Profondita','DEPTH','Attacco profondita utile: continuare a minacciare spazio alle spalle.', 'home')"><strong>Profondita</strong><span>Attacco spazio</span></button>
+                <button class="coach-live-btn warn" type="button" onclick="addTacticalLiveEvent('comunicazione','Comunicazione','VOICE','Manca comunicazione tra reparti: richiamare guida e marcature.', 'home')"><strong>Comunicazione</strong><span>Staff alert</span></button>
             </div>
 
             <div class="coach-live-note">
@@ -953,6 +998,11 @@
                 <h3>Domande intelligenti</h3>
                 <p>Tocca una domanda, completa la nota e salvala: meno scrittura, piu contesto utile.</p>
                 <div class="coach-question-list" id="coachAssistantQuestions"></div>
+            </div>
+            <div class="coach-smart-panel">
+                <h3>Promemoria automatici</h3>
+                <p>Quando un tema si ripete, MatchIQ lo trasforma in priorita per allenamento e report.</p>
+                <div id="coachAutoReminders"></div>
             </div>
         </div>
     </div>
@@ -1278,6 +1328,7 @@
 
             <div class="micro-row">
                 <button class="btn green" onclick="addPlayerRating()">Aggiungi pagella</button>
+                <button class="btn pro" onclick="generateAiRatings()">Genera pagelle AI</button>
                 <button class="btn dark" onclick="clearRatingForm()">Pulisci campi</button>
             </div>
         </div>
@@ -1291,6 +1342,16 @@
                 <div class="empty">
                     Nessuna pagella inserita. Aggiungi almeno un giocatore per arricchire il report.
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="panel">
+            <span class="badge green">ARCHIVIO GIOCATORI</span>
+            <h2>Storico prestazioni</h2>
+            <p>MatchIQ aggrega pagelle, eventi e note per creare una memoria tecnica dei giocatori.</p>
+            <div id="playerArchiveList" class="player-archive-list">
+                <div class="empty">Ancora nessuno storico giocatore.</div>
             </div>
         </div>
     </div>
@@ -1321,6 +1382,7 @@
                 <button class="btn gold" onclick="downloadReportTxt()">Scarica TXT</button>
                 <button class="btn green" onclick="printCoachPdf()">Scarica PDF</button>
                 <button class="btn dark" onclick="copyWhatsAppSummary()">Copia WhatsApp</button>
+                <button class="btn dark" onclick="copyTeamSummary()">Sintesi squadra</button>
             </div>
             <div class="whatsapp-hint">Usa “Copia WhatsApp” per condividere una sintesi rapida con mister, staff o gruppo squadra.</div>
         </div>
@@ -1365,11 +1427,11 @@
     <a class="active" href="/coach.html">Coach</a>
     <a href="/account.html">Account</a>
 </nav>
-<script src="/js/coach-state.js?v=10458"></script>
-<script src="/js/coach-storage.js?v=10458"></script>
-<script src="/js/coach-actions.js?v=10458"></script>
-<script src="/js/coach-report.js?v=10458"></script>
-<script src="/js/coach-render.js?v=10458"></script>
-<script src="/js/coach-core.js?v=10458"></script>
+<script src="/js/coach-state.js?v=10459"></script>
+<script src="/js/coach-storage.js?v=10459"></script>
+<script src="/js/coach-actions.js?v=10459"></script>
+<script src="/js/coach-report.js?v=10459"></script>
+<script src="/js/coach-render.js?v=10459"></script>
+<script src="/js/coach-core.js?v=10459"></script>
 </body>
 </html>

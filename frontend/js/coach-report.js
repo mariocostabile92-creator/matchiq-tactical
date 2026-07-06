@@ -145,6 +145,38 @@ Focus allenamento: ${buildTrainingAdvice().replace("Allenamento consigliato: ","
 Report generato con MatchIQ Coach.`;
 }
 
+function buildTeamStaffSummary(){
+    if(!coachState.match) return "";
+    const m = coachState.match;
+    const reminders = typeof buildCoachReminders === "function" ? buildCoachReminders() : [];
+    const halftime = typeof buildCoachHalftimeTalk === "function" ? buildCoachHalftimeTalk() : [];
+    return `SINTESI BREVE MATCHIQ
+${m.homeTeam} vs ${m.awayTeam} - ${getGoals("home")}-${getGoals("away")}
+
+Per la squadra:
+${halftime.slice(0,3).map((x,i) => `${i+1}. ${x}`).join("\n")}
+
+Priorita staff:
+${reminders.slice(0,3).map((x,i) => `${i+1}. ${x}`).join("\n")}
+
+Prossimo allenamento:
+${buildTrainingAdvice().replace("Allenamento consigliato: ","")}`;
+}
+
+async function copyTeamSummary(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+    const text = buildTeamStaffSummary();
+    try{
+        await navigator.clipboard.writeText(text);
+        showNotice("Sintesi squadra/staff copiata.", "ok");
+    }catch{
+        showNotice("Non riesco a copiare automaticamente. Seleziona il testo manualmente.", "warn");
+    }
+}
+
 async function copyWhatsAppSummary(){
     if(!canUseCoachWhatsapp()){
         showCoachProNotice("Sintesi WhatsApp");
@@ -251,6 +283,9 @@ ${buildLiveAssistantReportText()}
 <strong>Cosa dire all'intervallo</strong>
 ${buildHalftimeReportText()}
 
+<strong>Promemoria automatici</strong>
+${typeof buildCoachReminders === "function" ? buildCoachReminders().map(x => "- " + x).join("\n") : "- Nessun promemoria disponibile."}
+
 <strong>Criticità tattiche</strong>
 ${buildCriticalIssues()}
 
@@ -260,11 +295,14 @@ ${buildTrainingAdvice()}
 <strong>Sintesi WhatsApp</strong>
 ${buildWhatsAppSummary()}
 
+<strong>Sintesi breve squadra/staff</strong>
+${buildTeamStaffSummary()}
+
 <strong>Messaggio per la squadra</strong>
 La partita va letta con lucidità: gli episodi registrati mostrano cosa ha funzionato e cosa va migliorato. La priorità è trasformare il report in lavoro sul campo, mantenendo atteggiamento, intensità e attenzione nei dettagli.
 
 <strong>Nota</strong>
-Report generato localmente da MatchIQ Coach V1.8.1: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
+Report generato localmente da MatchIQ Coach V1.9.0: utile come base per analisi post-partita, confronto staff e lavoro settimanale sul campo.
 `.trim();
 
     coachState.report = report;
@@ -353,9 +391,11 @@ function splitReportSections(reportHtml){
         "Consigli per il mister",
         "Assistente live MatchIQ",
         "Cosa dire all'intervallo",
+        "Promemoria automatici",
         "Criticità tattiche",
         "Allenamento consigliato",
         "Sintesi WhatsApp",
+        "Sintesi breve squadra/staff",
         "Messaggio per la squadra",
         "Nota"
     ];
