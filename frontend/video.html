@@ -978,9 +978,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10475">Home</a>
-        <a class="btn dark" href="/coach.html?v=10475">Coach</a>
-        <a class="btn dark" href="/account.html?v=10475">Account</a>
+        <a class="btn dark" href="/index.html?v=10476">Home</a>
+        <a class="btn dark" href="/coach.html?v=10476">Coach</a>
+        <a class="btn dark" href="/account.html?v=10476">Account</a>
     </nav>
 </header>
 
@@ -1050,7 +1050,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10475">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10476">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1060,7 +1060,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10475">Scopri piano club</a>
+                    <a href="/account.html?v=10476">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1388,7 +1388,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10475";
+const APP_VERSION = "10476";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -2993,6 +2993,11 @@ function isSetPieceFocus(value){
     return /(palla inattiva|palle inattive|angolo|corner|punizion|rimess)/.test(f);
 }
 
+function isStrictTacticalFocus(value){
+    const f = normalizeFocus(value);
+    return isSetPieceFocus(f) || /(costruzione dal basso|prima costruzione|rimessa dal fondo|portiere)/.test(f);
+}
+
 function tacticalFrameLabel(focus, greenRatio, whiteRatio, edgeScore){
     const f = normalizeFocus(focus);
     if(greenRatio < .18) return "scartato: poco campo";
@@ -3001,6 +3006,7 @@ function tacticalFrameLabel(focus, greenRatio, whiteRatio, edgeScore){
     if(f.includes("punizion") && f.includes("central")) return "candidato punizione centrale";
     if(f.includes("rimess") && f.includes("lateral")) return "candidato rimessa laterale";
     if(f.includes("rimessa dal fondo")) return "candidato rimessa dal fondo";
+    if(f.includes("costruzione dal basso") || f.includes("prima costruzione")) return "candidato costruzione dal basso";
     if(f.includes("palle inattive") || f.includes("palla inattiva")) return "candidato palla inattiva";
     if(f.includes("pressing") || f.includes("transizion")) return "azione/pressione";
     if(f.includes("ampiezza")) return "ampiezza campo";
@@ -3060,6 +3066,8 @@ function scoreTacticalFrame(ctx, width, height, time, duration, focus){
 
     if(f.includes("angolo") || f.includes("corner") || f.includes("punizion") || f.includes("rimess") || f.includes("palla inattiva")){
         focusBonus += greenRatio * 58 + whiteRatio * 500 + edgeScore * 85 + verticalBalance * 18;
+    }else if(f.includes("costruzione dal basso") || f.includes("prima costruzione") || f.includes("portiere")){
+        focusBonus += greenRatio * 52 + whiteRatio * 380 + edgeScore * 80 + verticalBalance * 22 + centerPitch * 12;
     }else if(f.includes("linea") || f.includes("difens") || f.includes("offens") || f.includes("centrocampo")){
         focusBonus += greenRatio * 48 + whiteRatio * 420 + verticalBalance * 18 + centerPitch * 10;
     }else if(f.includes("ampiezza")){
@@ -3221,7 +3229,7 @@ async function extractFrames(){
     canvas.height = Math.round(sourceHeight * ratio);
 
     const focus = document.getElementById("videoFocus").value;
-    const candidateCount = isSetPieceFocus(focus) ? 32 : Math.min(32, Math.max(count * 4, 16));
+    const candidateCount = isStrictTacticalFocus(focus) ? 44 : Math.min(32, Math.max(count * 4, 16));
     const candidates = [];
 
     for(let i=0;i<candidateCount;i++){

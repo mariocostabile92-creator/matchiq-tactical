@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Tuple
 
@@ -12,19 +13,20 @@ class TacticalSituation:
     keywords: Tuple[str, ...]
     strict: bool = False
     min_quality: int = 65
+    required_signals: Tuple[str, ...] = ()
 
 
 SITUATIONS: Tuple[TacticalSituation, ...] = (
-    TacticalSituation("corner_defensive", "Calcio d'angolo difensivo", "corner", ("calcio d'angolo difensivo", "corner difensivo"), True, 82),
-    TacticalSituation("corner_offensive", "Calcio d'angolo offensivo", "corner", ("calcio d'angolo offensivo", "corner offensivo"), True, 82),
-    TacticalSituation("wide_free_kick_defensive", "Punizione laterale difensiva", "free_kick", ("punizione laterale difensiva",), True, 78),
-    TacticalSituation("wide_free_kick_offensive", "Punizione laterale offensiva", "free_kick", ("punizione laterale offensiva",), True, 78),
-    TacticalSituation("central_free_kick_defensive", "Punizione centrale difensiva", "free_kick", ("punizione centrale difensiva",), True, 78),
-    TacticalSituation("central_free_kick_offensive", "Punizione centrale offensiva", "free_kick", ("punizione centrale offensiva",), True, 78),
-    TacticalSituation("throw_in_defensive", "Rimessa laterale difensiva", "throw_in", ("rimessa laterale difensiva",), True, 78),
-    TacticalSituation("throw_in_offensive", "Rimessa laterale offensiva", "throw_in", ("rimessa laterale offensiva",), True, 78),
-    TacticalSituation("goal_kick", "Rimessa dal fondo", "goal_kick", ("rimessa dal fondo", "rinvio dal fondo"), True, 74),
-    TacticalSituation("build_from_back", "Costruzione dal basso", "build_up", ("costruzione dal basso", "portiere", "prima costruzione"), True, 72),
+    TacticalSituation("corner_defensive", "Calcio d'angolo difensivo", "corner", ("calcio d'angolo difensivo", "corner difensivo"), True, 84, ("corner", "calcio d'angolo", "bandierina", "area", "palla ferma", "punto di battuta")),
+    TacticalSituation("corner_offensive", "Calcio d'angolo offensivo", "corner", ("calcio d'angolo offensivo", "corner offensivo"), True, 84, ("corner", "calcio d'angolo", "bandierina", "area", "palla ferma", "punto di battuta")),
+    TacticalSituation("wide_free_kick_defensive", "Punizione laterale difensiva", "free_kick", ("punizione laterale difensiva",), True, 80, ("punizione", "palla ferma", "barriera", "punto di battuta", "linea difensiva", "fallo")),
+    TacticalSituation("wide_free_kick_offensive", "Punizione laterale offensiva", "free_kick", ("punizione laterale offensiva",), True, 80, ("punizione", "palla ferma", "barriera", "punto di battuta", "linea difensiva", "fallo")),
+    TacticalSituation("central_free_kick_defensive", "Punizione centrale difensiva", "free_kick", ("punizione centrale difensiva",), True, 80, ("punizione", "palla ferma", "barriera", "punto di battuta", "linea difensiva", "fallo")),
+    TacticalSituation("central_free_kick_offensive", "Punizione centrale offensiva", "free_kick", ("punizione centrale offensiva",), True, 80, ("punizione", "palla ferma", "barriera", "punto di battuta", "linea difensiva", "fallo")),
+    TacticalSituation("throw_in_defensive", "Rimessa laterale difensiva", "throw_in", ("rimessa laterale difensiva",), True, 80, ("rimessa", "laterale", "linea laterale", "mani", "fuori", "battuta")),
+    TacticalSituation("throw_in_offensive", "Rimessa laterale offensiva", "throw_in", ("rimessa laterale offensiva",), True, 80, ("rimessa", "laterale", "linea laterale", "mani", "fuori", "battuta")),
+    TacticalSituation("goal_kick", "Rimessa dal fondo", "goal_kick", ("rimessa dal fondo", "rinvio dal fondo"), True, 76, ("rimessa dal fondo", "rinvio", "portiere", "area piccola", "difensori", "palla ferma")),
+    TacticalSituation("build_from_back", "Costruzione dal basso", "build_up", ("costruzione dal basso", "portiere", "prima costruzione"), True, 74, ("portiere", "difensori", "prima costruzione", "pressione", "linee di passaggio", "palla bassa")),
     TacticalSituation("defensive_line", "Linea difensiva", "line", ("linea difensiva", "difensiva"), False, 64),
     TacticalSituation("midfield_line", "Linea centrocampo", "line", ("centrocampo", "linea centrocampo"), False, 62),
     TacticalSituation("offensive_line", "Linea offensiva", "line", ("linea offensiva", "offensiva"), False, 62),
@@ -32,9 +34,9 @@ SITUATIONS: Tuple[TacticalSituation, ...] = (
     TacticalSituation("width", "Ampiezza", "spacing", ("ampiezza",), False, 62),
     TacticalSituation("between_lines", "Spazio tra reparti", "spacing", ("spazio tra reparti", "reparti"), False, 62),
     TacticalSituation("rest_defense", "Rest defense", "rest_defense", ("rest defense", "rest difensiva"), False, 62),
-    TacticalSituation("set_piece_defensive", "Palla inattiva difensiva", "set_piece_defensive", ("palla inattiva difensiva", "palle inattive difensive"), True, 78),
-    TacticalSituation("set_piece_offensive", "Palla inattiva offensiva", "set_piece_offensive", ("palla inattiva offensiva", "palle inattive offensive"), True, 78),
-    TacticalSituation("set_piece_generic", "Palla inattiva", "set_piece", ("palla inattiva", "palle inattive"), True, 76),
+    TacticalSituation("set_piece_defensive", "Palla inattiva difensiva", "set_piece_defensive", ("palla inattiva difensiva", "palle inattive difensive"), True, 78, ("calcio d'angolo", "corner", "punizione", "rimessa", "laterale", "palla ferma", "punto di battuta", "bandierina", "barriera", "area", "marcature")),
+    TacticalSituation("set_piece_offensive", "Palla inattiva offensiva", "set_piece_offensive", ("palla inattiva offensiva", "palle inattive offensive"), True, 78, ("calcio d'angolo", "corner", "punizione", "rimessa", "laterale", "palla ferma", "punto di battuta", "bandierina", "barriera", "area", "marcature")),
+    TacticalSituation("set_piece_generic", "Palla inattiva", "set_piece", ("palla inattiva", "palle inattive"), True, 76, ("calcio d'angolo", "corner", "punizione", "rimessa", "laterale", "palla ferma", "punto di battuta", "bandierina", "barriera", "area", "marcature")),
     TacticalSituation("general", "Analisi tattica generale", "general", ("analisi tattica", "generale"), False, 55),
 )
 
@@ -71,7 +73,31 @@ def resolve_situation(value: str) -> TacticalSituation:
 
 
 def detected_situation(note: Dict[str, Any]) -> TacticalSituation:
-    return resolve_situation(_text(note.get("set_piece_type"), note.get("phase"), note.get("label"), note.get("reason")))
+    return resolve_situation(_signals_text(note))
+
+
+def _signals_text(note: Dict[str, Any]) -> str:
+    values: List[Any] = [
+        note.get("set_piece_type"),
+        note.get("phase"),
+        note.get("label"),
+        note.get("reason"),
+        note.get("grade_reason"),
+        note.get("camera"),
+        note.get("ai_reason"),
+        note.get("restart_type"),
+        note.get("restart_side"),
+        note.get("field_zone"),
+        note.get("ball_state"),
+        note.get("evidence"),
+    ]
+    for key in ("visual_signals", "missing_signals"):
+        signals = note.get(key)
+        if isinstance(signals, list):
+            values.extend(signals)
+        else:
+            values.append(signals)
+    return _text(*values)
 
 
 def _compatible(requested: TacticalSituation, detected: TacticalSituation) -> bool:
@@ -109,6 +135,63 @@ def _local_reasons(meta: Dict[str, Any]) -> List[str]:
     return reasons
 
 
+def _signal_hits(text: str, signals: Tuple[str, ...]) -> List[str]:
+    hits: List[str] = []
+    for signal in signals:
+        if not signal or signal not in text:
+            continue
+        negated = re.search(rf"(senza|manca|mancano|non si vede|non visibile|assente)\s+.{0,24}{re.escape(signal)}", text)
+        if not negated:
+            hits.append(signal)
+    return hits
+
+
+def _set_piece_evidence(requested: TacticalSituation, detected: TacticalSituation, text: str) -> Tuple[List[str], List[str]]:
+    reasons: List[str] = []
+    reject_reasons: List[str] = []
+
+    if requested.group == "corner" or detected.group == "corner":
+        hits = _signal_hits(text, ("corner", "calcio d'angolo", "bandierina", "area", "palla ferma", "punto di battuta", "traiettoria da corner"))
+        if "azione a campo aperto" in text or "open_play" in text:
+            reject_reasons.append("azione aperta, non calcio d'angolo")
+        if not any(hit in hits for hit in ("corner", "calcio d'angolo")) or not any(hit in hits for hit in ("bandierina", "area", "palla ferma", "punto di battuta", "traiettoria da corner")):
+            reject_reasons.append("mancano prove visive da calcio d'angolo")
+
+    if requested.group == "free_kick" or detected.group == "free_kick":
+        hits = _signal_hits(text, ("punizione", "palla ferma", "barriera", "punto di battuta", "fallo", "linea difensiva"))
+        if "azione a campo aperto" in text or "open_play" in text:
+            reject_reasons.append("azione aperta, non punizione")
+        if "punizione" not in hits or len(hits) < 2:
+            reject_reasons.append("mancano prove visive da punizione")
+
+    if requested.group == "throw_in" or detected.group == "throw_in":
+        hits = _signal_hits(text, ("rimessa", "laterale", "linea laterale", "mani", "fuori", "battuta"))
+        if "azione a campo aperto" in text or "open_play" in text:
+            reject_reasons.append("azione aperta, non rimessa laterale")
+        if "rimessa" not in hits or len(hits) < 2:
+            reject_reasons.append("mancano prove visive da rimessa laterale")
+
+    if requested.group == "goal_kick" or detected.group == "goal_kick":
+        hits = _signal_hits(text, ("rimessa dal fondo", "rinvio", "portiere", "area piccola", "palla ferma", "difensori"))
+        if not any(hit in hits for hit in ("rimessa dal fondo", "rinvio", "portiere")) or len(hits) < 2:
+            reject_reasons.append("mancano prove visive da rimessa dal fondo")
+
+    if requested.group == "build_up" or detected.group == "build_up":
+        has_first_line = any(signal in text for signal in ("portiere", "difensori", "centrali", "area"))
+        has_build_signal = any(signal in text for signal in ("prima costruzione", "costruzione dal basso", "pressione", "linee di passaggio", "palla bassa"))
+        if not (has_first_line and has_build_signal):
+            reject_reasons.append("mancano portiere/difensori e segnali di prima costruzione")
+
+    if requested.group in {"set_piece", "set_piece_defensive", "set_piece_offensive"}:
+        if detected.group == "set_piece" or detected.id.startswith("set_piece"):
+            reasons.append("palla inattiva generica: classificare il tipo prima del PDF")
+        hits = _signal_hits(text, requested.required_signals)
+        if len(hits) < 2:
+            reject_reasons.append("palla inattiva non dimostrata da segnali visivi sufficienti")
+
+    return reasons, reject_reasons
+
+
 def validate_frame_note(
     note: Dict[str, Any],
     requested: TacticalSituation,
@@ -117,7 +200,7 @@ def validate_frame_note(
     local_meta = local_meta or {}
     detected = detected_situation(note)
     quality = _quality(note.get("quality") or note.get("ai_quality"))
-    text = _text(note.get("phase"), note.get("set_piece_type"), note.get("grade"), note.get("reason"), note.get("grade_reason"))
+    text = _signals_text(note)
 
     reasons: List[str] = []
     reject_reasons: List[str] = []
@@ -140,6 +223,19 @@ def validate_frame_note(
         reject_reasons.append("rimessa laterale non riconosciuta con certezza")
     if requested.strict and requested.group == "free_kick" and detected.group != "free_kick":
         reject_reasons.append("punizione non riconosciuta con certezza")
+    if requested.strict and requested.group == "goal_kick" and detected.group != "goal_kick":
+        reject_reasons.append("rimessa dal fondo non riconosciuta con certezza")
+    if requested.strict and requested.group == "build_up" and detected.group != "build_up":
+        reject_reasons.append("costruzione dal basso non riconosciuta con certezza")
+
+    evidence_reasons, evidence_rejects = _set_piece_evidence(requested, detected, text)
+    reasons.extend(evidence_reasons)
+    reject_reasons.extend(evidence_rejects)
+
+    if detected.group == "set_piece" and requested.group in {"set_piece", "set_piece_defensive", "set_piece_offensive"}:
+        quality = min(quality, 58)
+    if reject_reasons:
+        quality = min(quality, 44)
 
     threshold = requested.min_quality
     if reject_reasons:

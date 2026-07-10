@@ -431,6 +431,9 @@ Regole importanti:
 - Se il focus chiede punizioni, seleziona solo frame con palla ferma, barriera/linea difensiva o punto di battuta riconoscibile. Non chiamare punizione un cross o un'azione dinamica.
 - Se il focus chiede rimesse laterali, seleziona solo frame con giocatore vicino alla linea laterale in gesto di battuta o palla fuori/ferma in zona laterale. Non chiamare rimessa una normale azione sulla fascia.
 - Riconosci "Costruzione dal basso" quando la palla parte da portiere/difensori, con prima pressione avversaria e linee di passaggio basse.
+- Per ogni frame indica restart_type, ball_state, field_zone e visual_signals. Se non trovi segnali visivi chiari, usa restart_type "open_play" o "unknown" e non forzare palle inattive.
+- Se il focus chiede un tipo specifico e nessun fotogramma lo dimostra, restituisci selected_indexes vuoto e metti i frame dubbi come "Da scartare" o "Spunto utile".
+- Non selezionare come "Slide pronta" una palla inattiva senza almeno 2 prove visive tra: palla ferma, punto di battuta, bandierina, barriera, area pronta, gesto di rimessa, portiere in area, difensori in costruzione.
 - Classifica ogni frame con grade: "Slide pronta" solo se palla, campo, reparti e fase sono leggibili; "Spunto utile" se la situazione puo aiutare ma va controllata; "Da scartare" se non va nello storyboard.
 - Per palle inattive e costruzione dal basso non basta un'inquadratura generica: serve vedere chiaramente punto di battuta/portiere, palla, compagni e avversari rilevanti. Altrimenti usa "Spunto utile" o "Da scartare".
 - Se il frame mostra esultanza, primo piano, giocatore isolato, panchina, arbitro o scena senza lettura collettiva, non chiamarlo linea difensiva/pressing: usa phase "Frame non tattico", quality massimo 35 e non aggiungere line_suggestions.
@@ -454,6 +457,13 @@ Schema JSON:
       "grade": "Slide pronta",
       "quality": 88,
       "camera": "campo aperto",
+      "restart_type": "corner",
+      "restart_side": "defensive",
+      "field_zone": "corner_flag",
+      "ball_state": "stopped",
+      "visual_signals": ["punto di battuta vicino alla bandierina", "area pronta", "marcature visibili"],
+      "missing_signals": [],
+      "evidence": "Si vedono punto di battuta del corner, palla ferma e marcature in area",
       "reason": "Punto di battuta, area e marcature visibili",
       "grade_reason": "Corner difensivo riconoscibile con avversari e marcature in area",
       "team_colors": ["bianco", "verde"],
@@ -1214,6 +1224,13 @@ def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_u
             "ai_quality": quality,
             "ai_reason": _clean_text(note.get("reason", ""), 220),
             "reason": _clean_text(note.get("reason", ""), 220),
+            "restart_type": _clean_text(note.get("restart_type", ""), 40),
+            "restart_side": _clean_text(note.get("restart_side", ""), 40),
+            "field_zone": _clean_text(note.get("field_zone", ""), 60),
+            "ball_state": _clean_text(note.get("ball_state", ""), 40),
+            "visual_signals": [_clean_text(item, 90) for item in note.get("visual_signals", [])[:8]] if isinstance(note.get("visual_signals"), list) else [],
+            "missing_signals": [_clean_text(item, 90) for item in note.get("missing_signals", [])[:8]] if isinstance(note.get("missing_signals"), list) else [],
+            "evidence": _clean_text(note.get("evidence", ""), 220),
             "team_colors": note.get("team_colors") if isinstance(note.get("team_colors"), list) else [],
             "visible_numbers": note.get("visible_numbers") if isinstance(note.get("visible_numbers"), list) else [],
             "player_read": _clean_text(note.get("player_read", ""), 180),
