@@ -3,4 +3,7 @@ __pycache__/
 .env
 .env.local
 matchiq.db
+*.db
+*.sqlite
+*.sqlite3
 reports/
