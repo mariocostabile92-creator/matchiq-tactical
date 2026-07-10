@@ -29,7 +29,7 @@ OPENAI_VIDEO_MODEL = os.getenv("OPENAI_VIDEO_MODEL", "gpt-4.1-mini").strip()
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
 MAX_FRAMES = int(os.getenv("VIDEO_REPORT_MAX_FRAMES", "6"))
-MAX_SELECTION_FRAMES = int(os.getenv("VIDEO_SELECTION_MAX_FRAMES", "16"))
+MAX_SELECTION_FRAMES = int(os.getenv("VIDEO_SELECTION_MAX_FRAMES", "32"))
 MAX_FRAME_CHARS = int(os.getenv("VIDEO_REPORT_MAX_FRAME_CHARS", "900000"))
 
 
@@ -403,12 +403,16 @@ Regole importanti:
 - Se il focus e' pressing o transizioni, preferisci frame con palla, portatore, avversari vicini e densita attorno alla zona palla.
 - Riconosci palle inattive in modo specifico: "Calcio d'angolo offensivo", "Calcio d'angolo difensivo", "Punizione laterale offensiva", "Punizione laterale difensiva", "Punizione centrale offensiva", "Punizione centrale difensiva", "Rimessa laterale offensiva", "Rimessa laterale difensiva", "Rimessa dal fondo".
 - Non usare "Palla inattiva offensiva/difensiva" se puoi capire il tipo reale. Se non lo capisci, usa "Palla inattiva da classificare" con grade massimo "Spunto utile".
+- Se il focus chiede calci d'angolo, seleziona solo frame in cui si vede davvero un corner: punto di battuta vicino alla bandierina, area pronta, giocatori schierati, palla ferma o traiettoria da corner. Non chiamare corner un'azione a campo aperto.
+- Se il focus chiede punizioni, seleziona solo frame con palla ferma, barriera/linea difensiva o punto di battuta riconoscibile. Non chiamare punizione un cross o un'azione dinamica.
+- Se il focus chiede rimesse laterali, seleziona solo frame con giocatore vicino alla linea laterale in gesto di battuta o palla fuori/ferma in zona laterale. Non chiamare rimessa una normale azione sulla fascia.
 - Riconosci "Costruzione dal basso" quando la palla parte da portiere/difensori, con prima pressione avversaria e linee di passaggio basse.
 - Classifica ogni frame con grade: "Slide pronta" solo se palla, campo, reparti e fase sono leggibili; "Spunto utile" se la situazione puo aiutare ma va controllata; "Da scartare" se non va nello storyboard.
 - Per palle inattive e costruzione dal basso non basta un'inquadratura generica: serve vedere chiaramente punto di battuta/portiere, palla, compagni e avversari rilevanti. Altrimenti usa "Spunto utile" o "Da scartare".
 - Se il frame mostra esultanza, primo piano, giocatore isolato, panchina, arbitro o scena senza lettura collettiva, non chiamarlo linea difensiva/pressing: usa phase "Frame non tattico", quality massimo 35 e non aggiungere line_suggestions.
 - In selected_indexes metti prima le "Slide pronta", poi eventuali "Spunto utile"; evita "Da scartare" salvo mancanza totale di alternative.
 - Non fidarti del pre-score locale se l'immagine reale lo contraddice: guarda il fotogramma e correggi etichetta e quality.
+- Se il pre-score locale dice corner/punizione/rimessa ma l'immagine non lo dimostra chiaramente, correggi phase in "Frame non tattico" o "Palla inattiva da classificare" e metti quality massimo 45.
 - Non inventare nomi dei giocatori. Se nelle formazioni e' scritto "numero + nome" e il numero e' leggibile, puoi citare il nome come ipotesi prudente.
 - Le line_suggestions devono usare coordinate normalizzate da 0 a 1 rispetto all'immagine: x sinistra-destra, y alto-basso.
 - Suggerisci al massimo 2 effetti per frame e solo quando la lettura e' plausibile. Per "line_suggestions" puoi usare phase come: Linea difensiva, Linea centrocampo, Calcio d'angolo difensivo, Punizione laterale offensiva, Rimessa laterale difensiva, Rimessa dal fondo, Costruzione dal basso, Cono d'ombra, Zona libera, Rest defense.

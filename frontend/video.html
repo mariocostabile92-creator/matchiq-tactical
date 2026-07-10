@@ -887,9 +887,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10468">Home</a>
-        <a class="btn dark" href="/coach.html?v=10468">Coach</a>
-        <a class="btn dark" href="/account.html?v=10468">Account</a>
+        <a class="btn dark" href="/index.html?v=10469">Home</a>
+        <a class="btn dark" href="/coach.html?v=10469">Coach</a>
+        <a class="btn dark" href="/account.html?v=10469">Account</a>
     </nav>
 </header>
 
@@ -959,7 +959,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10468">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10469">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -969,7 +969,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10468">Scopri piano club</a>
+                    <a href="/account.html?v=10469">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1263,7 +1263,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10468";
+const APP_VERSION = "10469";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1452,6 +1452,7 @@ function slideGradeClass(grade){
 
 function inferSetPieceType(value="", phase=""){
     const text = `${value || ""} ${phase || ""}`.toLowerCase();
+    if(text.includes("candidato") || text.includes("da classificare") || text.includes("spunto")) return "";
     const side = text.includes("difens") ? " difensivo" : text.includes("offens") ? " offensivo" : "";
     if(text.includes("corner") || text.includes("angolo")) return `Calcio d'angolo${side}`.trim();
     if(text.includes("rimessa dal fondo") || text.includes("rinvio")) return "Rimessa dal fondo";
@@ -1559,7 +1560,7 @@ function buildFallbackSlides(){
             frame_index:index,
             time_label:time,
             phase:status.phase,
-            set_piece_type:meta.set_piece_type || inferSetPieceType(status.phase, label),
+            set_piece_type:meta.selector === "AI" ? (meta.set_piece_type || inferSetPieceType(status.phase, label)) : "",
             grade:quality.grade,
             grade_reason:quality.reason,
             title:quality.grade === "Da scartare" ? `Frame ${index + 1}: non entra nello storyboard` : (status.kind === "trusted" ? `Frame ${index + 1}: ${cleanTacticalPhase(label, status.phase)}` : `Frame ${index + 1}: spunto tattico`),
@@ -1582,7 +1583,7 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
             ...slide,
             index: slide.index || index + 1,
             frame_index: frameIndex,
-            set_piece_type: slide.set_piece_type || inferSetPieceType(slide.phase, slide.title),
+            set_piece_type: slide.set_piece_type || (String(slide.title || "").toLowerCase().includes("candidato") ? "" : inferSetPieceType(slide.phase, slide.title)),
             grade,
             grade_reason: slide.grade_reason || (grade === "Slide pronta" ? "Frame pronto per storyboard." : grade === "Spunto utile" ? "Frame utile, da controllare." : "Frame escluso dalla scaletta principale.")
         };
@@ -1621,7 +1622,7 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
         const confidence = Number(slide.confidence || 0);
         const grade = normalizeSlideGrade(slide.grade, confidence, slide.phase);
         const cardClass = grade === "Slide pronta" ? "ready" : grade === "Spunto utile" ? "useful" : "reject";
-        const setPiece = slide.set_piece_type || inferSetPieceType(slide.phase, slide.title);
+        const setPiece = slide.set_piece_type || "";
         return `
             <article class="ai-slide ${cardClass}">
                 ${frame ? `<img src="${frame}" alt="Slide ${escapeHtml(slide.index || "")}">` : `<div></div>`}
@@ -2563,15 +2564,20 @@ function normalizeFocus(value){
     return String(value || "").toLowerCase();
 }
 
+function isSetPieceFocus(value){
+    const f = normalizeFocus(value);
+    return /(palla inattiva|palle inattive|angolo|corner|punizion|rimess)/.test(f);
+}
+
 function tacticalFrameLabel(focus, greenRatio, whiteRatio, edgeScore){
     const f = normalizeFocus(focus);
     if(greenRatio < .18) return "scartato: poco campo";
-    if(f.includes("angolo") || f.includes("corner")) return f.includes("difens") ? "Calcio d'angolo difensivo" : f.includes("offens") ? "Calcio d'angolo offensivo" : "Calcio d'angolo";
-    if(f.includes("punizion") && f.includes("later")) return f.includes("difens") ? "Punizione laterale difensiva" : f.includes("offens") ? "Punizione laterale offensiva" : "Punizione laterale";
-    if(f.includes("punizion") && f.includes("central")) return f.includes("difens") ? "Punizione centrale difensiva" : f.includes("offens") ? "Punizione centrale offensiva" : "Punizione centrale";
-    if(f.includes("rimess") && f.includes("lateral")) return f.includes("difens") ? "Rimessa laterale difensiva" : f.includes("offens") ? "Rimessa laterale offensiva" : "Rimessa laterale";
-    if(f.includes("rimessa dal fondo")) return "Rimessa dal fondo";
-    if(f.includes("palle inattive") || f.includes("palla inattiva")) return f.includes("difens") ? "Palla inattiva difensiva" : f.includes("offens") ? "Palla inattiva offensiva" : "Palla inattiva";
+    if(f.includes("angolo") || f.includes("corner")) return "candidato calcio d'angolo";
+    if(f.includes("punizion") && f.includes("later")) return "candidato punizione laterale";
+    if(f.includes("punizion") && f.includes("central")) return "candidato punizione centrale";
+    if(f.includes("rimess") && f.includes("lateral")) return "candidato rimessa laterale";
+    if(f.includes("rimessa dal fondo")) return "candidato rimessa dal fondo";
+    if(f.includes("palle inattive") || f.includes("palla inattiva")) return "candidato palla inattiva";
     if(f.includes("pressing") || f.includes("transizion")) return "azione/pressione";
     if(f.includes("ampiezza")) return "ampiezza campo";
     if(f.includes("spazio") || f.includes("repart")) return "spazi tra reparti";
@@ -2778,7 +2784,7 @@ async function extractFrames(){
     canvas.height = Math.round(sourceHeight * ratio);
 
     const focus = document.getElementById("videoFocus").value;
-    const candidateCount = Math.min(32, Math.max(count * 4, 16));
+    const candidateCount = isSetPieceFocus(focus) ? 32 : Math.min(32, Math.max(count * 4, 16));
     const candidates = [];
 
     for(let i=0;i<candidateCount;i++){
