@@ -29,6 +29,7 @@ from database import (
     save_video_report,
     save_video_frame_feedback,
     track_api_usage,
+    update_video_asset_status,
 )
 from app.services.video_library import remove_library_file, save_uploaded_video, validate_import_url
 from app.services.video_taxonomy import validate_selection_result
@@ -1056,6 +1057,11 @@ def _public_video_asset(row: dict):
             metadata = {}
     if not isinstance(metadata, dict):
         metadata = {}
+    job = metadata.get("job") if isinstance(metadata.get("job"), dict) else {}
+    status = row.get("status") or job.get("status") or "ready"
+    progress = job.get("progress")
+    if progress is None:
+        progress = 100 if status == "ready" else 0
 
     return {
         "id": row.get("id"),
@@ -1068,7 +1074,10 @@ def _public_video_asset(row: dict):
         "mime_type": row.get("mime_type") or "",
         "size_bytes": int(row.get("size_bytes") or 0),
         "rights_confirmed": bool(row.get("rights_confirmed")),
-        "status": row.get("status") or "ready",
+        "status": status,
+        "progress": max(0, min(100, int(progress or 0))),
+        "job_stage": job.get("stage") or status,
+        "job_error": job.get("error") or "",
         "metadata": metadata,
         "created_at": row.get("created_at") or "",
         "updated_at": row.get("updated_at") or "",
@@ -1292,7 +1301,16 @@ def upload_video_library_item(
         size_bytes=int(saved.get("size_bytes") or 0),
         rights_confirmed=True,
         status="ready",
-        metadata={"storage": "local", "original_name": saved.get("file_name", "")},
+        metadata={
+            "storage": "local",
+            "original_name": saved.get("file_name", ""),
+            "job": {
+                "status": "ready",
+                "stage": "ready",
+                "progress": 100,
+                "updated_at": datetime.utcnow().isoformat(),
+            },
+        },
     )
     asset = get_video_asset(user["id"], result["id"])
     return {"ok": True, "item": _public_video_asset(asset)}
@@ -1313,9 +1331,44 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
         source_url=safe_url,
         rights_confirmed=True,
         status="ready",
-        metadata={"notes": _clean_text(data.notes, 500), "storage": "remote_url"},
+        metadata={
+            "notes": _clean_text(data.notes, 500),
+            "storage": "remote_url",
+            "job": {
+                "status": "ready",
+                "stage": "ready",
+                "progress": 100,
+                "updated_at": datetime.utcnow().isoformat(),
+            },
+        },
     )
     asset = get_video_asset(user["id"], result["id"])
+    return {"ok": True, "item": _public_video_asset(asset)}
+
+
+@router.get("/library/{asset_id}/status")
+def get_video_library_status(asset_id: int, user=Depends(require_user)):
+    asset = get_video_asset(user["id"], asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Video non trovato")
+    return {"ok": True, "item": _public_video_asset(asset)}
+
+
+@router.post("/library/{asset_id}/status")
+def update_video_library_status(asset_id: int, data: dict, user=Depends(require_user)):
+    status = _clean_text(data.get("status", ""), 40) or "ready"
+    if status not in {"queued", "uploading", "processing", "ready", "error"}:
+        status = "ready"
+    asset = update_video_asset_status(
+        user_id=user["id"],
+        asset_id=asset_id,
+        status=status,
+        progress=data.get("progress"),
+        stage=_clean_text(data.get("stage", ""), 60) or status,
+        error=_clean_text(data.get("error", ""), 300),
+    )
+    if not asset:
+        raise HTTPException(status_code=404, detail="Video non trovato")
     return {"ok": True, "item": _public_video_asset(asset)}
 
 

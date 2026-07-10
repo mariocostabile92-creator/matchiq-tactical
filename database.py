@@ -1758,6 +1758,60 @@ def get_video_asset(user_id: int, asset_id: int):
     return row
 
 
+def update_video_asset_status(
+    user_id: int,
+    asset_id: int,
+    status: str = "",
+    progress: int = None,
+    stage: str = "",
+    error: str = "",
+    metadata_patch: dict = None,
+):
+    asset = get_video_asset(user_id, asset_id)
+    if not asset:
+        return None
+
+    metadata = asset.get("metadata") or {}
+    if isinstance(metadata, str):
+        try:
+            metadata = json.loads(metadata)
+        except json.JSONDecodeError:
+            metadata = {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+
+    job = metadata.get("job") if isinstance(metadata.get("job"), dict) else {}
+    if status:
+        job["status"] = str(status)
+    if progress is not None:
+        job["progress"] = max(0, min(100, int(progress or 0)))
+    if stage:
+        job["stage"] = str(stage)
+    if error:
+        job["error"] = str(error)
+    elif status and str(status).lower() != "error":
+        job.pop("error", None)
+    job["updated_at"] = utc_now()
+    metadata["job"] = job
+    if isinstance(metadata_patch, dict):
+        metadata.update(metadata_patch)
+
+    new_status = status or asset.get("status") or "ready"
+    payload = _asset_payload(metadata)
+    now = utc_now()
+
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        UPDATE video_assets
+        SET status = ?, metadata = ?, updated_at = ?
+        WHERE user_id = ? AND id = ?
+    """), (new_status, payload, now, user_id, asset_id))
+    conn.commit()
+    conn.close()
+    return get_video_asset(user_id, asset_id)
+
+
 def delete_video_asset(user_id: int, asset_id: int):
     asset = get_video_asset(user_id, asset_id)
     if not asset:

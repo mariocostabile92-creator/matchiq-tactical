@@ -562,6 +562,35 @@ video{
     gap:8px;
     margin-top:12px;
 }
+.library-job{
+    display:none;
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:13px;
+    background:rgba(0,245,160,.08);
+    border:1px solid rgba(0,245,160,.22);
+    color:var(--text);
+    font-size:12px;
+    line-height:1.4;
+}
+.library-job.show{display:block}
+.library-job.error{background:rgba(255,72,116,.12);border-color:rgba(255,72,116,.36)}
+.library-job.warn{background:rgba(255,198,77,.10);border-color:rgba(255,198,77,.30)}
+.library-progress{
+    overflow:hidden;
+    height:7px;
+    border-radius:999px;
+    margin-top:8px;
+    background:rgba(255,255,255,.12);
+}
+.library-progress span{
+    display:block;
+    height:100%;
+    width:0;
+    border-radius:999px;
+    background:linear-gradient(90deg,var(--green),var(--blue));
+    transition:width .2s ease;
+}
 .library-item{
     display:grid;
     grid-template-columns:1fr auto;
@@ -574,6 +603,29 @@ video{
 }
 .library-item strong{display:block}
 .library-item span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.library-state{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-top:8px;
+}
+.library-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:23px;
+    padding:4px 8px;
+    border-radius:999px;
+    background:rgba(0,245,160,.12);
+    border:1px solid rgba(0,245,160,.28);
+    color:var(--green);
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+}
+.library-chip.processing{color:#8fb7ff;border-color:rgba(47,145,255,.35);background:rgba(47,145,255,.11)}
+.library-chip.error{color:#ff8ea8;border-color:rgba(255,72,116,.35);background:rgba(255,72,116,.12)}
+.library-item .library-progress{min-width:140px;flex:1;margin-top:0}
 .library-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 .btn.small{
     min-height:34px;
@@ -989,9 +1041,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10477">Home</a>
-        <a class="btn dark" href="/coach.html?v=10477">Coach</a>
-        <a class="btn dark" href="/account.html?v=10477">Account</a>
+        <a class="btn dark" href="/index.html?v=10478">Home</a>
+        <a class="btn dark" href="/coach.html?v=10478">Coach</a>
+        <a class="btn dark" href="/account.html?v=10478">Account</a>
     </nav>
 </header>
 
@@ -1061,7 +1113,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10477">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10478">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1071,7 +1123,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10477">Scopri piano club</a>
+                    <a href="/account.html?v=10478">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1207,6 +1259,7 @@ video{
                             <button class="btn dark small" type="button" onclick="importVideoUrlToLibrary()">Importa link</button>
                         </div>
                     </div>
+                    <div id="libraryJobStatus" class="library-job"></div>
                     <div id="videoLibraryList" class="library-list">
                         <div class="archive-empty">Accedi per usare la libreria partite online.</div>
                     </div>
@@ -1399,7 +1452,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10477";
+const APP_VERSION = "10478";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1457,6 +1510,7 @@ const slideNextClick = document.getElementById("slideNextClick");
 const slideRejectedBox = document.getElementById("slideRejectedBox");
 const playerNameOptions = document.getElementById("playerNameOptions");
 const videoLibraryList = document.getElementById("videoLibraryList");
+const libraryJobStatus = document.getElementById("libraryJobStatus");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -2599,6 +2653,47 @@ function formatBytes(value){
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function setLibraryJob(message="", type="ok", progress=null){
+    if(!libraryJobStatus) return;
+    if(!message){
+        libraryJobStatus.className = "library-job";
+        libraryJobStatus.innerHTML = "";
+        return;
+    }
+    const safeProgress = progress === null ? null : Math.max(0, Math.min(100, Math.round(Number(progress) || 0)));
+    libraryJobStatus.className = `library-job show ${type === "err" ? "error" : type === "warn" ? "warn" : ""}`.trim();
+    libraryJobStatus.innerHTML = `
+        <strong>${escapeHtml(message)}</strong>
+        ${safeProgress === null ? "" : `<div class="library-progress"><span style="width:${safeProgress}%"></span></div>`}
+    `;
+}
+
+function getAssetProgress(item){
+    if(typeof item.progress !== "undefined") return Math.max(0, Math.min(100, Number(item.progress) || 0));
+    const job = item.metadata && item.metadata.job ? item.metadata.job : {};
+    if(typeof job.progress !== "undefined") return Math.max(0, Math.min(100, Number(job.progress) || 0));
+    return item.status === "ready" ? 100 : 0;
+}
+
+function getAssetStatusLabel(item){
+    const status = String(item.status || "ready").toLowerCase();
+    const labels = {
+        queued: "in coda",
+        uploading: "caricamento",
+        processing: "processing",
+        ready: "pronto",
+        error: "errore"
+    };
+    return labels[status] || "pronto";
+}
+
+function getAssetStatusClass(item){
+    const status = String(item.status || "ready").toLowerCase();
+    if(status === "error") return "error";
+    if(status === "processing" || status === "uploading" || status === "queued") return "processing";
+    return "";
+}
+
 function renderVideoLibrary(){
     if(!videoLibraryList) return;
     if(!getAuthToken()){
@@ -2609,18 +2704,62 @@ function renderVideoLibrary(){
         videoLibraryList.innerHTML = `<div class="archive-empty">Nessuna partita salvata. Carica una clip o importa un link autorizzato.</div>`;
         return;
     }
-    videoLibraryList.innerHTML = videoLibraryItems.map(item => `
+    videoLibraryList.innerHTML = videoLibraryItems.map(item => {
+        const progress = getAssetProgress(item);
+        const statusClass = getAssetStatusClass(item);
+        const disabled = String(item.status || "ready").toLowerCase() === "error" ? "disabled" : "";
+        return `
         <div class="library-item">
             <div>
                 <strong>${escapeHtml(item.title || "Partita MatchIQ")}</strong>
                 <span>${escapeHtml(item.club || item.category || "Societa non indicata")} - ${escapeHtml(item.source_type === "url" ? "Link autorizzato" : "Upload")} ${item.size_bytes ? `- ${escapeHtml(formatBytes(item.size_bytes))}` : ""}</span>
+                <div class="library-state">
+                    <b class="library-chip ${statusClass}">${escapeHtml(getAssetStatusLabel(item))}</b>
+                    <div class="library-progress"><span style="width:${progress}%"></span></div>
+                    ${item.job_error ? `<span>${escapeHtml(item.job_error)}</span>` : ""}
+                </div>
             </div>
             <div class="library-actions">
-                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})">Apri</button>
+                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})" ${disabled}>Apri</button>
                 <button class="btn red small" type="button" onclick="deleteLibraryVideo(${Number(item.id)})">Elimina</button>
             </div>
         </div>
-    `).join("");
+    `}).join("");
+}
+
+function uploadLibraryVideoWithProgress(form){
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${API_BASE}/video/library/upload`);
+        const token = getAuthToken();
+        if(token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.upload.onprogress = event => {
+            if(event.lengthComputable){
+                const progress = Math.min(95, Math.round((event.loaded / event.total) * 95));
+                setLibraryJob(`Caricamento video ${progress}%`, "warn", progress);
+            }else{
+                setLibraryJob("Caricamento video in corso...", "warn", 35);
+            }
+        };
+        xhr.onload = () => {
+            let data = {};
+            try{
+                data = JSON.parse(xhr.responseText || "{}");
+            }catch(err){
+                reject(new Error("Risposta upload non valida."));
+                return;
+            }
+            if(xhr.status < 200 || xhr.status >= 300 || !data.ok){
+                reject(new Error(getApiErrorMessage(data, "Upload non riuscito")));
+                return;
+            }
+            resolve(data);
+        };
+        xhr.onerror = () => reject(new Error("Connessione interrotta durante l'upload."));
+        xhr.onabort = () => reject(new Error("Upload annullato."));
+        setLibraryJob("Preparazione upload...", "warn", 5);
+        xhr.send(form);
+    });
 }
 
 async function loadVideoLibrary(){
@@ -2673,16 +2812,12 @@ async function saveCurrentVideoToLibrary(){
 
     try{
         showStatus("Salvo la clip nella libreria online...", "warn");
-        const res = await fetch(`${API_BASE}/video/library/upload`, {
-            method:"POST",
-            headers:apiAuthHeaders(),
-            body:form
-        });
-        const data = await res.json();
-        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Upload non riuscito"));
+        await uploadLibraryVideoWithProgress(form);
+        setLibraryJob("Upload completato. Video pronto in libreria.", "ok", 100);
         await loadVideoLibrary();
         showStatus("Clip salvata nella libreria.", "ok");
     }catch(err){
+        setLibraryJob(err.message || "Upload non riuscito.", "err", 100);
         showStatus(err.message || "Upload non riuscito.", "err");
     }
 }
@@ -2702,6 +2837,7 @@ async function importVideoUrlToLibrary(){
         return;
     }
     try{
+        setLibraryJob("Controllo link autorizzato...", "warn", 25);
         const res = await fetch(`${API_BASE}/video/library/import-url`, {
             method:"POST",
             headers:apiHeaders(),
@@ -2715,10 +2851,12 @@ async function importVideoUrlToLibrary(){
         });
         const data = await res.json();
         if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Import non riuscito"));
+        setLibraryJob("Link importato. Video pronto in libreria.", "ok", 100);
         document.getElementById("libraryUrl").value = "";
         await loadVideoLibrary();
         showStatus("Link salvato in libreria. Se il server sorgente permette CORS, potrai analizzarlo direttamente.", "ok");
     }catch(err){
+        setLibraryJob(err.message || "Import non riuscito.", "err", 100);
         showStatus(err.message || "Import non riuscito.", "err");
     }
 }
