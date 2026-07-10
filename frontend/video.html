@@ -887,9 +887,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10467">Home</a>
-        <a class="btn dark" href="/coach.html?v=10467">Coach</a>
-        <a class="btn dark" href="/account.html?v=10467">Account</a>
+        <a class="btn dark" href="/index.html?v=10468">Home</a>
+        <a class="btn dark" href="/coach.html?v=10468">Coach</a>
+        <a class="btn dark" href="/account.html?v=10468">Account</a>
     </nav>
 </header>
 
@@ -959,7 +959,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10467">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10468">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -969,7 +969,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10467">Scopri piano club</a>
+                    <a href="/account.html?v=10468">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1008,6 +1008,15 @@ video{
                         <option>Fase offensiva</option>
                         <option>Palle inattive offensive</option>
                         <option>Palle inattive difensive</option>
+                        <option>Calci d'angolo offensivi</option>
+                        <option>Calci d'angolo difensivi</option>
+                        <option>Punizioni laterali offensive</option>
+                        <option>Punizioni laterali difensive</option>
+                        <option>Punizioni centrali offensive</option>
+                        <option>Punizioni centrali difensive</option>
+                        <option>Rimesse laterali offensive</option>
+                        <option>Rimesse laterali difensive</option>
+                        <option>Rimessa dal fondo</option>
                         <option>Costruzione dal basso</option>
                         <option>Uscita pressing</option>
                         <option>Rest defense</option>
@@ -1106,6 +1115,15 @@ video{
                                 <option value="Linea offensiva">Linea offensiva</option>
                                 <option value="Palla inattiva offensiva">Palla inattiva offensiva</option>
                                 <option value="Palla inattiva difensiva">Palla inattiva difensiva</option>
+                                <option value="Calcio d'angolo offensivo">Calcio d'angolo offensivo</option>
+                                <option value="Calcio d'angolo difensivo">Calcio d'angolo difensivo</option>
+                                <option value="Punizione laterale offensiva">Punizione laterale offensiva</option>
+                                <option value="Punizione laterale difensiva">Punizione laterale difensiva</option>
+                                <option value="Punizione centrale offensiva">Punizione centrale offensiva</option>
+                                <option value="Punizione centrale difensiva">Punizione centrale difensiva</option>
+                                <option value="Rimessa laterale offensiva">Rimessa laterale offensiva</option>
+                                <option value="Rimessa laterale difensiva">Rimessa laterale difensiva</option>
+                                <option value="Rimessa dal fondo">Rimessa dal fondo</option>
                                 <option value="Costruzione dal basso">Costruzione dal basso</option>
                                 <option value="Pressing">Pressing</option>
                                 <option value="Ampiezza">Ampiezza</option>
@@ -1245,7 +1263,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10467";
+const APP_VERSION = "10468";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1358,6 +1376,33 @@ function cleanTacticalPhase(value, fallback="Lettura tattica"){
     if(!raw || /^\d+([.,]\d+)?%?$/.test(raw) || raw.length > 55) return fallback;
 
     const phaseMap = [
+        ["calcio d'angolo difensivo", "Calcio d'angolo difensivo"],
+        ["calci d'angolo difensivi", "Calcio d'angolo difensivo"],
+        ["corner difensivo", "Calcio d'angolo difensivo"],
+        ["calcio d'angolo offensivo", "Calcio d'angolo offensivo"],
+        ["calci d'angolo offensivi", "Calcio d'angolo offensivo"],
+        ["corner offensivo", "Calcio d'angolo offensivo"],
+        ["corner", "Calcio d'angolo"],
+        ["punizione laterale difensiva", "Punizione laterale difensiva"],
+        ["punizioni laterali difensive", "Punizione laterale difensiva"],
+        ["punizione laterale offensiva", "Punizione laterale offensiva"],
+        ["punizioni laterali offensive", "Punizione laterale offensiva"],
+        ["punizione centrale difensiva", "Punizione centrale difensiva"],
+        ["punizioni centrali difensive", "Punizione centrale difensiva"],
+        ["punizione centrale offensiva", "Punizione centrale offensiva"],
+        ["punizioni centrali offensive", "Punizione centrale offensiva"],
+        ["punizione", "Punizione"],
+        ["rimessa laterale difensiva", "Rimessa laterale difensiva"],
+        ["rimesse laterali difensive", "Rimessa laterale difensiva"],
+        ["rimessa laterale offensiva", "Rimessa laterale offensiva"],
+        ["rimesse laterali offensive", "Rimessa laterale offensiva"],
+        ["rimessa laterale", "Rimessa laterale"],
+        ["rimessa dal fondo", "Rimessa dal fondo"],
+        ["palla inattiva da classificare", "Palla inattiva da classificare"],
+        ["palla inattiva offensiva", "Palla inattiva offensiva"],
+        ["palle inattive offensive", "Palla inattiva offensiva"],
+        ["palla inattiva difensiva", "Palla inattiva difensiva"],
+        ["palle inattive difensive", "Palla inattiva difensiva"],
         ["linea difensiva", "Linea difensiva"],
         ["difens", "Linea difensiva"],
         ["linea offensiva", "Linea offensiva"],
@@ -1369,17 +1414,8 @@ function cleanTacticalPhase(value, fallback="Lettura tattica"){
         ["press", "Pressing"],
         ["transizion", "Transizione"],
         ["rest defense", "Rest defense"],
-        ["palla inattiva offensiva", "Palla inattiva offensiva"],
-        ["palle inattive offensive", "Palla inattiva offensiva"],
-        ["corner offensivo", "Palla inattiva offensiva"],
-        ["punizione offensiva", "Palla inattiva offensiva"],
-        ["palla inattiva difensiva", "Palla inattiva difensiva"],
-        ["palle inattive difensive", "Palla inattiva difensiva"],
-        ["corner difensivo", "Palla inattiva difensiva"],
-        ["punizione difensiva", "Palla inattiva difensiva"],
         ["costruzione dal basso", "Costruzione dal basso"],
         ["portiere", "Costruzione dal basso"],
-        ["rimessa dal fondo", "Costruzione dal basso"],
         ["campo aperto", "Campo aperto"],
         ["non tattico", "Frame da scartare"],
         ["verificare", "Spunto da controllare"],
@@ -1412,6 +1448,17 @@ function slideGradeClass(grade){
     if(clean.includes("pronta")) return "grade-ready";
     if(clean.includes("spunto")) return "grade-useful";
     return "grade-reject";
+}
+
+function inferSetPieceType(value="", phase=""){
+    const text = `${value || ""} ${phase || ""}`.toLowerCase();
+    const side = text.includes("difens") ? " difensivo" : text.includes("offens") ? " offensivo" : "";
+    if(text.includes("corner") || text.includes("angolo")) return `Calcio d'angolo${side}`.trim();
+    if(text.includes("rimessa dal fondo") || text.includes("rinvio")) return "Rimessa dal fondo";
+    if(text.includes("rimessa laterale") || text.includes("fallo laterale")) return `Rimessa laterale${side}`.trim();
+    if(text.includes("punizione laterale") || (text.includes("punizione") && text.includes("fascia"))) return `Punizione laterale${side}`.trim();
+    if(text.includes("punizione centrale") || text.includes("punizione")) return `Punizione centrale${side}`.trim();
+    return "";
 }
 
 function classifyFrameForSlide(status={}, meta={}, label="", focus=""){
@@ -1512,6 +1559,7 @@ function buildFallbackSlides(){
             frame_index:index,
             time_label:time,
             phase:status.phase,
+            set_piece_type:meta.set_piece_type || inferSetPieceType(status.phase, label),
             grade:quality.grade,
             grade_reason:quality.reason,
             title:quality.grade === "Da scartare" ? `Frame ${index + 1}: non entra nello storyboard` : (status.kind === "trusted" ? `Frame ${index + 1}: ${cleanTacticalPhase(label, status.phase)}` : `Frame ${index + 1}: spunto tattico`),
@@ -1534,6 +1582,7 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
             ...slide,
             index: slide.index || index + 1,
             frame_index: frameIndex,
+            set_piece_type: slide.set_piece_type || inferSetPieceType(slide.phase, slide.title),
             grade,
             grade_reason: slide.grade_reason || (grade === "Slide pronta" ? "Frame pronto per storyboard." : grade === "Spunto utile" ? "Frame utile, da controllare." : "Frame escluso dalla scaletta principale.")
         };
@@ -1572,6 +1621,7 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
         const confidence = Number(slide.confidence || 0);
         const grade = normalizeSlideGrade(slide.grade, confidence, slide.phase);
         const cardClass = grade === "Slide pronta" ? "ready" : grade === "Spunto utile" ? "useful" : "reject";
+        const setPiece = slide.set_piece_type || inferSetPieceType(slide.phase, slide.title);
         return `
             <article class="ai-slide ${cardClass}">
                 ${frame ? `<img src="${frame}" alt="Slide ${escapeHtml(slide.index || "")}">` : `<div></div>`}
@@ -1580,6 +1630,7 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
                         <span class="${slideGradeClass(grade)}">${escapeHtml(grade)}</span>
                         <span>${escapeHtml(slide.time_label || formatTime(extractedFrameTimes[frameIndex] || 0))}</span>
                         <span>${escapeHtml(slide.phase || "Lettura tattica")}</span>
+                        ${setPiece ? `<span>${escapeHtml(setPiece)}</span>` : ""}
                         ${confidence ? `<span>${confidence}%</span>` : ""}
                     </div>
                     <h3>${escapeHtml(slide.title || "Lettura tattica")}</h3>
@@ -1636,6 +1687,7 @@ function slideDeckPlainText(){
         lines.push(`Qualita frame: ${slide.grade || "Spunto utile"}`);
         if(slide.grade_reason) lines.push(`Motivo: ${slide.grade_reason}`);
         lines.push(`Fase: ${slide.phase || "-"}`);
+        if(slide.set_piece_type) lines.push(`Palla inattiva: ${slide.set_piece_type}`);
         lines.push(`Lettura: ${slide.tactical_read || "-"}`);
         lines.push(`Azione staff: ${slide.staff_action || "-"}`);
         lines.push(`Linea: ${slide.suggested_line || "-"}`);
@@ -2514,6 +2566,12 @@ function normalizeFocus(value){
 function tacticalFrameLabel(focus, greenRatio, whiteRatio, edgeScore){
     const f = normalizeFocus(focus);
     if(greenRatio < .18) return "scartato: poco campo";
+    if(f.includes("angolo") || f.includes("corner")) return f.includes("difens") ? "Calcio d'angolo difensivo" : f.includes("offens") ? "Calcio d'angolo offensivo" : "Calcio d'angolo";
+    if(f.includes("punizion") && f.includes("later")) return f.includes("difens") ? "Punizione laterale difensiva" : f.includes("offens") ? "Punizione laterale offensiva" : "Punizione laterale";
+    if(f.includes("punizion") && f.includes("central")) return f.includes("difens") ? "Punizione centrale difensiva" : f.includes("offens") ? "Punizione centrale offensiva" : "Punizione centrale";
+    if(f.includes("rimess") && f.includes("lateral")) return f.includes("difens") ? "Rimessa laterale difensiva" : f.includes("offens") ? "Rimessa laterale offensiva" : "Rimessa laterale";
+    if(f.includes("rimessa dal fondo")) return "Rimessa dal fondo";
+    if(f.includes("palle inattive") || f.includes("palla inattiva")) return f.includes("difens") ? "Palla inattiva difensiva" : f.includes("offens") ? "Palla inattiva offensiva" : "Palla inattiva";
     if(f.includes("pressing") || f.includes("transizion")) return "azione/pressione";
     if(f.includes("ampiezza")) return "ampiezza campo";
     if(f.includes("spazio") || f.includes("repart")) return "spazi tra reparti";
@@ -2570,7 +2628,9 @@ function scoreTacticalFrame(ctx, width, height, time, duration, focus){
     const f = normalizeFocus(focus);
     let focusBonus = 0;
 
-    if(f.includes("linea") || f.includes("difens") || f.includes("offens") || f.includes("centrocampo")){
+    if(f.includes("angolo") || f.includes("corner") || f.includes("punizion") || f.includes("rimess") || f.includes("palla inattiva")){
+        focusBonus += greenRatio * 58 + whiteRatio * 500 + edgeScore * 85 + verticalBalance * 18;
+    }else if(f.includes("linea") || f.includes("difens") || f.includes("offens") || f.includes("centrocampo")){
         focusBonus += greenRatio * 48 + whiteRatio * 420 + verticalBalance * 18 + centerPitch * 10;
     }else if(f.includes("ampiezza")){
         focusBonus += greenRatio * 55 + verticalBalance * 18 + (1 - Math.abs(centerPitch - .48)) * 18;
@@ -2654,6 +2714,7 @@ async function selectCandidatesWithAI(candidates, count, duration, focus){
                 meta:{
                     ...candidates[index].meta,
                     label:aiNote.label || candidates[index].meta.label || "selezione AI",
+                    set_piece_type:aiNote.set_piece_type || "",
                     grade:aiNote.grade || "",
                     grade_reason:aiNote.grade_reason || "",
                     ai_quality:aiNote.ai_quality,

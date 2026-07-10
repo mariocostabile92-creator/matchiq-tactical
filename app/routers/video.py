@@ -58,6 +58,7 @@ class VideoSlide(BaseModel):
     frame_index: Optional[int] = 0
     time_label: Optional[str] = ""
     phase: Optional[str] = ""
+    set_piece_type: Optional[str] = ""
     grade: Optional[str] = ""
     grade_reason: Optional[str] = ""
     title: Optional[str] = ""
@@ -115,6 +116,35 @@ def _normalize_frame_grade(value: str, confidence: int = 0, phase: str = "") -> 
     if confidence >= 50:
         return "Spunto utile"
     return "Da scartare"
+
+
+def _normalize_set_piece_type(value: str, phase: str = "") -> str:
+    text = f"{value or ''} {phase or ''}".strip().lower()
+    if not text:
+        return ""
+    side = ""
+    if "difens" in text or "da difendere" in text:
+        side = " difensivo"
+    elif "offens" in text or "attacco" in text or "a favore" in text:
+        side = " offensivo"
+
+    if "corner" in text or "angolo" in text:
+        return f"Calcio d'angolo{side}".strip()
+    if "rimessa dal fondo" in text or "rinvio" in text:
+        return "Rimessa dal fondo"
+    if "rimessa laterale" in text or "throw" in text or "fallo laterale" in text:
+        return f"Rimessa laterale{side}".strip()
+    if "punizione laterale" in text or ("punizione" in text and ("laterale" in text or "fascia" in text)):
+        return f"Punizione laterale{side}".strip()
+    if "punizione centrale" in text or "free kick" in text or "punizione" in text:
+        return f"Punizione centrale{side}".strip()
+    if "palla inattiva" in text:
+        if "difens" in text or "da difendere" in text:
+            return "Palla inattiva difensiva"
+        if "offens" in text or "attacco" in text or "a favore" in text:
+            return "Palla inattiva offensiva"
+        return "Palla inattiva da classificare"
+    return ""
 
 
 def _sanitize_frames(frames: List[str]) -> List[str]:
@@ -371,7 +401,8 @@ Obiettivo:
 Regole importanti:
 - Se il focus e' linea difensiva, centrocampo, offensiva, ampiezza o spazio tra reparti, preferisci immagini con campo aperto e piu giocatori visibili. Penalizza primi piani, arbitro isolato, replay, inquadrature ferme su un singolo giocatore.
 - Se il focus e' pressing o transizioni, preferisci frame con palla, portatore, avversari vicini e densita attorno alla zona palla.
-- Riconosci palle inattive: corner, punizioni laterali/centrali, rimesse laterali, rimesse dal fondo. Distingui "Palla inattiva offensiva" e "Palla inattiva difensiva" rispetto alla squadra osservata.
+- Riconosci palle inattive in modo specifico: "Calcio d'angolo offensivo", "Calcio d'angolo difensivo", "Punizione laterale offensiva", "Punizione laterale difensiva", "Punizione centrale offensiva", "Punizione centrale difensiva", "Rimessa laterale offensiva", "Rimessa laterale difensiva", "Rimessa dal fondo".
+- Non usare "Palla inattiva offensiva/difensiva" se puoi capire il tipo reale. Se non lo capisci, usa "Palla inattiva da classificare" con grade massimo "Spunto utile".
 - Riconosci "Costruzione dal basso" quando la palla parte da portiere/difensori, con prima pressione avversaria e linee di passaggio basse.
 - Classifica ogni frame con grade: "Slide pronta" solo se palla, campo, reparti e fase sono leggibili; "Spunto utile" se la situazione puo aiutare ma va controllata; "Da scartare" se non va nello storyboard.
 - Per palle inattive e costruzione dal basso non basta un'inquadratura generica: serve vedere chiaramente punto di battuta/portiere, palla, compagni e avversari rilevanti. Altrimenti usa "Spunto utile" o "Da scartare".
@@ -380,7 +411,7 @@ Regole importanti:
 - Non fidarti del pre-score locale se l'immagine reale lo contraddice: guarda il fotogramma e correggi etichetta e quality.
 - Non inventare nomi dei giocatori. Se nelle formazioni e' scritto "numero + nome" e il numero e' leggibile, puoi citare il nome come ipotesi prudente.
 - Le line_suggestions devono usare coordinate normalizzate da 0 a 1 rispetto all'immagine: x sinistra-destra, y alto-basso.
-- Suggerisci al massimo 2 effetti per frame e solo quando la lettura e' plausibile. Per "line_suggestions" puoi usare phase come: Linea difensiva, Linea centrocampo, Palla inattiva offensiva, Palla inattiva difensiva, Costruzione dal basso, Cono d'ombra, Zona libera, Rest defense.
+- Suggerisci al massimo 2 effetti per frame e solo quando la lettura e' plausibile. Per "line_suggestions" puoi usare phase come: Linea difensiva, Linea centrocampo, Calcio d'angolo difensivo, Punizione laterale offensiva, Rimessa laterale difensiva, Rimessa dal fondo, Costruzione dal basso, Cono d'ombra, Zona libera, Rest defense.
 - Per coni d'ombra e zone usa sempre start/end come riferimento grafico approssimato. Se il frame e' primo piano o poco tattico, lascia line_suggestions vuoto.
 - Restituisci solo JSON valido, senza markdown.
 
@@ -390,18 +421,19 @@ Schema JSON:
   "frame_notes": [
     {{
       "index": 0,
-      "phase": "Linea difensiva",
+      "phase": "Calcio d'angolo difensivo",
+      "set_piece_type": "Calcio d'angolo difensivo",
       "grade": "Slide pronta",
       "quality": 88,
       "camera": "campo aperto",
-      "reason": "Linea e piu reparti visibili",
-      "grade_reason": "Palla, reparto e spazio dietro la linea sono leggibili",
+      "reason": "Punto di battuta, area e marcature visibili",
+      "grade_reason": "Corner difensivo riconoscibile con avversari e marcature in area",
       "team_colors": ["bianco", "verde"],
       "visible_numbers": ["9", "18"],
       "player_read": "numeri parzialmente leggibili",
       "line_suggestions": [
         {{
-          "phase": "Linea difensiva",
+          "phase": "Calcio d'angolo difensivo",
           "team": "Squadra osservata",
           "color": "#ff4058",
           "confidence": 72,
@@ -590,13 +622,17 @@ Ogni frame deve avere grade:
 - "Slide pronta": entra nello storyboard perche fase, palla, reparti e distanze sono leggibili.
 - "Spunto utile": puo aiutare staff o match analyst, ma va controllato prima di usarlo nel PDF o nella riunione.
 - "Da scartare": non deve essere usato come slide tattica perche e' primo piano, esultanza, replay, scena troppo chiusa o fase non leggibile.
-Per palle inattive offensive/difensive e costruzione dal basso usa "Slide pronta" solo se la situazione e' davvero chiara: punto di battuta o portiere, palla, linea avversaria e compagni rilevanti devono essere visibili.
+Per palle inattive non restare generico: devi distinguere se e' calcio d'angolo, punizione laterale, punizione centrale, rimessa laterale o rimessa dal fondo. Aggiungi sempre set_piece_type quando riconosci una palla inattiva.
+Per palle inattive e costruzione dal basso usa "Slide pronta" solo se la situazione e' davvero chiara: punto di battuta o portiere, palla, linea avversaria e compagni rilevanti devono essere visibili.
 Guarda il fotogramma reale, non solo le etichette ricevute: se il frame mostra esultanza, primo piano, giocatore isolato, panchina o scena senza struttura collettiva, non trasformarlo in linea difensiva o pressing.
 In quei casi imposta grade "Da scartare", phase "Frame da scartare", title "Frame non adatto alla slide", suggested_line "Nessuna linea affidabile" e confidence massimo 35.
 Quando possibile, suggerisci quale linea tracciare: linea difensiva, centrocampo, offensiva, ampiezza, spazio tra reparti, pressing o rest defense.
-Devi includere quando riconoscibile una sezione/fase tra:
-- Palla inattiva offensiva: corner, punizione o rimessa in zona offensiva della squadra osservata.
-- Palla inattiva difensiva: corner, punizione o rimessa da difendere per la squadra osservata.
+Devi includere quando riconoscibile una sezione/fase specifica tra:
+- Calcio d'angolo offensivo/difensivo: corner a favore o da difendere, con area e punto di battuta leggibili.
+- Punizione laterale offensiva/difensiva: palla ferma laterale, traiettoria crossabile, linea/area da attaccare o difendere.
+- Punizione centrale offensiva/difensiva: palla ferma centrale o semi-centrale, barriera o struttura difensiva/offensiva leggibile.
+- Rimessa laterale offensiva/difensiva: battuta laterale riconoscibile, smarcamenti, marcature e zona palla leggibili.
+- Rimessa dal fondo: portiere o difensori bassi impostano da fermo.
 - Costruzione dal basso: portiere/difensori iniziano l'azione, avversari pressano, linee di passaggio basse.
 - Cono d'ombra: zona schermata da un giocatore o da una linea di pressione.
 - Giocatore chiave: solo se il numero/nome e' coerente con le formazioni inserite dallo staff; altrimenti resta prudente.
@@ -610,14 +646,15 @@ Schema:
       "index": 1,
       "frame_index": 0,
       "time_label": "12:34",
-      "phase": "Pressing e transizione",
+      "phase": "Calcio d'angolo difensivo",
+      "set_piece_type": "Calcio d'angolo difensivo",
       "grade": "Slide pronta",
-      "grade_reason": "Campo aperto, palla e reparti leggibili",
-      "title": "Prima pressione superata",
-      "tactical_read": "La squadra osservata pressa sul lato palla ma resta lunga dietro la prima linea.",
-      "staff_action": "Chiedere al mediano di accorciare e alla linea difensiva di salire appena parte la pressione.",
-      "suggested_line": "Traccia spazio tra centrocampo e difesa oppure cono d'ombra del primo pressing.",
-      "training_drill": "6v6+3 con riaggressione immediata dopo perdita.",
+      "grade_reason": "Punto di battuta, area e marcature sono leggibili",
+      "title": "Marcature su calcio d'angolo",
+      "tactical_read": "La squadra osservata difende il corner con marcature strette e copertura del secondo palo.",
+      "staff_action": "Controllare comunicazione tra primo palo, zona dischetto e secondo palo.",
+      "suggested_line": "Traccia zona di attacco palla e linea dei marcatori in area.",
+      "training_drill": "Sequenza corner difensivi con uscita, respinta e seconda palla.",
       "confidence": 82
     }}
   ],
@@ -641,12 +678,16 @@ def _sanitize_slides(raw: dict, frame_count: int) -> dict:
             confidence = 0
         confidence = max(0, min(100, confidence))
         phase = _clean_text(item.get("phase", ""), 80) or "Lettura tattica"
+        set_piece_type = _normalize_set_piece_type(item.get("set_piece_type", ""), phase)
+        if set_piece_type and phase.lower().startswith("palla inattiva"):
+            phase = set_piece_type
         grade = _normalize_frame_grade(item.get("grade", ""), confidence, phase)
         slides.append({
             "index": idx + 1,
             "frame_index": frame_index,
             "time_label": _clean_text(item.get("time_label", ""), 20),
             "phase": phase,
+            "set_piece_type": set_piece_type,
             "grade": grade,
             "grade_reason": _clean_text(item.get("grade_reason", ""), 180),
             "title": _clean_text(item.get("title", ""), 120) or f"Slide {idx + 1}",
@@ -881,10 +922,14 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
         for slide in slides[:6]:
             grade = _normalize_frame_grade(slide.get("grade", ""), int(slide.get("confidence") or 0), slide.get("phase", ""))
             grade_reason = _clean_text(slide.get("grade_reason", ""), 160)
+            set_piece_type = _normalize_set_piece_type(slide.get("set_piece_type", ""), slide.get("phase", ""))
+            phase_label = slide.get("phase") or ""
+            if set_piece_type:
+                phase_label = f"{phase_label}\nPalla inattiva: {set_piece_type}"
             slide_rows.append([
                 _pdf_cell(f"{slide.get('index') or ''}\n{grade}", styles["MatchIQSmall"]),
                 _pdf_cell(slide.get("time_label") or f"Frame {int(slide.get('frame_index') or 0) + 1}", styles["MatchIQSmall"]),
-                _pdf_cell(f"{slide.get('title') or ''}\n{grade_reason}\n{slide.get('tactical_read') or ''}\nLinea: {slide.get('suggested_line') or '-'}", styles["MatchIQSmall"]),
+                _pdf_cell(f"{slide.get('title') or ''}\n{phase_label}\n{grade_reason}\n{slide.get('tactical_read') or ''}\nLinea: {slide.get('suggested_line') or '-'}", styles["MatchIQSmall"]),
                 _pdf_cell(f"{slide.get('staff_action') or '-'}\nEsercizio: {slide.get('training_drill') or '-'}", styles["MatchIQSmall"]),
             ])
         slide_table = Table(slide_rows, colWidths=[36, 62, 194, 190])
@@ -1115,9 +1160,13 @@ def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_u
         except Exception:
             quality = 0
         phase = _clean_text(note.get("phase") or note.get("camera") or "selezione AI", 80)
+        set_piece_type = _normalize_set_piece_type(note.get("set_piece_type", ""), phase)
+        if set_piece_type and phase.lower().startswith("palla inattiva"):
+            phase = set_piece_type
         grade = _normalize_frame_grade(note.get("grade", ""), quality, phase)
         notes_by_index[str(index)] = {
             "label": phase,
+            "set_piece_type": set_piece_type,
             "grade": grade,
             "grade_reason": _clean_text(note.get("grade_reason", ""), 180),
             "ai_quality": quality,
