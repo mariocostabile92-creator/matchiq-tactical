@@ -176,7 +176,7 @@ td{color:#eaf0ff}
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10454";
+const APP_VERSION = "10471";
 let usersCache = [];
 
 function adminHeaders(extra = {}){
@@ -221,7 +221,7 @@ function normalizePlan(value){
 }
 
 function escapeHtml(value){
-  return String(value-"")
+  return String(value ?? "")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
@@ -230,7 +230,7 @@ function escapeHtml(value){
 }
 
 function csvCell(value){
-  const text=String(value-"");
+  const text=String(value ?? "");
   return `"${text.replaceAll('"','""')}"`;
 }
 
