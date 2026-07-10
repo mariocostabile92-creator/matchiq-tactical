@@ -387,6 +387,17 @@ video{
     padding:0 9px 9px!important;
     flex-wrap:wrap;
 }
+.frame-actions select{
+    min-width:145px;
+    flex:1 1 145px;
+    padding:6px 8px;
+    border-radius:9px;
+    border:1px solid rgba(255,255,255,.14);
+    background:#07101f;
+    color:#fff;
+    font-size:11px;
+    font-weight:900;
+}
 .btn.tiny{
     padding:6px 8px;
     font-size:11px;
@@ -978,9 +989,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10476">Home</a>
-        <a class="btn dark" href="/coach.html?v=10476">Coach</a>
-        <a class="btn dark" href="/account.html?v=10476">Account</a>
+        <a class="btn dark" href="/index.html?v=10477">Home</a>
+        <a class="btn dark" href="/coach.html?v=10477">Coach</a>
+        <a class="btn dark" href="/account.html?v=10477">Account</a>
     </nav>
 </header>
 
@@ -1050,7 +1061,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10476">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10477">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1060,7 +1071,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10476">Scopri piano club</a>
+                    <a href="/account.html?v=10477">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1388,7 +1399,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10476";
+const APP_VERSION = "10477";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1405,6 +1416,7 @@ let latestCoachNextClick = "";
 let cloudArchive = [];
 let videoLibraryItems = [];
 let selectedLibraryBlobUrl = "";
+let currentVideoAssetId = null;
 let tacticalMode = false;
 let tacticalLines = [];
 let tacticalPendingPoint = null;
@@ -1491,11 +1503,53 @@ function updateSelectedFrameLabel(){
     selectedFrameBtn.textContent = selectedFrameIndex >= 0 ? getSelectedFrameLabel() : "Scegli frame";
 }
 
+function feedbackCategoryOptions(selected=""){
+    const categories = [
+        "Calcio d'angolo difensivo",
+        "Calcio d'angolo offensivo",
+        "Punizione laterale difensiva",
+        "Punizione laterale offensiva",
+        "Punizione centrale difensiva",
+        "Punizione centrale offensiva",
+        "Rimessa laterale difensiva",
+        "Rimessa laterale offensiva",
+        "Rimessa dal fondo",
+        "Costruzione dal basso",
+        "Pressing e transizioni",
+        "Linea difensiva",
+        "Ampiezza",
+        "Spazio tra reparti",
+        "Frame non tattico"
+    ];
+    return `<option value="">Categoria corretta</option>` + categories.map(category => {
+        const isSelected = category === selected ? " selected" : "";
+        return `<option value="${escapeHtml(category)}"${isSelected}>${escapeHtml(category)}</option>`;
+    }).join("");
+}
+
+function getFrameFeedbackContext(source, index){
+    if(source === "verified"){
+        const meta = extractedFrameMeta[index] || {};
+        return {
+            meta,
+            time: extractedFrameTimes[index] || 0,
+            frameIndex:index
+        };
+    }
+    const item = candidateFrameResults[index] || {};
+    return {
+        meta:item.meta || {},
+        time:item.time || 0,
+        frameIndex:index
+    };
+}
+
 function renderFramesGrid(){
     if(!framesGrid) return;
     const verifiedHtml = extractedFrames.map((frame,i) => {
         const meta = extractedFrameMeta[i] || {};
         const feedback = frameFeedback[`verified:${i}`] || meta.feedback_status || "";
+        const correctionId = `frameCorrection_verified_${i}`;
         return `
         <article class="frame-card ${i === selectedFrameIndex ? "active" : ""}" onclick="selectTacticalFrame(${i})">
             <img src="${frame}" alt="Frame ${i+1}">
@@ -1504,6 +1558,10 @@ function renderFramesGrid(){
             <span class="frame-actions" onclick="event.stopPropagation()">
                 <button type="button" class="btn tiny" onclick="markFrameFeedback('verified', ${i}, 'corretto')">Corretto</button>
                 <button type="button" class="btn dark tiny" onclick="markFrameFeedback('verified', ${i}, 'non pertinente')">Non pertinente</button>
+                <select id="${correctionId}">
+                    ${feedbackCategoryOptions(meta.corrected_phase || "")}
+                </select>
+                <button type="button" class="btn dark tiny" onclick="markFrameFeedback('verified', ${i}, 'categoria corretta', document.getElementById('${correctionId}').value)">Salva cat.</button>
             </span>
         </article>
     `}).join("");
@@ -1521,6 +1579,10 @@ function renderFramesGrid(){
                 <span class="frame-actions" onclick="event.stopPropagation()">
                     <button type="button" class="btn tiny" onclick="approveCandidateFrame(${i})">Approva</button>
                     <button type="button" class="btn dark tiny" onclick="markFrameFeedback('candidate', ${i}, 'non pertinente')">Scarta</button>
+                    <select id="frameCorrection_candidate_${i}">
+                        ${feedbackCategoryOptions(item.meta?.corrected_phase || "")}
+                    </select>
+                    <button type="button" class="btn dark tiny" onclick="markFrameFeedback('candidate', ${i}, 'categoria corretta', document.getElementById('frameCorrection_candidate_${i}').value)">Salva cat.</button>
                 </span>
             </article>
         `).join("")}
@@ -1537,16 +1599,67 @@ function renderFramesGrid(){
     framesGrid.innerHTML += candidateHtml + rejectedHtml;
 }
 
-function markFrameFeedback(source, index, status){
+async function persistFrameFeedback(source, index, status, correctedPhase=""){
+    if(!getAuthToken()){
+        showStatus("Feedback salvato solo su questo dispositivo. Accedi per salvarlo nel cloud.", "warn");
+        return "local";
+    }
+    const context = getFrameFeedbackContext(source, index);
+    const meta = context.meta || {};
+    const payload = {
+        video_asset_id: currentVideoAssetId,
+        frame_index: Number(context.frameIndex || 0),
+        frame_time: Number(context.time || 0),
+        source,
+        status,
+        requested_phase: meta.requested_label || document.getElementById("videoFocus").value || "",
+        detected_phase: meta.detected_label || meta.label || "",
+        corrected_phase: correctedPhase || "",
+        confidence: Number(meta.confidence || meta.ai_quality || meta.score || 0),
+        notes: meta.ai_reason || meta.validation_reasons?.[0] || meta.rejection_reasons?.[0] || "",
+        metadata: {
+            label: meta.label || "",
+            set_piece_type: meta.set_piece_type || "",
+            grade: meta.grade || "",
+            validation_status: meta.validation_status || "",
+            selector: meta.selector || "",
+            source
+        }
+    };
+
+    try{
+        const res = await fetch(`${API_BASE}/video/frame-feedback`, {
+            method:"POST",
+            headers:apiHeaders(),
+            body:JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Feedback non salvato"));
+        return "cloud";
+    }catch(err){
+        showStatus(err.message || "Feedback non salvato nel cloud.", "warn");
+        return "failed";
+    }
+}
+
+async function markFrameFeedback(source, index, status, correctedPhase=""){
+    if(status === "categoria corretta" && !correctedPhase){
+        showStatus("Scegli prima la categoria corretta del frame.", "warn");
+        return;
+    }
     frameFeedback[`${source}:${index}`] = status;
     if(source === "verified" && extractedFrameMeta[index]){
         extractedFrameMeta[index].feedback_status = status;
+        extractedFrameMeta[index].corrected_phase = correctedPhase || extractedFrameMeta[index].corrected_phase || "";
     }
     if(source === "candidate" && candidateFrameResults[index]){
         candidateFrameResults[index].meta.feedback_status = status;
+        candidateFrameResults[index].meta.corrected_phase = correctedPhase || candidateFrameResults[index].meta.corrected_phase || "";
     }
+    const saveMode = await persistFrameFeedback(source, index, status, correctedPhase);
     renderFramesGrid();
-    showStatus(status === "corretto" ? "Feedback salvato: frame corretto." : "Feedback salvato: frame non pertinente.", status === "corretto" ? "ok" : "warn");
+    const suffix = saveMode === "cloud" ? " nel cloud" : saveMode === "local" ? " localmente" : "";
+    showStatus(status === "corretto" ? `Feedback salvato${suffix}: frame corretto.` : status === "categoria corretta" ? `Feedback salvato${suffix}: categoria corretta ${correctedPhase}.` : `Feedback salvato${suffix}: frame non pertinente.`, status === "corretto" || status === "categoria corretta" ? "ok" : "warn");
 }
 
 function approveCandidateFrame(index){
@@ -1554,7 +1667,8 @@ function approveCandidateFrame(index){
     if(!item) return;
     extractedFrames.push(item.frame);
     extractedFrameTimes.push(item.time);
-    extractedFrameMeta.push({...item.meta, validation_status:"verified", feedback_status:"approved"});
+    extractedFrameMeta.push({...item.meta, validation_status:"verified", feedback_status:"approvato"});
+    persistFrameFeedback("candidate", index, "approvato");
     candidateFrameResults.splice(index,1);
     selectedFrameIndex = extractedFrames.length - 1;
     updateSelectedFrameLabel();
@@ -2617,6 +2731,7 @@ async function openLibraryVideo(assetId){
         if(selectedLibraryBlobUrl) URL.revokeObjectURL(selectedLibraryBlobUrl);
         selectedVideoUrl = "";
         selectedLibraryBlobUrl = "";
+        currentVideoAssetId = Number(item.id);
         videoInput.value = "";
 
         if(item.source_type === "url"){
@@ -2871,6 +2986,7 @@ async function deleteArchivedReport(id){
 
 videoInput.addEventListener("change", () => {
     const file = videoInput.files && videoInput.files[0];
+    currentVideoAssetId = null;
     extractedFrames = [];
     extractedFrameTimes = [];
     extractedFrameMeta = [];

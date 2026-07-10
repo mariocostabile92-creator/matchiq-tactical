@@ -395,6 +395,27 @@ def init_db():
             )
         """)
 
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS video_frame_feedback (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                video_asset_id INTEGER,
+                report_id INTEGER,
+                frame_index INTEGER NOT NULL DEFAULT 0,
+                frame_time REAL NOT NULL DEFAULT 0,
+                source TEXT,
+                status TEXT NOT NULL,
+                requested_phase TEXT,
+                detected_phase TEXT,
+                corrected_phase TEXT,
+                confidence REAL NOT NULL DEFAULT 0,
+                notes TEXT,
+                metadata TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
     else:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -543,6 +564,27 @@ def init_db():
         """)
 
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS video_frame_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                video_asset_id INTEGER,
+                report_id INTEGER,
+                frame_index INTEGER NOT NULL DEFAULT 0,
+                frame_time REAL NOT NULL DEFAULT 0,
+                source TEXT,
+                status TEXT NOT NULL,
+                requested_phase TEXT,
+                detected_phase TEXT,
+                corrected_phase TEXT,
+                confidence REAL NOT NULL DEFAULT 0,
+                notes TEXT,
+                metadata TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS password_reset_tokens (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -636,6 +678,11 @@ def init_db():
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_video_assets_user_created
         ON video_assets(user_id, created_at)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_video_frame_feedback_user_created
+        ON video_frame_feedback(user_id, created_at)
     """)
 
     conn.commit()
@@ -1724,6 +1771,82 @@ def delete_video_asset(user_id: int, asset_id: int):
     conn.commit()
     conn.close()
     return asset
+
+
+# =========================================================
+# VIDEO FRAME FEEDBACK
+# =========================================================
+
+def save_video_frame_feedback(
+    user_id: int,
+    video_asset_id: int = None,
+    report_id: int = None,
+    frame_index: int = 0,
+    frame_time: float = 0,
+    source: str = "",
+    status: str = "",
+    requested_phase: str = "",
+    detected_phase: str = "",
+    corrected_phase: str = "",
+    confidence: float = 0,
+    notes: str = "",
+    metadata: dict = None,
+):
+    now = utc_now()
+    payload = json.dumps(metadata or {}, ensure_ascii=False)
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if USE_POSTGRES:
+        cur.execute("""
+            INSERT INTO video_frame_feedback (
+                user_id, video_asset_id, report_id, frame_index, frame_time,
+                source, status, requested_phase, detected_phase, corrected_phase,
+                confidence, notes, metadata, created_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            user_id, video_asset_id, report_id, int(frame_index or 0), float(frame_time or 0),
+            source, status, requested_phase, detected_phase, corrected_phase,
+            float(confidence or 0), notes, payload, now,
+        ))
+        feedback_id = get_last_insert_id(cur)
+    else:
+        cur.execute("""
+            INSERT INTO video_frame_feedback (
+                user_id, video_asset_id, report_id, frame_index, frame_time,
+                source, status, requested_phase, detected_phase, corrected_phase,
+                confidence, notes, metadata, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            user_id, video_asset_id, report_id, int(frame_index or 0), float(frame_time or 0),
+            source, status, requested_phase, detected_phase, corrected_phase,
+            float(confidence or 0), notes, payload, now,
+        ))
+        feedback_id = cur.lastrowid
+
+    conn.commit()
+    conn.close()
+    return {"success": True, "id": feedback_id, "created_at": now}
+
+
+def get_video_frame_feedback(user_id: int, limit: int = 100):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        SELECT id, user_id, video_asset_id, report_id, frame_index, frame_time,
+               source, status, requested_phase, detected_phase, corrected_phase,
+               confidence, notes, metadata, created_at
+        FROM video_frame_feedback
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT ?
+    """), (user_id, int(limit or 100)))
+    rows = fetchall(cur)
+    conn.close()
+    return rows
 
 
 # =========================================================

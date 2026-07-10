@@ -27,6 +27,7 @@ from database import (
     get_video_assets,
     get_video_reports,
     save_video_report,
+    save_video_frame_feedback,
     track_api_usage,
 )
 from app.services.video_library import remove_library_file, save_uploaded_video, validate_import_url
@@ -97,6 +98,21 @@ class FrameSelectionRequest(BaseModel):
     frame_meta: List[dict] = Field(default_factory=list)
     desired_count: Optional[int] = 6
     frames: List[str]
+
+
+class FrameFeedbackRequest(BaseModel):
+    video_asset_id: Optional[int] = None
+    report_id: Optional[int] = None
+    frame_index: int = 0
+    frame_time: float = 0
+    source: Optional[str] = "verified"
+    status: str
+    requested_phase: Optional[str] = ""
+    detected_phase: Optional[str] = ""
+    corrected_phase: Optional[str] = ""
+    confidence: Optional[float] = 0
+    notes: Optional[str] = ""
+    metadata: dict = Field(default_factory=dict)
 
 
 class CloudVideoReportRequest(BaseModel):
@@ -1372,3 +1388,33 @@ def remove_video_report(report_id: int, user=Depends(require_user)):
         raise HTTPException(status_code=404, detail="Report video non trovato")
 
     return {"ok": True}
+
+
+@router.post("/frame-feedback")
+def create_frame_feedback(data: FrameFeedbackRequest, user=Depends(require_user)):
+    status = _clean_text(data.status, 40).lower()
+    allowed = {"corretto", "non pertinente", "categoria corretta", "approvato", "scartato"}
+    if status not in allowed:
+        raise HTTPException(status_code=400, detail="Feedback frame non valido")
+
+    corrected_phase = _clean_text(data.corrected_phase, 120)
+    if status == "categoria corretta" and not corrected_phase:
+        raise HTTPException(status_code=400, detail="Indica la categoria corretta")
+
+    result = save_video_frame_feedback(
+        user_id=user["id"],
+        video_asset_id=data.video_asset_id,
+        report_id=data.report_id,
+        frame_index=max(0, int(data.frame_index or 0)),
+        frame_time=max(0, float(data.frame_time or 0)),
+        source=_clean_text(data.source, 40),
+        status=status,
+        requested_phase=_clean_text(data.requested_phase, 160),
+        detected_phase=_clean_text(data.detected_phase, 160),
+        corrected_phase=corrected_phase,
+        confidence=float(data.confidence or 0),
+        notes=_clean_text(data.notes, 500),
+        metadata=data.metadata or {},
+    )
+
+    return {"ok": True, "id": result.get("id"), "created_at": result.get("created_at")}
