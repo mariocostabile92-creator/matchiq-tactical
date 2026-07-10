@@ -689,8 +689,85 @@ video{
     line-height:1.45;
     margin-bottom:12px;
 }
+.slide-deck{
+    display:none;
+    margin-top:18px;
+    padding:16px;
+    border-radius:22px;
+    border:1px solid rgba(0,245,160,.24);
+    background:linear-gradient(145deg,rgba(0,245,160,.09),rgba(47,124,255,.07));
+}
+.slide-deck.show{display:block}
+.slide-deck-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:12px;
+}
+.slide-deck-head strong{display:block;font-size:18px;margin-bottom:5px}
+.slide-deck-head span{display:block;color:var(--muted);font-size:13px;line-height:1.45}
+.slide-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+}
+.ai-slide{
+    display:grid;
+    grid-template-columns:150px 1fr;
+    gap:12px;
+    padding:12px;
+    border-radius:18px;
+    background:rgba(2,8,19,.48);
+    border:1px solid rgba(255,255,255,.10);
+}
+.ai-slide img{
+    width:100%;
+    aspect-ratio:16/9;
+    object-fit:cover;
+    border-radius:12px;
+    background:#000;
+}
+.ai-slide-kicker{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:7px;
+}
+.ai-slide-kicker span{
+    border-radius:999px;
+    padding:5px 8px;
+    background:rgba(0,245,160,.10);
+    border:1px solid rgba(0,245,160,.22);
+    color:#dfffee;
+    font-size:10px;
+    font-weight:1000;
+}
+.ai-slide h3{
+    font-size:16px;
+    margin:0 0 7px;
+    line-height:1.2;
+}
+.ai-slide p{
+    margin:0 0 8px;
+    color:#c4d2f5;
+    font-size:12px;
+    line-height:1.45;
+}
+.ai-slide small{
+    display:block;
+    color:#9fb0df;
+    font-size:11px;
+    line-height:1.4;
+}
+.slide-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+}
 @media(max-width:900px){
-    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid,.onboarding-list{grid-template-columns:1fr}
+    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid,.onboarding-list,.slide-grid{grid-template-columns:1fr}
     .archive-tools{grid-template-columns:1fr}
     .onboarding-head{flex-direction:column}
     .onboarding-actions{width:100%}
@@ -704,6 +781,7 @@ video{
     .tactical-head{align-items:flex-start;flex-direction:column}
     .tactical-grid{grid-template-columns:1fr}
     .frames{grid-template-columns:repeat(2,1fr)}
+    .ai-slide{grid-template-columns:1fr}
     .archive-item{grid-template-columns:1fr}
     .archive-actions{justify-content:flex-start}
 }
@@ -763,9 +841,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10454">Home</a>
-        <a class="btn dark" href="/coach.html?v=10454">Coach</a>
-        <a class="btn dark" href="/account.html?v=10454">Account</a>
+        <a class="btn dark" href="/index.html?v=10462">Home</a>
+        <a class="btn dark" href="/coach.html?v=10462">Coach</a>
+        <a class="btn dark" href="/account.html?v=10462">Account</a>
     </nav>
 </header>
 
@@ -835,7 +913,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10454">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10462">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -845,7 +923,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10454">Scopri piano club</a>
+                    <a href="/account.html?v=10462">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1027,6 +1105,18 @@ video{
                 <button class="btn dark" id="downloadPdfBtn" onclick="downloadPdf()" disabled>Scarica PDF</button>
             </div>
 
+            <div id="aiSlideDeck" class="slide-deck">
+                <div class="slide-deck-head">
+                    <div>
+                        <strong>Diapositive tattiche AI</strong>
+                        <span id="slideDeckSummary">MatchIQ prepara una scaletta pronta per staff: frame, lettura, linea da mostrare e correzione.</span>
+                    </div>
+                    <button class="btn dark small" type="button" onclick="copySlideDeckText()">Copia scaletta</button>
+                </div>
+                <div id="slideGrid" class="slide-grid"></div>
+                <div id="slideNextClick" class="slide-actions"></div>
+            </div>
+
             <div id="statusBox" class="status"></div>
             <div id="framesGrid" class="frames"></div>
         </div>
@@ -1075,6 +1165,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
+const APP_VERSION = "10462";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1082,6 +1173,9 @@ let extractedFrameTimes = [];
 let extractedFrameMeta = [];
 let aiLineSuggestions = {};
 let latestPdfBase64 = "";
+let latestSlides = [];
+let latestDeckSummary = "";
+let latestCoachNextClick = "";
 let cloudArchive = [];
 let tacticalMode = false;
 let tacticalLines = [];
@@ -1116,6 +1210,10 @@ const videoFullscreenBtn = document.getElementById("videoFullscreenBtn");
 const aiLinePanel = document.getElementById("aiLinePanel");
 const aiLineText = document.getElementById("aiLineText");
 const applyAiLinesBtn = document.getElementById("applyAiLinesBtn");
+const aiSlideDeck = document.getElementById("aiSlideDeck");
+const slideGrid = document.getElementById("slideGrid");
+const slideDeckSummary = document.getElementById("slideDeckSummary");
+const slideNextClick = document.getElementById("slideNextClick");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -1149,6 +1247,115 @@ function renderFramesGrid(){
             <span>Frame ${i+1} - ${formatTime(extractedFrameTimes[i])}${extractedFrameMeta[i]?.label ? ` - ${escapeHtml(extractedFrameMeta[i].label)}` : ""}${extractedFrameMeta[i]?.selector === "AI" ? " - AI" : ""}</span>
         </button>
     `).join("");
+}
+
+function buildFallbackSlides(){
+    const focus = document.getElementById("videoFocus").value || "Analisi tattica";
+    return extractedFrames.slice(0,6).map((frame,index) => {
+        const meta = extractedFrameMeta[index] || {};
+        const time = formatTime(extractedFrameTimes[index] || 0);
+        const label = meta.label || focus;
+        return {
+            index:index + 1,
+            frame_index:index,
+            time_label:time,
+            phase:focus,
+            title:`Frame ${index + 1}: ${label}`,
+            tactical_read: meta.ai_reason || "Frame selezionato per leggere struttura, distanze e comportamento dei reparti.",
+            staff_action: "Metti in pausa, traccia la linea piu importante e aggiungi una nota staff prima di generare il PDF finale.",
+            suggested_line: "Scegli tra linea difensiva, spazio tra reparti, pressing o ampiezza in base al focus.",
+            training_drill: "Trasforma il tema ricorrente in esercizio situazionale nella prossima seduta.",
+            confidence: meta.ai_quality || Math.max(55, Math.round(Number(meta.score || 55)))
+        };
+    });
+}
+
+function renderAiSlides(slides=[], summary="", nextClick=""){
+    latestSlides = Array.isArray(slides) && slides.length ? slides : buildFallbackSlides();
+    latestDeckSummary = summary || "Storyboard tattico pronto: usa le slide per guidare staff, linee e report.";
+    latestCoachNextClick = nextClick || "Seleziona una slide, controlla il frame e aggiungi eventuali linee manuali.";
+
+    if(!aiSlideDeck || !slideGrid) return;
+    if(!latestSlides.length){
+        aiSlideDeck.classList.remove("show");
+        return;
+    }
+
+    if(slideDeckSummary) slideDeckSummary.textContent = latestDeckSummary;
+    slideGrid.innerHTML = latestSlides.map((slide, slideIndex) => {
+        const frameIndex = Math.max(0, Math.min(extractedFrames.length - 1, Number(slide.frame_index || 0)));
+        const frame = extractedFrames[frameIndex] || "";
+        const confidence = Number(slide.confidence || 0);
+        return `
+            <article class="ai-slide">
+                ${frame ? `<img src="${frame}" alt="Slide ${escapeHtml(slide.index || "")}">` : `<div></div>`}
+                <div>
+                    <div class="ai-slide-kicker">
+                        <span>Slide ${escapeHtml(slide.index || "")}</span>
+                        <span>${escapeHtml(slide.time_label || formatTime(extractedFrameTimes[frameIndex] || 0))}</span>
+                        <span>${escapeHtml(slide.phase || "Lettura tattica")}</span>
+                        ${confidence ? `<span>${confidence}%</span>` : ""}
+                    </div>
+                    <h3>${escapeHtml(slide.title || "Lettura tattica")}</h3>
+                    <p>${escapeHtml(slide.tactical_read || "Lettura non disponibile.")}</p>
+                    <small><strong>Azione staff:</strong> ${escapeHtml(slide.staff_action || "-")}</small>
+                    <small><strong>Linea:</strong> ${escapeHtml(slide.suggested_line || "-")}</small>
+                    <small><strong>Allenamento:</strong> ${escapeHtml(slide.training_drill || "-")}</small>
+                    <div class="slide-actions">
+                        <button class="btn small" type="button" onclick="selectTacticalFrame(${frameIndex})">Apri frame</button>
+                        <button class="btn dark small" type="button" onclick="prepareSlideLine(${frameIndex}, ${slideIndex})">Prepara linea</button>
+                    </div>
+                </div>
+            </article>
+        `;
+    }).join("");
+    if(slideNextClick){
+        slideNextClick.innerHTML = `<span class="report-pill ready">${escapeHtml(latestCoachNextClick)}</span>`;
+    }
+    aiSlideDeck.classList.add("show");
+}
+
+async function prepareSlideLine(frameIndex, slideIndex=null){
+    await selectTacticalFrame(frameIndex);
+    const slide = Number.isInteger(Number(slideIndex)) ? latestSlides[Number(slideIndex)] : null;
+    const phase = slide?.phase || "Linea tattica";
+    const phaseSelect = document.getElementById("tacticalPhase");
+    if(phaseSelect){
+        const clean = String(phase || "").toLowerCase();
+        const options = [...phaseSelect.options];
+        const match = options.find(opt => clean.includes(String(opt.value).toLowerCase().split(" ")[0]));
+        if(match) phaseSelect.value = match.value;
+    }
+    showStatus("Frame pronto. Premi Pausa e traccia e clicca due punti per completare la slide.", "ok");
+}
+
+function slideDeckPlainText(){
+    if(!latestSlides.length) return "";
+    const lines = [`MATCHIQ VIDEO AI - DIAPOSITIVE TATTICHE`, latestDeckSummary, ""];
+    latestSlides.forEach(slide => {
+        lines.push(`${slide.index || ""}. ${slide.title || "Slide tattica"} (${slide.time_label || ""})`);
+        lines.push(`Fase: ${slide.phase || "-"}`);
+        lines.push(`Lettura: ${slide.tactical_read || "-"}`);
+        lines.push(`Azione staff: ${slide.staff_action || "-"}`);
+        lines.push(`Linea: ${slide.suggested_line || "-"}`);
+        lines.push(`Allenamento: ${slide.training_drill || "-"}`);
+        lines.push("");
+    });
+    return lines.join("\n").trim();
+}
+
+async function copySlideDeckText(){
+    const text = slideDeckPlainText();
+    if(!text){
+        showStatus("Prima genera le diapositive AI.", "warn");
+        return;
+    }
+    try{
+        await navigator.clipboard.writeText(text);
+        showStatus("Scaletta slide copiata.", "ok");
+    }catch(err){
+        showStatus("Non riesco a copiare automaticamente.", "warn");
+    }
 }
 
 async function selectTacticalFrame(index){
@@ -1758,6 +1965,9 @@ function addToArchive(data, payload){
         focus: payload.focus || "-",
         frames: data.frames_analyzed || extractedFrames.length,
         report: data.report || "",
+        slides: data.slides || latestSlides || [],
+        deck_summary: data.deck_summary || latestDeckSummary || "",
+        coach_next_click: data.coach_next_click || latestCoachNextClick || "",
         pdf_base64: data.pdf_base64 || "",
         cloud_report_id: data.cloud_report_id || null,
         date: new Date().toLocaleString("it-IT", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit"})
@@ -1786,6 +1996,7 @@ function loadArchivedReport(id){
     if(!item) return;
     reportBox.textContent = item.report || "Report non disponibile.";
     latestPdfBase64 = item.pdf_base64 || "";
+    renderAiSlides(item.slides || [], item.deck_summary || "", item.coach_next_click || "");
     downloadPdfBtn.disabled = !latestPdfBase64;
     updateReportMeta("report", item.frames || "Archivio");
     showStatus("Report archivio aperto.", "ok");
@@ -1834,6 +2045,9 @@ videoInput.addEventListener("change", () => {
     extractedFrameTimes = [];
     extractedFrameMeta = [];
     aiLineSuggestions = {};
+    latestSlides = [];
+    latestDeckSummary = "";
+    latestCoachNextClick = "";
     tacticalLines = [];
     tacticalPendingPoint = null;
     tacticalMode = false;
@@ -1841,6 +2055,7 @@ videoInput.addEventListener("change", () => {
     updateSelectedFrameLabel();
     latestPdfBase64 = "";
     framesGrid.innerHTML = "";
+    if(aiSlideDeck) aiSlideDeck.classList.remove("show");
     analyzeBtn.disabled = true;
     downloadPdfBtn.disabled = true;
     reportBox.textContent = "Video caricato. Estrai i fotogrammi per avviare l'analisi.";
@@ -2105,6 +2320,10 @@ async function extractFrames(){
     extractedFrameTimes = [];
     extractedFrameMeta = [];
     aiLineSuggestions = {};
+    latestSlides = [];
+    latestDeckSummary = "";
+    latestCoachNextClick = "";
+    if(aiSlideDeck) aiSlideDeck.classList.remove("show");
     framesGrid.innerHTML = "";
     latestPdfBase64 = "";
     downloadPdfBtn.disabled = true;
@@ -2180,6 +2399,7 @@ async function extractFrames(){
     updateSelectedFrameLabel();
     renderFramesGrid();
     if(extractedFrames.length) await selectTacticalFrame(0);
+    renderAiSlides([], `Bozza storyboard pronta per ${focus}: genera il report AI per avere slide tattiche complete.`, "Prossimo click: genera report AI.");
     analyzeBtn.disabled = extractedFrames.length < 2;
     extractBtn.disabled = false;
     updateReportMeta("frames");
@@ -2245,6 +2465,7 @@ async function analyzeVideo(){
         }
 
         reportBox.textContent = data.report || "Report non disponibile.";
+        renderAiSlides(data.slides || [], data.deck_summary || "", data.coach_next_click || "");
         latestPdfBase64 = data.pdf_base64 || "";
         downloadPdfBtn.disabled = !latestPdfBase64;
         addToArchive(data, payload);

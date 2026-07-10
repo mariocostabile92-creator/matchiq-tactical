@@ -53,6 +53,19 @@ class VideoReportRequest(BaseModel):
     frames: List[str]
 
 
+class VideoSlide(BaseModel):
+    index: Optional[int] = 0
+    frame_index: Optional[int] = 0
+    time_label: Optional[str] = ""
+    phase: Optional[str] = ""
+    title: Optional[str] = ""
+    tactical_read: Optional[str] = ""
+    staff_action: Optional[str] = ""
+    suggested_line: Optional[str] = ""
+    training_drill: Optional[str] = ""
+    confidence: Optional[int] = 0
+
+
 class FrameSelectionRequest(BaseModel):
     focus: Optional[str] = "Analisi tattica generale"
     observed_team: Optional[str] = ""
@@ -503,6 +516,140 @@ def _call_openai(prompt: str, frames: List[str]) -> str:
     return data["choices"][0]["message"]["content"].strip()
 
 
+def _build_slides_prompt(data: VideoReportRequest, frame_count: int) -> str:
+    title = _clean_text(data.title, 180) or "Video partita"
+    focus = _clean_text(data.focus, 160) or "Analisi tattica generale"
+    observed_team = _clean_text(data.observed_team, 160) or "Squadra osservata"
+    home_team = _clean_text(data.home_team, 120) or "Non specificata"
+    away_team = _clean_text(data.away_team, 120) or "Non specificata"
+    home_formation = _clean_text(data.home_formation, 40) or "Non indicato"
+    away_formation = _clean_text(data.away_formation, 40) or "Non indicato"
+    lineup_notes = _clean_text(data.lineup_notes, 1400) or "Non inserite"
+    notes = _clean_text(data.notes, 1200) or "Nessuna nota staff inserita."
+    frame_times = ", ".join(
+        f"Frame {idx + 1}: {_format_seconds(t)}"
+        for idx, t in enumerate((data.frame_times or [])[:frame_count])
+    ) or "non disponibili"
+    frame_meta = _format_frame_meta(data.frame_meta, frame_count)
+    tactical_lines = _format_tactical_lines(data.tactical_lines)
+
+    return f"""
+Costruisci una mini-presentazione tattica tipo match analyst professionista partendo dai fotogrammi della clip.
+
+Contesto:
+- Titolo: {title}
+- Focus richiesto: {focus}
+- Squadra osservata: {observed_team}
+- Casa/modulo: {home_team} / {home_formation}
+- Trasferta/modulo: {away_team} / {away_formation}
+- Formazioni o numeri staff: {lineup_notes}
+- Note staff: {notes}
+- Tempi frame: {frame_times}
+- Motivo selezione frame: {frame_meta}
+- Linee tattiche gia tracciate: {tactical_lines}
+
+Obiettivo prodotto:
+Devi proporre slide pronte per un allenatore o match analyst: una slide deve dire cosa guardare, perche conta e cosa correggere.
+Non inventare giocatori, nomi o misurazioni. Se il frame non e' adatto, proponi una slide "limite/da verificare" con confidence bassa.
+Quando possibile, suggerisci quale linea tracciare: linea difensiva, centrocampo, offensiva, ampiezza, spazio tra reparti, pressing o rest defense.
+Restituisci solo JSON valido, senza markdown.
+
+Schema:
+{{
+  "slides": [
+    {{
+      "index": 1,
+      "frame_index": 0,
+      "time_label": "12:34",
+      "phase": "Pressing e transizione",
+      "title": "Prima pressione superata",
+      "tactical_read": "La squadra osservata pressa sul lato palla ma resta lunga dietro la prima linea.",
+      "staff_action": "Chiedere al mediano di accorciare e alla linea difensiva di salire appena parte la pressione.",
+      "suggested_line": "Traccia spazio tra centrocampo e difesa.",
+      "training_drill": "6v6+3 con riaggressione immediata dopo perdita.",
+      "confidence": 82
+    }}
+  ],
+  "deck_summary": "Tema principale da portare allo staff",
+  "coach_next_click": "La prossima azione consigliata nell'app"
+}}
+""".strip()
+
+
+def _sanitize_slides(raw: dict, frame_count: int) -> dict:
+    slides = []
+    for idx, item in enumerate((raw or {}).get("slides") or []):
+        try:
+            frame_index = int(item.get("frame_index", idx))
+        except Exception:
+            frame_index = idx
+        frame_index = max(0, min(max(0, frame_count - 1), frame_index))
+        try:
+            confidence = int(float(item.get("confidence", 0) or 0))
+        except Exception:
+            confidence = 0
+        slides.append({
+            "index": idx + 1,
+            "frame_index": frame_index,
+            "time_label": _clean_text(item.get("time_label", ""), 20),
+            "phase": _clean_text(item.get("phase", ""), 80) or "Lettura tattica",
+            "title": _clean_text(item.get("title", ""), 120) or f"Slide {idx + 1}",
+            "tactical_read": _clean_text(item.get("tactical_read", ""), 420),
+            "staff_action": _clean_text(item.get("staff_action", ""), 360),
+            "suggested_line": _clean_text(item.get("suggested_line", ""), 220),
+            "training_drill": _clean_text(item.get("training_drill", ""), 260),
+            "confidence": max(0, min(100, confidence)),
+        })
+        if len(slides) >= min(6, frame_count):
+            break
+    return {
+        "slides": slides,
+        "deck_summary": _clean_text((raw or {}).get("deck_summary", ""), 260),
+        "coach_next_click": _clean_text((raw or {}).get("coach_next_click", ""), 220),
+    }
+
+
+def _call_openai_slides(data: VideoReportRequest, frames: List[str]) -> dict:
+    if not OPENAI_API_KEY:
+        return {"slides": [], "deck_summary": "", "coach_next_click": ""}
+
+    prompt = _build_slides_prompt(data, len(frames))
+    content = [{"type": "text", "text": prompt}]
+    for frame in frames:
+        content.append({"type": "image_url", "image_url": {"url": frame}})
+
+    payload = {
+        "model": OPENAI_VIDEO_MODEL,
+        "temperature": 0.15,
+        "max_tokens": 1800,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "Sei MatchIQ Slide Analyst. Crei storyboard tattici in JSON "
+                    "per staff tecnici, con letture prudenti e azioni operative."
+                ),
+            },
+            {"role": "user", "content": content},
+        ],
+    }
+
+    response = requests.post(
+        OPENAI_API_URL,
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=90,
+    )
+    if response.status_code >= 400:
+        return {"slides": [], "deck_summary": "", "coach_next_click": ""}
+    message = response.json()["choices"][0]["message"]["content"]
+    return _sanitize_slides(_extract_json_object(message), len(frames))
+
+
 def _draw_pdf_footer(canvas, doc):
     canvas.saveState()
     canvas.setStrokeColor(colors.HexColor("#d8e4ef"))
@@ -522,7 +669,12 @@ def _paragraph(value: str, style: ParagraphStyle) -> Paragraph:
     return Paragraph(html.escape(str(value or "")), style)
 
 
-def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_count: int) -> str:
+def _pdf_cell(value: str, style: ParagraphStyle) -> Paragraph:
+    safe = html.escape(str(value or "")).replace("\n", "<br/>")
+    return Paragraph(safe, style)
+
+
+def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_count: int, slides_data: Optional[dict] = None) -> str:
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=38, leftMargin=38, topMargin=34, bottomMargin=42)
     styles = getSampleStyleSheet()
@@ -662,6 +814,40 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
     story.append(limits_box)
     story.append(Spacer(1, 10))
 
+    slides = (slides_data or {}).get("slides") or []
+    if slides:
+        story.append(_paragraph("Diapositive tattiche AI", styles["MatchIQHeading"]))
+        deck_summary = _clean_text((slides_data or {}).get("deck_summary", ""), 260)
+        if deck_summary:
+            story.append(_paragraph(deck_summary, styles["MatchIQSmall"]))
+            story.append(Spacer(1, 5))
+        slide_rows = [["Slide", "Frame", "Lettura", "Azione staff"]]
+        for slide in slides[:6]:
+            slide_rows.append([
+                _pdf_cell(str(slide.get("index") or ""), styles["MatchIQSmall"]),
+                _pdf_cell(slide.get("time_label") or f"Frame {int(slide.get('frame_index') or 0) + 1}", styles["MatchIQSmall"]),
+                _pdf_cell(f"{slide.get('title') or ''}\n{slide.get('tactical_read') or ''}\nLinea: {slide.get('suggested_line') or '-'}", styles["MatchIQSmall"]),
+                _pdf_cell(f"{slide.get('staff_action') or '-'}\nEsercizio: {slide.get('training_drill') or '-'}", styles["MatchIQSmall"]),
+            ])
+        slide_table = Table(slide_rows, colWidths=[36, 62, 194, 190])
+        slide_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#07101f")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#f8fafc")),
+            ("TEXTCOLOR", (0, 1), (-1, -1), colors.HexColor("#1f2937")),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 7.4),
+            ("LEADING", (0, 0), (-1, -1), 9.4),
+            ("GRID", (0, 0), (-1, -1), .35, colors.HexColor("#d8e4ef")),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        story.append(slide_table)
+        story.append(Spacer(1, 10))
+
     for block in str(report or "").split("\n"):
         block = block.strip()
         if not block:
@@ -676,6 +862,15 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
 
 
 def _public_video_report(row: dict):
+    payload = row.get("payload") or {}
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except json.JSONDecodeError:
+            payload = {}
+    if not isinstance(payload, dict):
+        payload = {}
+
     return {
         "id": row.get("id"),
         "title": row.get("title") or "Video Report MatchIQ",
@@ -688,11 +883,14 @@ def _public_video_report(row: dict):
         "report": row.get("report") or "",
         "pdf_base64": row.get("pdf_base64") or "",
         "date": row.get("created_at") or "",
+        "slides": payload.get("slides") or [],
+        "deck_summary": payload.get("deck_summary") or "",
+        "coach_next_click": payload.get("coach_next_click") or "",
         "cloud": True,
     }
 
 
-def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: str, pdf_base64: str, frames_count: int):
+def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: str, pdf_base64: str, frames_count: int, slides_data: Optional[dict] = None):
     if not user:
         return {"success": False, "reason": "login_required"}
 
@@ -713,6 +911,9 @@ def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: st
             "frame_meta": data.frame_meta[:12],
             "notes": _clean_text(data.notes, 1200),
             "tactical_lines": data.tactical_lines[:12],
+            "slides": (slides_data or {}).get("slides", [])[:8],
+            "deck_summary": _clean_text((slides_data or {}).get("deck_summary", ""), 260),
+            "coach_next_click": _clean_text((slides_data or {}).get("coach_next_click", ""), 220),
             "home_team": _clean_text(data.home_team, 120),
             "away_team": _clean_text(data.away_team, 120),
             "home_formation": _clean_text(data.home_formation, 40),
@@ -761,10 +962,11 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
 
     prompt = _build_prompt(data, len(frames))
     report = _sanitize_video_report(_call_openai(prompt, frames))
+    slides = _call_openai_slides(data, frames)
     title = _clean_text(data.title, 180) or "Video Report MatchIQ"
-    pdf_base64 = _build_pdf_base64(title, report, data, len(frames))
+    pdf_base64 = _build_pdf_base64(title, report, data, len(frames), slides)
     track_api_usage(user["id"], "/api/video/analyze", "video_report")
-    cloud_save = _save_cloud_report_for_user(user, data, report, pdf_base64, len(frames))
+    cloud_save = _save_cloud_report_for_user(user, data, report, pdf_base64, len(frames), slides)
 
     return {
         "ok": True,
@@ -772,6 +974,9 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
         "frames_analyzed": len(frames),
         "title": title,
         "report": report,
+        "slides": slides.get("slides", []),
+        "deck_summary": slides.get("deck_summary", ""),
+        "coach_next_click": slides.get("coach_next_click", ""),
         "pdf_base64": pdf_base64,
         "generated_at": datetime.utcnow().isoformat(),
         "cloud_saved": bool(cloud_save and cloud_save.get("success")),

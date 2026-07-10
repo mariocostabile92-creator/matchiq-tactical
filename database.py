@@ -1543,7 +1543,7 @@ def get_video_reports(user_id: int, limit: int = 50):
     cur = conn.cursor()
     cur.execute(q("""
         SELECT id, title, club_name, category, focus, observed_team, report_style,
-               frames_analyzed, report, pdf_base64, created_at
+               frames_analyzed, report, pdf_base64, payload, created_at
         FROM video_reports
         WHERE user_id = ?
         ORDER BY created_at DESC
