@@ -16,6 +16,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from database import can_use_feature, delete_video_report, get_plan_limits, get_video_reports, save_video_report, track_api_usage
+from app.services.video_taxonomy import validate_selection_result
 from usage_guard import get_optional_user, require_user
 
 
@@ -1133,27 +1134,10 @@ def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_u
             }
         )
 
-    result = _call_openai_frame_selector(data, frames)
     desired_count = max(2, min(MAX_FRAMES, int(data.desired_count or MAX_FRAMES)))
-    selected_indexes = []
+    result = _call_openai_frame_selector(data, frames)
 
-    for value in result.get("selected_indexes") or []:
-        try:
-            index = int(value)
-        except Exception:
-            continue
-        if 0 <= index < len(frames) and index not in selected_indexes:
-            selected_indexes.append(index)
-        if len(selected_indexes) >= desired_count:
-            break
-
-    if len(selected_indexes) < 2:
-        raise HTTPException(
-            status_code=502,
-            detail="La selezione AI non ha restituito fotogrammi validi"
-        )
-
-    notes_by_index = {}
+    normalized_notes = []
     for note in result.get("frame_notes") or []:
         try:
             index = int(note.get("index"))
@@ -1168,25 +1152,25 @@ def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_u
         if set_piece_type and phase.lower().startswith("palla inattiva"):
             phase = set_piece_type
         grade = _normalize_frame_grade(note.get("grade", ""), quality, phase)
-        notes_by_index[str(index)] = {
+        normalized_notes.append({
+            "index": index,
             "label": phase,
+            "phase": phase,
             "set_piece_type": set_piece_type,
             "grade": grade,
             "grade_reason": _clean_text(note.get("grade_reason", ""), 180),
+            "quality": quality,
             "ai_quality": quality,
             "ai_reason": _clean_text(note.get("reason", ""), 220),
+            "reason": _clean_text(note.get("reason", ""), 220),
             "team_colors": note.get("team_colors") if isinstance(note.get("team_colors"), list) else [],
             "visible_numbers": note.get("visible_numbers") if isinstance(note.get("visible_numbers"), list) else [],
             "player_read": _clean_text(note.get("player_read", ""), 180),
             "line_suggestions": _normalize_line_suggestions(note.get("line_suggestions") or []),
-        }
+        })
 
-    return {
-        "ok": True,
-        "selected_indexes": selected_indexes,
-        "frame_notes": notes_by_index,
-        "team_guess": result.get("team_guess") or {},
-    }
+    result["frame_notes"] = normalized_notes
+    return validate_selection_result(result, data, len(frames), desired_count)
 
 
 @router.get("/reports")

@@ -372,6 +372,39 @@ video{
     font-weight:1000;
 }
 .frame-card.active span{color:#00f5a0}
+.frame-card.candidate{border-color:rgba(255,226,138,.35)}
+.frame-confidence{
+    display:block;
+    padding:0 9px 7px;
+    color:#9fb4ff;
+    font-size:11px;
+    line-height:1.35;
+    font-weight:800;
+}
+.frame-actions{
+    display:flex!important;
+    gap:6px;
+    padding:0 9px 9px!important;
+    flex-wrap:wrap;
+}
+.btn.tiny{
+    padding:6px 8px;
+    font-size:11px;
+    border-radius:9px;
+}
+.frame-section{
+    grid-column:1/-1;
+    padding:13px 14px;
+    border:1px solid rgba(0,245,160,.25);
+    border-radius:12px;
+    background:rgba(0,245,160,.08);
+}
+.frame-section.rejected{
+    border-color:rgba(255,64,88,.25);
+    background:rgba(255,64,88,.08);
+}
+.frame-section strong{display:block;font-size:14px}
+.frame-section span{display:block;color:var(--muted);font-size:12px;margin-top:4px}
 .status{
     margin-top:14px;
     padding:13px 14px;
@@ -882,9 +915,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10472">Home</a>
-        <a class="btn dark" href="/coach.html?v=10472">Coach</a>
-        <a class="btn dark" href="/account.html?v=10472">Account</a>
+        <a class="btn dark" href="/index.html?v=10474">Home</a>
+        <a class="btn dark" href="/coach.html?v=10474">Coach</a>
+        <a class="btn dark" href="/account.html?v=10474">Account</a>
     </nav>
 </header>
 
@@ -954,7 +987,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10472">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10474">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -964,7 +997,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10472">Scopri piano club</a>
+                    <a href="/account.html?v=10474">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1258,12 +1291,15 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10472";
+const APP_VERSION = "10474";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
 let extractedFrameTimes = [];
 let extractedFrameMeta = [];
+let candidateFrameResults = [];
+let rejectedFrameResults = [];
+let frameFeedback = {};
 let aiLineSuggestions = {};
 let latestPdfBase64 = "";
 let latestSlides = [];
@@ -1357,12 +1393,81 @@ function updateSelectedFrameLabel(){
 
 function renderFramesGrid(){
     if(!framesGrid) return;
-    framesGrid.innerHTML = extractedFrames.map((frame,i) => `
-        <button type="button" class="frame-card ${i === selectedFrameIndex ? "active" : ""}" onclick="selectTacticalFrame(${i})">
+    const verifiedHtml = extractedFrames.map((frame,i) => {
+        const meta = extractedFrameMeta[i] || {};
+        const feedback = frameFeedback[`verified:${i}`] || meta.feedback_status || "";
+        return `
+        <article class="frame-card ${i === selectedFrameIndex ? "active" : ""}" onclick="selectTacticalFrame(${i})">
             <img src="${frame}" alt="Frame ${i+1}">
-            <span>Frame ${i+1} - ${formatTime(extractedFrameTimes[i])}${extractedFrameMeta[i]?.label ? ` - ${escapeHtml(extractedFrameMeta[i].label)}` : ""}${extractedFrameMeta[i]?.selector === "AI" ? " - AI" : ""}</span>
-        </button>
-    `).join("");
+            <span>Frame ${i+1} - ${formatTime(extractedFrameTimes[i])}${meta.label ? ` - ${escapeHtml(meta.label)}` : ""}${meta.selector === "AI" ? " - AI" : ""}</span>
+            <small class="frame-confidence">${escapeHtml(meta.validation_status === "verified" ? "Frame verificato" : "Frame selezionato")}${meta.confidence ? ` - ${meta.confidence}%` : ""}${feedback ? ` - ${escapeHtml(feedback)}` : ""}</small>
+            <span class="frame-actions" onclick="event.stopPropagation()">
+                <button type="button" class="btn tiny" onclick="markFrameFeedback('verified', ${i}, 'corretto')">Corretto</button>
+                <button type="button" class="btn dark tiny" onclick="markFrameFeedback('verified', ${i}, 'non pertinente')">Non pertinente</button>
+            </span>
+        </article>
+    `}).join("");
+
+    const candidateHtml = candidateFrameResults.length ? `
+        <div class="frame-section">
+            <strong>Possibili candidati da controllare</strong>
+            <span>Non entrano nel report finche non li approvi tu.</span>
+        </div>
+        ${candidateFrameResults.map((item,i) => `
+            <article class="frame-card candidate" onclick="previewCandidateFrame(${i})">
+                <img src="${item.frame}" alt="Candidato ${i+1}">
+                <span>Candidato ${i+1} - ${formatTime(item.time)}${item.meta?.label ? ` - ${escapeHtml(item.meta.label)}` : ""}</span>
+                <small class="frame-confidence">${escapeHtml(item.meta?.validation_reasons?.[0] || "Da controllare")}${item.meta?.confidence ? ` - ${item.meta.confidence}%` : ""}</small>
+                <span class="frame-actions" onclick="event.stopPropagation()">
+                    <button type="button" class="btn tiny" onclick="approveCandidateFrame(${i})">Approva</button>
+                    <button type="button" class="btn dark tiny" onclick="markFrameFeedback('candidate', ${i}, 'non pertinente')">Scarta</button>
+                </span>
+            </article>
+        `).join("")}
+    ` : "";
+
+    const rejectedHtml = rejectedFrameResults.length ? `
+        <div class="frame-section rejected">
+            <strong>Frame esclusi</strong>
+            <span>${rejectedFrameResults.length} frame non coerenti con il focus richiesto.</span>
+        </div>
+    ` : "";
+
+    framesGrid.innerHTML = verifiedHtml || `<div class="frame-section"><strong>Nessun frame verificato</strong><span>Cambia focus, aumenta i fotogrammi o usa un video con azione piu leggibile.</span></div>`;
+    framesGrid.innerHTML += candidateHtml + rejectedHtml;
+}
+
+function markFrameFeedback(source, index, status){
+    frameFeedback[`${source}:${index}`] = status;
+    if(source === "verified" && extractedFrameMeta[index]){
+        extractedFrameMeta[index].feedback_status = status;
+    }
+    if(source === "candidate" && candidateFrameResults[index]){
+        candidateFrameResults[index].meta.feedback_status = status;
+    }
+    renderFramesGrid();
+    showStatus(status === "corretto" ? "Feedback salvato: frame corretto." : "Feedback salvato: frame non pertinente.", status === "corretto" ? "ok" : "warn");
+}
+
+function approveCandidateFrame(index){
+    const item = candidateFrameResults[index];
+    if(!item) return;
+    extractedFrames.push(item.frame);
+    extractedFrameTimes.push(item.time);
+    extractedFrameMeta.push({...item.meta, validation_status:"verified", feedback_status:"approved"});
+    candidateFrameResults.splice(index,1);
+    selectedFrameIndex = extractedFrames.length - 1;
+    updateSelectedFrameLabel();
+    renderFramesGrid();
+    selectTacticalFrame(selectedFrameIndex);
+    analyzeBtn.disabled = extractedFrames.length < 1;
+    showStatus("Candidato approvato e aggiunto ai frame verificati.", "ok");
+}
+
+function previewCandidateFrame(index){
+    const item = candidateFrameResults[index];
+    if(!item) return;
+    showStatus(`Candidato ${index + 1}: ${item.meta?.label || "spunto tattico"} - aprilo solo se ti sembra coerente.`, "warn");
 }
 
 function cleanTacticalPhase(value, fallback="Lettura tattica"){
@@ -2452,6 +2557,9 @@ videoInput.addEventListener("change", () => {
     extractedFrames = [];
     extractedFrameTimes = [];
     extractedFrameMeta = [];
+    candidateFrameResults = [];
+    rejectedFrameResults = [];
+    frameFeedback = {};
     aiLineSuggestions = {};
     latestSlides = [];
     latestDeckSummary = "";
@@ -2703,34 +2811,44 @@ async function selectCandidatesWithAI(candidates, count, duration, focus){
         err.stopExtraction = res.status === 401 || res.status === 402;
         throw err;
     }
-    const selectedIndexes = Array.isArray(data.selected_indexes) ? data.selected_indexes : [];
-    const selected = [];
+    const selectedIndexes = Array.isArray(data.verified_indexes) ? data.verified_indexes : (Array.isArray(data.selected_indexes) ? data.selected_indexes : []);
+    const candidateIndexes = Array.isArray(data.candidate_indexes) ? data.candidate_indexes : [];
+    const rejectedIndexes = Array.isArray(data.rejected_indexes) ? data.rejected_indexes : [];
 
-    selectedIndexes.forEach(rawIndex => {
+    const buildResult = rawIndex => {
         const index = Number(rawIndex);
-        if(Number.isInteger(index) && candidates[index] && !selected.includes(candidates[index])){
-            const aiNote = data.frame_notes?.[String(index)] || {};
-            selected.push({
-                ...candidates[index],
-                meta:{
-                    ...candidates[index].meta,
-                    label:aiNote.label || candidates[index].meta.label || "selezione AI",
-                    set_piece_type:aiNote.set_piece_type || "",
-                    grade:aiNote.grade || "",
-                    grade_reason:aiNote.grade_reason || "",
-                    ai_quality:aiNote.ai_quality,
-                    ai_reason:aiNote.ai_reason,
-                    team_colors:aiNote.team_colors || [],
-                    visible_numbers:aiNote.visible_numbers || [],
-                    line_suggestions:aiNote.line_suggestions || [],
-                    player_read:aiNote.player_read || "",
-                    selector:"AI"
-                }
-            });
-        }
-    });
+        if(!Number.isInteger(index) || !candidates[index]) return null;
+        const aiNote = data.frame_notes?.[String(index)] || {};
+        return {
+            ...candidates[index],
+            meta:{
+                ...candidates[index].meta,
+                label:aiNote.label || candidates[index].meta.label || "selezione AI",
+                set_piece_type:aiNote.set_piece_type || "",
+                grade:aiNote.grade || "",
+                grade_reason:aiNote.grade_reason || "",
+                ai_quality:aiNote.ai_quality ?? aiNote.confidence,
+                confidence:aiNote.confidence ?? aiNote.ai_quality,
+                ai_reason:aiNote.ai_reason || "",
+                team_colors:aiNote.team_colors || [],
+                visible_numbers:aiNote.visible_numbers || [],
+                line_suggestions:aiNote.line_suggestions || [],
+                player_read:aiNote.player_read || "",
+                requested_label:aiNote.requested_label || "",
+                detected_label:aiNote.detected_label || "",
+                validation_status:aiNote.validation_status || "verified",
+                validation_reasons:aiNote.validation_reasons || [],
+                rejection_reasons:aiNote.rejection_reasons || [],
+                feedback_status:aiNote.feedback_status || "none",
+                selector:"AI"
+            }
+        };
+    };
 
-    if(selected.length < 2) return null;
+    const selected = selectedIndexes.map(buildResult).filter(Boolean);
+    candidateFrameResults = candidateIndexes.map(buildResult).filter(Boolean);
+    rejectedFrameResults = rejectedIndexes.map(buildResult).filter(Boolean);
+
     return selected.slice(0,count).sort((a,b) => a.time - b.time);
 }
 
@@ -2745,6 +2863,9 @@ async function extractFrames(){
     extractedFrames = [];
     extractedFrameTimes = [];
     extractedFrameMeta = [];
+    candidateFrameResults = [];
+    rejectedFrameResults = [];
+    frameFeedback = {};
     aiLineSuggestions = {};
     latestSlides = [];
     latestDeckSummary = "";
@@ -2808,7 +2929,7 @@ async function extractFrames(){
         }
         selectedCandidates = null;
     }
-    if(!selectedCandidates){
+    if(selectedCandidates === null){
         selectedCandidates = selectBestTacticalCandidates(candidates, count, duration);
     }
     extractedFrames = selectedCandidates.map(item => item.frame);
@@ -2825,16 +2946,16 @@ async function extractFrames(){
     updateSelectedFrameLabel();
     renderFramesGrid();
     if(extractedFrames.length) await selectTacticalFrame(0);
-    renderAiSlides([], `Bozza storyboard pronta per ${focus}: genera il report AI per avere slide tattiche complete.`, "Prossimo click: genera report AI.");
-    analyzeBtn.disabled = extractedFrames.length < 2;
+    renderAiSlides([], extractedFrames.length ? `Frame verificati per ${focus}: genera il report AI per avere slide tattiche complete.` : `Nessun frame verificato per ${focus}. Controlla i candidati o cambia focus.`, extractedFrames.length ? "Prossimo click: genera report AI." : "Approva un candidato o aumenta i fotogrammi.");
+    analyzeBtn.disabled = extractedFrames.length < 1;
     extractBtn.disabled = false;
     updateReportMeta("frames");
-    showStatus(`${extractedFrames.length} fotogrammi selezionati per "${focus}". Scegli un frame sotto al video e traccia le linee che ti interessano.`, "ok");
+    showStatus(`${extractedFrames.length} frame verificati per "${focus}". ${candidateFrameResults.length ? `${candidateFrameResults.length} candidati da controllare.` : ""}`, extractedFrames.length ? "ok" : "warn");
 }
 
 async function analyzeVideo(){
-    if(extractedFrames.length < 2){
-        showStatus("Servono almeno 2 fotogrammi.", "warn");
+    if(extractedFrames.length < 1){
+        showStatus("Serve almeno 1 frame verificato o approvato.", "warn");
         return;
     }
 
