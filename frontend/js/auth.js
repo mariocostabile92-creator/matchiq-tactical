@@ -103,14 +103,22 @@ function getAdminToken(){
   return "";
 }
 
+function clearAdminTokens(){
+  MATCHIQ_ADMIN_TOKEN_KEYS.forEach(key => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  });
+}
+
 function adminHeaders(extra = {}){
-  const adminToken = getAdminToken();
   const authToken = getAuthToken();
+  const ownerAuth = authToken && isOwnerOrAdmin();
+  const adminToken = ownerAuth ? "" : getAdminToken();
 
   return {
     "Accept": "application/json",
-    ...(adminToken ? {"X-Admin-Token": adminToken} : {}),
     ...(authToken ? {"Authorization": "Bearer " + authToken} : {}),
+    ...(adminToken ? {"X-Admin-Token": adminToken} : {}),
     ...extra
   };
 }
@@ -203,6 +211,7 @@ window.MatchIQAuth = {
   isOwnerOrAdmin,
   authHeaders,
   getAdminToken,
+  clearAdminTokens,
   adminHeaders,
   hasAdminAccess,
   requireLogin,
