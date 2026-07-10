@@ -1096,13 +1096,18 @@
         </div>
     </div>
 
-    <div class="grid section">
-        <div class="panel">
-            <span class="badge blue">1. CREA PARTITA</span>
+    <div class="section setup-section">
+        <div class="panel setup-panel">
+            <span class="badge blue setup-badge">1. CREA PARTITA</span>
 
-            <h2>Setup partita</h2>
+            <div class="setup-head">
+                <div>
+                    <h2>Setup partita</h2>
+                    <p>Imposta subito dati gara, campo e moduli: da qui parte tutto il lavoro di Coach Mode.</p>
+                </div>
+            </div>
 
-            <div class="form-grid">
+            <div class="setup-grid setup-grid-main">
                 <div class="field">
                     <label>Squadra casa</label>
                     <input id="homeTeamInput" type="text" placeholder="Es. ASD Lomazzo" />
@@ -1135,6 +1140,9 @@
                     <input id="matchDateInput" type="date" />
                 </div>
 
+            </div>
+
+            <div class="setup-grid setup-grid-tactical">
                 <div class="field">
                     <label>Campo</label>
                     <input id="matchFieldInput" type="text" placeholder="Es. Comunale Mario Rossi" />
@@ -1150,114 +1158,25 @@
                     <input id="awayShapeInput" type="text" placeholder="Es. 4-4-2" />
                 </div>
 
-                <div class="field full">
-                    <label>Note pre-partita</label>
-                    <textarea id="preNotesInput" placeholder="Obiettivo partita, assenti, indicazioni tattiche, cose da osservare..."></textarea>
-                </div>
             </div>
 
-            <div class="micro-row">
+            <div class="field setup-notes">
+                <label>Note pre-partita</label>
+                <textarea id="preNotesInput" placeholder="Obiettivo partita, assenti, indicazioni tattiche, cose da osservare..."></textarea>
+            </div>
+
+            <div class="setup-actions">
                 <button class="btn green" onclick="createManualMatch()">Crea / aggiorna partita</button>
                 <button class="btn dark" onclick="clearCurrentMatch()">Reset partita</button>
             </div>
         </div>
 
-        <div class="panel">
-            <span class="badge gold">2. REGISTRA EVENTI</span>
-
-            <h2>Evento rapido</h2>
-
-            <div class="form-grid">
-                <div class="field">
-                    <label>Minuto</label>
-                    <input id="eventMinuteInput" type="number" min="0" max="130" placeholder="Es. 35" />
-                </div>
-
-                <div class="field">
-                    <label>Squadra</label>
-                    <select id="eventTeamInput">
-                        <option value="home">Casa</option>
-                        <option value="away">Trasferta</option>
-                    </select>
-                </div>
-
-
-                <div class="field">
-                    <label>Giocatore da formazione</label>
-                    <select id="eventPlayerSelectInput" onchange="syncEventPlayerFromSelect()">
-                        <option value="">Seleziona giocatore</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Giocatore opzionale</label>
-                    <input id="eventPlayerInput" type="text" placeholder="Es. N.10 Rossi" />
-                </div>
-
-                <div class="field">
-                    <label>Nota opzionale</label>
-                    <input id="eventNoteInput" type="text" placeholder="Es. tiro da fuori, errore marcatura..." />
-                </div>
-            </div>
-
-            <div class="quick-actions">
-                <button class="event-btn goal" onclick="addQuickEvent('gol','Gol','⚽')">
-                    <span class="event-emoji">⚽</span>
-                    <span class="event-text">Gol</span>
-                </button>
-
-                <button class="event-btn danger" onclick="addQuickEvent('tiro','Tiro','🎯')">
-                    <span class="event-emoji">🎯</span>
-                    <span class="event-text">Tiro</span>
-                </button>
-
-                <button class="event-btn danger" onclick="addQuickEvent('occasione','Occasione','🔥')">
-                    <span class="event-emoji">🔥</span>
-                    <span class="event-text">Occasione</span>
-                </button>
-
-                <button class="event-btn" onclick="addQuickEvent('recupero','Recupero palla','✅')">
-                    <span class="event-emoji">✅</span>
-                    <span class="event-text">Recupero palla</span>
-                </button>
-
-                <button class="event-btn danger" onclick="addQuickEvent('palla_persa','Palla persa','❌')">
-                    <span class="event-emoji">❌</span>
-                    <span class="event-text">Palla persa</span>
-                </button>
-
-                <button class="event-btn danger" onclick="addQuickEvent('errore_difensivo','Errore difensivo','🚨')">
-                    <span class="event-emoji">🚨</span>
-                    <span class="event-text">Errore difensivo</span>
-                </button>
-
-                <button class="event-btn gold" onclick="addQuickEvent('cambio','Cambio','🔁')">
-                    <span class="event-emoji">🔁</span>
-                    <span class="event-text">Cambio</span>
-                </button>
-
-                <button class="event-btn gold" onclick="addQuickEvent('cartellino','Cartellino','🟨')">
-                    <span class="event-emoji">🟨</span>
-                    <span class="event-text">Cartellino</span>
-                </button>
-
-                <button class="event-btn" onclick="addQuickEvent('nota','Nota coach','📝')">
-                    <span class="event-emoji">📝</span>
-                    <span class="event-text">Nota</span>
-                </button>
-            </div>
-
-            <div class="micro-row">
-                <button class="btn green" onclick="generateCoachReport()">Genera report</button>
-                <button class="btn dark" onclick="copyReport()">Copia report</button>
-            </div>
-        </div>
     </div>
 
 
     <div class="section">
         <div class="panel">
-            <span class="badge green">3. FORMAZIONE</span>
+            <span class="badge green">2. FORMAZIONE</span>
 
             <h2>Campo e formazione</h2>
 
@@ -1534,11 +1453,11 @@
     <a class="active" href="/coach.html">Coach</a>
     <a href="/account.html">Account</a>
 </nav>
-<script src="/js/coach-state.js?v=10461"></script>
-<script src="/js/coach-storage.js?v=10461"></script>
-<script src="/js/coach-actions.js?v=10461"></script>
-<script src="/js/coach-report.js?v=10461"></script>
-<script src="/js/coach-render.js?v=10461"></script>
-<script src="/js/coach-core.js?v=10461"></script>
+<script src="/js/coach-state.js?v=10473"></script>
+<script src="/js/coach-storage.js?v=10473"></script>
+<script src="/js/coach-actions.js?v=10473"></script>
+<script src="/js/coach-report.js?v=10473"></script>
+<script src="/js/coach-render.js?v=10473"></script>
+<script src="/js/coach-core.js?v=10473"></script>
 </body>
 </html>

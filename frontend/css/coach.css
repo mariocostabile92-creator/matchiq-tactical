@@ -324,6 +324,76 @@ p{
     gap:12px;
 }
 
+.setup-section{
+    margin-top:22px;
+}
+
+.setup-panel{
+    border-color:rgba(56,169,255,.20);
+    background:
+        radial-gradient(circle at 90% 0,rgba(56,169,255,.12),transparent 32%),
+        radial-gradient(circle at 8% 0,rgba(24,240,139,.10),transparent 28%),
+        linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));
+}
+
+.setup-badge{
+    margin-bottom:10px;
+}
+
+.setup-head{
+    display:flex;
+    justify-content:space-between;
+    gap:18px;
+    align-items:flex-start;
+    margin-bottom:18px;
+}
+
+.setup-head h2{
+    font-size:clamp(28px,4vw,42px);
+    line-height:1;
+    letter-spacing:0;
+    margin-bottom:8px;
+}
+
+.setup-head p{
+    color:var(--muted);
+    max-width:720px;
+    line-height:1.5;
+}
+
+.setup-grid{
+    display:grid;
+    gap:12px;
+}
+
+.setup-grid-main{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+}
+
+.setup-grid-tactical{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    margin-top:12px;
+}
+
+.setup-notes{
+    margin-top:12px;
+}
+
+.setup-notes textarea{
+    min-height:120px;
+}
+
+.setup-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:16px;
+}
+
+.setup-actions .btn{
+    min-width:190px;
+}
+
 .field{
     display:grid;
     gap:7px;
@@ -668,6 +738,23 @@ select option{
         grid-template-columns:1fr;
     }
 
+    .setup-section{
+        margin-top:16px;
+    }
+
+    .setup-grid-main,
+    .setup-grid-tactical{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .setup-head{
+        margin-bottom:14px;
+    }
+
+    .setup-actions .btn{
+        flex:1 1 180px;
+    }
+
     .quick-actions{
         grid-template-columns:repeat(2,1fr);
     }
@@ -723,6 +810,32 @@ select option{
     .bottom-nav a.active{
         background:linear-gradient(135deg,var(--green),var(--blue));
         color:#06111c;
+    }
+}
+
+@media(max-width:560px){
+    .setup-grid-main,
+    .setup-grid-tactical{
+        grid-template-columns:1fr;
+    }
+
+    .setup-panel{
+        padding:18px;
+        border-radius:22px;
+    }
+
+    .setup-head h2{
+        font-size:30px;
+    }
+
+    .setup-actions{
+        display:grid;
+        grid-template-columns:1fr;
+    }
+
+    .setup-actions .btn{
+        width:100%;
+        min-height:56px;
     }
 }
 
