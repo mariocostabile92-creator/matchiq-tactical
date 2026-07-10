@@ -841,9 +841,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10463">Home</a>
-        <a class="btn dark" href="/coach.html?v=10463">Coach</a>
-        <a class="btn dark" href="/account.html?v=10463">Account</a>
+        <a class="btn dark" href="/index.html?v=10464">Home</a>
+        <a class="btn dark" href="/coach.html?v=10464">Coach</a>
+        <a class="btn dark" href="/account.html?v=10464">Account</a>
     </nav>
 </header>
 
@@ -913,7 +913,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10463">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10464">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -923,7 +923,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10463">Scopri piano club</a>
+                    <a href="/account.html?v=10464">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1174,7 +1174,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10463";
+const APP_VERSION = "10464";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1258,30 +1258,70 @@ function renderFramesGrid(){
     `).join("");
 }
 
+function getFrameTacticalStatus(meta={}, label="", focus=""){
+    const text = `${label} ${meta.ai_reason || ""} ${meta.player_read || ""}`.toLowerCase();
+    const suggestions = Array.isArray(meta.line_suggestions) ? meta.line_suggestions : [];
+    const hasTrustedLine = suggestions.some(line => Number(line.confidence || 0) >= 45);
+    const badShot = /(primo piano|esult|replay|arbitro isolato|singolo giocatore|panchina|non tattico|poco tattico|dettaglio|fermo immagine|volto)/.test(text);
+    const phaseNeedsShape = /(linea|difensiva|offensiva|centrocampo|ampiezza|reparti|rest defense|spazio)/.test(`${label} ${focus}`.toLowerCase());
+
+    if(hasTrustedLine){
+        return {
+            kind:"trusted",
+            phase:suggestions[0].phase || label || focus || "Lettura tattica",
+            confidence:Math.max(55, Math.min(100, Number(suggestions[0].confidence || meta.ai_quality || 65))),
+            read:meta.ai_reason || "Frame con linea AI plausibile. Puoi aprirlo, controllarlo e correggere la linea a mano.",
+            action:"Apri il frame, verifica la linea proposta e correggila se necessario prima del PDF.",
+            line:suggestions[0].phase ? `Linea suggerita: ${suggestions[0].phase}` : "Linea AI disponibile sul frame."
+        };
+    }
+
+    if(badShot || phaseNeedsShape){
+        return {
+            kind:"review",
+            phase:"Frame da verificare",
+            confidence:Math.min(45, Math.max(20, Number(meta.ai_quality || 35))),
+            read:"Questo frame non conferma abbastanza la fase indicata. Non usarlo come prova tattica finche non lo apri e lo validi manualmente.",
+            action:"Apri il frame: se non mostra campo aperto e piu giocatori, scartalo o scegli un altro fotogramma.",
+            line:"Nessuna linea automatica affidabile su questo frame."
+        };
+    }
+
+    return {
+        kind:"candidate",
+        phase:label || focus || "Frame candidato",
+        confidence:Math.min(70, Math.max(45, Number(meta.ai_quality || meta.score || 55))),
+        read:meta.ai_reason || "Frame candidato: controlla che palla, reparti e distanze siano davvero leggibili.",
+        action:"Validalo a video prima di usarlo nella presentazione o nel PDF.",
+        line:"Traccia una linea solo se il frame mostra chiaramente la struttura tattica."
+    };
+}
+
 function buildFallbackSlides(){
     const focus = document.getElementById("videoFocus").value || "Analisi tattica";
     return extractedFrames.slice(0,6).map((frame,index) => {
         const meta = extractedFrameMeta[index] || {};
         const time = formatTime(extractedFrameTimes[index] || 0);
         const label = meta.label || focus;
+        const status = getFrameTacticalStatus(meta, label, focus);
         return {
             index:index + 1,
             frame_index:index,
             time_label:time,
-            phase:focus,
-            title:`Frame ${index + 1}: ${label}`,
-            tactical_read: meta.ai_reason || "Frame selezionato per leggere struttura, distanze e comportamento dei reparti.",
-            staff_action: "Metti in pausa, traccia la linea piu importante e aggiungi una nota staff prima di generare il PDF finale.",
-            suggested_line: "Scegli tra linea difensiva, spazio tra reparti, pressing o ampiezza in base al focus.",
-            training_drill: "Trasforma il tema ricorrente in esercizio situazionale nella prossima seduta.",
-            confidence: meta.ai_quality || Math.max(55, Math.round(Number(meta.score || 55)))
+            phase:status.phase,
+            title:status.kind === "trusted" ? `Frame ${index + 1}: ${label}` : `Frame ${index + 1}: da validare`,
+            tactical_read: status.read,
+            staff_action: status.action,
+            suggested_line: status.line,
+            training_drill: status.kind === "trusted" ? "Trasforma il tema ricorrente in esercizio situazionale nella prossima seduta." : "Non inserirlo come slide definitiva se l'immagine non mostra una situazione tattica chiara.",
+            confidence: status.confidence
         };
     });
 }
 
 function renderAiSlides(slides=[], summary="", nextClick=""){
     latestSlides = Array.isArray(slides) && slides.length ? slides : buildFallbackSlides();
-    latestDeckSummary = summary || "Storyboard tattico pronto: usa le slide per guidare staff, linee e report.";
+    latestDeckSummary = summary || "Bozza storyboard: valida i frame prima di usarli come slide tattiche definitive.";
     latestCoachNextClick = nextClick || "Seleziona una slide, controlla il frame e aggiungi eventuali linee manuali.";
 
     if(!aiSlideDeck || !slideGrid) return;

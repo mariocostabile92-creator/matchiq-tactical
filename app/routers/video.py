@@ -348,6 +348,8 @@ Obiettivo:
 Regole importanti:
 - Se il focus e' linea difensiva, centrocampo, offensiva, ampiezza o spazio tra reparti, preferisci immagini con campo aperto e piu giocatori visibili. Penalizza primi piani, arbitro isolato, replay, inquadrature ferme su un singolo giocatore.
 - Se il focus e' pressing o transizioni, preferisci frame con palla, portatore, avversari vicini e densita attorno alla zona palla.
+- Se il frame mostra esultanza, primo piano, giocatore isolato, panchina, arbitro o scena senza lettura collettiva, non chiamarlo linea difensiva/pressing: usa phase "Frame non tattico", quality massimo 35 e non aggiungere line_suggestions.
+- Non fidarti del pre-score locale se l'immagine reale lo contraddice: guarda il fotogramma e correggi etichetta e quality.
 - Non inventare nomi dei giocatori. Rileva solo numeri o colori chiaramente leggibili.
 - Le line_suggestions devono usare coordinate normalizzate da 0 a 1 rispetto all'immagine: x sinistra-destra, y alto-basso.
 - Suggerisci al massimo 2 linee per frame e solo quando la lettura e' plausibile. Se il frame e' primo piano o poco tattico, lascia line_suggestions vuoto.
@@ -551,6 +553,8 @@ Contesto:
 Obiettivo prodotto:
 Devi proporre slide pronte per un allenatore o match analyst: una slide deve dire cosa guardare, perche conta e cosa correggere.
 Non inventare giocatori, nomi o misurazioni. Se il frame non e' adatto, proponi una slide "limite/da verificare" con confidence bassa.
+Guarda il fotogramma reale, non solo le etichette ricevute: se il frame mostra esultanza, primo piano, giocatore isolato, panchina o scena senza struttura collettiva, non trasformarlo in linea difensiva o pressing.
+In quei casi imposta phase "Frame non tattico", title "Frame da scartare o verificare", suggested_line "Nessuna linea affidabile" e confidence massimo 35.
 Quando possibile, suggerisci quale linea tracciare: linea difensiva, centrocampo, offensiva, ampiezza, spazio tra reparti, pressing o rest defense.
 Restituisci solo JSON valido, senza markdown.
 
