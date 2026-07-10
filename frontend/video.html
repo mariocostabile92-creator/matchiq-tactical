@@ -690,7 +690,7 @@ video{
     margin-bottom:12px;
 }
 .slide-deck{
-    display:none;
+    display:block;
     margin-top:18px;
     padding:16px;
     border-radius:22px;
@@ -841,9 +841,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10462">Home</a>
-        <a class="btn dark" href="/coach.html?v=10462">Coach</a>
-        <a class="btn dark" href="/account.html?v=10462">Account</a>
+        <a class="btn dark" href="/index.html?v=10463">Home</a>
+        <a class="btn dark" href="/coach.html?v=10463">Coach</a>
+        <a class="btn dark" href="/account.html?v=10463">Account</a>
     </nav>
 </header>
 
@@ -913,7 +913,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10462">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10463">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -923,7 +923,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10462">Scopri piano club</a>
+                    <a href="/account.html?v=10463">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1113,7 +1113,16 @@ video{
                     </div>
                     <button class="btn dark small" type="button" onclick="copySlideDeckText()">Copia scaletta</button>
                 </div>
-                <div id="slideGrid" class="slide-grid"></div>
+                <div id="slideGrid" class="slide-grid">
+                    <article class="ai-slide">
+                        <div></div>
+                        <div>
+                            <div class="ai-slide-kicker"><span>Pronta</span><span>Video AI</span></div>
+                            <h3>Carica o estrai i fotogrammi</h3>
+                            <p>Qui compariranno le diapositive tattiche AI con frame, lettura, azione staff e linea consigliata.</p>
+                        </div>
+                    </article>
+                </div>
                 <div id="slideNextClick" class="slide-actions"></div>
             </div>
 
@@ -1165,7 +1174,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10462";
+const APP_VERSION = "10463";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1277,7 +1286,18 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
 
     if(!aiSlideDeck || !slideGrid) return;
     if(!latestSlides.length){
-        aiSlideDeck.classList.remove("show");
+        if(slideDeckSummary) slideDeckSummary.textContent = "Carica il video ed estrai i fotogrammi: MatchIQ preparera qui le slide tattiche.";
+        slideGrid.innerHTML = `
+            <article class="ai-slide">
+                <div></div>
+                <div>
+                    <div class="ai-slide-kicker"><span>In attesa</span><span>Video AI</span></div>
+                    <h3>Diapositive non ancora generate</h3>
+                    <p>Appena estrai i fotogrammi o generi il report, qui vedrai le slide operative per staff e allenatore.</p>
+                </div>
+            </article>
+        `;
+        aiSlideDeck.classList.add("show");
         return;
     }
 
