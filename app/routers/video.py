@@ -552,10 +552,11 @@ Contesto:
 
 Obiettivo prodotto:
 Devi proporre slide pronte per un allenatore o match analyst: una slide deve dire cosa guardare, perche conta e cosa correggere.
-Non inventare giocatori, nomi o misurazioni. Se il frame non e' adatto, proponi una slide "limite/da verificare" con confidence bassa.
+Non inventare giocatori, nomi o misurazioni. Se il frame non e' adatto, proponi una slide "spunto da controllare" o "frame da scartare" con confidence bassa.
 Guarda il fotogramma reale, non solo le etichette ricevute: se il frame mostra esultanza, primo piano, giocatore isolato, panchina o scena senza struttura collettiva, non trasformarlo in linea difensiva o pressing.
-In quei casi imposta phase "Frame non tattico", title "Frame da scartare o verificare", suggested_line "Nessuna linea affidabile" e confidence massimo 35.
+In quei casi imposta phase "Frame da scartare", title "Spunto non tattico", suggested_line "Nessuna linea affidabile" e confidence massimo 35.
 Quando possibile, suggerisci quale linea tracciare: linea difensiva, centrocampo, offensiva, ampiezza, spazio tra reparti, pressing o rest defense.
+Usa un linguaggio da staff, non da debug: "spunto tattico", "clip utile", "priorita staff", "frame da scartare".
 Restituisci solo JSON valido, senza markdown.
 
 Schema:
