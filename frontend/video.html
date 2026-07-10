@@ -841,9 +841,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10465">Home</a>
-        <a class="btn dark" href="/coach.html?v=10465">Coach</a>
-        <a class="btn dark" href="/account.html?v=10465">Account</a>
+        <a class="btn dark" href="/index.html?v=10466">Home</a>
+        <a class="btn dark" href="/coach.html?v=10466">Coach</a>
+        <a class="btn dark" href="/account.html?v=10466">Account</a>
     </nav>
 </header>
 
@@ -913,7 +913,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10465">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10466">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -923,7 +923,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10465">Scopri piano club</a>
+                    <a href="/account.html?v=10466">Scopri piano club</a>
                 </div>
             </div>
 
@@ -960,6 +960,11 @@ video{
                         <option>Spazio tra reparti</option>
                         <option>Fase difensiva</option>
                         <option>Fase offensiva</option>
+                        <option>Palle inattive offensive</option>
+                        <option>Palle inattive difensive</option>
+                        <option>Costruzione dal basso</option>
+                        <option>Uscita pressing</option>
+                        <option>Rest defense</option>
                         <option>Pressing e transizioni</option>
                         <option>Gol subito</option>
                         <option>Occasioni create</option>
@@ -1053,10 +1058,29 @@ video{
                                 <option value="Linea difensiva">Linea difensiva</option>
                                 <option value="Linea centrocampo">Linea centrocampo</option>
                                 <option value="Linea offensiva">Linea offensiva</option>
+                                <option value="Palla inattiva offensiva">Palla inattiva offensiva</option>
+                                <option value="Palla inattiva difensiva">Palla inattiva difensiva</option>
+                                <option value="Costruzione dal basso">Costruzione dal basso</option>
                                 <option value="Pressing">Pressing</option>
                                 <option value="Ampiezza">Ampiezza</option>
                                 <option value="Spazio tra reparti">Spazio tra reparti</option>
+                                <option value="Rest defense">Rest defense</option>
+                                <option value="Giocatore chiave">Giocatore chiave</option>
                             </select>
+                        </div>
+                        <div class="field">
+                            <label>Effetto</label>
+                            <select id="tacticalEffect">
+                                <option value="line">Linea</option>
+                                <option value="shadow">Cono d'ombra</option>
+                                <option value="zone">Zona</option>
+                                <option value="player">Nome giocatore</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Giocatore / nota</label>
+                            <input id="tacticalPlayerName" list="playerNameOptions" placeholder="Es. 6 Bianchi" />
+                            <datalist id="playerNameOptions"></datalist>
                         </div>
                         <div class="field">
                             <label>Squadra</label>
@@ -1174,7 +1198,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10465";
+const APP_VERSION = "10466";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1223,6 +1247,7 @@ const aiSlideDeck = document.getElementById("aiSlideDeck");
 const slideGrid = document.getElementById("slideGrid");
 const slideDeckSummary = document.getElementById("slideDeckSummary");
 const slideNextClick = document.getElementById("slideNextClick");
+const playerNameOptions = document.getElementById("playerNameOptions");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -1234,8 +1259,29 @@ function getTacticalContext(){
     return {
         phase: document.getElementById("tacticalPhase")?.value || "Linea difensiva",
         team: document.getElementById("tacticalTeam")?.value || "Squadra osservata",
-        color: document.getElementById("tacticalColor")?.value || "#00f5a0"
+        color: document.getElementById("tacticalColor")?.value || "#00f5a0",
+        effect: document.getElementById("tacticalEffect")?.value || "line",
+        player_name: document.getElementById("tacticalPlayerName")?.value.trim() || ""
     };
+}
+
+function parseLineupPlayers(){
+    const text = document.getElementById("lineupNotes")?.value || "";
+    const players = [];
+    const regex = /(?:^|[\s,;])(\d{1,2})\s+([A-Za-zÀ-ÿ'’.-]{2,}(?:\s+[A-Za-zÀ-ÿ'’.-]{2,})?)/g;
+    let match;
+    while((match = regex.exec(text)) !== null){
+        const label = `${match[1]} ${match[2].trim()}`;
+        if(!players.includes(label)) players.push(label);
+    }
+    return players.slice(0, 40);
+}
+
+function refreshPlayerNameOptions(){
+    if(!playerNameOptions) return;
+    playerNameOptions.innerHTML = parseLineupPlayers()
+        .map(player => `<option value="${escapeHtml(player)}"></option>`)
+        .join("");
 }
 
 function getSelectedFrameLabel(){
@@ -1275,6 +1321,17 @@ function cleanTacticalPhase(value, fallback="Lettura tattica"){
         ["press", "Pressing"],
         ["transizion", "Transizione"],
         ["rest defense", "Rest defense"],
+        ["palla inattiva offensiva", "Palla inattiva offensiva"],
+        ["palle inattive offensive", "Palla inattiva offensiva"],
+        ["corner offensivo", "Palla inattiva offensiva"],
+        ["punizione offensiva", "Palla inattiva offensiva"],
+        ["palla inattiva difensiva", "Palla inattiva difensiva"],
+        ["palle inattive difensive", "Palla inattiva difensiva"],
+        ["corner difensivo", "Palla inattiva difensiva"],
+        ["punizione difensiva", "Palla inattiva difensiva"],
+        ["costruzione dal basso", "Costruzione dal basso"],
+        ["portiere", "Costruzione dal basso"],
+        ["rimessa dal fondo", "Costruzione dal basso"],
         ["campo aperto", "Campo aperto"],
         ["non tattico", "Frame da scartare"],
         ["verificare", "Spunto da controllare"],
@@ -1296,7 +1353,7 @@ function getFrameTacticalStatus(meta={}, label="", focus=""){
     const trustedSuggestion = suggestions.find(line => safeConfidence(line.confidence, 0) >= 55);
     const hasTrustedLine = Boolean(trustedSuggestion);
     const badShot = /(primo piano|esult|replay|arbitro isolato|singolo giocatore|panchina|non tattico|poco tattico|dettaglio|fermo immagine|volto)/.test(text);
-    const phaseNeedsShape = /(linea|difensiva|offensiva|centrocampo|ampiezza|reparti|rest defense|spazio)/.test(`${label} ${focus}`.toLowerCase());
+    const phaseNeedsShape = /(linea|difensiva|offensiva|centrocampo|ampiezza|reparti|rest defense|spazio|palla inattiva|corner|punizione|costruzione dal basso|portiere)/.test(`${label} ${focus}`.toLowerCase());
 
     if(hasTrustedLine){
         const phase = cleanTacticalPhase(trustedSuggestion.phase || label || focus, "Linea tattica");
@@ -1533,6 +1590,8 @@ function applyAiLineSuggestionsForSelectedFrame(){
             phase:cleanTacticalPhase(item.phase, "Linea tattica AI"),
             team:item.team || "Squadra osservata",
             color:item.color || "#ff4058",
+            effect:item.effect || "line",
+            player_name:item.player_name || "",
             source:"AI",
             confidence:safeConfidence(item.confidence, 0),
             reason:item.reason || "",
@@ -1694,9 +1753,12 @@ function drawTacticalLines(previewPoint=null){
     getVisibleTacticalLines().forEach(line => drawOneTacticalLine(ctx,line,w,h));
 
     if(tacticalPendingPoint){
+        const context = getTacticalContext();
         const line = {
-            phase:"Punto iniziale",
-            color:getTacticalContext().color,
+            phase:context.phase || "Punto iniziale",
+            color:context.color,
+            effect:context.effect,
+            player_name:context.player_name,
             start:tacticalPendingPoint,
             end:previewPoint || tacticalPendingPoint
         };
@@ -1709,15 +1771,24 @@ function drawOneTacticalLine(ctx,line,w,h,isPreview=false){
     const sy = line.start.y * h;
     const ex = line.end.x * w;
     const ey = line.end.y * h;
+    const effect = line.effect || "line";
     ctx.save();
     ctx.strokeStyle = line.color || "#00f5a0";
     ctx.lineWidth = isPreview ? 3 : 4;
     ctx.globalAlpha = isPreview ? .75 : .95;
     ctx.setLineDash(isPreview ? [8,8] : []);
-    ctx.beginPath();
-    ctx.moveTo(sx,sy);
-    ctx.lineTo(ex,ey);
-    ctx.stroke();
+
+    if(effect === "shadow"){
+        drawShadowCone(ctx, sx, sy, ex, ey, line.color || "#00f5a0", isPreview);
+    }else if(effect === "zone"){
+        drawTacticalZone(ctx, sx, sy, ex, ey, line.color || "#00f5a0", isPreview);
+    }else{
+        ctx.beginPath();
+        ctx.moveTo(sx,sy);
+        ctx.lineTo(ex,ey);
+        ctx.stroke();
+    }
+
     ctx.setLineDash([]);
     ctx.fillStyle = line.color || "#00f5a0";
     [ [sx,sy], [ex,ey] ].forEach(([x,y]) => {
@@ -1730,8 +1801,47 @@ function drawOneTacticalLine(ctx,line,w,h,isPreview=false){
         ctx.fillStyle = "#ffffff";
         ctx.shadowColor = "rgba(0,0,0,.8)";
         ctx.shadowBlur = 6;
-        ctx.fillText(line.phase || "Linea", Math.min(sx,ex)+8, Math.min(sy,ey)-8);
+        const label = line.player_name ? `${line.player_name} - ${line.phase || "Nota"}` : (line.phase || "Linea");
+        ctx.fillText(label, Math.min(sx,ex)+8, Math.min(sy,ey)-8);
     }
+    ctx.restore();
+}
+
+function drawShadowCone(ctx, sx, sy, ex, ey, color, isPreview=false){
+    const angle = Math.atan2(ey - sy, ex - sx);
+    const length = Math.hypot(ex - sx, ey - sy);
+    const width = Math.max(34, Math.min(140, length * .45));
+    const px = Math.cos(angle + Math.PI / 2) * width / 2;
+    const py = Math.sin(angle + Math.PI / 2) * width / 2;
+    ctx.save();
+    ctx.globalAlpha = isPreview ? .18 : .28;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex + px, ey + py);
+    ctx.lineTo(ex - px, ey - py);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = isPreview ? .65 : .9;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawTacticalZone(ctx, sx, sy, ex, ey, color, isPreview=false){
+    const x = Math.min(sx, ex);
+    const y = Math.min(sy, ey);
+    const width = Math.max(24, Math.abs(ex - sx));
+    const height = Math.max(24, Math.abs(ey - sy));
+    ctx.save();
+    ctx.globalAlpha = isPreview ? .14 : .22;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, width, height);
+    ctx.globalAlpha = isPreview ? .65 : .9;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, y, width, height);
     ctx.restore();
 }
 
@@ -1742,7 +1852,9 @@ function renderTacticalLineList(){
             const frameIndex = Number(line.frame_index);
             const frameAction = Number.isFinite(frameIndex) && frameIndex >= 0 ? ` onclick="selectTacticalFrame(${frameIndex})"` : "";
             const sourceLabel = line.source === "AI" ? "AI - " : "";
-            return `<span class="line-chip"${frameAction}>${sourceLabel}${escapeHtml(line.frame_label || "Video")} - ${escapeHtml(line.phase)} - ${escapeHtml(line.team)} - ${formatTime(line.time)} <button type="button" onclick="event.stopPropagation();removeTacticalLine('${line.id}')">x</button></span>`;
+            const effectLabel = line.effect === "shadow" ? "Cono" : line.effect === "zone" ? "Zona" : line.effect === "player" ? "Giocatore" : "Linea";
+            const playerLabel = line.player_name ? ` - ${escapeHtml(line.player_name)}` : "";
+            return `<span class="line-chip"${frameAction}>${sourceLabel}${escapeHtml(line.frame_label || "Video")} - ${escapeHtml(effectLabel)} - ${escapeHtml(line.phase)}${playerLabel} - ${formatTime(line.time)} <button type="button" onclick="event.stopPropagation();removeTacticalLine('${line.id}')">x</button></span>`;
         }).join("")
         : `<span class="line-chip">Nessuna linea tracciata</span>`;
 }
@@ -1774,6 +1886,8 @@ function buildTacticalNotes(){
         source:line.source || "manuale",
         confidence:line.confidence,
         reason:line.reason,
+        effect:line.effect || "line",
+        player_name:line.player_name || "",
         time_seconds:line.time,
         time_label:formatTime(line.time),
         start:line.start,
@@ -2151,7 +2265,7 @@ videoInput.addEventListener("change", () => {
     updateSelectedFrameLabel();
     latestPdfBase64 = "";
     framesGrid.innerHTML = "";
-    if(aiSlideDeck) aiSlideDeck.classList.remove("show");
+    renderAiSlides([], "Carica il video ed estrai i fotogrammi: MatchIQ preparera qui le slide tattiche.", "Prossimo click: estrai fotogrammi.");
     analyzeBtn.disabled = true;
     downloadPdfBtn.disabled = true;
     reportBox.textContent = "Video caricato. Estrai i fotogrammi per avviare l'analisi.";
@@ -2178,6 +2292,8 @@ videoInput.addEventListener("change", () => {
     updateReportMeta("video");
     showStatus("Video pronto. Ora estrai i fotogrammi.", "ok");
 });
+
+document.getElementById("lineupNotes")?.addEventListener("input", refreshPlayerNameOptions);
 
 tacticalCanvas.addEventListener("click", event => {
     if(suppressCanvasClick) return;
@@ -2612,6 +2728,7 @@ function downloadBase64Pdf(pdfBase64, rawTitle){
 
 renderArchive();
 loadCloudArchive();
+refreshPlayerNameOptions();
 
 if("scrollRestoration" in history){
     history.scrollRestoration = "manual";

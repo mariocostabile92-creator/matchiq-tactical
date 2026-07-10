@@ -246,12 +246,17 @@ def _normalize_line_suggestions(items: List[dict]) -> List[dict]:
     for item in (items or [])[:2]:
         start = item.get("start") or {}
         end = item.get("end") or {}
+        effect = _clean_text(item.get("effect", ""), 20).lower()
+        if effect not in {"line", "shadow", "zone", "player"}:
+            effect = "line"
         safe_lines.append({
             "phase": _clean_text(item.get("phase", ""), 80) or "Linea tattica",
             "team": _clean_text(item.get("team", ""), 80) or "Squadra osservata",
             "color": _safe_color(item.get("color"), "#ff4058"),
             "confidence": item.get("confidence"),
             "reason": _clean_text(item.get("reason", ""), 220),
+            "effect": effect,
+            "player_name": _clean_text(item.get("player_name", ""), 80),
             "start": {
                 "x": _safe_unit(start.get("x"), 0.25),
                 "y": _safe_unit(start.get("y"), 0.5),
@@ -348,11 +353,14 @@ Obiettivo:
 Regole importanti:
 - Se il focus e' linea difensiva, centrocampo, offensiva, ampiezza o spazio tra reparti, preferisci immagini con campo aperto e piu giocatori visibili. Penalizza primi piani, arbitro isolato, replay, inquadrature ferme su un singolo giocatore.
 - Se il focus e' pressing o transizioni, preferisci frame con palla, portatore, avversari vicini e densita attorno alla zona palla.
+- Riconosci palle inattive: corner, punizioni laterali/centrali, rimesse laterali, rimesse dal fondo. Distingui "Palla inattiva offensiva" e "Palla inattiva difensiva" rispetto alla squadra osservata.
+- Riconosci "Costruzione dal basso" quando la palla parte da portiere/difensori, con prima pressione avversaria e linee di passaggio basse.
 - Se il frame mostra esultanza, primo piano, giocatore isolato, panchina, arbitro o scena senza lettura collettiva, non chiamarlo linea difensiva/pressing: usa phase "Frame non tattico", quality massimo 35 e non aggiungere line_suggestions.
 - Non fidarti del pre-score locale se l'immagine reale lo contraddice: guarda il fotogramma e correggi etichetta e quality.
-- Non inventare nomi dei giocatori. Rileva solo numeri o colori chiaramente leggibili.
+- Non inventare nomi dei giocatori. Se nelle formazioni e' scritto "numero + nome" e il numero e' leggibile, puoi citare il nome come ipotesi prudente.
 - Le line_suggestions devono usare coordinate normalizzate da 0 a 1 rispetto all'immagine: x sinistra-destra, y alto-basso.
-- Suggerisci al massimo 2 linee per frame e solo quando la lettura e' plausibile. Se il frame e' primo piano o poco tattico, lascia line_suggestions vuoto.
+- Suggerisci al massimo 2 effetti per frame e solo quando la lettura e' plausibile. Per "line_suggestions" puoi usare phase come: Linea difensiva, Linea centrocampo, Palla inattiva offensiva, Palla inattiva difensiva, Costruzione dal basso, Cono d'ombra, Zona libera, Rest defense.
+- Per coni d'ombra e zone usa sempre start/end come riferimento grafico approssimato. Se il frame e' primo piano o poco tattico, lascia line_suggestions vuoto.
 - Restituisci solo JSON valido, senza markdown.
 
 Schema JSON:
@@ -375,6 +383,8 @@ Schema JSON:
           "color": "#ff4058",
           "confidence": 72,
           "reason": "Tre giocatori in linea nella zona difensiva",
+          "effect": "line",
+          "player_name": "",
           "start": {{"x": 0.22, "y": 0.54}},
           "end": {{"x": 0.78, "y": 0.58}}
         }}
@@ -556,6 +566,12 @@ Non inventare giocatori, nomi o misurazioni. Se il frame non e' adatto, proponi 
 Guarda il fotogramma reale, non solo le etichette ricevute: se il frame mostra esultanza, primo piano, giocatore isolato, panchina o scena senza struttura collettiva, non trasformarlo in linea difensiva o pressing.
 In quei casi imposta phase "Frame da scartare", title "Spunto non tattico", suggested_line "Nessuna linea affidabile" e confidence massimo 35.
 Quando possibile, suggerisci quale linea tracciare: linea difensiva, centrocampo, offensiva, ampiezza, spazio tra reparti, pressing o rest defense.
+Devi includere quando riconoscibile una sezione/fase tra:
+- Palla inattiva offensiva: corner, punizione o rimessa in zona offensiva della squadra osservata.
+- Palla inattiva difensiva: corner, punizione o rimessa da difendere per la squadra osservata.
+- Costruzione dal basso: portiere/difensori iniziano l'azione, avversari pressano, linee di passaggio basse.
+- Cono d'ombra: zona schermata da un giocatore o da una linea di pressione.
+- Giocatore chiave: solo se il numero/nome e' coerente con le formazioni inserite dallo staff; altrimenti resta prudente.
 Usa un linguaggio da staff, non da debug: "spunto tattico", "clip utile", "priorita staff", "frame da scartare".
 Restituisci solo JSON valido, senza markdown.
 
@@ -570,7 +586,7 @@ Schema:
       "title": "Prima pressione superata",
       "tactical_read": "La squadra osservata pressa sul lato palla ma resta lunga dietro la prima linea.",
       "staff_action": "Chiedere al mediano di accorciare e alla linea difensiva di salire appena parte la pressione.",
-      "suggested_line": "Traccia spazio tra centrocampo e difesa.",
+      "suggested_line": "Traccia spazio tra centrocampo e difesa oppure cono d'ombra del primo pressing.",
       "training_drill": "6v6+3 con riaggressione immediata dopo perdita.",
       "confidence": 82
     }}
