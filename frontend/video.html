@@ -503,6 +503,67 @@ video{
     border:1px solid rgba(247,183,51,.25);
 }
 .archive-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.video-library{
+    margin:18px 0;
+    padding:16px;
+    border-radius:18px;
+    background:rgba(0,245,160,.07);
+    border:1px solid rgba(0,245,160,.22);
+}
+.video-library-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:12px;
+}
+.video-library-head strong{display:block;font-size:16px}
+.video-library-head span{display:block;color:var(--muted);font-size:12px;margin-top:4px;line-height:1.45}
+.library-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+.library-card{
+    padding:12px;
+    border-radius:14px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.10);
+}
+.library-card strong{display:block;margin-bottom:8px}
+.library-card input{
+    width:100%;
+    min-height:38px;
+    border-radius:12px;
+    padding:9px 10px;
+    margin-bottom:8px;
+}
+.library-check{
+    display:flex;
+    gap:8px;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.35;
+    margin:8px 0;
+}
+.library-list{
+    display:grid;
+    gap:8px;
+    margin-top:12px;
+}
+.library-item{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px;
+    align-items:center;
+    padding:11px;
+    border-radius:14px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.10);
+}
+.library-item strong{display:block}
+.library-item span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.library-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 .btn.small{
     min-height:34px;
     padding:8px 11px;
@@ -846,7 +907,7 @@ video{
     font-weight:900;
 }
 @media(max-width:900px){
-    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid,.onboarding-list,.slide-grid{grid-template-columns:1fr}
+    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid,.onboarding-list,.slide-grid,.library-grid{grid-template-columns:1fr}
     .archive-tools{grid-template-columns:1fr}
     .onboarding-head{flex-direction:column}
     .onboarding-actions{width:100%}
@@ -863,6 +924,8 @@ video{
     .ai-slide{grid-template-columns:1fr}
     .archive-item{grid-template-columns:1fr}
     .archive-actions{justify-content:flex-start}
+    .library-item{grid-template-columns:1fr}
+    .library-actions{justify-content:flex-start}
 }
 @media(max-width:560px){
     .topbar{gap:12px}
@@ -915,9 +978,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10474">Home</a>
-        <a class="btn dark" href="/coach.html?v=10474">Coach</a>
-        <a class="btn dark" href="/account.html?v=10474">Account</a>
+        <a class="btn dark" href="/index.html?v=10475">Home</a>
+        <a class="btn dark" href="/coach.html?v=10475">Coach</a>
+        <a class="btn dark" href="/account.html?v=10475">Account</a>
     </nav>
 </header>
 
@@ -987,7 +1050,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10474">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10475">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -997,7 +1060,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10474">Scopri piano club</a>
+                    <a href="/account.html?v=10475">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1103,6 +1166,40 @@ video{
             <div class="upload" id="videoUploadSection">
                 <label>Video clip</label>
                 <input id="videoInput" type="file" accept="video/*" />
+                <div class="video-library">
+                    <div class="video-library-head">
+                        <div>
+                            <strong>Libreria partite online</strong>
+                            <span>Salva clip autorizzate nel tuo account o importa un link diretto pubblico. I video non finiscono nella cache PWA.</span>
+                        </div>
+                        <button class="btn dark small" type="button" onclick="loadVideoLibrary()">Aggiorna</button>
+                    </div>
+                    <div class="library-grid">
+                        <div class="library-card">
+                            <strong>Salva la clip caricata</strong>
+                            <input id="libraryTitle" placeholder="Titolo partita o clip" />
+                            <input id="libraryClub" placeholder="Societa / squadra" />
+                            <label class="library-check">
+                                <input id="libraryRights" type="checkbox" />
+                                Confermo di avere diritto a usare questo video per analisi sportiva.
+                            </label>
+                            <button class="btn small" type="button" onclick="saveCurrentVideoToLibrary()">Salva in libreria</button>
+                        </div>
+                        <div class="library-card">
+                            <strong>Importa link autorizzato</strong>
+                            <input id="libraryUrl" placeholder="https://.../video.mp4" />
+                            <input id="libraryUrlTitle" placeholder="Titolo link" />
+                            <label class="library-check">
+                                <input id="libraryUrlRights" type="checkbox" />
+                                Confermo che il link e' autorizzato e accessibile legalmente.
+                            </label>
+                            <button class="btn dark small" type="button" onclick="importVideoUrlToLibrary()">Importa link</button>
+                        </div>
+                    </div>
+                    <div id="videoLibraryList" class="library-list">
+                        <div class="archive-empty">Accedi per usare la libreria partite online.</div>
+                    </div>
+                </div>
                 <div id="videoShell" class="video-shell">
                     <div class="video-empty">
                         <strong>Carica una clip per iniziare</strong>
@@ -1291,7 +1388,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10474";
+const APP_VERSION = "10475";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1306,6 +1403,8 @@ let latestSlides = [];
 let latestDeckSummary = "";
 let latestCoachNextClick = "";
 let cloudArchive = [];
+let videoLibraryItems = [];
+let selectedLibraryBlobUrl = "";
 let tacticalMode = false;
 let tacticalLines = [];
 let tacticalPendingPoint = null;
@@ -1345,6 +1444,7 @@ const slideDeckSummary = document.getElementById("slideDeckSummary");
 const slideNextClick = document.getElementById("slideNextClick");
 const slideRejectedBox = document.getElementById("slideRejectedBox");
 const playerNameOptions = document.getElementById("playerNameOptions");
+const videoLibraryList = document.getElementById("videoLibraryList");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -2306,6 +2406,13 @@ function apiHeaders(){
     return headers;
 }
 
+function apiAuthHeaders(){
+    const token = getAuthToken();
+    const headers = {"Accept":"application/json"};
+    if(token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+}
+
 function getApiErrorMessage(data, fallback="Operazione non riuscita"){
     const detail = data && typeof data === "object" ? data.detail : null;
     if(detail && typeof detail === "object"){
@@ -2330,6 +2437,37 @@ function saveArchive(items){
     }
 }
 
+function resetVideoWorkspace(message="Video pronto. Ora estrai i fotogrammi."){
+    extractedFrames = [];
+    extractedFrameTimes = [];
+    extractedFrameMeta = [];
+    candidateFrameResults = [];
+    rejectedFrameResults = [];
+    frameFeedback = {};
+    aiLineSuggestions = {};
+    latestSlides = [];
+    latestDeckSummary = "";
+    latestCoachNextClick = "";
+    tacticalLines = [];
+    tacticalPendingPoint = null;
+    tacticalMode = false;
+    selectedFrameIndex = -1;
+    updateSelectedFrameLabel();
+    latestPdfBase64 = "";
+    framesGrid.innerHTML = "";
+    renderAiSlides([], "Carica il video ed estrai i fotogrammi: MatchIQ preparera qui le slide tattiche.", "Prossimo click: estrai fotogrammi.");
+    analyzeBtn.disabled = true;
+    downloadPdfBtn.disabled = true;
+    reportBox.textContent = "Video caricato. Estrai i fotogrammi per avviare l'analisi.";
+    if(tacticalTools) tacticalTools.classList.add("show");
+    videoShell.classList.add("has-video");
+    updateTacticalCanvasVisibility();
+    renderTacticalLineList();
+    extractBtn.disabled = false;
+    updateReportMeta("video");
+    showStatus(message, "ok");
+}
+
 function escapeHtml(value){
     return String(value || "").replace(/[&<>"']/g, char => ({
         "&":"&amp;",
@@ -2338,6 +2476,185 @@ function escapeHtml(value){
         '"':"&quot;",
         "'":"&#39;"
     }[char]));
+}
+
+function formatBytes(value){
+    const bytes = Number(value || 0);
+    if(!bytes) return "";
+    if(bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function renderVideoLibrary(){
+    if(!videoLibraryList) return;
+    if(!getAuthToken()){
+        videoLibraryList.innerHTML = `<div class="archive-empty">Accedi per salvare e riaprire le partite online.</div>`;
+        return;
+    }
+    if(!videoLibraryItems.length){
+        videoLibraryList.innerHTML = `<div class="archive-empty">Nessuna partita salvata. Carica una clip o importa un link autorizzato.</div>`;
+        return;
+    }
+    videoLibraryList.innerHTML = videoLibraryItems.map(item => `
+        <div class="library-item">
+            <div>
+                <strong>${escapeHtml(item.title || "Partita MatchIQ")}</strong>
+                <span>${escapeHtml(item.club || item.category || "Societa non indicata")} - ${escapeHtml(item.source_type === "url" ? "Link autorizzato" : "Upload")} ${item.size_bytes ? `- ${escapeHtml(formatBytes(item.size_bytes))}` : ""}</span>
+            </div>
+            <div class="library-actions">
+                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})">Apri</button>
+                <button class="btn red small" type="button" onclick="deleteLibraryVideo(${Number(item.id)})">Elimina</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+async function loadVideoLibrary(){
+    const token = getAuthToken();
+    if(!token){
+        videoLibraryItems = [];
+        renderVideoLibrary();
+        return;
+    }
+    try{
+        const res = await fetch(`${API_BASE}/video/library`, {headers:apiAuthHeaders()});
+        const data = await res.json();
+        if(res.status === 401){
+            clearAuthToken();
+            videoLibraryItems = [];
+            renderVideoLibrary();
+            showStatus("Accedi di nuovo per usare la libreria video.", "warn");
+            return;
+        }
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Libreria non disponibile"));
+        videoLibraryItems = data.items || [];
+        renderVideoLibrary();
+    }catch(err){
+        renderVideoLibrary();
+        showStatus(err.message || "Non riesco a caricare la libreria video.", "warn");
+    }
+}
+
+async function saveCurrentVideoToLibrary(){
+    const file = videoInput.files && videoInput.files[0];
+    if(!file){
+        showStatus("Prima scegli una clip dal tuo dispositivo.", "warn");
+        return;
+    }
+    if(!getAuthToken()){
+        showStatus("Accedi per salvare video nella libreria online.", "warn");
+        return;
+    }
+    if(!document.getElementById("libraryRights").checked){
+        showStatus("Conferma di avere diritto a usare questo video.", "warn");
+        return;
+    }
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("title", document.getElementById("libraryTitle").value.trim() || document.getElementById("videoTitle").value.trim() || file.name);
+    form.append("club_name", document.getElementById("libraryClub").value.trim() || document.getElementById("clubName").value.trim());
+    form.append("category", document.getElementById("videoCategory").value || "");
+    form.append("rights_confirmed", "true");
+
+    try{
+        showStatus("Salvo la clip nella libreria online...", "warn");
+        const res = await fetch(`${API_BASE}/video/library/upload`, {
+            method:"POST",
+            headers:apiAuthHeaders(),
+            body:form
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Upload non riuscito"));
+        await loadVideoLibrary();
+        showStatus("Clip salvata nella libreria.", "ok");
+    }catch(err){
+        showStatus(err.message || "Upload non riuscito.", "err");
+    }
+}
+
+async function importVideoUrlToLibrary(){
+    if(!getAuthToken()){
+        showStatus("Accedi per importare link nella libreria.", "warn");
+        return;
+    }
+    if(!document.getElementById("libraryUrlRights").checked){
+        showStatus("Conferma che il link e' autorizzato.", "warn");
+        return;
+    }
+    const sourceUrl = document.getElementById("libraryUrl").value.trim();
+    if(!sourceUrl){
+        showStatus("Inserisci un link video diretto.", "warn");
+        return;
+    }
+    try{
+        const res = await fetch(`${API_BASE}/video/library/import-url`, {
+            method:"POST",
+            headers:apiHeaders(),
+            body:JSON.stringify({
+                title: document.getElementById("libraryUrlTitle").value.trim() || "Video importato",
+                club_name: document.getElementById("clubName").value.trim(),
+                category: document.getElementById("videoCategory").value,
+                source_url: sourceUrl,
+                rights_confirmed: true
+            })
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Import non riuscito"));
+        document.getElementById("libraryUrl").value = "";
+        await loadVideoLibrary();
+        showStatus("Link salvato in libreria. Se il server sorgente permette CORS, potrai analizzarlo direttamente.", "ok");
+    }catch(err){
+        showStatus(err.message || "Import non riuscito.", "err");
+    }
+}
+
+async function openLibraryVideo(assetId){
+    const item = videoLibraryItems.find(asset => Number(asset.id) === Number(assetId));
+    if(!item) return;
+    try{
+        if(selectedVideoUrl) URL.revokeObjectURL(selectedVideoUrl);
+        if(selectedLibraryBlobUrl) URL.revokeObjectURL(selectedLibraryBlobUrl);
+        selectedVideoUrl = "";
+        selectedLibraryBlobUrl = "";
+        videoInput.value = "";
+
+        if(item.source_type === "url"){
+            videoPreview.crossOrigin = "anonymous";
+            videoPreview.src = item.source_url;
+            resetVideoWorkspace("Video da link aperto. Se il browser blocca i fotogrammi, carica il file nella libreria.");
+        }else{
+            const res = await fetch(`${API_BASE}/video/library/${encodeURIComponent(item.id)}/stream`, {headers:apiAuthHeaders()});
+            if(!res.ok) throw new Error("File video non disponibile.");
+            const blob = await res.blob();
+            selectedLibraryBlobUrl = URL.createObjectURL(blob);
+            videoPreview.removeAttribute("crossorigin");
+            videoPreview.src = selectedLibraryBlobUrl;
+            resetVideoWorkspace("Video dalla libreria aperto. Ora estrai i fotogrammi.");
+        }
+
+        document.getElementById("videoTitle").value = item.title || document.getElementById("videoTitle").value;
+        if(item.club) document.getElementById("clubName").value = item.club;
+    }catch(err){
+        showStatus(err.message || "Non riesco ad aprire questo video.", "err");
+    }
+}
+
+async function deleteLibraryVideo(assetId){
+    if(!getAuthToken()) return;
+    try{
+        const res = await fetch(`${API_BASE}/video/library/${encodeURIComponent(assetId)}`, {
+            method:"DELETE",
+            headers:apiAuthHeaders()
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Eliminazione non riuscita"));
+        videoLibraryItems = videoLibraryItems.filter(item => Number(item.id) !== Number(assetId));
+        renderVideoLibrary();
+        showStatus("Video eliminato dalla libreria.", "ok");
+    }catch(err){
+        showStatus(err.message || "Eliminazione non riuscita.", "err");
+    }
 }
 
 function getArchiveItems(){
@@ -2577,6 +2894,10 @@ videoInput.addEventListener("change", () => {
     reportBox.textContent = "Video caricato. Estrai i fotogrammi per avviare l'analisi.";
 
     if(selectedVideoUrl) URL.revokeObjectURL(selectedVideoUrl);
+    if(selectedLibraryBlobUrl){
+        URL.revokeObjectURL(selectedLibraryBlobUrl);
+        selectedLibraryBlobUrl = "";
+    }
 
     if(!file){
         extractBtn.disabled = true;
@@ -3063,6 +3384,7 @@ function downloadBase64Pdf(pdfBase64, rawTitle){
 
 renderArchive();
 loadCloudArchive();
+loadVideoLibrary();
 refreshPlayerNameOptions();
 
 if("scrollRestoration" in history){

@@ -373,6 +373,28 @@ def init_db():
             )
         """)
 
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS video_assets (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                title TEXT,
+                club_name TEXT,
+                category TEXT,
+                source_type TEXT NOT NULL DEFAULT 'upload',
+                source_url TEXT,
+                file_path TEXT,
+                file_name TEXT,
+                mime_type TEXT,
+                size_bytes BIGINT NOT NULL DEFAULT 0,
+                rights_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
+                status TEXT NOT NULL DEFAULT 'ready',
+                metadata TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
     else:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -499,6 +521,28 @@ def init_db():
         """)
 
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS video_assets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT,
+                club_name TEXT,
+                category TEXT,
+                source_type TEXT NOT NULL DEFAULT 'upload',
+                source_url TEXT,
+                file_path TEXT,
+                file_name TEXT,
+                mime_type TEXT,
+                size_bytes INTEGER NOT NULL DEFAULT 0,
+                rights_confirmed INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'ready',
+                metadata TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        """)
+
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS password_reset_tokens (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -587,6 +631,11 @@ def init_db():
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_video_reports_user_created
         ON video_reports(user_id, created_at)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_video_assets_user_created
+        ON video_assets(user_id, created_at)
     """)
 
     conn.commit()
@@ -1565,6 +1614,116 @@ def delete_video_report(user_id: int, report_id: int):
     conn.commit()
     conn.close()
     return deleted > 0
+
+
+# =========================================================
+# VIDEO LIBRARY
+# =========================================================
+
+def _asset_payload(metadata: dict = None):
+    return json.dumps(metadata or {}, ensure_ascii=False)
+
+
+def create_video_asset(
+    user_id: int,
+    title: str = "",
+    club_name: str = "",
+    category: str = "",
+    source_type: str = "upload",
+    source_url: str = "",
+    file_path: str = "",
+    file_name: str = "",
+    mime_type: str = "",
+    size_bytes: int = 0,
+    rights_confirmed: bool = False,
+    status: str = "ready",
+    metadata: dict = None,
+):
+    now = utc_now()
+    conn = get_connection()
+    cur = conn.cursor()
+    payload = _asset_payload(metadata)
+
+    if USE_POSTGRES:
+        cur.execute("""
+            INSERT INTO video_assets (
+                user_id, title, club_name, category, source_type, source_url,
+                file_path, file_name, mime_type, size_bytes, rights_confirmed,
+                status, metadata, created_at, updated_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            user_id, title, club_name, category, source_type, source_url,
+            file_path, file_name, mime_type, int(size_bytes or 0), bool(rights_confirmed),
+            status, payload, now, now,
+        ))
+        asset_id = get_last_insert_id(cur)
+    else:
+        cur.execute("""
+            INSERT INTO video_assets (
+                user_id, title, club_name, category, source_type, source_url,
+                file_path, file_name, mime_type, size_bytes, rights_confirmed,
+                status, metadata, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            user_id, title, club_name, category, source_type, source_url,
+            file_path, file_name, mime_type, int(size_bytes or 0), 1 if rights_confirmed else 0,
+            status, payload, now, now,
+        ))
+        asset_id = cur.lastrowid
+
+    conn.commit()
+    conn.close()
+    return {"success": True, "id": asset_id}
+
+
+def get_video_assets(user_id: int, limit: int = 50):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        SELECT id, user_id, title, club_name, category, source_type, source_url,
+               file_path, file_name, mime_type, size_bytes, rights_confirmed,
+               status, metadata, created_at, updated_at
+        FROM video_assets
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT ?
+    """), (user_id, int(limit or 50)))
+    rows = fetchall(cur)
+    conn.close()
+    return rows
+
+
+def get_video_asset(user_id: int, asset_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        SELECT id, user_id, title, club_name, category, source_type, source_url,
+               file_path, file_name, mime_type, size_bytes, rights_confirmed,
+               status, metadata, created_at, updated_at
+        FROM video_assets
+        WHERE user_id = ? AND id = ?
+    """), (user_id, asset_id))
+    row = fetchone(cur)
+    conn.close()
+    return row
+
+
+def delete_video_asset(user_id: int, asset_id: int):
+    asset = get_video_asset(user_id, asset_id)
+    if not asset:
+        return None
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        DELETE FROM video_assets
+        WHERE user_id = ? AND id = ?
+    """), (user_id, asset_id))
+    conn.commit()
+    conn.close()
+    return asset
 
 
 # =========================================================

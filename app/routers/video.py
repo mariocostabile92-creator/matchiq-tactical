@@ -3,19 +3,33 @@ import html
 import io
 import json
 import os
+from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
 
 import requests
 from dotenv import load_dotenv
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from database import can_use_feature, delete_video_report, get_plan_limits, get_video_reports, save_video_report, track_api_usage
+from database import (
+    can_use_feature,
+    create_video_asset,
+    delete_video_asset,
+    delete_video_report,
+    get_plan_limits,
+    get_video_asset,
+    get_video_assets,
+    get_video_reports,
+    save_video_report,
+    track_api_usage,
+)
+from app.services.video_library import remove_library_file, save_uploaded_video, validate_import_url
 from app.services.video_taxonomy import validate_selection_result
 from usage_guard import get_optional_user, require_user
 
@@ -96,6 +110,15 @@ class CloudVideoReportRequest(BaseModel):
     report: Optional[str] = ""
     pdf_base64: Optional[str] = ""
     payload: Optional[dict] = Field(default_factory=dict)
+
+
+class VideoImportRequest(BaseModel):
+    title: Optional[str] = ""
+    club_name: Optional[str] = ""
+    category: Optional[str] = ""
+    source_url: str
+    rights_confirmed: bool = False
+    notes: Optional[str] = ""
 
 
 def _clean_text(value: str, limit: int = 1200) -> str:
@@ -998,6 +1021,34 @@ def _public_video_report(row: dict):
     }
 
 
+def _public_video_asset(row: dict):
+    metadata = row.get("metadata") or {}
+    if isinstance(metadata, str):
+        try:
+            metadata = json.loads(metadata)
+        except json.JSONDecodeError:
+            metadata = {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+
+    return {
+        "id": row.get("id"),
+        "title": row.get("title") or row.get("file_name") or "Partita MatchIQ",
+        "club": row.get("club_name") or "",
+        "category": row.get("category") or "",
+        "source_type": row.get("source_type") or "upload",
+        "source_url": row.get("source_url") or "",
+        "file_name": row.get("file_name") or "",
+        "mime_type": row.get("mime_type") or "",
+        "size_bytes": int(row.get("size_bytes") or 0),
+        "rights_confirmed": bool(row.get("rights_confirmed")),
+        "status": row.get("status") or "ready",
+        "metadata": metadata,
+        "created_at": row.get("created_at") or "",
+        "updated_at": row.get("updated_at") or "",
+    }
+
+
 def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: str, pdf_base64: str, frames_count: int, slides_data: Optional[dict] = None):
     if not user:
         return {"success": False, "reason": "login_required"}
@@ -1171,6 +1222,94 @@ def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_u
 
     result["frame_notes"] = normalized_notes
     return validate_selection_result(result, data, len(frames), desired_count)
+
+
+@router.get("/library")
+def list_video_library(user=Depends(require_user)):
+    rows = get_video_assets(user["id"], limit=80)
+    return {
+        "ok": True,
+        "items": [_public_video_asset(row) for row in rows],
+        "count": len(rows),
+    }
+
+
+@router.post("/library/upload")
+def upload_video_library_item(
+    title: str = Form(""),
+    club_name: str = Form(""),
+    category: str = Form(""),
+    rights_confirmed: bool = Form(False),
+    file: UploadFile = File(...),
+    user=Depends(require_user),
+):
+    if not rights_confirmed:
+        raise HTTPException(status_code=400, detail="Conferma di avere diritto a usare questo video.")
+
+    saved = save_uploaded_video(user["id"], file, title)
+    result = create_video_asset(
+        user_id=user["id"],
+        title=_clean_text(title, 180) or saved.get("file_name", "Partita MatchIQ"),
+        club_name=_clean_text(club_name, 160),
+        category=_clean_text(category, 80),
+        source_type="upload",
+        file_path=saved.get("file_path", ""),
+        file_name=saved.get("file_name", ""),
+        mime_type=saved.get("mime_type", ""),
+        size_bytes=int(saved.get("size_bytes") or 0),
+        rights_confirmed=True,
+        status="ready",
+        metadata={"storage": "local", "original_name": saved.get("file_name", "")},
+    )
+    asset = get_video_asset(user["id"], result["id"])
+    return {"ok": True, "item": _public_video_asset(asset)}
+
+
+@router.post("/library/import-url")
+def import_video_library_url(data: VideoImportRequest, user=Depends(require_user)):
+    if not data.rights_confirmed:
+        raise HTTPException(status_code=400, detail="Conferma di avere diritto a usare questo link video.")
+
+    safe_url = validate_import_url(data.source_url)
+    result = create_video_asset(
+        user_id=user["id"],
+        title=_clean_text(data.title, 180) or "Video importato",
+        club_name=_clean_text(data.club_name, 160),
+        category=_clean_text(data.category, 80),
+        source_type="url",
+        source_url=safe_url,
+        rights_confirmed=True,
+        status="ready",
+        metadata={"notes": _clean_text(data.notes, 500), "storage": "remote_url"},
+    )
+    asset = get_video_asset(user["id"], result["id"])
+    return {"ok": True, "item": _public_video_asset(asset)}
+
+
+@router.get("/library/{asset_id}/stream")
+def stream_video_library_item(asset_id: int, user=Depends(require_user)):
+    asset = get_video_asset(user["id"], asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Video non trovato")
+    if asset.get("source_type") != "upload":
+        raise HTTPException(status_code=400, detail="Questo video e' un link esterno, non un file caricato.")
+    file_path = Path(asset.get("file_path") or "")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File video non disponibile sul server")
+    return FileResponse(
+        file_path,
+        media_type=asset.get("mime_type") or "video/mp4",
+        filename=asset.get("file_name") or "matchiq-video.mp4",
+    )
+
+
+@router.delete("/library/{asset_id}")
+def remove_video_library_item(asset_id: int, user=Depends(require_user)):
+    asset = delete_video_asset(user["id"], asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Video non trovato")
+    remove_library_file(asset.get("file_path"))
+    return {"ok": True, "deleted": True}
 
 
 @router.get("/reports")
