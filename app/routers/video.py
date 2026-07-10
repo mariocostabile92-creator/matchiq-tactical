@@ -58,6 +58,8 @@ class VideoSlide(BaseModel):
     frame_index: Optional[int] = 0
     time_label: Optional[str] = ""
     phase: Optional[str] = ""
+    grade: Optional[str] = ""
+    grade_reason: Optional[str] = ""
     title: Optional[str] = ""
     tactical_read: Optional[str] = ""
     staff_action: Optional[str] = ""
@@ -97,6 +99,22 @@ class CloudVideoReportRequest(BaseModel):
 def _clean_text(value: str, limit: int = 1200) -> str:
     value = str(value or "").strip()
     return value[:limit]
+
+
+def _normalize_frame_grade(value: str, confidence: int = 0, phase: str = "") -> str:
+    raw = str(value or "").strip().lower()
+    phase_text = str(phase or "").strip().lower()
+    if "scart" in raw or "non tattico" in raw or "scart" in phase_text or "non tattico" in phase_text:
+        return "Da scartare"
+    if "pronta" in raw or "slide" in raw:
+        return "Slide pronta"
+    if "spunto" in raw or "utile" in raw or "controll" in raw:
+        return "Spunto utile"
+    if confidence >= 75:
+        return "Slide pronta"
+    if confidence >= 50:
+        return "Spunto utile"
+    return "Da scartare"
 
 
 def _sanitize_frames(frames: List[str]) -> List[str]:
@@ -355,7 +373,10 @@ Regole importanti:
 - Se il focus e' pressing o transizioni, preferisci frame con palla, portatore, avversari vicini e densita attorno alla zona palla.
 - Riconosci palle inattive: corner, punizioni laterali/centrali, rimesse laterali, rimesse dal fondo. Distingui "Palla inattiva offensiva" e "Palla inattiva difensiva" rispetto alla squadra osservata.
 - Riconosci "Costruzione dal basso" quando la palla parte da portiere/difensori, con prima pressione avversaria e linee di passaggio basse.
+- Classifica ogni frame con grade: "Slide pronta" solo se palla, campo, reparti e fase sono leggibili; "Spunto utile" se la situazione puo aiutare ma va controllata; "Da scartare" se non va nello storyboard.
+- Per palle inattive e costruzione dal basso non basta un'inquadratura generica: serve vedere chiaramente punto di battuta/portiere, palla, compagni e avversari rilevanti. Altrimenti usa "Spunto utile" o "Da scartare".
 - Se il frame mostra esultanza, primo piano, giocatore isolato, panchina, arbitro o scena senza lettura collettiva, non chiamarlo linea difensiva/pressing: usa phase "Frame non tattico", quality massimo 35 e non aggiungere line_suggestions.
+- In selected_indexes metti prima le "Slide pronta", poi eventuali "Spunto utile"; evita "Da scartare" salvo mancanza totale di alternative.
 - Non fidarti del pre-score locale se l'immagine reale lo contraddice: guarda il fotogramma e correggi etichetta e quality.
 - Non inventare nomi dei giocatori. Se nelle formazioni e' scritto "numero + nome" e il numero e' leggibile, puoi citare il nome come ipotesi prudente.
 - Le line_suggestions devono usare coordinate normalizzate da 0 a 1 rispetto all'immagine: x sinistra-destra, y alto-basso.
@@ -370,9 +391,11 @@ Schema JSON:
     {{
       "index": 0,
       "phase": "Linea difensiva",
+      "grade": "Slide pronta",
       "quality": 88,
       "camera": "campo aperto",
       "reason": "Linea e piu reparti visibili",
+      "grade_reason": "Palla, reparto e spazio dietro la linea sono leggibili",
       "team_colors": ["bianco", "verde"],
       "visible_numbers": ["9", "18"],
       "player_read": "numeri parzialmente leggibili",
@@ -562,9 +585,14 @@ Contesto:
 
 Obiettivo prodotto:
 Devi proporre slide pronte per un allenatore o match analyst: una slide deve dire cosa guardare, perche conta e cosa correggere.
-Non inventare giocatori, nomi o misurazioni. Se il frame non e' adatto, proponi una slide "spunto da controllare" o "frame da scartare" con confidence bassa.
+Non inventare giocatori, nomi o misurazioni.
+Ogni frame deve avere grade:
+- "Slide pronta": entra nello storyboard perche fase, palla, reparti e distanze sono leggibili.
+- "Spunto utile": puo aiutare staff o match analyst, ma va controllato prima di usarlo nel PDF o nella riunione.
+- "Da scartare": non deve essere usato come slide tattica perche e' primo piano, esultanza, replay, scena troppo chiusa o fase non leggibile.
+Per palle inattive offensive/difensive e costruzione dal basso usa "Slide pronta" solo se la situazione e' davvero chiara: punto di battuta o portiere, palla, linea avversaria e compagni rilevanti devono essere visibili.
 Guarda il fotogramma reale, non solo le etichette ricevute: se il frame mostra esultanza, primo piano, giocatore isolato, panchina o scena senza struttura collettiva, non trasformarlo in linea difensiva o pressing.
-In quei casi imposta phase "Frame da scartare", title "Spunto non tattico", suggested_line "Nessuna linea affidabile" e confidence massimo 35.
+In quei casi imposta grade "Da scartare", phase "Frame da scartare", title "Frame non adatto alla slide", suggested_line "Nessuna linea affidabile" e confidence massimo 35.
 Quando possibile, suggerisci quale linea tracciare: linea difensiva, centrocampo, offensiva, ampiezza, spazio tra reparti, pressing o rest defense.
 Devi includere quando riconoscibile una sezione/fase tra:
 - Palla inattiva offensiva: corner, punizione o rimessa in zona offensiva della squadra osservata.
@@ -583,6 +611,8 @@ Schema:
       "frame_index": 0,
       "time_label": "12:34",
       "phase": "Pressing e transizione",
+      "grade": "Slide pronta",
+      "grade_reason": "Campo aperto, palla e reparti leggibili",
       "title": "Prima pressione superata",
       "tactical_read": "La squadra osservata pressa sul lato palla ma resta lunga dietro la prima linea.",
       "staff_action": "Chiedere al mediano di accorciare e alla linea difensiva di salire appena parte la pressione.",
@@ -609,17 +639,22 @@ def _sanitize_slides(raw: dict, frame_count: int) -> dict:
             confidence = int(float(item.get("confidence", 0) or 0))
         except Exception:
             confidence = 0
+        confidence = max(0, min(100, confidence))
+        phase = _clean_text(item.get("phase", ""), 80) or "Lettura tattica"
+        grade = _normalize_frame_grade(item.get("grade", ""), confidence, phase)
         slides.append({
             "index": idx + 1,
             "frame_index": frame_index,
             "time_label": _clean_text(item.get("time_label", ""), 20),
-            "phase": _clean_text(item.get("phase", ""), 80) or "Lettura tattica",
+            "phase": phase,
+            "grade": grade,
+            "grade_reason": _clean_text(item.get("grade_reason", ""), 180),
             "title": _clean_text(item.get("title", ""), 120) or f"Slide {idx + 1}",
             "tactical_read": _clean_text(item.get("tactical_read", ""), 420),
             "staff_action": _clean_text(item.get("staff_action", ""), 360),
             "suggested_line": _clean_text(item.get("suggested_line", ""), 220),
             "training_drill": _clean_text(item.get("training_drill", ""), 260),
-            "confidence": max(0, min(100, confidence)),
+            "confidence": confidence,
         })
         if len(slides) >= min(6, frame_count):
             break
@@ -844,10 +879,12 @@ def _build_pdf_base64(title: str, report: str, data: VideoReportRequest, frame_c
             story.append(Spacer(1, 5))
         slide_rows = [["Slide", "Frame", "Lettura", "Azione staff"]]
         for slide in slides[:6]:
+            grade = _normalize_frame_grade(slide.get("grade", ""), int(slide.get("confidence") or 0), slide.get("phase", ""))
+            grade_reason = _clean_text(slide.get("grade_reason", ""), 160)
             slide_rows.append([
-                _pdf_cell(str(slide.get("index") or ""), styles["MatchIQSmall"]),
+                _pdf_cell(f"{slide.get('index') or ''}\n{grade}", styles["MatchIQSmall"]),
                 _pdf_cell(slide.get("time_label") or f"Frame {int(slide.get('frame_index') or 0) + 1}", styles["MatchIQSmall"]),
-                _pdf_cell(f"{slide.get('title') or ''}\n{slide.get('tactical_read') or ''}\nLinea: {slide.get('suggested_line') or '-'}", styles["MatchIQSmall"]),
+                _pdf_cell(f"{slide.get('title') or ''}\n{grade_reason}\n{slide.get('tactical_read') or ''}\nLinea: {slide.get('suggested_line') or '-'}", styles["MatchIQSmall"]),
                 _pdf_cell(f"{slide.get('staff_action') or '-'}\nEsercizio: {slide.get('training_drill') or '-'}", styles["MatchIQSmall"]),
             ])
         slide_table = Table(slide_rows, colWidths=[36, 62, 194, 190])
@@ -1073,9 +1110,17 @@ def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_u
             index = int(note.get("index"))
         except Exception:
             continue
+        try:
+            quality = int(float(note.get("quality", 0) or 0))
+        except Exception:
+            quality = 0
+        phase = _clean_text(note.get("phase") or note.get("camera") or "selezione AI", 80)
+        grade = _normalize_frame_grade(note.get("grade", ""), quality, phase)
         notes_by_index[str(index)] = {
-            "label": _clean_text(note.get("phase") or note.get("camera") or "selezione AI", 80),
-            "ai_quality": note.get("quality"),
+            "label": phase,
+            "grade": grade,
+            "grade_reason": _clean_text(note.get("grade_reason", ""), 180),
+            "ai_quality": quality,
             "ai_reason": _clean_text(note.get("reason", ""), 220),
             "team_colors": note.get("team_colors") if isinstance(note.get("team_colors"), list) else [],
             "visible_numbers": note.get("visible_numbers") if isinstance(note.get("visible_numbers"), list) else [],

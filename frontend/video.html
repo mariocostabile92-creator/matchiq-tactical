@@ -721,6 +721,14 @@ video{
     background:rgba(2,8,19,.48);
     border:1px solid rgba(255,255,255,.10);
 }
+.ai-slide.ready{
+    border-color:rgba(0,245,160,.28);
+    background:linear-gradient(145deg,rgba(0,245,160,.08),rgba(2,8,19,.50));
+}
+.ai-slide.useful{
+    border-color:rgba(247,183,51,.28);
+    background:linear-gradient(145deg,rgba(247,183,51,.08),rgba(2,8,19,.50));
+}
 .ai-slide img{
     width:100%;
     aspect-ratio:16/9;
@@ -742,6 +750,21 @@ video{
     color:#dfffee;
     font-size:10px;
     font-weight:1000;
+}
+.ai-slide-kicker span.grade-ready{
+    color:#06111c;
+    background:var(--green);
+    border-color:rgba(0,245,160,.55);
+}
+.ai-slide-kicker span.grade-useful{
+    color:#211704;
+    background:var(--yellow);
+    border-color:rgba(247,183,51,.55);
+}
+.ai-slide-kicker span.grade-reject{
+    color:#ffd8de;
+    background:rgba(255,64,88,.12);
+    border-color:rgba(255,64,88,.30);
 }
 .ai-slide h3{
     font-size:16px;
@@ -765,6 +788,29 @@ video{
     flex-wrap:wrap;
     gap:8px;
     margin-top:12px;
+}
+.slide-rejected{
+    margin-top:12px;
+    padding:12px;
+    border-radius:16px;
+    background:rgba(255,64,88,.07);
+    border:1px solid rgba(255,64,88,.18);
+    color:#ffd8de;
+    font-size:12px;
+    line-height:1.45;
+}
+.slide-rejected strong{
+    display:block;
+    margin-bottom:7px;
+}
+.slide-rejected span{
+    display:inline-flex;
+    margin:4px 6px 0 0;
+    padding:5px 8px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    color:#ffe6ea;
+    font-weight:900;
 }
 @media(max-width:900px){
     .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid,.onboarding-list,.slide-grid{grid-template-columns:1fr}
@@ -841,9 +887,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10466">Home</a>
-        <a class="btn dark" href="/coach.html?v=10466">Coach</a>
-        <a class="btn dark" href="/account.html?v=10466">Account</a>
+        <a class="btn dark" href="/index.html?v=10467">Home</a>
+        <a class="btn dark" href="/coach.html?v=10467">Coach</a>
+        <a class="btn dark" href="/account.html?v=10467">Account</a>
     </nav>
 </header>
 
@@ -913,7 +959,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10466">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10467">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -923,7 +969,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10466">Scopri piano club</a>
+                    <a href="/account.html?v=10467">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1141,12 +1187,13 @@ video{
                     <article class="ai-slide">
                         <div></div>
                         <div>
-                            <div class="ai-slide-kicker"><span>Pronta</span><span>Video AI</span></div>
+                            <div class="ai-slide-kicker"><span class="grade-ready">Slide pronta</span><span>Video AI</span></div>
                             <h3>Carica o estrai i fotogrammi</h3>
                             <p>Qui compariranno le diapositive tattiche AI con frame, lettura, azione staff e linea consigliata.</p>
                         </div>
                     </article>
                 </div>
+                <div id="slideRejectedBox" class="slide-rejected" style="display:none"></div>
                 <div id="slideNextClick" class="slide-actions"></div>
             </div>
 
@@ -1198,7 +1245,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10466";
+const APP_VERSION = "10467";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1247,6 +1294,7 @@ const aiSlideDeck = document.getElementById("aiSlideDeck");
 const slideGrid = document.getElementById("slideGrid");
 const slideDeckSummary = document.getElementById("slideDeckSummary");
 const slideNextClick = document.getElementById("slideNextClick");
+const slideRejectedBox = document.getElementById("slideRejectedBox");
 const playerNameOptions = document.getElementById("playerNameOptions");
 
 function showStatus(message,type="ok"){
@@ -1347,6 +1395,69 @@ function safeConfidence(value, fallback=55){
     return Math.max(0, Math.min(100, Math.round(number)));
 }
 
+function normalizeSlideGrade(value, confidence=0, phase=""){
+    const raw = String(value || "").toLowerCase();
+    const phaseText = String(phase || "").toLowerCase();
+    if(raw.includes("scart") || phaseText.includes("scart") || phaseText.includes("non tattico")) return "Da scartare";
+    if(raw.includes("pronta") || raw.includes("slide")) return "Slide pronta";
+    if(raw.includes("spunto") || raw.includes("utile") || raw.includes("controll")) return "Spunto utile";
+    const score = safeConfidence(confidence, 0);
+    if(score >= 75) return "Slide pronta";
+    if(score >= 50) return "Spunto utile";
+    return "Da scartare";
+}
+
+function slideGradeClass(grade){
+    const clean = normalizeSlideGrade(grade).toLowerCase();
+    if(clean.includes("pronta")) return "grade-ready";
+    if(clean.includes("spunto")) return "grade-useful";
+    return "grade-reject";
+}
+
+function classifyFrameForSlide(status={}, meta={}, label="", focus=""){
+    const confidence = safeConfidence(status.confidence || meta.ai_quality || meta.score, 0);
+    const text = `${label} ${focus} ${status.phase || ""} ${status.read || ""} ${meta.ai_reason || ""} ${meta.grade_reason || ""}`.toLowerCase();
+    const badShot = /(primo piano|esult|replay|arbitro isolato|singolo giocatore|panchina|non tattico|poco tattico|volto|abbraccio|festeggia)/.test(text);
+    const hasLine = Array.isArray(meta.line_suggestions) && meta.line_suggestions.some(item => safeConfidence(item.confidence, 0) >= 60);
+    const phaseNeedsShape = /(palla inattiva|corner|punizione|rimessa|costruzione dal basso|portiere|linea|ampiezza|reparti|pressing|transizion)/.test(text);
+
+    if(badShot || status.phase === "Frame da scartare"){
+        return {
+            grade:"Da scartare",
+            reason:"Immagine non abbastanza collettiva per una slide tattica affidabile."
+        };
+    }
+    if(meta.grade){
+        const grade = normalizeSlideGrade(meta.grade, confidence, status.phase);
+        if(grade === "Slide pronta" && confidence < 65 && phaseNeedsShape && !hasLine){
+            return {
+                grade:"Spunto utile",
+                reason:"Buona traccia, ma serve conferma manuale prima di inserirla nello storyboard."
+            };
+        }
+        return {
+            grade,
+            reason:meta.grade_reason || (grade === "Slide pronta" ? "Fase leggibile per staff e match analyst." : "Frame utile ma da controllare.")
+        };
+    }
+    if((hasLine && confidence >= 68) || confidence >= 78){
+        return {
+            grade:"Slide pronta",
+            reason:"Campo, palla e struttura tattica sono abbastanza leggibili."
+        };
+    }
+    if(confidence >= 45 || phaseNeedsShape){
+        return {
+            grade:"Spunto utile",
+            reason:"Frame interessante, da confermare prima del PDF o della riunione."
+        };
+    }
+    return {
+        grade:"Da scartare",
+        reason:"Qualita tattica bassa per lo storyboard."
+    };
+}
+
 function getFrameTacticalStatus(meta={}, label="", focus=""){
     const text = `${label} ${meta.ai_reason || ""} ${meta.player_read || ""}`.toLowerCase();
     const suggestions = Array.isArray(meta.line_suggestions) ? meta.line_suggestions : [];
@@ -1395,12 +1506,15 @@ function buildFallbackSlides(){
         const time = formatTime(extractedFrameTimes[index] || 0);
         const label = meta.label || focus;
         const status = getFrameTacticalStatus(meta, label, focus);
+        const quality = classifyFrameForSlide(status, meta, label, focus);
         return {
             index:index + 1,
             frame_index:index,
             time_label:time,
             phase:status.phase,
-            title:status.kind === "trusted" ? `Frame ${index + 1}: ${cleanTacticalPhase(label, status.phase)}` : `Frame ${index + 1}: spunto da controllare`,
+            grade:quality.grade,
+            grade_reason:quality.reason,
+            title:quality.grade === "Da scartare" ? `Frame ${index + 1}: non entra nello storyboard` : (status.kind === "trusted" ? `Frame ${index + 1}: ${cleanTacticalPhase(label, status.phase)}` : `Frame ${index + 1}: spunto tattico`),
             tactical_read: status.read,
             staff_action: status.action,
             suggested_line: status.line,
@@ -1411,7 +1525,22 @@ function buildFallbackSlides(){
 }
 
 function renderAiSlides(slides=[], summary="", nextClick=""){
-    latestSlides = Array.isArray(slides) && slides.length ? slides : buildFallbackSlides();
+    const rawSlides = Array.isArray(slides) && slides.length ? slides : buildFallbackSlides();
+    const normalizedSlides = rawSlides.map((slide,index) => {
+        const frameIndex = Math.max(0, Math.min(extractedFrames.length - 1, Number(slide.frame_index ?? index)));
+        const confidence = safeConfidence(slide.confidence, 0);
+        const grade = normalizeSlideGrade(slide.grade, confidence, slide.phase);
+        return {
+            ...slide,
+            index: slide.index || index + 1,
+            frame_index: frameIndex,
+            grade,
+            grade_reason: slide.grade_reason || (grade === "Slide pronta" ? "Frame pronto per storyboard." : grade === "Spunto utile" ? "Frame utile, da controllare." : "Frame escluso dalla scaletta principale.")
+        };
+    });
+    const storySlides = normalizedSlides.filter(slide => slide.grade !== "Da scartare");
+    const rejectedSlides = normalizedSlides.filter(slide => slide.grade === "Da scartare");
+    latestSlides = storySlides.length ? storySlides : normalizedSlides.slice(0, Math.min(2, normalizedSlides.length));
     latestDeckSummary = summary || "Storyboard iniziale: MatchIQ propone spunti, tu confermi i frame migliori e li trasformi in slide staff.";
     latestCoachNextClick = nextClick || "Seleziona una slide, controlla il frame e aggiungi eventuali linee manuali.";
 
@@ -1428,6 +1557,10 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
                 </div>
             </article>
         `;
+        if(slideRejectedBox){
+            slideRejectedBox.style.display = "none";
+            slideRejectedBox.innerHTML = "";
+        }
         aiSlideDeck.classList.add("show");
         return;
     }
@@ -1437,17 +1570,20 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
         const frameIndex = Math.max(0, Math.min(extractedFrames.length - 1, Number(slide.frame_index || 0)));
         const frame = extractedFrames[frameIndex] || "";
         const confidence = Number(slide.confidence || 0);
+        const grade = normalizeSlideGrade(slide.grade, confidence, slide.phase);
+        const cardClass = grade === "Slide pronta" ? "ready" : grade === "Spunto utile" ? "useful" : "reject";
         return `
-            <article class="ai-slide">
+            <article class="ai-slide ${cardClass}">
                 ${frame ? `<img src="${frame}" alt="Slide ${escapeHtml(slide.index || "")}">` : `<div></div>`}
                 <div>
                     <div class="ai-slide-kicker">
-                        <span>Slide ${escapeHtml(slide.index || "")}</span>
+                        <span class="${slideGradeClass(grade)}">${escapeHtml(grade)}</span>
                         <span>${escapeHtml(slide.time_label || formatTime(extractedFrameTimes[frameIndex] || 0))}</span>
                         <span>${escapeHtml(slide.phase || "Lettura tattica")}</span>
                         ${confidence ? `<span>${confidence}%</span>` : ""}
                     </div>
                     <h3>${escapeHtml(slide.title || "Lettura tattica")}</h3>
+                    <p><strong>Perche:</strong> ${escapeHtml(slide.grade_reason || "Valutazione tattica del frame.")}</p>
                     <p>${escapeHtml(slide.tactical_read || "Lettura non disponibile.")}</p>
                     <small><strong>Azione staff:</strong> ${escapeHtml(slide.staff_action || "-")}</small>
                     <small><strong>Linea:</strong> ${escapeHtml(slide.suggested_line || "-")}</small>
@@ -1460,6 +1596,18 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
             </article>
         `;
     }).join("");
+    if(slideRejectedBox){
+        if(rejectedSlides.length){
+            slideRejectedBox.style.display = "block";
+            slideRejectedBox.innerHTML = `
+                <strong>Frame esclusi dallo storyboard</strong>
+                ${rejectedSlides.map(slide => `<span>Frame ${Number(slide.frame_index || 0) + 1}: ${escapeHtml(slide.grade_reason || "non abbastanza utile")}</span>`).join("")}
+            `;
+        }else{
+            slideRejectedBox.style.display = "none";
+            slideRejectedBox.innerHTML = "";
+        }
+    }
     if(slideNextClick){
         slideNextClick.innerHTML = `<span class="report-pill ready">${escapeHtml(latestCoachNextClick)}</span>`;
     }
@@ -1485,6 +1633,8 @@ function slideDeckPlainText(){
     const lines = [`MATCHIQ VIDEO AI - DIAPOSITIVE TATTICHE`, latestDeckSummary, ""];
     latestSlides.forEach(slide => {
         lines.push(`${slide.index || ""}. ${slide.title || "Slide tattica"} (${slide.time_label || ""})`);
+        lines.push(`Qualita frame: ${slide.grade || "Spunto utile"}`);
+        if(slide.grade_reason) lines.push(`Motivo: ${slide.grade_reason}`);
         lines.push(`Fase: ${slide.phase || "-"}`);
         lines.push(`Lettura: ${slide.tactical_read || "-"}`);
         lines.push(`Azione staff: ${slide.staff_action || "-"}`);
@@ -2504,6 +2654,8 @@ async function selectCandidatesWithAI(candidates, count, duration, focus){
                 meta:{
                     ...candidates[index].meta,
                     label:aiNote.label || candidates[index].meta.label || "selezione AI",
+                    grade:aiNote.grade || "",
+                    grade_reason:aiNote.grade_reason || "",
                     ai_quality:aiNote.ai_quality,
                     ai_reason:aiNote.ai_reason,
                     team_colors:aiNote.team_colors || [],
