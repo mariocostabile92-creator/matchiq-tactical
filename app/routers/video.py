@@ -18,6 +18,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 from database import (
     can_use_feature,
+    can_create_video_asset,
     create_video_asset,
     delete_video_asset,
     delete_video_report,
@@ -1156,6 +1157,25 @@ def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: st
     )
 
 
+def _require_video_library_capacity(user: dict) -> dict:
+    usage = can_create_video_asset(user["id"])
+    if not usage.get("allowed"):
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "success": False,
+                "allowed": False,
+                "upgrade_required": True,
+                "feature": "video_archive_cloud",
+                "plan": usage.get("plan"),
+                "used": usage.get("used", 0),
+                "limit": usage.get("limit", 0),
+                "message": "Hai raggiunto il limite della libreria video. Elimina una clip o passa a Pro."
+            },
+        )
+    return usage
+
+
 @router.post("/analyze")
 def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)):
     frames = _sanitize_frames(data.frames)
@@ -1334,6 +1354,7 @@ def upload_video_library_item(
     if not rights_confirmed:
         raise HTTPException(status_code=400, detail="Conferma di avere diritto a usare questo video.")
 
+    library_usage = _require_video_library_capacity(user)
     saved = save_uploaded_video(user["id"], file, title)
     result = create_video_asset(
         user_id=user["id"],
@@ -1366,7 +1387,7 @@ def upload_video_library_item(
         },
     )
     asset = get_video_asset(user["id"], result["id"])
-    return {"ok": True, "item": _public_video_asset(asset)}
+    return {"ok": True, "item": _public_video_asset(asset), "library_usage": library_usage}
 
 
 @router.post("/library/import-url")
@@ -1374,6 +1395,7 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
     if not data.rights_confirmed:
         raise HTTPException(status_code=400, detail="Conferma di avere diritto a usare questo link video.")
 
+    library_usage = _require_video_library_capacity(user)
     import_info = validate_import_url(data.source_url)
     safe_url = import_info.get("url", "")
     result = create_video_asset(
@@ -1411,7 +1433,7 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
         },
     )
     asset = get_video_asset(user["id"], result["id"])
-    return {"ok": True, "item": _public_video_asset(asset)}
+    return {"ok": True, "item": _public_video_asset(asset), "library_usage": library_usage}
 
 
 @router.post("/library/{asset_id}/touch")

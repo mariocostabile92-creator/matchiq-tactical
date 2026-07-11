@@ -1667,6 +1667,34 @@ def delete_video_report(user_id: int, report_id: int):
 # VIDEO LIBRARY
 # =========================================================
 
+def count_video_assets(user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        SELECT COUNT(*) AS total
+        FROM video_assets
+        WHERE user_id = ?
+    """), (user_id,))
+    row = fetchone(cur)
+    conn.close()
+    return int((row or {}).get("total") or 0)
+
+
+def can_create_video_asset(user_id: int):
+    user = get_user_by_id(user_id)
+    limits = get_plan_limits(user.get("plan", "free") if user else "free")
+    archive_limit = int(limits.get("video_archive_limit", 0) or 0)
+    used = count_video_assets(user_id)
+
+    return {
+        "allowed": archive_limit > 0 and used < archive_limit,
+        "plan": user.get("plan", "free") if user else "free",
+        "used": used,
+        "limit": archive_limit,
+        "reason": "OK" if archive_limit > 0 and used < archive_limit else "Limite libreria video raggiunto",
+    }
+
+
 def _asset_payload(metadata: dict = None):
     return json.dumps(metadata or {}, ensure_ascii=False)
 
