@@ -367,6 +367,40 @@ function toggleCoachLiveClock(){
     else startCoachLiveClock();
 }
 
+function startCoachMatchDay(){
+    if(!coachState.match){
+        showNotice("Prima crea o aggiorna la partita nel Pre-partita.", "warn");
+        setCoachPhase("pre");
+        return;
+    }
+    const starters = getLineup().filter(p => p.status === "Titolare").length;
+    const bench = getLineup().filter(p => p.status === "Panchina").length;
+    if(starters < 1 && !confirm("Non hai ancora completato la formazione. Vuoi comunque avviare il Match Day?")) return;
+    ensureCoachStateShape();
+    coachState.phase = "match";
+    saveState();
+    startCoachLiveClock();
+    renderAll();
+    showNotice(`Match Day avviato. Titolari inseriti: ${starters}. Panchina: ${bench}.`, "ok", 3500);
+}
+
+function finishCoachMatchDay(){
+    if(!coachState.match){
+        showNotice("Nessuna partita attiva da terminare.", "warn");
+        return;
+    }
+    if(!confirm("Vuoi passare al Post-partita? Timer, eventi, note e pagelle restano salvati.")) return;
+    stopCoachLiveClock(true);
+    ensureCoachStateShape();
+    coachState.phase = "post";
+    if(!coachState.report && coachState.events.length){
+        generateCoachReport();
+    }
+    saveState();
+    renderAll();
+    showNotice("Partita spostata nel Post-partita. Completa pagelle, report e storico.", "ok", 4000);
+}
+
 function resetCoachLiveClock(){
     if(!confirm("Vuoi azzerare solo il timer live? Eventi e report restano salvati.")) return;
     ensureCoachStateShape();
@@ -385,6 +419,24 @@ function setCoachLivePeriod(period){
     coachState.live.period = period || "1T";
     saveState();
     renderLiveAssistant();
+}
+
+function prepareCoachHalftimeSummary(){
+    if(!coachState.match){
+        showNotice("Prima crea una partita manuale.", "warn");
+        return;
+    }
+    ensureCoachStateShape();
+    if(coachState.live?.running){
+        stopCoachLiveClock(true);
+    }
+    coachState.live.period = "INT";
+    coachState.phase = "match";
+    saveState();
+    renderAll();
+    const panel = document.getElementById("coachHalftimeTalk");
+    if(panel) panel.scrollIntoView({behavior:"smooth", block:"center"});
+    showNotice("Sintesi intervallo pronta con i dati registrati finora.", "ok", 3500);
 }
 
 function ensureCoachLiveTicker(){

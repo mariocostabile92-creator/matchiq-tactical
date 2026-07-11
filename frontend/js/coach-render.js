@@ -451,8 +451,11 @@ function renderCoachPrecheck(){
     if(!box) return;
     const pre = coachState.memory?.precheck || {};
     const filled = Object.values(pre).filter(Boolean).length;
+    const starters = getLineup().filter(p => p.status === "Titolare").length;
+    const bench = getLineup().filter(p => p.status === "Panchina").length;
+    const ready = Boolean(coachState.match) && starters > 0 && filled >= 2;
     box.innerHTML = filled
-        ? `<strong>${filled}/5</strong><span> punti pre-partita salvati nella memoria MatchIQ.</span>`
+        ? `<strong>${ready ? "Pronto per il Match Day" : `${filled}/5`}</strong><span>${ready ? `Partita creata, ${starters} titolari e ${bench} riserve inserite. Puoi avviare la console live.` : " punti pre-partita salvati nella memoria MatchIQ. Completa setup e formazione prima della gara."}</span>`
         : `<strong>0/5</strong><span>Completa la checklist prima della gara per guidare meglio l'AI.</span>`;
 }
 
@@ -603,11 +606,125 @@ function renderLiveAssistant(){
     renderCoachAutopilot();
 }
 
+function findCoachBlockByText(selector, text){
+    const needle = String(text || "").toLowerCase();
+    return [...document.querySelectorAll(selector)].find(el => String(el.textContent || "").toLowerCase().includes(needle)) || null;
+}
+
+function moveCoachBlock(target, block){
+    if(target && block && block.parentElement !== target){
+        target.appendChild(block);
+    }
+}
+
+function organizeCoachPhaseBlocks(){
+    const pre = document.getElementById("coachPhasePre");
+    const match = document.getElementById("coachPhaseMatch");
+    const post = document.getElementById("coachPhasePost");
+    if(!pre || !match || !post || pre.dataset.organized === "1") return;
+
+    const setup = document.querySelector(".setup-section");
+    const precheck = findCoachBlockByText(".section", "Piano partita");
+    const lineup = findCoachBlockByText(".section", "Campo e formazione");
+    const onboarding = document.querySelector(".coach-onboarding");
+    const live = document.querySelector(".coach-live-board");
+    const ratings = findCoachBlockByText(".grid.section", "Pagelle giocatori");
+    const playerArchive = findCoachBlockByText(".section", "Storico prestazioni");
+    const memoryTraining = findCoachBlockByText(".grid.section", "Pattern che si ripetono");
+    const timelineReportGrid = findCoachBlockByText(".grid.section", "Report tecnico automatico");
+    const timelinePanel = findCoachBlockByText(".panel", "Eventi partita");
+    const reportPanel = findCoachBlockByText(".panel", "Report tecnico automatico");
+    const history = findCoachBlockByText(".grid.section", "Archivio partite");
+
+    [setup, precheck, lineup, onboarding].forEach(block => moveCoachBlock(pre, block));
+    [live, timelinePanel].forEach(block => moveCoachBlock(match, block));
+    [reportPanel, ratings, playerArchive, memoryTraining, history].forEach(block => moveCoachBlock(post, block));
+    if(timelineReportGrid && !timelineReportGrid.children.length){
+        timelineReportGrid.remove();
+    }
+
+    pre.dataset.organized = "1";
+}
+
+function getCoachPhaseCopy(phase){
+    const m = coachState.match;
+    const title = phase === "match" ? "Match Day" : phase === "post" ? "Post-partita" : "Pre-partita";
+    if(phase === "match"){
+        return {
+            title,
+            text: m ? `${getTeamName("home")} - ${getTeamName("away")} | ${getGoals("home")} - ${getGoals("away")} | minuto ${getLiveMinuteLabel()}'` : "Crea una partita prima di usare la console live.",
+            action: m ? "Termina partita" : "Vai al setup",
+            actionFn: m ? "finishCoachMatchDay()" : "setCoachPhase('pre')"
+        };
+    }
+    if(phase === "post"){
+        return {
+            title,
+            text: m ? "Completa pagelle, report, sintesi WhatsApp e salvataggio nello storico." : "Nessuna partita attiva: crea una gara nel Pre-partita.",
+            action: coachState.report ? "Salva nello storico" : "Genera report",
+            actionFn: coachState.report ? "saveCurrentMatchToHistory()" : "generateCoachReport()"
+        };
+    }
+    return {
+        title,
+        text: m ? `${getTeamName("home")} vs ${getTeamName("away")} preparata. Controlla piano, formazione e checklist.` : "Crea la partita e prepara il lavoro dello staff.",
+        action: m ? "Avvia Match Day" : "Crea partita",
+        actionFn: m ? "startCoachMatchDay()" : "document.getElementById('homeTeamInput')?.focus()"
+    };
+}
+
+function setCoachPhase(phase){
+    ensureCoachStateShape();
+    coachState.phase = normalizeCoachPhase(phase);
+    saveState();
+    renderCoachPhaseShell();
+}
+
+function renderCoachPhaseShell(){
+    organizeCoachPhaseBlocks();
+    ensureCoachStateShape();
+    const phase = getCoachSuggestedPhase();
+    coachState.phase = phase;
+
+    const sections = {
+        pre: document.getElementById("coachPhasePre"),
+        match: document.getElementById("coachPhaseMatch"),
+        post: document.getElementById("coachPhasePost")
+    };
+    const buttons = {
+        pre: document.getElementById("coachPhasePreBtn"),
+        match: document.getElementById("coachPhaseMatchBtn"),
+        post: document.getElementById("coachPhasePostBtn")
+    };
+
+    Object.entries(sections).forEach(([key, el]) => {
+        if(!el) return;
+        el.classList.toggle("hidden", key !== phase);
+        el.setAttribute("aria-hidden", key === phase ? "false" : "true");
+    });
+    Object.entries(buttons).forEach(([key, btn]) => {
+        if(!btn) return;
+        btn.classList.toggle("active", key === phase);
+        btn.setAttribute("aria-selected", key === phase ? "true" : "false");
+    });
+
+    const status = document.getElementById("coachPhaseStatus");
+    if(status){
+        const copy = getCoachPhaseCopy(phase);
+        status.innerHTML = `
+            <strong>${esc(copy.title)}</strong>
+            <span>${esc(copy.text)}</span>
+            <button class="btn green small-btn" type="button" onclick="${copy.actionFn}">${esc(copy.action)}</button>
+        `;
+    }
+}
+
 function renderAll(){
     ensureCoachStateShape();
     fillFormFromState();
     renderCoachPrecheck();
     renderStatus();
+    renderCoachPhaseShell();
     renderLiveAssistant();
     if(typeof renderLineup === "function") renderLineup();
     renderTimeline();

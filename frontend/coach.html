@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Coach Mode V2.0.0 - Onboarding</title>
+<title>MatchIQ Coach - Console staff</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
-<link rel="stylesheet" href="/css/coach.css">
+<link rel="stylesheet" href="/css/coach.css?v=10489">
 
 <style>
 .coach-onboarding{
@@ -872,21 +872,21 @@
     <div id="pageNotice" class="notice"></div>
     <div class="hero">
         <div class="card hero-card">
-            <span class="badge green">COACH MODE V2.0.0</span>
+            <span class="badge green">MATCHIQ COACH</span>
 
-            <h1>Il match analyst AI per i dilettanti</h1>
+            <h1>Il tuo assistente per preparare, vivere e analizzare la partita</h1>
 
             <p class="hero-lead">
-                Crea una partita manuale, registra gli eventi principali e genera un report tecnico
-                utile per allenatori, staff e società dilettantistiche.
+                Organizza il pre-gara, gestisci il Match Day e trasforma eventi, note e pagelle
+                in indicazioni utili per il lavoro settimanale.
             </p>
 
             <div class="micro-row">
-                <span>⚽ Match manuale</span>
-                <span>📌 Eventi rapidi</span>
-                <span>🧠 Report automatico</span>
-                <span>📱 Zero API live</span>
-                <span>📄 PDF Coach</span>
+                <span>Pre-partita</span>
+                <span>Match Day</span>
+                <span>Post-partita</span>
+                <span>Report staff</span>
+                <span>PWA bordo campo</span>
             </div>
 
             <div class="kpi-grid">
@@ -947,6 +947,34 @@
         </div>
     </div>
 
+    <div class="coach-phase-nav" role="tablist" aria-label="Fasi Coach">
+        <button id="coachPhasePreBtn" class="coach-phase-tab active" type="button" role="tab" aria-controls="coachPhasePre" onclick="setCoachPhase('pre')">
+            <span>1</span>
+            <strong>Pre-partita</strong>
+            <small>Setup, piano, formazione</small>
+        </button>
+        <button id="coachPhaseMatchBtn" class="coach-phase-tab" type="button" role="tab" aria-controls="coachPhaseMatch" onclick="setCoachPhase('match')">
+            <span>2</span>
+            <strong>Match Day</strong>
+            <small>Plancia, timer, note live</small>
+        </button>
+        <button id="coachPhasePostBtn" class="coach-phase-tab" type="button" role="tab" aria-controls="coachPhasePost" onclick="setCoachPhase('post')">
+            <span>3</span>
+            <strong>Post-partita</strong>
+            <small>Pagelle, report, storico</small>
+        </button>
+    </div>
+
+    <div class="coach-phase-status" id="coachPhaseStatus">
+        <strong>Pre-partita</strong>
+        <span>Crea la partita e prepara il lavoro dello staff.</span>
+        <button class="btn green small-btn" type="button" onclick="startCoachMatchDay()">Avvia Match Day</button>
+    </div>
+
+    <div id="coachPhasePre" class="coach-phase-content" role="tabpanel" aria-labelledby="coachPhasePreBtn"></div>
+    <div id="coachPhaseMatch" class="coach-phase-content hidden" role="tabpanel" aria-labelledby="coachPhaseMatchBtn"></div>
+    <div id="coachPhasePost" class="coach-phase-content hidden" role="tabpanel" aria-labelledby="coachPhasePostBtn"></div>
+
     <div class="coach-onboarding">
         <div class="coach-guide-card">
             <span class="badge green">PRIMA VOLTA?</span>
@@ -980,9 +1008,9 @@
 
     <div class="section">
         <div class="panel">
-            <span class="badge green">AI PRE-PARTITA</span>
-            <h2>Checklist intelligente</h2>
-            <p>Compila pochi punti prima del match: MatchIQ li usa per fare domande migliori, leggere gli eventi e preparare il report.</p>
+            <span class="badge green">PIANO PARTITA</span>
+            <h2>Piano partita e checklist pre-gara</h2>
+            <p>Compila pochi punti prima del match: obiettivo, rischi, principi da osservare e focus staff guidano eventi, note e report.</p>
             <div class="coach-precheck-grid">
                 <div class="field">
                     <label>Obiettivo gara</label>
@@ -1030,12 +1058,14 @@
             <div class="coach-live-controls">
                 <select id="coachLivePeriod" class="coach-live-period" onchange="setCoachLivePeriod(this.value)">
                     <option value="1T">1T</option>
+                    <option value="INT">Intervallo</option>
                     <option value="2T">2T</option>
                     <option value="ET1">Supplementare 1</option>
                     <option value="ET2">Supplementare 2</option>
                 </select>
                 <button class="btn green" id="coachLiveToggle" type="button" onclick="toggleCoachLiveClock()">Avvia timer</button>
                 <button class="btn dark" type="button" onclick="resetCoachLiveClock()">Azzera timer</button>
+                <button class="btn gold" type="button" onclick="prepareCoachHalftimeSummary()">Prepara sintesi intervallo</button>
             </div>
 
             <div class="coach-live-actions">
@@ -1071,8 +1101,8 @@
 
         <div class="coach-ai-panel">
             <span class="badge blue">AI ASSISTANT LIVE</span>
-            <h2>Cosa sta leggendo MatchIQ</h2>
-            <p>Legge gli eventi inseriti e ti suggerisce cosa non perdere nel report tecnico.</p>
+            <h2>Assistente MatchIQ</h2>
+            <p>Sintesi e indicazioni basate sugli eventi registrati. Se mancano dati, ti guida su cosa osservare.</p>
             <div class="status-box" style="margin-top:14px;">
                 <div class="status-label">Ultimo evento live</div>
                 <div class="status-value" id="coachLiveLast">Nessun evento live</div>
@@ -1373,9 +1403,9 @@
             </div>
         </div>
         <div class="panel">
-            <span class="badge gold">ALLENAMENTO AI</span>
-            <h2>Piano automatico</h2>
-            <p>Dalla partita al campo: gli eventi piu ricorrenti diventano esercizi pratici per la settimana.</p>
+            <span class="badge gold">POST-PARTITA</span>
+            <h2>Priorità per la settimana</h2>
+            <p>Dalla partita al campo: gli eventi più ricorrenti diventano temi di lavoro da verificare con lo staff.</p>
             <div id="trainingPlanList" class="training-plan-list">
                 <div class="empty">Registra eventi per generare il piano.</div>
             </div>
@@ -1453,11 +1483,11 @@
     <a class="active" href="/coach.html">Coach</a>
     <a href="/account.html">Account</a>
 </nav>
-<script src="/js/coach-state.js?v=10473"></script>
-<script src="/js/coach-storage.js?v=10473"></script>
-<script src="/js/coach-actions.js?v=10473"></script>
-<script src="/js/coach-report.js?v=10473"></script>
-<script src="/js/coach-render.js?v=10473"></script>
-<script src="/js/coach-core.js?v=10473"></script>
+<script src="/js/coach-state.js?v=10489"></script>
+<script src="/js/coach-storage.js?v=10489"></script>
+<script src="/js/coach-actions.js?v=10489"></script>
+<script src="/js/coach-report.js?v=10489"></script>
+<script src="/js/coach-render.js?v=10489"></script>
+<script src="/js/coach-core.js?v=10489"></script>
 </body>
 </html>
