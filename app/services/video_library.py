@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ipaddress
+import json
 import os
 import re
 import socket
@@ -13,6 +14,7 @@ from fastapi import HTTPException, UploadFile
 
 
 VIDEO_LIBRARY_ROOT = Path(os.getenv("VIDEO_LIBRARY_DIR", "storage/video_library")).resolve()
+VIDEO_STORAGE_BACKEND = os.getenv("VIDEO_STORAGE_BACKEND", "local").strip().lower() or "local"
 MAX_UPLOAD_BYTES = int(os.getenv("VIDEO_LIBRARY_MAX_UPLOAD_MB", "450")) * 1024 * 1024
 IMPORT_TIMEOUT_SECONDS = float(os.getenv("VIDEO_IMPORT_TIMEOUT_SECONDS", "6"))
 IMPORT_MAX_REDIRECTS = int(os.getenv("VIDEO_IMPORT_MAX_REDIRECTS", "4"))
@@ -181,40 +183,101 @@ def user_library_dir(user_id: int) -> Path:
     return path
 
 
+class LocalVideoStorage:
+    backend = "local"
+
+    def save_upload(self, user_id: int, upload: UploadFile, title: str = "") -> dict:
+        safe_name = _assert_safe_video_name(upload.filename or "")
+        asset_name = f"{_safe_slug(title or Path(safe_name).stem)}-{os.urandom(6).hex()}{Path(safe_name).suffix.lower()}"
+        target = user_library_dir(user_id) / asset_name
+        bytes_written = 0
+
+        with target.open("wb") as out_file:
+            while True:
+                chunk = upload.file.read(1024 * 1024)
+                if not chunk:
+                    break
+                bytes_written += len(chunk)
+                if bytes_written > MAX_UPLOAD_BYTES:
+                    try:
+                        target.unlink(missing_ok=True)
+                    except Exception:
+                        pass
+                    raise HTTPException(status_code=413, detail="Video troppo grande per la libreria.")
+                out_file.write(chunk)
+
+        return {
+            "storage_backend": self.backend,
+            "storage_key": str(target.relative_to(VIDEO_LIBRARY_ROOT)),
+            "file_path": str(target),
+            "file_name": safe_name,
+            "size_bytes": bytes_written,
+            "mime_type": upload.content_type or "video/mp4",
+        }
+
+    def resolve_path(self, file_path: str = "", storage_key: str = "") -> Path:
+        if storage_key:
+            path = (VIDEO_LIBRARY_ROOT / storage_key).resolve()
+        else:
+            path = Path(file_path or "").resolve()
+        if VIDEO_LIBRARY_ROOT not in path.parents:
+            raise HTTPException(status_code=400, detail="Percorso video non valido.")
+        return path
+
+    def delete(self, file_path: str = "", storage_key: str = "") -> None:
+        try:
+            path = self.resolve_path(file_path=file_path, storage_key=storage_key)
+            if path.exists():
+                path.unlink()
+        except Exception:
+            pass
+
+
+def get_video_storage():
+    if VIDEO_STORAGE_BACKEND != "local":
+        raise HTTPException(
+            status_code=501,
+            detail="Storage video esterno non configurato. Imposta VIDEO_STORAGE_BACKEND=local o collega un provider.",
+        )
+    return LocalVideoStorage()
+
+
+def parse_asset_metadata(asset: dict) -> dict:
+    metadata = (asset or {}).get("metadata") or {}
+    if isinstance(metadata, str):
+        try:
+            metadata = json.loads(metadata)
+        except json.JSONDecodeError:
+            metadata = {}
+    return metadata if isinstance(metadata, dict) else {}
+
+
 def save_uploaded_video(user_id: int, upload: UploadFile, title: str = "") -> dict:
-    safe_name = _assert_safe_video_name(upload.filename or "")
-    asset_name = f"{_safe_slug(title or Path(safe_name).stem)}-{os.urandom(6).hex()}{Path(safe_name).suffix.lower()}"
-    target = user_library_dir(user_id) / asset_name
-    bytes_written = 0
-
-    with target.open("wb") as out_file:
-        while True:
-            chunk = upload.file.read(1024 * 1024)
-            if not chunk:
-                break
-            bytes_written += len(chunk)
-            if bytes_written > MAX_UPLOAD_BYTES:
-                try:
-                    target.unlink(missing_ok=True)
-                except Exception:
-                    pass
-                raise HTTPException(status_code=413, detail="Video troppo grande per la libreria.")
-            out_file.write(chunk)
-
-    return {
-        "file_path": str(target),
-        "file_name": safe_name,
-        "size_bytes": bytes_written,
-        "mime_type": upload.content_type or "video/mp4",
-    }
+    return get_video_storage().save_upload(user_id, upload, title)
 
 
-def remove_library_file(file_path: Optional[str]) -> None:
-    if not file_path:
+def resolve_library_file(asset: dict) -> Path:
+    metadata = parse_asset_metadata(asset or {})
+    backend = metadata.get("storage_backend") or metadata.get("storage") or "local"
+    if backend not in {"local", "local_file"}:
+        raise HTTPException(status_code=501, detail="Storage video non supportato da questo server.")
+    return get_video_storage().resolve_path(
+        file_path=(asset or {}).get("file_path") or "",
+        storage_key=metadata.get("storage_key") or "",
+    )
+
+
+def remove_library_file(file_path: Optional[str], metadata: Optional[dict] = None) -> None:
+    metadata = metadata or {}
+    backend = metadata.get("storage_backend") or metadata.get("storage") or "local"
+    if backend not in {"local", "local_file"}:
         return
-    try:
-        path = Path(file_path).resolve()
-        if VIDEO_LIBRARY_ROOT in path.parents and path.exists():
-            path.unlink()
-    except Exception:
-        pass
+    get_video_storage().delete(file_path=file_path or "", storage_key=metadata.get("storage_key") or "")
+
+
+def storage_descriptor(saved: dict) -> dict:
+    return {
+        "storage": saved.get("storage_backend") or "local",
+        "storage_backend": saved.get("storage_backend") or "local",
+        "storage_key": saved.get("storage_key") or "",
+    }

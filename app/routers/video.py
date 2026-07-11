@@ -3,7 +3,6 @@ import html
 import io
 import json
 import os
-from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
 
@@ -31,7 +30,14 @@ from database import (
     track_api_usage,
     update_video_asset_status,
 )
-from app.services.video_library import remove_library_file, save_uploaded_video, validate_import_url
+from app.services.video_library import (
+    parse_asset_metadata,
+    remove_library_file,
+    resolve_library_file,
+    save_uploaded_video,
+    storage_descriptor,
+    validate_import_url,
+)
 from app.services.video_taxonomy import validate_selection_result
 from usage_guard import get_optional_user, require_user
 
@@ -1342,7 +1348,7 @@ def upload_video_library_item(
         rights_confirmed=True,
         status="ready",
         metadata={
-            "storage": "local",
+            **storage_descriptor(saved),
             "original_name": saved.get("file_name", ""),
             "duration_seconds": max(0, float(duration_seconds or 0)),
             "home_team": _clean_text(home_team, 120),
@@ -1458,7 +1464,7 @@ def stream_video_library_item(asset_id: int, user=Depends(require_user)):
         raise HTTPException(status_code=404, detail="Video non trovato")
     if asset.get("source_type") != "upload":
         raise HTTPException(status_code=400, detail="Questo video e' un link esterno, non un file caricato.")
-    file_path = Path(asset.get("file_path") or "")
+    file_path = resolve_library_file(asset)
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File video non disponibile sul server")
     return FileResponse(
@@ -1473,7 +1479,7 @@ def remove_video_library_item(asset_id: int, user=Depends(require_user)):
     asset = delete_video_asset(user["id"], asset_id)
     if not asset:
         raise HTTPException(status_code=404, detail="Video non trovato")
-    remove_library_file(asset.get("file_path"))
+    remove_library_file(asset.get("file_path"), parse_asset_metadata(asset))
     return {"ok": True, "deleted": True}
 
 
