@@ -46,6 +46,7 @@ from app.services.video_hub import (
     list_video_sessions,
     patch_video_session,
     public_video_session,
+    record_video_session_activity,
     touch_video_session,
 )
 from app.services.video_taxonomy import validate_selection_result
@@ -67,6 +68,7 @@ MAX_FRAME_CHARS = int(os.getenv("VIDEO_REPORT_MAX_FRAME_CHARS", "900000"))
 
 
 class VideoReportRequest(BaseModel):
+    video_asset_id: Optional[int] = None
     title: Optional[str] = ""
     club_name: Optional[str] = ""
     category: Optional[str] = "Dilettanti"
@@ -133,6 +135,7 @@ class FrameFeedbackRequest(BaseModel):
 
 
 class CloudVideoReportRequest(BaseModel):
+    video_asset_id: Optional[int] = None
     title: Optional[str] = ""
     club_name: Optional[str] = ""
     category: Optional[str] = ""
@@ -1106,6 +1109,7 @@ def _public_video_report(row: dict):
 
     return {
         "id": row.get("id"),
+        "video_asset_id": payload.get("video_asset_id"),
         "title": row.get("title") or "Video Report MatchIQ",
         "club": row.get("club_name") or "",
         "category": row.get("category") or "",
@@ -1195,6 +1199,7 @@ def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: st
         pdf_base64=pdf_base64,
         payload={
             "duration_seconds": data.duration_seconds,
+            "video_asset_id": data.video_asset_id,
             "frame_times": data.frame_times,
             "frame_meta": data.frame_meta[:12],
             "notes": _clean_text(data.notes, 1200),
@@ -1374,6 +1379,21 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
     pdf_base64 = _build_pdf_base64(title, report, data, len(frames), slides)
     track_api_usage(user["id"], "/api/video/analyze", "video_report")
     cloud_save = _save_cloud_report_for_user(user, data, report, pdf_base64, len(frames), slides)
+    if data.video_asset_id and cloud_save and cloud_save.get("success"):
+        record_video_session_activity(
+            user["id"],
+            int(data.video_asset_id),
+            "report_generated",
+            "Report AI generato",
+            f"{len(frames)} fotogrammi analizzati.",
+            latest_report={
+                "id": cloud_save.get("id"),
+                "title": title,
+                "frames": len(frames),
+                "focus": _clean_text(data.focus, 160),
+                "created_at": datetime.utcnow().isoformat(),
+            },
+        )
 
     return {
         "ok": True,
@@ -1517,6 +1537,7 @@ def upload_video_library_item(
 
     library_usage = _require_video_library_capacity(user)
     saved = save_uploaded_video(user["id"], file, title)
+    now = datetime.utcnow().isoformat()
     result = create_video_asset(
         user_id=user["id"],
         title=_clean_text(title, 180) or saved.get("file_name", "Partita MatchIQ"),
@@ -1553,8 +1574,14 @@ def upload_video_library_item(
                 "status": "ready",
                 "stage": "ready",
                 "progress": 100,
-                "updated_at": datetime.utcnow().isoformat(),
+                "updated_at": now,
             },
+            "activity": [{
+                "event": "uploaded",
+                "label": "Video caricato",
+                "details": "File salvato nel Video Hub.",
+                "at": now,
+            }],
         },
     )
     asset = get_video_asset(user["id"], result["id"])
@@ -1569,6 +1596,7 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
     library_usage = _require_video_library_capacity(user)
     import_info = validate_import_url(data.source_url)
     safe_url = import_info.get("url", "")
+    now = datetime.utcnow().isoformat()
     result = create_video_asset(
         user_id=user["id"],
         title=_clean_text(data.title, 180) or "Video importato",
@@ -1594,7 +1622,7 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
                 "size_bytes": int(import_info.get("size_bytes") or 0),
                 "extension": import_info.get("extension", ""),
                 "redirects": import_info.get("redirects", [])[:4],
-                "checked_at": datetime.utcnow().isoformat(),
+                "checked_at": now,
             },
             "home_team": _clean_text(data.home_team, 120),
             "away_team": _clean_text(data.away_team, 120),
@@ -1605,8 +1633,14 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
                 "status": "ready",
                 "stage": "ready",
                 "progress": 100,
-                "updated_at": datetime.utcnow().isoformat(),
+                "updated_at": now,
             },
+            "activity": [{
+                "event": "imported",
+                "label": "Link importato",
+                "details": "Link video autorizzato collegato alla sessione.",
+                "at": now,
+            }],
         },
     )
     asset = get_video_asset(user["id"], result["id"])
@@ -1708,11 +1742,26 @@ def create_video_report(data: CloudVideoReportRequest, user=Depends(require_user
         frames_analyzed=int(data.frames_analyzed or 0),
         report=_clean_text(data.report, 12000),
         pdf_base64=str(data.pdf_base64 or ""),
-        payload=data.payload or {},
+        payload={**(data.payload or {}), "video_asset_id": data.video_asset_id},
     )
 
     if not result.get("success"):
         raise HTTPException(status_code=402, detail=result)
+    if data.video_asset_id:
+        record_video_session_activity(
+            user["id"],
+            int(data.video_asset_id),
+            "report_saved",
+            "Report salvato in archivio",
+            f"{int(data.frames_analyzed or 0)} fotogrammi archiviati.",
+            latest_report={
+                "id": result.get("id"),
+                "title": _clean_text(data.title, 180) or "Video Report MatchIQ",
+                "frames": int(data.frames_analyzed or 0),
+                "focus": _clean_text(data.focus, 160),
+                "created_at": datetime.utcnow().isoformat(),
+            },
+        )
 
     return {"ok": True, "id": result.get("id")}
 

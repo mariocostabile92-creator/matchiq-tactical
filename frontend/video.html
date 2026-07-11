@@ -803,6 +803,27 @@ video{
     border:1px solid rgba(255,255,255,.08);
 }
 .session-detail-list strong{display:block;font-size:13px;word-break:break-word}
+.session-activity{
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid rgba(255,255,255,.10);
+}
+.session-activity h3{
+    margin:0 0 10px;
+    font-size:14px;
+}
+.session-activity-list{
+    display:grid;
+    gap:8px;
+}
+.session-activity-item{
+    padding:10px;
+    border-radius:13px;
+    background:rgba(0,245,160,.06);
+    border:1px solid rgba(0,245,160,.14);
+}
+.session-activity-item strong{display:block;font-size:12px}
+.session-activity-item span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:3px}
 .session-modal-actions{
     display:flex;
     gap:9px;
@@ -1226,9 +1247,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10484">Home</a>
-        <a class="btn dark" href="/coach.html?v=10484">Coach</a>
-        <a class="btn dark" href="/account.html?v=10484">Account</a>
+        <a class="btn dark" href="/index.html?v=10485">Home</a>
+        <a class="btn dark" href="/coach.html?v=10485">Coach</a>
+        <a class="btn dark" href="/account.html?v=10485">Account</a>
     </nav>
 </header>
 
@@ -1298,7 +1319,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10484">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10485">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1308,7 +1329,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10484">Scopri piano club</a>
+                    <a href="/account.html?v=10485">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1823,7 +1844,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10484";
+const APP_VERSION = "10485";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -3320,11 +3341,23 @@ function renderSessionDetails(item){
     const size = item.size_bytes ? formatBytes(item.size_bytes) : "Non indicata";
     const duration = item.duration_seconds ? formatDurationLabel(item.duration_seconds) : "Non indicata";
     const updated = formatDateLabel(item.updated_at) || "Non indicato";
+    const created = formatDateLabel(item.created_at) || "Non indicato";
     const lastUsed = formatDateLabel(item.last_used_at) || "Mai aperta";
     const source = item.source_type === "url" ? "Link autorizzato" : item.source_type === "session" ? "Sessione senza file" : "Upload MatchIQ";
+    const latestReport = item.latest_report && typeof item.latest_report === "object" ? item.latest_report : {};
+    const activity = Array.isArray(item.activity) ? item.activity : [];
+    const activityHtml = activity.length
+        ? activity.slice(0, 8).map(entry => `
+            <div class="session-activity-item">
+                <strong>${escapeHtml(entry.label || entry.event || "Attivita sessione")}</strong>
+                <span>${escapeHtml(formatDateLabel(entry.at) || "Data non indicata")}${entry.details ? ` - ${escapeHtml(entry.details)}` : ""}</span>
+            </div>
+        `).join("")
+        : `<div class="session-activity-item"><strong>Nessuna attivita registrata</strong><span>Da ora la scheda salvera apertura, modifiche, archivio e report.</span></div>`;
     sessionDetailList.innerHTML = `
         <div><label>Stato lavoro</label><strong>${escapeHtml(workflow)}</strong></div>
         <div><label>Stato lavorazione</label><strong>${escapeHtml(status)} - ${progress}%</strong><div class="library-progress"><span style="width:${progress}%"></span></div></div>
+        <div><label>Creata</label><strong>${escapeHtml(created)}</strong></div>
         <div><label>Sorgente</label><strong>${escapeHtml(source)}</strong></div>
         <div><label>Provider</label><strong>${escapeHtml(provider)}</strong></div>
         <div><label>File originale</label><strong>${escapeHtml(item.original_name || item.file_name || "Non indicato")}</strong></div>
@@ -3333,7 +3366,12 @@ function renderSessionDetails(item){
         <div><label>Durata</label><strong>${escapeHtml(duration)}</strong></div>
         <div><label>Aggiornata</label><strong>${escapeHtml(updated)}</strong></div>
         <div><label>Ultimo utilizzo</label><strong>${escapeHtml(lastUsed)}</strong></div>
+        <div><label>Ultimo report</label><strong>${latestReport.id ? `#${Number(latestReport.id)} - ${escapeHtml(latestReport.title || "Report MatchIQ")}` : "Nessun report collegato"}</strong></div>
         <div><label>ID sessione</label><strong>#${Number(item.id) || "-"}</strong></div>
+        <div class="session-activity">
+            <h3>Storico sessione</h3>
+            <div class="session-activity-list">${activityHtml}</div>
+        </div>
     `;
 }
 
@@ -4011,6 +4049,7 @@ function addToArchive(data, payload){
         coach_next_click: data.coach_next_click || latestCoachNextClick || "",
         pdf_base64: data.pdf_base64 || "",
         cloud_report_id: data.cloud_report_id || null,
+        video_asset_id: payload.video_asset_id || currentVideoAssetId || null,
         date: new Date().toLocaleString("it-IT", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit"})
     };
 
@@ -4506,6 +4545,7 @@ async function analyzeVideo(){
     showStatus("Sto generando il report. Per clip lunghe può volerci qualche secondo.", "warn");
 
     const payload = {
+        video_asset_id: currentVideoAssetId || null,
         title: document.getElementById("videoTitle").value.trim(),
         club_name: document.getElementById("clubName").value.trim(),
         category: document.getElementById("videoCategory").value,
@@ -4558,6 +4598,13 @@ async function analyzeVideo(){
         downloadPdfBtn.disabled = !latestPdfBase64;
         addToArchive(data, payload);
         if(data.cloud_saved) loadCloudArchive();
+        if(currentVideoAssetId){
+            await loadVideoLibrary();
+            const updatedSession = videoLibraryItems.find(item => Number(item.id) === Number(currentVideoAssetId));
+            if(updatedSession && Number(activeSessionModalId) === Number(currentVideoAssetId)){
+                fillSessionModal(updatedSession);
+            }
+        }
         updateReportMeta("report", data.frames_analyzed || extractedFrames.length);
         showStatus(`Report generato con ${data.frames_analyzed || extractedFrames.length} fotogrammi${data.cloud_saved ? " e salvato nel cloud" : ""}.`, "ok");
     }catch(err){

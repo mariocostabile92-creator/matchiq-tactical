@@ -72,6 +72,27 @@ def _metadata(row: Optional[dict]) -> Dict[str, Any]:
     return metadata if isinstance(metadata, dict) else {}
 
 
+def _activity_list(metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
+    activity = metadata.get("activity")
+    if not isinstance(activity, list):
+        activity = []
+    return [item for item in activity if isinstance(item, dict)][:30]
+
+
+def _push_activity(metadata: Dict[str, Any], event: str, label: str, details: str = "") -> Dict[str, Any]:
+    now = utc_now()
+    activity = _activity_list(metadata)
+    activity.insert(0, {
+        "event": _clean_text(event, 50),
+        "label": _clean_text(label, 160),
+        "details": _clean_text(details, 260),
+        "at": now,
+    })
+    metadata["activity"] = activity[:25]
+    metadata["activity_updated_at"] = now
+    return metadata
+
+
 def _pick_session_type(value: Any) -> str:
     value = _clean_text(value, 80)
     return value if value in SESSION_TYPES else "official_match"
@@ -181,6 +202,8 @@ def public_video_session(row: dict) -> Dict[str, Any]:
         "created_at": row.get("created_at") or "",
         "updated_at": row.get("updated_at") or "",
         "last_used_at": metadata.get("last_used_at") or "",
+        "latest_report": metadata.get("latest_report") if isinstance(metadata.get("latest_report"), dict) else {},
+        "activity": _activity_list(metadata),
         "rights_confirmed": bool(row.get("rights_confirmed")),
         "archive_state": archive_state,
         "is_archived": archive_state == "archived" or status == "archived",
@@ -198,6 +221,7 @@ def create_video_session(user_id: int, data: dict) -> Dict[str, Any]:
         "created_from": "video_hub",
         "job": {"status": "draft", "stage": "draft", "progress": 0, "updated_at": now},
     }
+    _push_activity(metadata, "created", "Sessione creata", "Scheda nata nel Video Hub.")
     result = create_video_asset(
         user_id=user_id,
         title=_clean_text(data.get("title"), 180) or "Nuova sessione video",
@@ -224,6 +248,7 @@ def patch_video_session(user_id: int, asset_id: int, data: dict) -> Optional[Dic
     metadata.update({key: value for key, value in patch.items() if value not in ("", [], 0.0)})
     metadata["updated_from"] = "video_hub"
     metadata["updated_at"] = utc_now()
+    _push_activity(metadata, "updated", "Scheda aggiornata", "Dati sessione modificati dal Video Hub.")
     detailed = update_video_asset_details(
         user_id=user_id,
         asset_id=asset_id,
@@ -254,6 +279,12 @@ def archive_video_session(user_id: int, asset_id: int, archived: bool = True) ->
     metadata = _metadata(asset)
     metadata["archive_state"] = "archived" if archived else "active"
     metadata["archived_at" if archived else "restored_at"] = utc_now()
+    _push_activity(
+        metadata,
+        "archived" if archived else "restored",
+        "Sessione archiviata" if archived else "Sessione ripristinata",
+        "Stato archivio aggiornato.",
+    )
     previous_status = ""
     if isinstance(metadata.get("job"), dict):
         previous_status = metadata["job"].get("status") or ""
@@ -274,13 +305,45 @@ def touch_video_session(user_id: int, asset_id: int) -> Optional[Dict[str, Any]]
     if not asset:
         return None
     public = public_video_session(asset)
+    metadata = _metadata(asset)
+    metadata["last_used_at"] = utc_now()
+    _push_activity(metadata, "opened", "Aperta nel Video AI", "Sessione aperta per analisi video.")
     updated = update_video_asset_status(
         user_id=user_id,
         asset_id=asset_id,
         status=public.get("status") or "ready",
         progress=public.get("progress", 100),
         stage=public.get("status") or "ready",
-        metadata_patch={"last_used_at": utc_now()},
+        metadata_patch=metadata,
+    )
+    return public_video_session(updated) if updated else None
+
+
+def record_video_session_activity(
+    user_id: int,
+    asset_id: int,
+    event: str,
+    label: str,
+    details: str = "",
+    latest_report: Optional[Dict[str, Any]] = None,
+) -> Optional[Dict[str, Any]]:
+    asset = get_video_asset(user_id, asset_id)
+    if not asset:
+        return None
+    metadata = _metadata(asset)
+    _push_activity(metadata, event, label, details)
+    if latest_report:
+        metadata["latest_report"] = latest_report
+        metadata["last_report_at"] = latest_report.get("created_at") or utc_now()
+        metadata["workflow_state"] = "report_ready"
+    public = public_video_session(asset)
+    updated = update_video_asset_status(
+        user_id=user_id,
+        asset_id=asset_id,
+        status=public.get("status") or "ready",
+        progress=public.get("progress", 100),
+        stage=public.get("status") or "ready",
+        metadata_patch=metadata,
     )
     return public_video_session(updated) if updated else None
 
