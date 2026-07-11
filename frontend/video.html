@@ -593,7 +593,7 @@ video{
 }
 .library-item{
     display:grid;
-    grid-template-columns:1fr auto;
+    grid-template-columns:92px 1fr auto;
     gap:10px;
     align-items:center;
     padding:11px;
@@ -601,8 +601,42 @@ video{
     background:rgba(255,255,255,.05);
     border:1px solid rgba(255,255,255,.10);
 }
+.library-thumb{
+    width:92px;
+    aspect-ratio:16/9;
+    border-radius:10px;
+    object-fit:cover;
+    background:linear-gradient(135deg,rgba(0,245,160,.22),rgba(47,145,255,.14));
+    border:1px solid rgba(255,255,255,.12);
+}
+.library-thumb.placeholder{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+}
 .library-item strong{display:block}
 .library-item span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.library-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:7px;
+}
+.library-meta b{
+    display:inline-flex;
+    align-items:center;
+    min-height:22px;
+    padding:4px 7px;
+    border-radius:999px;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.10);
+    color:#dce8ff;
+    font-size:10px;
+}
 .library-state{
     display:flex;
     gap:7px;
@@ -987,8 +1021,9 @@ video{
     .ai-slide{grid-template-columns:1fr}
     .archive-item{grid-template-columns:1fr}
     .archive-actions{justify-content:flex-start}
-    .library-item{grid-template-columns:1fr}
-    .library-actions{justify-content:flex-start}
+    .library-item{grid-template-columns:74px 1fr}
+    .library-thumb{width:74px}
+    .library-actions{grid-column:1 / -1;justify-content:flex-start}
 }
 @media(max-width:560px){
     .topbar{gap:12px}
@@ -1041,9 +1076,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10478">Home</a>
-        <a class="btn dark" href="/coach.html?v=10478">Coach</a>
-        <a class="btn dark" href="/account.html?v=10478">Account</a>
+        <a class="btn dark" href="/index.html?v=10479">Home</a>
+        <a class="btn dark" href="/coach.html?v=10479">Coach</a>
+        <a class="btn dark" href="/account.html?v=10479">Account</a>
     </nav>
 </header>
 
@@ -1113,7 +1148,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10478">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10479">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1123,7 +1158,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10478">Scopri piano club</a>
+                    <a href="/account.html?v=10479">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1148,6 +1183,14 @@ video{
                         <option>Allievi</option>
                         <option>Giovanissimi</option>
                     </select>
+                </div>
+                <div class="field">
+                    <label>Competizione</label>
+                    <input id="videoCompetition" placeholder="Es. Campionato, torneo, amichevole" />
+                </div>
+                <div class="field">
+                    <label>Tag archivio</label>
+                    <input id="videoTags" placeholder="Es. pressing, corner, transizioni" />
                 </div>
                 <div class="field">
                     <label>Focus analisi</label>
@@ -1452,7 +1495,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10478";
+const APP_VERSION = "10479";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -2653,6 +2696,47 @@ function formatBytes(value){
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function formatDurationLabel(seconds){
+    const value = Math.max(0, Number(seconds || 0));
+    if(!value) return "";
+    const mins = Math.floor(value / 60);
+    const secs = Math.round(value % 60);
+    return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+function formatDateLabel(value){
+    if(!value) return "";
+    const date = new Date(value);
+    if(Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString("it-IT", {day:"2-digit", month:"2-digit"}) + " " + date.toLocaleTimeString("it-IT", {hour:"2-digit", minute:"2-digit"});
+}
+
+function getLibraryTeamsLabel(item){
+    const home = item.home_team || "";
+    const away = item.away_team || "";
+    if(home && away) return `${home} - ${away}`;
+    return home || away || item.club || item.category || "Societa non indicata";
+}
+
+function getLibraryTags(item){
+    const tags = Array.isArray(item.tags) ? item.tags : [];
+    return tags.slice(0, 4);
+}
+
+function captureLibraryThumbnail(){
+    try{
+        if(!videoPreview || !videoPreview.videoWidth || !videoPreview.videoHeight) return "";
+        const canvas = document.createElement("canvas");
+        canvas.width = 320;
+        canvas.height = 180;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(videoPreview, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/jpeg", 0.62);
+    }catch(err){
+        return "";
+    }
+}
+
 function setLibraryJob(message="", type="ok", progress=null){
     if(!libraryJobStatus) return;
     if(!message){
@@ -2708,11 +2792,22 @@ function renderVideoLibrary(){
         const progress = getAssetProgress(item);
         const statusClass = getAssetStatusClass(item);
         const disabled = String(item.status || "ready").toLowerCase() === "error" ? "disabled" : "";
+        const tags = getLibraryTags(item);
+        const duration = formatDurationLabel(item.duration_seconds);
+        const lastUsed = formatDateLabel(item.last_used_at);
         return `
         <div class="library-item">
+            ${item.thumbnail ? `<img class="library-thumb" src="${escapeHtml(item.thumbnail)}" alt="Anteprima ${escapeHtml(item.title || "video")}">` : `<div class="library-thumb placeholder">Video</div>`}
             <div>
                 <strong>${escapeHtml(item.title || "Partita MatchIQ")}</strong>
-                <span>${escapeHtml(item.club || item.category || "Societa non indicata")} - ${escapeHtml(item.source_type === "url" ? "Link autorizzato" : "Upload")} ${item.size_bytes ? `- ${escapeHtml(formatBytes(item.size_bytes))}` : ""}</span>
+                <span>${escapeHtml(getLibraryTeamsLabel(item))} - ${escapeHtml(item.source_type === "url" ? "Link autorizzato" : "Upload")} ${item.size_bytes ? `- ${escapeHtml(formatBytes(item.size_bytes))}` : ""}</span>
+                <div class="library-meta">
+                    ${item.competition ? `<b>${escapeHtml(item.competition)}</b>` : ""}
+                    ${item.focus ? `<b>${escapeHtml(item.focus)}</b>` : ""}
+                    ${duration ? `<b>${escapeHtml(duration)}</b>` : ""}
+                    ${lastUsed ? `<b>Usato ${escapeHtml(lastUsed)}</b>` : ""}
+                    ${tags.map(tag => `<b>#${escapeHtml(tag)}</b>`).join("")}
+                </div>
                 <div class="library-state">
                     <b class="library-chip ${statusClass}">${escapeHtml(getAssetStatusLabel(item))}</b>
                     <div class="library-progress"><span style="width:${progress}%"></span></div>
@@ -2808,6 +2903,13 @@ async function saveCurrentVideoToLibrary(){
     form.append("title", document.getElementById("libraryTitle").value.trim() || document.getElementById("videoTitle").value.trim() || file.name);
     form.append("club_name", document.getElementById("libraryClub").value.trim() || document.getElementById("clubName").value.trim());
     form.append("category", document.getElementById("videoCategory").value || "");
+    form.append("focus", document.getElementById("videoFocus").value || "");
+    form.append("home_team", document.getElementById("homeTeamName").value.trim());
+    form.append("away_team", document.getElementById("awayTeamName").value.trim());
+    form.append("competition", document.getElementById("videoCompetition").value.trim());
+    form.append("tags", document.getElementById("videoTags").value.trim());
+    form.append("duration_seconds", String(videoPreview.duration || 0));
+    form.append("thumbnail", captureLibraryThumbnail());
     form.append("rights_confirmed", "true");
 
     try{
@@ -2845,6 +2947,11 @@ async function importVideoUrlToLibrary(){
                 title: document.getElementById("libraryUrlTitle").value.trim() || "Video importato",
                 club_name: document.getElementById("clubName").value.trim(),
                 category: document.getElementById("videoCategory").value,
+                focus: document.getElementById("videoFocus").value,
+                home_team: document.getElementById("homeTeamName").value.trim(),
+                away_team: document.getElementById("awayTeamName").value.trim(),
+                competition: document.getElementById("videoCompetition").value.trim(),
+                tags: document.getElementById("videoTags").value.trim(),
                 source_url: sourceUrl,
                 rights_confirmed: true
             })
@@ -2888,6 +2995,20 @@ async function openLibraryVideo(assetId){
 
         document.getElementById("videoTitle").value = item.title || document.getElementById("videoTitle").value;
         if(item.club) document.getElementById("clubName").value = item.club;
+        if(item.home_team) document.getElementById("homeTeamName").value = item.home_team;
+        if(item.away_team) document.getElementById("awayTeamName").value = item.away_team;
+        if(item.competition) document.getElementById("videoCompetition").value = item.competition;
+        if(item.focus) document.getElementById("videoFocus").value = item.focus;
+        if(Array.isArray(item.tags) && item.tags.length) document.getElementById("videoTags").value = item.tags.join(", ");
+        fetch(`${API_BASE}/video/library/${encodeURIComponent(item.id)}/touch`, {
+            method:"POST",
+            headers:apiAuthHeaders()
+        }).then(res => res.ok ? res.json() : null).then(data => {
+            if(data && data.ok && data.item){
+                videoLibraryItems = videoLibraryItems.map(asset => Number(asset.id) === Number(item.id) ? data.item : asset);
+                renderVideoLibrary();
+            }
+        }).catch(() => {});
     }catch(err){
         showStatus(err.message || "Non riesco ad aprire questo video.", "err");
     }

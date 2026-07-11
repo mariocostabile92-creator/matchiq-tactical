@@ -133,6 +133,11 @@ class VideoImportRequest(BaseModel):
     title: Optional[str] = ""
     club_name: Optional[str] = ""
     category: Optional[str] = ""
+    focus: Optional[str] = ""
+    home_team: Optional[str] = ""
+    away_team: Optional[str] = ""
+    competition: Optional[str] = ""
+    tags: Optional[str] = ""
     source_url: str
     rights_confirmed: bool = False
     notes: Optional[str] = ""
@@ -141,6 +146,26 @@ class VideoImportRequest(BaseModel):
 def _clean_text(value: str, limit: int = 1200) -> str:
     value = str(value or "").strip()
     return value[:limit]
+
+
+def _clean_tags(value: str, limit: int = 8) -> list:
+    items = []
+    for raw in str(value or "").replace(";", ",").split(","):
+        tag = _clean_text(raw, 28)
+        if tag and tag.lower() not in {item.lower() for item in items}:
+            items.append(tag)
+        if len(items) >= limit:
+            break
+    return items
+
+
+def _safe_thumbnail(value: str) -> str:
+    text = str(value or "").strip()
+    if not text.startswith("data:image/"):
+        return ""
+    if len(text) > 350000:
+        return ""
+    return text
 
 
 def _normalize_frame_grade(value: str, confidence: int = 0, phase: str = "") -> str:
@@ -1078,6 +1103,14 @@ def _public_video_asset(row: dict):
         "progress": max(0, min(100, int(progress or 0))),
         "job_stage": job.get("stage") or status,
         "job_error": job.get("error") or "",
+        "thumbnail": metadata.get("thumbnail") or "",
+        "duration_seconds": float(metadata.get("duration_seconds") or 0),
+        "home_team": metadata.get("home_team") or "",
+        "away_team": metadata.get("away_team") or "",
+        "competition": metadata.get("competition") or "",
+        "focus": metadata.get("focus") or "",
+        "tags": metadata.get("tags") if isinstance(metadata.get("tags"), list) else [],
+        "last_used_at": metadata.get("last_used_at") or "",
         "metadata": metadata,
         "created_at": row.get("created_at") or "",
         "updated_at": row.get("updated_at") or "",
@@ -1281,6 +1314,13 @@ def upload_video_library_item(
     title: str = Form(""),
     club_name: str = Form(""),
     category: str = Form(""),
+    focus: str = Form(""),
+    home_team: str = Form(""),
+    away_team: str = Form(""),
+    competition: str = Form(""),
+    tags: str = Form(""),
+    duration_seconds: float = Form(0),
+    thumbnail: str = Form(""),
     rights_confirmed: bool = Form(False),
     file: UploadFile = File(...),
     user=Depends(require_user),
@@ -1304,6 +1344,13 @@ def upload_video_library_item(
         metadata={
             "storage": "local",
             "original_name": saved.get("file_name", ""),
+            "duration_seconds": max(0, float(duration_seconds or 0)),
+            "home_team": _clean_text(home_team, 120),
+            "away_team": _clean_text(away_team, 120),
+            "competition": _clean_text(competition, 120),
+            "focus": _clean_text(focus, 160),
+            "tags": _clean_tags(tags),
+            "thumbnail": _safe_thumbnail(thumbnail),
             "job": {
                 "status": "ready",
                 "stage": "ready",
@@ -1334,6 +1381,11 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
         metadata={
             "notes": _clean_text(data.notes, 500),
             "storage": "remote_url",
+            "home_team": _clean_text(data.home_team, 120),
+            "away_team": _clean_text(data.away_team, 120),
+            "competition": _clean_text(data.competition, 120),
+            "focus": _clean_text(data.focus, 160),
+            "tags": _clean_tags(data.tags),
             "job": {
                 "status": "ready",
                 "stage": "ready",
@@ -1344,6 +1396,23 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
     )
     asset = get_video_asset(user["id"], result["id"])
     return {"ok": True, "item": _public_video_asset(asset)}
+
+
+@router.post("/library/{asset_id}/touch")
+def touch_video_library_item(asset_id: int, user=Depends(require_user)):
+    asset = get_video_asset(user["id"], asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Video non trovato")
+    public = _public_video_asset(asset)
+    updated = update_video_asset_status(
+        user_id=user["id"],
+        asset_id=asset_id,
+        status=public.get("status") or "ready",
+        progress=public.get("progress", 100),
+        stage=public.get("job_stage") or "ready",
+        metadata_patch={"last_used_at": datetime.utcnow().isoformat()},
+    )
+    return {"ok": True, "item": _public_video_asset(updated)}
 
 
 @router.get("/library/{asset_id}/status")
