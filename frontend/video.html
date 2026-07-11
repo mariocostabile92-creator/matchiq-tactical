@@ -549,6 +549,52 @@ video{
     padding:9px 10px;
     margin-bottom:8px;
 }
+.library-card select{
+    width:100%;
+    min-height:38px;
+    border-radius:12px;
+    padding:9px 10px;
+    margin-bottom:8px;
+}
+.hub-tools{
+    display:grid;
+    grid-template-columns:1.25fr .8fr .8fr auto;
+    gap:10px;
+    align-items:end;
+    margin-top:12px;
+}
+.hub-tools label{
+    display:block;
+    color:#9db8ff;
+    font-size:11px;
+    font-weight:900;
+    margin-bottom:5px;
+}
+.hub-tools input,.hub-tools select{
+    width:100%;
+    min-height:38px;
+    border-radius:12px;
+    padding:9px 10px;
+}
+.provider-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-top:12px;
+}
+.provider-card{
+    padding:12px;
+    border-radius:14px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.10);
+}
+.provider-card.configured{
+    background:rgba(0,245,160,.08);
+    border-color:rgba(0,245,160,.45);
+}
+.provider-card strong{display:block;font-size:13px;margin-bottom:6px}
+.provider-card span{display:block;color:var(--muted);font-size:11px;line-height:1.4}
+.provider-card .archive-source{margin-top:10px}
 .library-check{
     display:flex;
     gap:8px;
@@ -1004,7 +1050,7 @@ video{
     font-weight:900;
 }
 @media(max-width:900px){
-    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid,.onboarding-list,.slide-grid,.library-grid{grid-template-columns:1fr}
+    .hero,.form-grid,.mini-grid,.plan-strip,.flow-strip,.quality-grid,.onboarding-list,.slide-grid,.library-grid,.hub-tools,.provider-grid{grid-template-columns:1fr}
     .archive-tools{grid-template-columns:1fr}
     .onboarding-head{flex-direction:column}
     .onboarding-actions{width:100%}
@@ -1076,9 +1122,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10479">Home</a>
-        <a class="btn dark" href="/coach.html?v=10479">Coach</a>
-        <a class="btn dark" href="/account.html?v=10479">Account</a>
+        <a class="btn dark" href="/index.html?v=10480">Home</a>
+        <a class="btn dark" href="/coach.html?v=10480">Coach</a>
+        <a class="btn dark" href="/account.html?v=10480">Account</a>
     </nav>
 </header>
 
@@ -1148,7 +1194,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10479">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10480">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1158,7 +1204,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10479">Scopri piano club</a>
+                    <a href="/account.html?v=10480">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1275,16 +1321,59 @@ video{
                 <div class="video-library">
                     <div class="video-library-head">
                         <div>
-                            <strong>Libreria partite online</strong>
-                            <span>Salva clip autorizzate nel tuo account o importa un link diretto pubblico. I video non finiscono nella cache PWA.</span>
+                            <strong>Video Hub MatchIQ</strong>
+                            <span>Archivio centrale per partite, allenamenti e analisi video. Apri una sessione nel Video AI senza duplicare file.</span>
                         </div>
-                        <button class="btn dark small" type="button" onclick="loadVideoLibrary()">Aggiorna</button>
+                        <button class="btn dark small" type="button" onclick="refreshVideoHub()">Aggiorna</button>
+                    </div>
+                    <div class="hub-tools">
+                        <div>
+                            <label>Cerca sessione</label>
+                            <input id="hubSearch" placeholder="Titolo, squadra, competizione, tag" oninput="renderVideoLibrary()" />
+                        </div>
+                        <div>
+                            <label>Tipo</label>
+                            <select id="hubTypeFilter" onchange="loadVideoHubSessions()">
+                                <option value="all">Tutte</option>
+                                <option value="official_match">Partite ufficiali</option>
+                                <option value="friendly_match">Amichevoli</option>
+                                <option value="training">Allenamenti</option>
+                                <option value="opponent_analysis">Analisi avversario</option>
+                                <option value="individual_analysis">Analisi individuale</option>
+                                <option value="goalkeeper">Portieri</option>
+                                <option value="youth">Settore giovanile</option>
+                                <option value="other">Altro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Archivio</label>
+                            <select id="hubArchiveFilter" onchange="loadVideoHubSessions()">
+                                <option value="active">Attive</option>
+                                <option value="archived">Archiviate</option>
+                                <option value="all">Tutte</option>
+                            </select>
+                        </div>
+                        <button class="btn small" type="button" onclick="createDraftVideoSession()">Nuova sessione</button>
                     </div>
                     <div class="library-grid">
                         <div class="library-card">
                             <strong>Salva la clip caricata</strong>
+                            <select id="librarySessionType">
+                                <option value="official_match">Partita ufficiale</option>
+                                <option value="friendly_match">Amichevole</option>
+                                <option value="training">Allenamento</option>
+                                <option value="exercise">Esercitazione</option>
+                                <option value="opponent_analysis">Analisi avversario</option>
+                                <option value="individual_analysis">Analisi individuale</option>
+                                <option value="goalkeeper">Portieri</option>
+                                <option value="youth">Settore giovanile</option>
+                                <option value="other">Altro</option>
+                            </select>
                             <input id="libraryTitle" placeholder="Titolo partita o clip" />
                             <input id="libraryClub" placeholder="Societa / squadra" />
+                            <input id="librarySeason" placeholder="Stagione, es. 2026/27" />
+                            <input id="libraryResult" placeholder="Risultato, es. 2-1" />
+                            <input id="libraryField" placeholder="Campo / impianto" />
                             <label class="library-check">
                                 <input id="libraryRights" type="checkbox" />
                                 Confermo di avere diritto a usare questo video per analisi sportiva.
@@ -1303,8 +1392,9 @@ video{
                         </div>
                     </div>
                     <div id="libraryJobStatus" class="library-job"></div>
+                    <div id="cloudProviders" class="provider-grid"></div>
                     <div id="videoLibraryList" class="library-list">
-                        <div class="archive-empty">Accedi per usare la libreria partite online.</div>
+                        <div class="archive-empty">Accedi per usare il Video Hub.</div>
                     </div>
                 </div>
                 <div id="videoShell" class="video-shell">
@@ -1495,7 +1585,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10479";
+const APP_VERSION = "10480";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1511,6 +1601,7 @@ let latestDeckSummary = "";
 let latestCoachNextClick = "";
 let cloudArchive = [];
 let videoLibraryItems = [];
+let cloudProviders = [];
 let selectedLibraryBlobUrl = "";
 let currentVideoAssetId = null;
 let tacticalMode = false;
@@ -1554,6 +1645,10 @@ const slideRejectedBox = document.getElementById("slideRejectedBox");
 const playerNameOptions = document.getElementById("playerNameOptions");
 const videoLibraryList = document.getElementById("videoLibraryList");
 const libraryJobStatus = document.getElementById("libraryJobStatus");
+const cloudProvidersBox = document.getElementById("cloudProviders");
+const hubSearch = document.getElementById("hubSearch");
+const hubTypeFilter = document.getElementById("hubTypeFilter");
+const hubArchiveFilter = document.getElementById("hubArchiveFilter");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -2771,6 +2866,40 @@ function getAssetStatusLabel(item){
     return labels[status] || "pronto";
 }
 
+function getSessionTypeLabel(item){
+    const labels = {
+        official_match: "Partita ufficiale",
+        friendly_match: "Amichevole",
+        training: "Allenamento",
+        exercise: "Esercitazione",
+        opponent_analysis: "Analisi avversario",
+        individual_analysis: "Analisi individuale",
+        goalkeeper: "Portieri",
+        youth: "Settore giovanile",
+        other: "Altro"
+    };
+    return item.type_label || labels[item.type || item.session_type] || "Sessione video";
+}
+
+function videoHubMatchesSearch(item){
+    const query = String(hubSearch ? hubSearch.value : "").trim().toLowerCase();
+    if(!query) return true;
+    const haystack = [
+        item.title,
+        item.club,
+        item.team,
+        item.home_team,
+        item.away_team,
+        item.opponent,
+        item.competition,
+        item.season,
+        item.result,
+        item.notes,
+        ...(Array.isArray(item.tags) ? item.tags : [])
+    ].join(" ").toLowerCase();
+    return haystack.includes(query);
+}
+
 function getAssetStatusClass(item){
     const status = String(item.status || "ready").toLowerCase();
     if(status === "error") return "error";
@@ -2781,28 +2910,34 @@ function getAssetStatusClass(item){
 function renderVideoLibrary(){
     if(!videoLibraryList) return;
     if(!getAuthToken()){
-        videoLibraryList.innerHTML = `<div class="archive-empty">Accedi per salvare e riaprire le partite online.</div>`;
+        videoLibraryList.innerHTML = `<div class="archive-empty">Accedi per salvare e riaprire le sessioni video.</div>`;
         return;
     }
-    if(!videoLibraryItems.length){
-        videoLibraryList.innerHTML = `<div class="archive-empty">Nessuna partita salvata. Carica una clip o importa un link autorizzato.</div>`;
+    const visibleItems = videoLibraryItems.filter(videoHubMatchesSearch);
+    if(!visibleItems.length){
+        videoLibraryList.innerHTML = `<div class="archive-empty">${videoLibraryItems.length ? "Nessuna sessione corrisponde alla ricerca." : "Nessuna sessione salvata. Carica una clip, importa un link autorizzato o crea una sessione."}</div>`;
         return;
     }
-    videoLibraryList.innerHTML = videoLibraryItems.map(item => {
+    videoLibraryList.innerHTML = visibleItems.map(item => {
         const progress = getAssetProgress(item);
         const statusClass = getAssetStatusClass(item);
         const disabled = String(item.status || "ready").toLowerCase() === "error" ? "disabled" : "";
         const tags = getLibraryTags(item);
         const duration = formatDurationLabel(item.duration_seconds);
         const lastUsed = formatDateLabel(item.last_used_at);
+        const teamLine = getLibraryTeamsLabel(item);
+        const sourceProvider = item.source_provider || item.source_type || "matchiq";
         return `
         <div class="library-item">
             ${item.thumbnail ? `<img class="library-thumb" src="${escapeHtml(item.thumbnail)}" alt="Anteprima ${escapeHtml(item.title || "video")}">` : `<div class="library-thumb placeholder">Video</div>`}
             <div>
                 <strong>${escapeHtml(item.title || "Partita MatchIQ")}</strong>
-                <span>${escapeHtml(getLibraryTeamsLabel(item))} - ${escapeHtml(item.source_type === "url" ? "Link autorizzato" : "Upload")} ${item.size_bytes ? `- ${escapeHtml(formatBytes(item.size_bytes))}` : ""}</span>
+                <span>${escapeHtml(teamLine)} - ${escapeHtml(getSessionTypeLabel(item))} - ${escapeHtml(sourceProvider)} ${item.size_bytes ? `- ${escapeHtml(formatBytes(item.size_bytes))}` : ""}</span>
                 <div class="library-meta">
                     ${item.competition ? `<b>${escapeHtml(item.competition)}</b>` : ""}
+                    ${item.season ? `<b>${escapeHtml(item.season)}</b>` : ""}
+                    ${item.result ? `<b>${escapeHtml(item.result)}</b>` : ""}
+                    ${item.field ? `<b>${escapeHtml(item.field)}</b>` : ""}
                     ${item.focus ? `<b>${escapeHtml(item.focus)}</b>` : ""}
                     ${duration ? `<b>${escapeHtml(duration)}</b>` : ""}
                     ${lastUsed ? `<b>Usato ${escapeHtml(lastUsed)}</b>` : ""}
@@ -2815,11 +2950,32 @@ function renderVideoLibrary(){
                 </div>
             </div>
             <div class="library-actions">
-                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})" ${disabled}>Apri</button>
+                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})" ${disabled}>Apri nel Video AI</button>
+                <button class="btn dark small" type="button" onclick="prepareSessionAnalysis(${Number(item.id)})" ${disabled}>Analizza</button>
+                <button class="btn dark small" type="button" onclick="archiveVideoSession(${Number(item.id)}, true)">Archivia</button>
                 <button class="btn red small" type="button" onclick="deleteLibraryVideo(${Number(item.id)})">Elimina</button>
             </div>
         </div>
     `}).join("");
+}
+
+function renderCloudProviders(){
+    if(!cloudProvidersBox) return;
+    if(!getAuthToken()){
+        cloudProvidersBox.innerHTML = "";
+        return;
+    }
+    if(!cloudProviders.length){
+        cloudProvidersBox.innerHTML = `<div class="archive-empty">Provider cloud in caricamento...</div>`;
+        return;
+    }
+    cloudProvidersBox.innerHTML = cloudProviders.map(provider => `
+        <div class="provider-card ${provider.configured ? "configured" : ""}">
+            <strong>${escapeHtml(provider.name || provider.id)}</strong>
+            <span>${escapeHtml(provider.message || "")}</span>
+            <b class="archive-source ${provider.configured ? "pdf" : "missing"}">${provider.configured ? "Configurato" : "Da configurare"}</b>
+        </div>
+    `).join("");
 }
 
 function uploadLibraryVideoWithProgress(form){
@@ -2865,7 +3021,13 @@ async function loadVideoLibrary(){
         return;
     }
     try{
-        const res = await fetch(`${API_BASE}/video/library`, {headers:apiAuthHeaders()});
+        const params = new URLSearchParams({
+            type: hubTypeFilter ? hubTypeFilter.value : "all",
+            archive_state: hubArchiveFilter ? hubArchiveFilter.value : "active",
+            limit: "80",
+            offset: "0"
+        });
+        const res = await fetch(`${API_BASE}/video/hub/sessions?${params.toString()}`, {headers:apiAuthHeaders()});
         const data = await res.json();
         if(res.status === 401){
             clearAuthToken();
@@ -2880,6 +3042,68 @@ async function loadVideoLibrary(){
     }catch(err){
         renderVideoLibrary();
         showStatus(err.message || "Non riesco a caricare la libreria video.", "warn");
+    }
+}
+
+async function loadVideoHubSessions(){
+    await loadVideoLibrary();
+}
+
+async function loadCloudProviders(){
+    if(!getAuthToken()){
+        cloudProviders = [];
+        renderCloudProviders();
+        return;
+    }
+    try{
+        const res = await fetch(`${API_BASE}/video/hub/providers`, {headers:apiAuthHeaders()});
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Provider cloud non disponibili"));
+        cloudProviders = data.providers || [];
+        renderCloudProviders();
+    }catch(err){
+        cloudProviders = [];
+        renderCloudProviders();
+    }
+}
+
+async function refreshVideoHub(){
+    await Promise.all([loadVideoLibrary(), loadCloudProviders()]);
+}
+
+async function createDraftVideoSession(){
+    if(!getAuthToken()){
+        showStatus("Accedi per creare una sessione video.", "warn");
+        return;
+    }
+    try{
+        const title = document.getElementById("libraryTitle").value.trim() || document.getElementById("videoTitle").value.trim() || "Nuova sessione video";
+        const res = await fetch(`${API_BASE}/video/hub/sessions`, {
+            method:"POST",
+            headers:apiHeaders(),
+            body:JSON.stringify({
+                title,
+                session_type: document.getElementById("librarySessionType").value || "official_match",
+                season: document.getElementById("librarySeason").value.trim(),
+                team: document.getElementById("homeTeamName").value.trim(),
+                home_team: document.getElementById("homeTeamName").value.trim(),
+                away_team: document.getElementById("awayTeamName").value.trim(),
+                opponent: document.getElementById("awayTeamName").value.trim(),
+                competition: document.getElementById("videoCompetition").value.trim(),
+                category: document.getElementById("videoCategory").value,
+                result: document.getElementById("libraryResult").value.trim(),
+                field: document.getElementById("libraryField").value.trim(),
+                notes: document.getElementById("videoNotes").value.trim(),
+                tags: document.getElementById("videoTags").value.trim().split(",").map(tag => tag.trim()).filter(Boolean),
+                rights_confirmed: false
+            })
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Sessione non creata"));
+        await loadVideoLibrary();
+        showStatus("Sessione Video Hub creata. Puoi caricare il video o aprirla per preparare l'analisi.", "ok");
+    }catch(err){
+        showStatus(err.message || "Sessione non creata.", "err");
     }
 }
 
@@ -2904,9 +3128,15 @@ async function saveCurrentVideoToLibrary(){
     form.append("club_name", document.getElementById("libraryClub").value.trim() || document.getElementById("clubName").value.trim());
     form.append("category", document.getElementById("videoCategory").value || "");
     form.append("focus", document.getElementById("videoFocus").value || "");
+    form.append("session_type", document.getElementById("librarySessionType").value || "official_match");
+    form.append("season", document.getElementById("librarySeason").value.trim());
+    form.append("session_date", new Date().toISOString().slice(0, 10));
     form.append("home_team", document.getElementById("homeTeamName").value.trim());
     form.append("away_team", document.getElementById("awayTeamName").value.trim());
+    form.append("opponent", document.getElementById("awayTeamName").value.trim());
     form.append("competition", document.getElementById("videoCompetition").value.trim());
+    form.append("result", document.getElementById("libraryResult").value.trim());
+    form.append("field", document.getElementById("libraryField").value.trim());
     form.append("tags", document.getElementById("videoTags").value.trim());
     form.append("duration_seconds", String(videoPreview.duration || 0));
     form.append("thumbnail", captureLibraryThumbnail());
@@ -2979,6 +3209,13 @@ async function openLibraryVideo(assetId){
         currentVideoAssetId = Number(item.id);
         videoInput.value = "";
 
+        if(item.source_type === "session" && !item.source_url){
+            resetVideoWorkspace("Sessione aperta. Carica una clip o collega un video per analizzarla.");
+            prefillVideoFormFromSession(item);
+            await touchVideoHubSession(item.id);
+            return;
+        }
+
         if(item.source_type === "url"){
             videoPreview.crossOrigin = "anonymous";
             videoPreview.src = item.source_url;
@@ -2993,24 +3230,64 @@ async function openLibraryVideo(assetId){
             resetVideoWorkspace("Video dalla libreria aperto. Ora estrai i fotogrammi.");
         }
 
-        document.getElementById("videoTitle").value = item.title || document.getElementById("videoTitle").value;
-        if(item.club) document.getElementById("clubName").value = item.club;
-        if(item.home_team) document.getElementById("homeTeamName").value = item.home_team;
-        if(item.away_team) document.getElementById("awayTeamName").value = item.away_team;
-        if(item.competition) document.getElementById("videoCompetition").value = item.competition;
-        if(item.focus) document.getElementById("videoFocus").value = item.focus;
-        if(Array.isArray(item.tags) && item.tags.length) document.getElementById("videoTags").value = item.tags.join(", ");
-        fetch(`${API_BASE}/video/library/${encodeURIComponent(item.id)}/touch`, {
-            method:"POST",
-            headers:apiAuthHeaders()
-        }).then(res => res.ok ? res.json() : null).then(data => {
-            if(data && data.ok && data.item){
-                videoLibraryItems = videoLibraryItems.map(asset => Number(asset.id) === Number(item.id) ? data.item : asset);
-                renderVideoLibrary();
-            }
-        }).catch(() => {});
+        prefillVideoFormFromSession(item);
+        await touchVideoHubSession(item.id);
     }catch(err){
         showStatus(err.message || "Non riesco ad aprire questo video.", "err");
+    }
+}
+
+function prefillVideoFormFromSession(item){
+    document.getElementById("videoTitle").value = item.title || document.getElementById("videoTitle").value;
+    if(item.club) document.getElementById("clubName").value = item.club;
+    if(item.home_team) document.getElementById("homeTeamName").value = item.home_team;
+    if(item.away_team) document.getElementById("awayTeamName").value = item.away_team;
+    if(item.competition) document.getElementById("videoCompetition").value = item.competition;
+    if(item.category) document.getElementById("videoCategory").value = item.category;
+    if(item.focus) document.getElementById("videoFocus").value = item.focus;
+    if(item.season) document.getElementById("librarySeason").value = item.season;
+    if(item.result) document.getElementById("libraryResult").value = item.result;
+    if(item.field) document.getElementById("libraryField").value = item.field;
+    if(item.session_type || item.type) document.getElementById("librarySessionType").value = item.session_type || item.type;
+    if(Array.isArray(item.tags) && item.tags.length) document.getElementById("videoTags").value = item.tags.join(", ");
+}
+
+async function touchVideoHubSession(assetId){
+    try{
+        const res = await fetch(`${API_BASE}/video/hub/sessions/${encodeURIComponent(assetId)}/open`, {
+            method:"POST",
+            headers:apiAuthHeaders()
+        });
+        const data = await res.json();
+        if(data && data.ok && data.item){
+            videoLibraryItems = videoLibraryItems.map(asset => Number(asset.id) === Number(assetId) ? data.item : asset);
+            renderVideoLibrary();
+        }
+    }catch(err){}
+}
+
+async function prepareSessionAnalysis(assetId){
+    const item = videoLibraryItems.find(asset => Number(asset.id) === Number(assetId));
+    if(!item) return;
+    prefillVideoFormFromSession(item);
+    await openLibraryVideo(assetId);
+    showStatus("Sessione pronta: scegli focus, estrai frame e genera il report.", "ok");
+}
+
+async function archiveVideoSession(assetId, archived){
+    if(!getAuthToken()) return;
+    try{
+        const res = await fetch(`${API_BASE}/video/hub/sessions/${encodeURIComponent(assetId)}/archive`, {
+            method:"POST",
+            headers:apiHeaders(),
+            body:JSON.stringify({archived: Boolean(archived)})
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Archiviazione non riuscita"));
+        await loadVideoLibrary();
+        showStatus(archived ? "Sessione archiviata." : "Sessione ripristinata.", "ok");
+    }catch(err){
+        showStatus(err.message || "Archiviazione non riuscita.", "err");
     }
 }
 
@@ -3767,7 +4044,7 @@ function downloadBase64Pdf(pdfBase64, rawTitle){
 
 renderArchive();
 loadCloudArchive();
-loadVideoLibrary();
+refreshVideoHub();
 refreshPlayerNameOptions();
 
 if("scrollRestoration" in history){
