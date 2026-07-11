@@ -39,6 +39,15 @@ from app.services.video_library import (
     storage_descriptor,
     validate_import_url,
 )
+from app.services.cloud_providers import get_cloud_provider_status, list_cloud_providers
+from app.services.video_hub import (
+    archive_video_session,
+    create_video_session,
+    list_video_sessions,
+    patch_video_session,
+    public_video_session,
+    touch_video_session,
+)
 from app.services.video_taxonomy import validate_selection_result
 from usage_guard import get_optional_user, require_user
 
@@ -148,6 +157,37 @@ class VideoImportRequest(BaseModel):
     source_url: str
     rights_confirmed: bool = False
     notes: Optional[str] = ""
+
+
+class VideoSessionRequest(BaseModel):
+    title: Optional[str] = ""
+    session_type: Optional[str] = "official_match"
+    season: Optional[str] = ""
+    session_date: Optional[str] = ""
+    team: Optional[str] = ""
+    home_team: Optional[str] = ""
+    away_team: Optional[str] = ""
+    opponent: Optional[str] = ""
+    competition: Optional[str] = ""
+    category: Optional[str] = ""
+    result: Optional[str] = ""
+    field: Optional[str] = ""
+    duration_seconds: Optional[float] = 0
+    source_type: Optional[str] = "session"
+    source_provider: Optional[str] = "matchiq"
+    source_url: Optional[str] = ""
+    external_id: Optional[str] = ""
+    original_name: Optional[str] = ""
+    storage_key: Optional[str] = ""
+    format: Optional[str] = ""
+    mime_type: Optional[str] = ""
+    size_bytes: Optional[int] = 0
+    thumbnail: Optional[str] = ""
+    notes: Optional[str] = ""
+    tags: Optional[list] = Field(default_factory=list)
+    rights_confirmed: Optional[bool] = False
+    status: Optional[str] = ""
+    archive_state: Optional[str] = "active"
 
 
 def _clean_text(value: str, limit: int = 1200) -> str:
@@ -1100,7 +1140,15 @@ def _public_video_asset(row: dict):
         "title": row.get("title") or row.get("file_name") or "Partita MatchIQ",
         "club": row.get("club_name") or "",
         "category": row.get("category") or "",
+        "session_type": metadata.get("session_type") or metadata.get("type") or "official_match",
+        "session_date": metadata.get("session_date") or metadata.get("date") or "",
+        "season": metadata.get("season") or "",
+        "team": metadata.get("team") or metadata.get("home_team") or "",
+        "opponent": metadata.get("opponent") or metadata.get("away_team") or "",
+        "result": metadata.get("result") or "",
+        "field": metadata.get("field") or metadata.get("field_name") or "",
         "source_type": row.get("source_type") or "upload",
+        "source_provider": metadata.get("source_provider") or metadata.get("provider") or metadata.get("storage") or "matchiq",
         "source_url": row.get("source_url") or "",
         "file_name": row.get("file_name") or "",
         "mime_type": row.get("mime_type") or "",
@@ -1117,6 +1165,9 @@ def _public_video_asset(row: dict):
         "competition": metadata.get("competition") or "",
         "focus": metadata.get("focus") or "",
         "tags": metadata.get("tags") if isinstance(metadata.get("tags"), list) else [],
+        "notes": metadata.get("notes") or "",
+        "archive_state": metadata.get("archive_state") or "active",
+        "is_archived": (metadata.get("archive_state") or "active") == "archived" or status == "archived",
         "last_used_at": metadata.get("last_used_at") or "",
         "metadata": metadata,
         "created_at": row.get("created_at") or "",
@@ -1174,6 +1225,94 @@ def _require_video_library_capacity(user: dict) -> dict:
             },
         )
     return usage
+
+
+@router.get("/hub/sessions")
+def list_video_hub_sessions(
+    search: str = "",
+    type: str = "all",
+    status: str = "all",
+    provider: str = "all",
+    archive_state: str = "active",
+    limit: int = 40,
+    offset: int = 0,
+    user=Depends(require_user),
+):
+    return {
+        "ok": True,
+        **list_video_sessions(user["id"], {
+            "search": search,
+            "type": type,
+            "status": status,
+            "provider": provider,
+            "archive_state": archive_state,
+            "limit": limit,
+            "offset": offset,
+        }),
+    }
+
+
+@router.post("/hub/sessions")
+def create_video_hub_session(data: VideoSessionRequest, user=Depends(require_user)):
+    item = create_video_session(user["id"], data.dict())
+    return {"ok": True, "item": item}
+
+
+@router.get("/hub/sessions/{asset_id}")
+def get_video_hub_session(asset_id: int, user=Depends(require_user)):
+    asset = get_video_asset(user["id"], asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Sessione video non trovata")
+    return {"ok": True, "item": public_video_session(asset)}
+
+
+@router.patch("/hub/sessions/{asset_id}")
+def update_video_hub_session(asset_id: int, data: VideoSessionRequest, user=Depends(require_user)):
+    item = patch_video_session(user["id"], asset_id, data.dict(exclude_unset=True))
+    if not item:
+        raise HTTPException(status_code=404, detail="Sessione video non trovata")
+    return {"ok": True, "item": item}
+
+
+@router.post("/hub/sessions/{asset_id}/archive")
+def archive_video_hub_session(asset_id: int, data: dict = None, user=Depends(require_user)):
+    archived = bool((data or {}).get("archived", True))
+    item = archive_video_session(user["id"], asset_id, archived=archived)
+    if not item:
+        raise HTTPException(status_code=404, detail="Sessione video non trovata")
+    return {"ok": True, "item": item}
+
+
+@router.post("/hub/sessions/{asset_id}/open")
+def open_video_hub_session(asset_id: int, user=Depends(require_user)):
+    item = touch_video_session(user["id"], asset_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Sessione video non trovata")
+    return {"ok": True, "item": item, "open_url": f"/video.html?session={asset_id}"}
+
+
+@router.get("/hub/providers")
+def list_video_hub_providers(user=Depends(require_user)):
+    return {"ok": True, "providers": list_cloud_providers()}
+
+
+@router.get("/hub/providers/{provider_id}/status")
+def get_video_hub_provider_status(provider_id: str, user=Depends(require_user)):
+    return {"ok": True, "provider": get_cloud_provider_status(provider_id)}
+
+
+@router.post("/hub/providers/{provider_id}/import")
+def import_video_from_hub_provider(provider_id: str, data: dict = None, user=Depends(require_user)):
+    provider = get_cloud_provider_status(provider_id)
+    if not provider.get("configured"):
+        raise HTTPException(
+            status_code=501,
+            detail="Provider cloud non configurato. Nessun import automatico e nessuna connessione finta.",
+        )
+    raise HTTPException(
+        status_code=501,
+        detail="Import cloud autorizzato non ancora attivo: manca il flusso OAuth sicuro per questo provider.",
+    )
 
 
 @router.post("/analyze")
@@ -1341,9 +1480,15 @@ def upload_video_library_item(
     club_name: str = Form(""),
     category: str = Form(""),
     focus: str = Form(""),
+    session_type: str = Form("official_match"),
+    season: str = Form(""),
+    session_date: str = Form(""),
     home_team: str = Form(""),
     away_team: str = Form(""),
+    opponent: str = Form(""),
     competition: str = Form(""),
+    result: str = Form(""),
+    field: str = Form(""),
     tags: str = Form(""),
     duration_seconds: float = Form(0),
     thumbnail: str = Form(""),
@@ -1371,10 +1516,19 @@ def upload_video_library_item(
         metadata={
             **storage_descriptor(saved),
             "original_name": saved.get("file_name", ""),
+            "session_type": _clean_text(session_type, 80) or "official_match",
+            "season": _clean_text(season, 40),
+            "session_date": _clean_text(session_date, 40),
+            "team": _clean_text(home_team, 120),
             "duration_seconds": max(0, float(duration_seconds or 0)),
             "home_team": _clean_text(home_team, 120),
             "away_team": _clean_text(away_team, 120),
+            "opponent": _clean_text(opponent or away_team, 120),
             "competition": _clean_text(competition, 120),
+            "result": _clean_text(result, 40),
+            "field": _clean_text(field, 120),
+            "source_provider": "matchiq",
+            "archive_state": "active",
             "focus": _clean_text(focus, 160),
             "tags": _clean_tags(tags),
             "thumbnail": _safe_thumbnail(thumbnail),
@@ -1412,6 +1566,11 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
         metadata={
             "notes": _clean_text(data.notes, 500),
             "storage": "remote_url",
+            "session_type": "official_match",
+            "team": _clean_text(data.home_team, 120),
+            "opponent": _clean_text(data.away_team, 120),
+            "source_provider": "authorized_url",
+            "archive_state": "active",
             "import_check": {
                 "content_type": import_info.get("content_type", ""),
                 "size_bytes": int(import_info.get("size_bytes") or 0),
