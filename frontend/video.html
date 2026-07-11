@@ -558,7 +558,7 @@ video{
 }
 .hub-tools{
     display:grid;
-    grid-template-columns:1.25fr .8fr .8fr auto;
+    grid-template-columns:1.25fr .8fr .8fr .8fr;
     gap:10px;
     align-items:end;
     margin-top:12px;
@@ -576,6 +576,22 @@ video{
     border-radius:12px;
     padding:9px 10px;
 }
+.hub-filter-summary{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.045);
+    color:var(--muted);
+    font-size:12px;
+    font-weight:800;
+}
+.hub-filter-summary strong{color:white}
 .provider-grid{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -1210,9 +1226,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10483">Home</a>
-        <a class="btn dark" href="/coach.html?v=10483">Coach</a>
-        <a class="btn dark" href="/account.html?v=10483">Account</a>
+        <a class="btn dark" href="/index.html?v=10484">Home</a>
+        <a class="btn dark" href="/coach.html?v=10484">Coach</a>
+        <a class="btn dark" href="/account.html?v=10484">Account</a>
     </nav>
 </header>
 
@@ -1282,7 +1298,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10483">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10484">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1292,7 +1308,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10483">Scopri piano club</a>
+                    <a href="/account.html?v=10484">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1417,7 +1433,19 @@ video{
                     <div class="hub-tools">
                         <div>
                             <label>Cerca sessione</label>
-                            <input id="hubSearch" placeholder="Titolo, squadra, competizione, tag" oninput="renderVideoLibrary()" />
+                            <input id="hubSearch" placeholder="Titolo, squadra, competizione, tag" oninput="scheduleVideoHubSearch()" />
+                        </div>
+                        <div>
+                            <label>Squadra</label>
+                            <input id="hubTeamFilter" placeholder="Casa, trasferta, avversario" oninput="scheduleVideoHubSearch()" />
+                        </div>
+                        <div>
+                            <label>Stagione</label>
+                            <input id="hubSeasonFilter" placeholder="2026/27" oninput="scheduleVideoHubSearch()" />
+                        </div>
+                        <div>
+                            <label>Competizione</label>
+                            <input id="hubCompetitionFilter" placeholder="Campionato, torneo" oninput="scheduleVideoHubSearch()" />
                         </div>
                         <div>
                             <label>Tipo</label>
@@ -1445,6 +1473,23 @@ video{
                             </select>
                         </div>
                         <div>
+                            <label>Focus</label>
+                            <input id="hubFocusFilter" placeholder="Pressing, palle inattive" oninput="scheduleVideoHubSearch()" />
+                        </div>
+                        <div>
+                            <label>Tag</label>
+                            <input id="hubTagFilter" placeholder="#corner, costruzione" oninput="scheduleVideoHubSearch()" />
+                        </div>
+                        <div>
+                            <label>Sorgente</label>
+                            <select id="hubProviderFilter" onchange="loadVideoHubSessions()">
+                                <option value="all">Tutte</option>
+                                <option value="matchiq">MatchIQ upload</option>
+                                <option value="authorized_url">Link autorizzato</option>
+                                <option value="session">Sessione</option>
+                            </select>
+                        </div>
+                        <div>
                             <label>Archivio</label>
                             <select id="hubArchiveFilter" onchange="loadVideoHubSessions()">
                                 <option value="active">Attive</option>
@@ -1453,6 +1498,11 @@ video{
                             </select>
                         </div>
                         <button class="btn small" type="button" onclick="createDraftVideoSession()">Nuova sessione</button>
+                        <button class="btn dark small" type="button" onclick="clearHubFilters()">Pulisci filtri</button>
+                    </div>
+                    <div id="hubFilterSummary" class="hub-filter-summary">
+                        <span>Archivio pronto.</span>
+                        <strong>0 sessioni</strong>
                     </div>
                     <div class="library-grid">
                         <div class="library-card">
@@ -1773,7 +1823,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10483";
+const APP_VERSION = "10484";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1791,6 +1841,7 @@ let cloudArchive = [];
 let videoLibraryItems = [];
 let cloudProviders = [];
 let selectedLibraryBlobUrl = "";
+let hubSearchTimer = null;
 let currentVideoAssetId = null;
 let activeSessionModalId = null;
 let tacticalMode = false;
@@ -1836,9 +1887,16 @@ const videoLibraryList = document.getElementById("videoLibraryList");
 const libraryJobStatus = document.getElementById("libraryJobStatus");
 const cloudProvidersBox = document.getElementById("cloudProviders");
 const hubSearch = document.getElementById("hubSearch");
+const hubTeamFilter = document.getElementById("hubTeamFilter");
+const hubSeasonFilter = document.getElementById("hubSeasonFilter");
+const hubCompetitionFilter = document.getElementById("hubCompetitionFilter");
 const hubTypeFilter = document.getElementById("hubTypeFilter");
 const hubWorkflowFilter = document.getElementById("hubWorkflowFilter");
+const hubFocusFilter = document.getElementById("hubFocusFilter");
+const hubTagFilter = document.getElementById("hubTagFilter");
+const hubProviderFilter = document.getElementById("hubProviderFilter");
 const hubArchiveFilter = document.getElementById("hubArchiveFilter");
+const hubFilterSummary = document.getElementById("hubFilterSummary");
 const sessionModalBackdrop = document.getElementById("sessionModalBackdrop");
 const sessionDetailList = document.getElementById("sessionDetailList");
 
@@ -3088,6 +3146,35 @@ function getWorkflowClass(item){
     return "";
 }
 
+function getHubFilterValue(el){
+    return el ? String(el.value || "").trim() : "";
+}
+
+function getActiveHubFilters(){
+    const filters = [
+        {label:"ricerca", value:getHubFilterValue(hubSearch)},
+        {label:"squadra", value:getHubFilterValue(hubTeamFilter)},
+        {label:"stagione", value:getHubFilterValue(hubSeasonFilter)},
+        {label:"competizione", value:getHubFilterValue(hubCompetitionFilter)},
+        {label:"tipo", value:getHubFilterValue(hubTypeFilter), skip:"all"},
+        {label:"stato", value:getHubFilterValue(hubWorkflowFilter), skip:"all"},
+        {label:"focus", value:getHubFilterValue(hubFocusFilter)},
+        {label:"tag", value:getHubFilterValue(hubTagFilter)},
+        {label:"sorgente", value:getHubFilterValue(hubProviderFilter), skip:"all"},
+        {label:"archivio", value:getHubFilterValue(hubArchiveFilter), skip:"active"}
+    ];
+    return filters.filter(item => item.value && item.value !== item.skip);
+}
+
+function updateHubFilterSummary(visibleCount, totalCount){
+    if(!hubFilterSummary) return;
+    const active = getActiveHubFilters();
+    const text = active.length
+        ? `Filtri attivi: ${active.map(item => `${item.label} ${item.value}`).join(" / ")}`
+        : "Archivio pronto. Usa i filtri per trovare subito la sessione giusta.";
+    hubFilterSummary.innerHTML = `<span>${escapeHtml(text)}</span><strong>${Number(visibleCount) || 0} di ${Number(totalCount) || 0} sessioni</strong>`;
+}
+
 function getSessionTypeLabel(item){
     const labels = {
         official_match: "Partita ufficiale",
@@ -3135,13 +3222,16 @@ function renderVideoLibrary(){
     if(!videoLibraryList) return;
     if(!getAuthToken()){
         videoLibraryList.innerHTML = `<div class="archive-empty">Accedi per salvare e riaprire le sessioni video.</div>`;
+        updateHubFilterSummary(0, 0);
         return;
     }
     const visibleItems = videoLibraryItems.filter(videoHubMatchesSearch);
     if(!visibleItems.length){
         videoLibraryList.innerHTML = `<div class="archive-empty">${videoLibraryItems.length ? "Nessuna sessione corrisponde alla ricerca." : "Nessuna sessione salvata. Carica una clip, importa un link autorizzato o crea una sessione."}</div>`;
+        updateHubFilterSummary(0, videoLibraryItems.length);
         return;
     }
+    updateHubFilterSummary(visibleItems.length, videoLibraryItems.length);
     videoLibraryList.innerHTML = visibleItems.map(item => {
         const progress = getAssetProgress(item);
         const statusClass = getAssetStatusClass(item);
@@ -3383,8 +3473,15 @@ async function loadVideoLibrary(){
     }
     try{
         const params = new URLSearchParams({
+            search: hubSearch ? hubSearch.value.trim() : "",
             type: hubTypeFilter ? hubTypeFilter.value : "all",
             workflow_state: hubWorkflowFilter ? hubWorkflowFilter.value : "all",
+            team: hubTeamFilter ? hubTeamFilter.value.trim() : "",
+            season: hubSeasonFilter ? hubSeasonFilter.value.trim() : "",
+            competition: hubCompetitionFilter ? hubCompetitionFilter.value.trim() : "",
+            focus: hubFocusFilter ? hubFocusFilter.value.trim() : "",
+            tag: hubTagFilter ? hubTagFilter.value.trim() : "",
+            provider: hubProviderFilter ? hubProviderFilter.value : "all",
             archive_state: hubArchiveFilter ? hubArchiveFilter.value : "active",
             limit: "80",
             offset: "0"
@@ -3409,6 +3506,25 @@ async function loadVideoLibrary(){
 
 async function loadVideoHubSessions(){
     await loadVideoLibrary();
+}
+
+function scheduleVideoHubSearch(){
+    renderVideoLibrary();
+    if(hubSearchTimer) clearTimeout(hubSearchTimer);
+    hubSearchTimer = setTimeout(() => {
+        loadVideoHubSessions();
+    }, 350);
+}
+
+function clearHubFilters(){
+    [hubSearch, hubTeamFilter, hubSeasonFilter, hubCompetitionFilter, hubFocusFilter, hubTagFilter].forEach(el => {
+        if(el) el.value = "";
+    });
+    if(hubTypeFilter) hubTypeFilter.value = "all";
+    if(hubWorkflowFilter) hubWorkflowFilter.value = "all";
+    if(hubProviderFilter) hubProviderFilter.value = "all";
+    if(hubArchiveFilter) hubArchiveFilter.value = "active";
+    loadVideoHubSessions();
 }
 
 async function loadCloudProviders(){

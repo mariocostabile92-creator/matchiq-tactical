@@ -294,6 +294,11 @@ def list_video_sessions(user_id: int, filters: dict) -> Dict[str, Any]:
     workflow_filter = _clean_text(filters.get("workflow_state") or filters.get("work_state"), 40).lower()
     provider_filter = _clean_text(filters.get("provider"), 80).lower()
     archive_filter = _clean_text(filters.get("archive_state") or "active", 40).lower()
+    team_filter = _clean_text(filters.get("team"), 120).lower()
+    season_filter = _clean_text(filters.get("season"), 40).lower()
+    competition_filter = _clean_text(filters.get("competition"), 120).lower()
+    focus_filter = _clean_text(filters.get("focus"), 160).lower()
+    tag_filter = _clean_text(filters.get("tag"), 60).lower().lstrip("#")
 
     rows = get_video_assets(user_id, limit=500)
     sessions = [public_video_session(row) for row in rows]
@@ -307,11 +312,27 @@ def list_video_sessions(user_id: int, filters: dict) -> Dict[str, Any]:
             return False
         if workflow_filter and workflow_filter != "all" and session.get("workflow_state") != workflow_filter:
             return False
-        if provider_filter and provider_filter != "all" and str(session.get("source_provider") or "").lower() != provider_filter:
+        if provider_filter and provider_filter != "all":
+            provider_text = " ".join(str(session.get(key) or "") for key in ("source_provider", "source_type")).lower()
+            if provider_filter not in provider_text:
+                return False
+        if team_filter:
+            team_text = " ".join(str(session.get(key) or "") for key in ("team", "home_team", "away_team", "opponent")).lower()
+            if team_filter not in team_text:
+                return False
+        if season_filter and season_filter not in str(session.get("season") or "").lower():
             return False
+        if competition_filter and competition_filter not in str(session.get("competition") or "").lower():
+            return False
+        if focus_filter and focus_filter not in str(session.get("focus") or "").lower():
+            return False
+        if tag_filter:
+            tag_text = " ".join(session.get("tags") or []).lower()
+            if tag_filter not in tag_text:
+                return False
         if search:
             haystack = " ".join(str(session.get(key) or "") for key in (
-                "title", "team", "home_team", "away_team", "opponent", "competition", "season", "notes", "category", "result"
+                "title", "team", "home_team", "away_team", "opponent", "competition", "season", "notes", "category", "result", "focus", "field", "workflow_label", "source_provider"
             ))
             haystack = f"{haystack} {' '.join(session.get('tags') or [])}".lower()
             if search not in haystack:
