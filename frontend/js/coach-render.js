@@ -668,9 +668,11 @@ function getCoachPhaseCopy(phase){
     const m = coachState.match;
     const title = phase === "match" ? "Match Day" : phase === "post" ? "Post-partita" : "Pre-partita";
     if(phase === "match"){
+        const periodMap = { "1T":"Primo tempo", "INT":"Intervallo", "2T":"Secondo tempo", "ET1":"Supplementare 1", "ET2":"Supplementare 2" };
+        const periodLabel = periodMap[coachState.live?.period || "1T"] || "Live";
         return {
             title,
-            text: m ? `${getTeamName("home")} - ${getTeamName("away")} | ${getGoals("home")} - ${getGoals("away")} | minuto ${getLiveMinuteLabel()}'` : "Crea una partita prima di usare la console live.",
+            text: m ? `${getTeamName("home")} - ${getTeamName("away")} | ${getGoals("home")} - ${getGoals("away")} | ${periodLabel} | minuto ${getLiveMinuteLabel()}'` : "Crea una partita prima di usare la console live.",
             action: m ? "Termina partita" : "Vai al setup",
             actionFn: m ? "finishCoachMatchDay()" : "setCoachPhase('pre')"
         };

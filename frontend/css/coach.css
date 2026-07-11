@@ -684,6 +684,36 @@ select option{
     line-height:1.35;
 }
 
+#coachPhaseMatch .coach-live-board{
+    grid-template-columns:minmax(0,1.45fr) minmax(300px,.65fr);
+    align-items:start;
+}
+
+#coachPhaseMatch .coach-live-card{
+    border-color:rgba(0,245,160,.34);
+    box-shadow:0 28px 90px rgba(0,0,0,.30),0 0 0 1px rgba(0,245,160,.04) inset;
+}
+
+#coachPhaseMatch .coach-ai-panel{
+    position:sticky;
+    top:110px;
+    max-height:calc(100vh - 130px);
+    overflow:auto;
+}
+
+#coachPhaseMatch > .panel{
+    border-color:rgba(56,169,255,.20);
+}
+
+#coachPhaseMatch .timeline{
+    max-height:360px;
+}
+
+#coachPhaseMatch .event-card:first-child{
+    border-color:rgba(24,240,139,.28);
+    background:rgba(24,240,139,.07);
+}
+
 .timeline{
     display:grid;
     gap:10px;
@@ -878,6 +908,19 @@ select option{
 
     .coach-preflight-list{
         grid-template-columns:1fr 1fr;
+    }
+
+    #coachPhaseMatch .coach-live-board{
+        grid-template-columns:1fr;
+    }
+
+    #coachPhaseMatch .coach-ai-panel{
+        position:static;
+        max-height:none;
+    }
+
+    #coachPhaseMatch .timeline{
+        max-height:300px;
     }
 
     h1{
