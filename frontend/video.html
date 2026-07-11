@@ -707,6 +707,91 @@ video{
 .library-chip.error{color:#ff8ea8;border-color:rgba(255,72,116,.35);background:rgba(255,72,116,.12)}
 .library-item .library-progress{min-width:140px;flex:1;margin-top:0}
 .library-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.session-modal-backdrop{
+    position:fixed;
+    inset:0;
+    z-index:80;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:22px;
+    background:rgba(0,4,12,.72);
+    backdrop-filter:blur(10px);
+}
+.session-modal-backdrop.show{display:flex}
+.session-modal{
+    width:min(980px,100%);
+    max-height:90vh;
+    overflow:auto;
+    border-radius:24px;
+    border:1px solid rgba(255,255,255,.14);
+    background:linear-gradient(145deg,rgba(16,27,45,.98),rgba(5,10,20,.98));
+    box-shadow:0 28px 90px rgba(0,0,0,.55);
+    padding:20px;
+}
+.session-modal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    padding-bottom:14px;
+    border-bottom:1px solid rgba(255,255,255,.10);
+}
+.session-modal-head h2{margin:6px 0 4px;font-size:24px}
+.session-modal-head span{display:block;color:var(--muted);font-size:12px;line-height:1.45}
+.session-modal-grid{
+    display:grid;
+    grid-template-columns:1.2fr .8fr;
+    gap:14px;
+    margin-top:14px;
+}
+.session-form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+}
+.session-form-grid .full{grid-column:1 / -1}
+.session-form-grid label,.session-detail-list label{
+    display:block;
+    color:#9db8ff;
+    font-size:11px;
+    font-weight:900;
+    margin-bottom:5px;
+}
+.session-form-grid input,.session-form-grid select,.session-form-grid textarea{
+    width:100%;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#07101f;
+    color:white;
+    padding:10px 11px;
+    font-weight:850;
+}
+.session-form-grid textarea{min-height:92px;resize:vertical}
+.session-detail-panel{
+    padding:14px;
+    border-radius:18px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.10);
+}
+.session-detail-list{
+    display:grid;
+    gap:10px;
+}
+.session-detail-list div{
+    padding:10px;
+    border-radius:13px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.08);
+}
+.session-detail-list strong{display:block;font-size:13px;word-break:break-word}
+.session-modal-actions{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    margin-top:16px;
+}
 .btn.small{
     min-height:34px;
     padding:8px 11px;
@@ -1070,6 +1155,7 @@ video{
     .library-item{grid-template-columns:74px 1fr}
     .library-thumb{width:74px}
     .library-actions{grid-column:1 / -1;justify-content:flex-start}
+    .session-modal-grid,.session-form-grid{grid-template-columns:1fr}
 }
 @media(max-width:560px){
     .topbar{gap:12px}
@@ -1122,9 +1208,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10481">Home</a>
-        <a class="btn dark" href="/coach.html?v=10481">Coach</a>
-        <a class="btn dark" href="/account.html?v=10481">Account</a>
+        <a class="btn dark" href="/index.html?v=10482">Home</a>
+        <a class="btn dark" href="/coach.html?v=10482">Coach</a>
+        <a class="btn dark" href="/account.html?v=10482">Account</a>
     </nav>
 </header>
 
@@ -1194,7 +1280,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10481">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10482">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1204,7 +1290,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10481">Scopri piano club</a>
+                    <a href="/account.html?v=10482">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1583,9 +1669,88 @@ video{
 
 <canvas id="captureCanvas" style="display:none"></canvas>
 
+<div id="sessionModalBackdrop" class="session-modal-backdrop" onclick="if(event.target===this) closeSessionModal()">
+    <div class="session-modal" role="dialog" aria-modal="true" aria-labelledby="sessionModalTitle">
+        <div class="session-modal-head">
+            <div>
+                <span class="badge">VIDEO HUB</span>
+                <h2 id="sessionModalTitle">Scheda sessione</h2>
+                <span id="sessionModalSubtitle">Organizza dati, stato e apertura nel Video AI.</span>
+            </div>
+            <button class="btn dark small" type="button" onclick="closeSessionModal()">Chiudi</button>
+        </div>
+        <div class="session-modal-grid">
+            <div class="session-form-grid">
+                <div class="full">
+                    <label>Titolo sessione</label>
+                    <input id="modalSessionTitle" placeholder="Es. Primo tempo ASD - Rivale" />
+                </div>
+                <div>
+                    <label>Tipo sessione</label>
+                    <select id="modalSessionType">
+                        <option value="official_match">Partita ufficiale</option>
+                        <option value="friendly_match">Amichevole</option>
+                        <option value="training">Allenamento</option>
+                        <option value="exercise">Esercitazione</option>
+                        <option value="opponent_analysis">Analisi avversario</option>
+                        <option value="individual_analysis">Analisi individuale</option>
+                        <option value="goalkeeper">Portieri</option>
+                        <option value="youth">Settore giovanile</option>
+                        <option value="other">Altro</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Stagione</label>
+                    <input id="modalSeason" placeholder="2026/27" />
+                </div>
+                <div>
+                    <label>Squadra casa</label>
+                    <input id="modalHomeTeam" placeholder="Casa" />
+                </div>
+                <div>
+                    <label>Squadra trasferta</label>
+                    <input id="modalAwayTeam" placeholder="Trasferta" />
+                </div>
+                <div>
+                    <label>Competizione</label>
+                    <input id="modalCompetition" placeholder="Campionato, torneo..." />
+                </div>
+                <div>
+                    <label>Risultato</label>
+                    <input id="modalResult" placeholder="2-1" />
+                </div>
+                <div>
+                    <label>Categoria</label>
+                    <input id="modalCategory" placeholder="Dilettanti, Juniores..." />
+                </div>
+                <div>
+                    <label>Campo</label>
+                    <input id="modalField" placeholder="Impianto / campo" />
+                </div>
+                <div class="full">
+                    <label>Tag</label>
+                    <input id="modalTags" placeholder="pressing, corner, costruzione" />
+                </div>
+                <div class="full">
+                    <label>Note sessione</label>
+                    <textarea id="modalNotes" placeholder="Obiettivo analisi, contesto gara, dettagli utili per lo staff..."></textarea>
+                </div>
+            </div>
+            <div class="session-detail-panel">
+                <div class="session-detail-list" id="sessionDetailList"></div>
+            </div>
+        </div>
+        <div class="session-modal-actions">
+            <button class="btn" type="button" onclick="openModalSessionInVideoAi()">Apri nel Video AI</button>
+            <button class="btn dark" type="button" onclick="saveSessionModal()">Salva scheda</button>
+            <button class="btn dark" type="button" onclick="archiveModalSession()">Archivia/Ripristina</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10481";
+const APP_VERSION = "10482";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1604,6 +1769,7 @@ let videoLibraryItems = [];
 let cloudProviders = [];
 let selectedLibraryBlobUrl = "";
 let currentVideoAssetId = null;
+let activeSessionModalId = null;
 let tacticalMode = false;
 let tacticalLines = [];
 let tacticalPendingPoint = null;
@@ -1649,6 +1815,8 @@ const cloudProvidersBox = document.getElementById("cloudProviders");
 const hubSearch = document.getElementById("hubSearch");
 const hubTypeFilter = document.getElementById("hubTypeFilter");
 const hubArchiveFilter = document.getElementById("hubArchiveFilter");
+const sessionModalBackdrop = document.getElementById("sessionModalBackdrop");
+const sessionDetailList = document.getElementById("sessionDetailList");
 
 function showStatus(message,type="ok"){
     const box=document.getElementById("statusBox");
@@ -2953,6 +3121,7 @@ function renderVideoLibrary(){
             <div class="library-actions">
                 <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})" ${disabled}>Apri nel Video AI</button>
                 <button class="btn dark small" type="button" onclick="prepareSessionAnalysis(${Number(item.id)})" ${disabled}>Analizza</button>
+                <button class="btn dark small" type="button" onclick="openSessionModal(${Number(item.id)})">Scheda</button>
                 <button class="btn dark small" type="button" onclick="saveSessionMetadata(${Number(item.id)})">Salva dati</button>
                 <button class="btn dark small" type="button" onclick="archiveVideoSession(${Number(item.id)}, ${isArchived ? "false" : "true"})">${isArchived ? "Ripristina" : "Archivia"}</button>
                 <button class="btn red small" type="button" onclick="deleteLibraryVideo(${Number(item.id)})">Elimina</button>
@@ -2978,6 +3147,134 @@ function renderCloudProviders(){
             <b class="archive-source ${provider.configured ? "pdf" : "missing"}">${provider.configured ? "Configurato" : "Da configurare"}</b>
         </div>
     `).join("");
+}
+
+function setInputValue(id, value){
+    const el = document.getElementById(id);
+    if(el) el.value = value || "";
+}
+
+function getInputValue(id){
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : "";
+}
+
+function getSessionModalItem(){
+    return videoLibraryItems.find(item => Number(item.id) === Number(activeSessionModalId));
+}
+
+function renderSessionDetails(item){
+    if(!sessionDetailList) return;
+    const progress = getAssetProgress(item);
+    const status = getAssetStatusLabel(item);
+    const provider = item.source_provider || item.source_type || "matchiq";
+    const size = item.size_bytes ? formatBytes(item.size_bytes) : "Non indicata";
+    const duration = item.duration_seconds ? formatDurationLabel(item.duration_seconds) : "Non indicata";
+    const updated = formatDateLabel(item.updated_at) || "Non indicato";
+    const lastUsed = formatDateLabel(item.last_used_at) || "Mai aperta";
+    const source = item.source_type === "url" ? "Link autorizzato" : item.source_type === "session" ? "Sessione senza file" : "Upload MatchIQ";
+    sessionDetailList.innerHTML = `
+        <div><label>Stato lavorazione</label><strong>${escapeHtml(status)} - ${progress}%</strong><div class="library-progress"><span style="width:${progress}%"></span></div></div>
+        <div><label>Sorgente</label><strong>${escapeHtml(source)}</strong></div>
+        <div><label>Provider</label><strong>${escapeHtml(provider)}</strong></div>
+        <div><label>File originale</label><strong>${escapeHtml(item.original_name || item.file_name || "Non indicato")}</strong></div>
+        <div><label>Formato</label><strong>${escapeHtml(item.mime_type || item.format || "Non indicato")}</strong></div>
+        <div><label>Dimensione</label><strong>${escapeHtml(size)}</strong></div>
+        <div><label>Durata</label><strong>${escapeHtml(duration)}</strong></div>
+        <div><label>Aggiornata</label><strong>${escapeHtml(updated)}</strong></div>
+        <div><label>Ultimo utilizzo</label><strong>${escapeHtml(lastUsed)}</strong></div>
+        <div><label>ID sessione</label><strong>#${Number(item.id) || "-"}</strong></div>
+    `;
+}
+
+function fillSessionModal(item){
+    activeSessionModalId = Number(item.id);
+    document.getElementById("sessionModalTitle").textContent = item.title || "Scheda sessione";
+    document.getElementById("sessionModalSubtitle").textContent = `${getLibraryTeamsLabel(item)} - ${getSessionTypeLabel(item)} - ${item.archive_state === "archived" ? "archiviata" : "attiva"}`;
+    setInputValue("modalSessionTitle", item.title || "");
+    setInputValue("modalSessionType", item.type || item.session_type || "official_match");
+    setInputValue("modalSeason", item.season || "");
+    setInputValue("modalHomeTeam", item.home_team || item.team || "");
+    setInputValue("modalAwayTeam", item.away_team || item.opponent || "");
+    setInputValue("modalCompetition", item.competition || "");
+    setInputValue("modalResult", item.result || "");
+    setInputValue("modalCategory", item.category || "");
+    setInputValue("modalField", item.field || "");
+    setInputValue("modalTags", Array.isArray(item.tags) ? item.tags.join(", ") : "");
+    setInputValue("modalNotes", item.notes || "");
+    renderSessionDetails(item);
+}
+
+async function openSessionModal(assetId){
+    if(!getAuthToken()) return;
+    try{
+        let item = videoLibraryItems.find(asset => Number(asset.id) === Number(assetId));
+        if(!item){
+            item = await loadVideoSessionById(assetId);
+        }
+        if(!item) throw new Error("Sessione non trovata");
+        fillSessionModal(item);
+        if(sessionModalBackdrop) sessionModalBackdrop.classList.add("show");
+    }catch(err){
+        showStatus(err.message || "Non riesco ad aprire la scheda sessione.", "err");
+    }
+}
+
+function closeSessionModal(){
+    if(sessionModalBackdrop) sessionModalBackdrop.classList.remove("show");
+}
+
+function collectSessionModalPayload(){
+    return {
+        title: getInputValue("modalSessionTitle") || "Sessione video MatchIQ",
+        club_name: getInputValue("modalHomeTeam"),
+        session_type: getInputValue("modalSessionType") || "official_match",
+        season: getInputValue("modalSeason"),
+        team: getInputValue("modalHomeTeam"),
+        home_team: getInputValue("modalHomeTeam"),
+        away_team: getInputValue("modalAwayTeam"),
+        opponent: getInputValue("modalAwayTeam"),
+        competition: getInputValue("modalCompetition"),
+        category: getInputValue("modalCategory"),
+        result: getInputValue("modalResult"),
+        field: getInputValue("modalField"),
+        notes: getInputValue("modalNotes"),
+        tags: getInputValue("modalTags").split(",").map(tag => tag.trim()).filter(Boolean)
+    };
+}
+
+async function saveSessionModal(){
+    if(!activeSessionModalId) return;
+    try{
+        const res = await fetch(`${API_BASE}/video/hub/sessions/${encodeURIComponent(activeSessionModalId)}`, {
+            method:"PATCH",
+            headers:apiHeaders(),
+            body:JSON.stringify(collectSessionModalPayload())
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Scheda non salvata"));
+        videoLibraryItems = videoLibraryItems.map(item => Number(item.id) === Number(activeSessionModalId) ? data.item : item);
+        fillSessionModal(data.item);
+        renderVideoLibrary();
+        showStatus("Scheda sessione salvata.", "ok");
+    }catch(err){
+        showStatus(err.message || "Scheda non salvata.", "err");
+    }
+}
+
+async function openModalSessionInVideoAi(){
+    if(!activeSessionModalId) return;
+    closeSessionModal();
+    await openLibraryVideo(activeSessionModalId);
+}
+
+async function archiveModalSession(){
+    const item = getSessionModalItem();
+    if(!item || !activeSessionModalId) return;
+    const shouldArchive = !(item.is_archived || item.archive_state === "archived");
+    await archiveVideoSession(activeSessionModalId, shouldArchive);
+    const updated = videoLibraryItems.find(asset => Number(asset.id) === Number(activeSessionModalId));
+    if(updated) fillSessionModal(updated);
 }
 
 function uploadLibraryVideoWithProgress(form){
@@ -3294,6 +3591,7 @@ async function saveSessionMetadata(assetId){
         if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Salvataggio non riuscito"));
         videoLibraryItems = videoLibraryItems.map(item => Number(item.id) === targetId ? data.item : item);
         renderVideoLibrary();
+        if(Number(activeSessionModalId) === targetId) fillSessionModal(data.item);
         showStatus("Dati sessione aggiornati nel Video Hub.", "ok");
     }catch(err){
         showStatus(err.message || "Salvataggio non riuscito.", "err");
@@ -4134,6 +4432,12 @@ if("scrollRestoration" in history){
 window.addEventListener("load", () => {
     if(!location.hash){
         window.scrollTo({top:0, left:0, behavior:"instant"});
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if(event.key === "Escape" && sessionModalBackdrop && sessionModalBackdrop.classList.contains("show")){
+        closeSessionModal();
     }
 });
 
