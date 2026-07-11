@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Video Analyst Beta</title>
+<title>MatchIQ Video AI</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
 <style>
@@ -837,6 +837,15 @@ video{
     border-radius:11px;
     font-size:12px;
 }
+.hero-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:18px;
+}
+.hero-actions .btn{
+    min-width:150px;
+}
 .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
 .mini{
     background:rgba(255,255,255,.055);
@@ -846,6 +855,25 @@ video{
 }
 .mini strong{display:block;margin-bottom:6px}
 .mini span{color:var(--muted);font-size:13px;line-height:1.45}
+.compact-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-top:9px;
+}
+.compact-tags span{
+    display:inline-flex;
+    align-items:center;
+    min-height:25px;
+    padding:5px 8px;
+    border-radius:999px;
+    color:#dfffee;
+    background:rgba(0,245,160,.10);
+    border:1px solid rgba(0,245,160,.22);
+    font-size:11px;
+    font-weight:900;
+    line-height:1.15;
+}
 .quality-grid{
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
@@ -901,7 +929,7 @@ video{
 }
 .plan-kicker.warn{
     color:#271604;
-    background:var(--yellow);
+    background:var(--gold);
 }
 .upgrade-list{
     display:grid;
@@ -921,7 +949,7 @@ video{
 }
 .flow-strip{
     display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns:repeat(4,minmax(0,1fr));
     gap:12px;
     margin-top:16px;
 }
@@ -1119,7 +1147,7 @@ video{
 }
 .ai-slide-kicker span.grade-useful{
     color:#211704;
-    background:var(--yellow);
+    background:var(--gold);
     border-color:rgba(247,183,51,.55);
 }
 .ai-slide-kicker span.grade-reject{
@@ -1178,7 +1206,7 @@ video{
     .archive-tools{grid-template-columns:1fr}
     .onboarding-head{flex-direction:column}
     .onboarding-actions{width:100%}
-    .onboarding-actions .btn{flex:1}
+    .onboarding-actions .btn,.hero-actions .btn{flex:1}
     .topbar{align-items:flex-start;flex-direction:column;padding:16px}
     .nav{width:100%}
     .nav .btn{flex:1;min-width:0}
@@ -1212,7 +1240,7 @@ video{
     .flow-step,.mini,.quality-card,.plan-card,.onboarding,.upload,.sample-report,.archive-item{border-radius:14px}
     .flow-step,.mini,.quality-card,.plan-card,.onboarding-item{padding:12px}
     .onboarding{padding:12px}
-    .onboarding-actions .btn,.actions .btn{width:100%;flex:1 1 100%}
+    .onboarding-actions .btn,.hero-actions .btn,.actions .btn{width:100%;flex:1 1 100%}
     .form-grid{gap:10px;margin-top:14px}
     input,select,textarea{border-radius:12px;padding:12px;font-size:13px}
     .video-shell{min-height:210px;border-radius:16px}
@@ -1242,94 +1270,118 @@ video{
     <div class="brand-block">
         <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
         <div>
-        <div class="brand">MatchIQ Video Analyst</div>
-        <div class="sub">Beta video report · clip brevi · PDF AI</div>
+        <div class="brand">MatchIQ Video AI</div>
+        <div class="sub">Video analysis intelligente per staff e match analyst</div>
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10486">Home</a>
-        <a class="btn dark" href="/coach.html?v=10486">Coach</a>
-        <a class="btn dark" href="/account.html?v=10486">Account</a>
+        <a class="btn dark" href="/index.html?v=10487">Home</a>
+        <a class="btn dark" href="/coach.html?v=10487">Coach</a>
+        <a class="btn dark" href="/account.html?v=10487">Account</a>
     </nav>
 </header>
 
 <main class="wrap">
     <section class="hero">
         <div class="panel">
-            <span class="badge">VIDEO REPORT BETA</span>
-            <h1>Carica una clip e genera un report tecnico PDF</h1>
+            <span class="badge">MATCHIQ VIDEO AI</span>
+            <h1>Trasforma ogni video in un'analisi tattica pronta per lo staff</h1>
             <p>
-                Carichi una clip della partita, MatchIQ estrae fotogrammi e genera un report tecnico PDF
-                con sintesi, rischi, transizioni e indicazioni per il prossimo allenamento.
+                Carica una partita, un allenamento o una clip. MatchIQ individua i momenti rilevanti,
+                organizza i frame e prepara materiale tecnico utile per analisi, riunioni e lavoro sul campo.
             </p>
+            <div class="hero-actions" aria-label="Azioni principali Video AI">
+                <button class="btn" type="button" onclick="scrollToVideoUpload()">Inizia analisi</button>
+                <button class="btn dark" type="button" onclick="loadSampleReport()">Apri esempio</button>
+            </div>
 
             <div class="flow-strip">
-                <div class="flow-step"><b>1</b><div><strong>Carica video</strong><span>Usa clip brevi, gol subiti, highlights o fasi tattiche specifiche.</span></div></div>
-                <div class="flow-step"><b>2</b><div><strong>Analisi AI</strong><span>Scegli focus, squadra osservata e stile report per guidare l'analisi.</span></div></div>
-                <div class="flow-step"><b>3</b><div><strong>PDF e archivio</strong><span>Scarica il report e ritrovalo nello storico cloud dell'account.</span></div></div>
+                <div class="flow-step"><b>1</b><div><strong>Importa una Sessione Video</strong><span>Carica una partita, un allenamento o una clip dal dispositivo, dal Video Hub o da una sorgente autorizzata.</span></div></div>
+                <div class="flow-step"><b>2</b><div><strong>MatchIQ AI analizza il video</strong><span>L'AI individua frame, momenti chiave e situazioni tattiche utili all'analisi.</span></div></div>
+                <div class="flow-step"><b>3</b><div><strong>Revisiona e completa</strong><span>Controlla i risultati, aggiungi note e seleziona il materiale davvero utile allo staff.</span></div></div>
+                <div class="flow-step"><b>4</b><div><strong>Prepara il lavoro dello staff</strong><span>Genera report, frame e materiali condivisibili a partire dall'analisi.</span></div></div>
             </div>
 
             <div class="onboarding">
                 <div class="onboarding-head">
                     <div>
-                        <strong>Come usarlo in partita</strong>
-                        <span>Parti da una clip breve: azione chiara, focus preciso e note staff rendono il PDF più utile.</span>
+                        <strong>Dal video al materiale tecnico</strong>
+                        <span>Parti da un video chiaro, definisci il focus e lascia a MatchIQ il compito di organizzare il lavoro iniziale.</span>
                     </div>
                     <div class="onboarding-actions">
                         <button class="btn dark small" type="button" onclick="loadSampleReport()">Apri esempio</button>
-                        <button class="btn small" type="button" onclick="scrollToVideoUpload()">Carica clip</button>
+                        <button class="btn small" type="button" onclick="scrollToVideoUpload()">Inizia analisi</button>
                     </div>
                 </div>
                 <div class="onboarding-list">
-                    <div class="onboarding-item"><b>1</b><strong>Scegli la clip</strong><span>Meglio 1-10 minuti o una fase specifica.</span></div>
-                    <div class="onboarding-item"><b>2</b><strong>Scrivi il focus</strong><span>Indica squadra, problema e obiettivo.</span></div>
-                    <div class="onboarding-item"><b>3</b><strong>Genera il PDF</strong><span>Controlla sintesi, rischi e allenamento.</span></div>
-                    <div class="onboarding-item"><b>4</b><strong>Recuperalo</strong><span>Ritrovi i report salvati nell'archivio.</span></div>
+                    <div class="onboarding-item"><b>1</b><strong>Scegli il video</strong><span>Partita, allenamento o fase specifica.</span></div>
+                    <div class="onboarding-item"><b>2</b><strong>Definisci il focus</strong><span>Indica squadra osservata, situazione e obiettivo.</span></div>
+                    <div class="onboarding-item"><b>3</b><strong>Revisiona l'analisi</strong><span>Controlla i frame e seleziona i risultati piu utili.</span></div>
+                    <div class="onboarding-item"><b>4</b><strong>Prepara lo staff</strong><span>Salva il lavoro e genera il report tecnico.</span></div>
                 </div>
             </div>
 
             <div class="mini-grid">
-                <div class="mini"><strong>Clip consigliate</strong><span>1-10 minuti, highlights, gol subiti, azioni offensive o fase difensiva.</span></div>
-                <div class="mini"><strong>Output</strong><span>Sintesi tattica, rischi, transizioni, consigli allenamento e PDF scaricabile.</span></div>
-                <div class="mini"><strong>Beta prudente</strong><span>Se numeri e volti non sono leggibili, il report lo segnala come limite.</span></div>
+                <div class="mini">
+                    <strong>Situazioni analizzabili</strong>
+                    <span>Usa il focus reale del prodotto per guidare la lettura del video.</span>
+                    <div class="compact-tags" aria-label="Situazioni analizzabili">
+                        <span>Costruzione dal basso</span>
+                        <span>Pressing</span>
+                        <span>Transizioni</span>
+                        <span>Calci d'angolo</span>
+                        <span>Punizioni</span>
+                        <span>Rimesse laterali</span>
+                        <span>Linee reparto</span>
+                        <span>Rest defense</span>
+                    </div>
+                </div>
+                <div class="mini">
+                    <strong>Cosa ottieni</strong>
+                    <span>Frame tattici, sintesi AI, rischi, indicazioni, report tecnico, PDF scaricabile e archivio delle analisi.</span>
+                </div>
+                <div class="mini">
+                    <strong>Analisi verificabile</strong>
+                    <span>MatchIQ propone i risultati e ne indica la pertinenza. Lo staff mantiene sempre il controllo finale sull'analisi.</span>
+                </div>
             </div>
 
             <div class="quality-grid">
                 <div class="quality-card"><b>Ripresa utile</b><span>Laterale o dall'alto, campo visibile e azione riconoscibile.</span></div>
-                <div class="quality-card"><b>Focus chiaro</b><span>Più il focus è preciso, più il PDF diventa utile per staff e allenamento.</span></div>
-                <div class="quality-card"><b>Archivio pronto</b><span>Ogni analisi resta recuperabile con report e PDF, anche dopo la partita.</span></div>
+                <div class="quality-card"><b>Focus chiaro</b><span>Piu il focus e preciso, piu l'analisi diventa utile per staff e allenamento.</span></div>
+                <div class="quality-card"><b>Video Hub</b><span>Organizza partite, allenamenti e analisi in un unico archivio. Riapri ogni Sessione Video e continua il lavoro senza ripartire da zero.</span></div>
             </div>
 
             <div class="plan-strip">
                 <div class="plan-card limited">
                     <div class="plan-kicker warn">Prova gratuita</div>
-                    <strong>Free beta</strong>
-                    <span>Perfetta per testare il flusso, con limite giornaliero e archivio iniziale.</span>
+                    <strong>Prova gratuita</strong>
+                    <span>Per scoprire il flusso.</span>
                     <div class="upgrade-list">
                         <div>1 report video al giorno</div>
-                        <div>Storico limitato</div>
+                        <div>Archivio fino a 3 analisi video</div>
                     </div>
                 </div>
                 <div class="plan-card featured">
                     <div class="plan-kicker">Consigliato</div>
                     <strong>Coach Pro</strong>
-                    <span>Per usarlo in modo continuativo con staff, partite e PDF sempre recuperabili.</span>
+                    <span>Per lo staff che lavora ogni settimana: piu analisi, piu archivio e un flusso continuo per partite e allenamenti.</span>
                     <div class="upgrade-list">
                         <div>10 report video al giorno</div>
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10486">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10487">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
-                    <div class="plan-kicker">Società</div>
+                    <div class="plan-kicker">Societa</div>
                     <strong>Club / Academy</strong>
-                    <span>Più report, storico ampio, staff e branding società.</span>
+                    <span>Per societa e settori giovanili: gestione condivisa del lavoro video e utilizzo da parte dello staff.</span>
                     <div class="upgrade-list">
-                        <div>Più squadre e più report</div>
-                        <div>Materiale pronto per staff e dirigenti</div>
+                        <div>30 report video al giorno sul piano Scout</div>
+                        <div>Archivio video fino a 200 report</div>
                     </div>
-                    <a href="/account.html?v=10486">Scopri piano club</a>
+                    <a href="/account.html?v=10487">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1396,7 +1448,7 @@ video{
                 <div class="field">
                     <label>Fotogrammi</label>
                     <select id="frameCount">
-                        <option value="4" selected>4 frame · beta economica</option>
+                        <option value="4" selected>4 frame - economica</option>
                         <option value="6">6 frame</option>
                         <option value="8">8 frame</option>
                     </select>
@@ -1845,7 +1897,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10486";
+const APP_VERSION = "10487";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];

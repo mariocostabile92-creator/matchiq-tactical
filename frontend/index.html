@@ -1585,7 +1585,7 @@ a{
   <section><div class="section-head"><div><div class="section-title">Cosa puoi fare con MatchIQ</div><div class="section-sub">Una sola webapp per desktop e telefono: lavori da PC, poi la usi come PWA direttamente al campo.</div></div></div>
     <div class="features-grid">
       <article class="feature-card"><div><div class="feature-icon">📝</div><h3>Coach Mode</h3><p>Crei la partita, registri eventi, note tattiche e pagelle. A fine gara generi un report tecnico post-partita.</p></div><div class="feature-actions"><button class="btn green" onclick="openCoach()">Apri Coach</button></div></article>
-      <article class="feature-card"><div><div class="feature-icon">🎥</div><h3>Video Analyst Beta</h3><p>Carichi una clip, MatchIQ estrae fotogrammi e genera un report tecnico PDF con AI.</p></div><div class="feature-actions"><button class="btn green" onclick="openVideo()">Apri Video AI</button></div></article>
+      <article class="feature-card"><div><div class="feature-icon">🎥</div><h3>Video AI</h3><p>Carichi una clip, MatchIQ organizza i fotogrammi e prepara materiale tecnico per staff e match analyst.</p></div><div class="feature-actions"><button class="btn green" onclick="openVideo()">Apri Video AI</button></div></article>
       <article class="feature-card"><div><div class="feature-icon">🔎</div><h3>Scout Mode</h3><p>Supporto extra per osservare giocatori, segnali live e impatto durante la gara.</p></div><div class="feature-actions"><button class="btn dark" onclick="openScoutHome()">Apri Scout</button></div></article>
       <article class="feature-card"><div><div class="feature-icon">📊</div><h3>Analisi live</h3><p>Quando ci sono partite live, leggi momentum, pressione e segnali tattici in tempo reale.</p></div><div class="feature-actions"><button class="btn" onclick="scrollToLive()">Vedi live</button></div></article>
     </div>
@@ -1672,7 +1672,7 @@ a{
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
-const APP_VERSION = "10486";
+const APP_VERSION = "10487";
 const BETA_STORAGE_KEY = "matchiq_beta_requests_v821";
 let accountPlan = {plan:"guest",label:"Guest",limits:{max_live_matches:3,scout_enabled:true,scout_preview:true,export_enabled:false,pdf_enabled:false},features:{}};
 function getAuthToken(){return localStorage.getItem("matchiq_auth_token")||sessionStorage.getItem("matchiq_auth_token")||"";}
