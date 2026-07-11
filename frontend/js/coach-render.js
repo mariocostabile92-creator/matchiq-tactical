@@ -454,9 +454,27 @@ function renderCoachPrecheck(){
     const starters = getLineup().filter(p => p.status === "Titolare").length;
     const bench = getLineup().filter(p => p.status === "Panchina").length;
     const ready = Boolean(coachState.match) && starters > 0 && filled >= 2;
+    const notesReady = Boolean(coachState.match?.preNotes || pre.observe || pre.risk);
     box.innerHTML = filled
         ? `<strong>${ready ? "Pronto per il Match Day" : `${filled}/5`}</strong><span>${ready ? `Partita creata, ${starters} titolari e ${bench} riserve inserite. Puoi avviare la console live.` : " punti pre-partita salvati nella memoria MatchIQ. Completa setup e formazione prima della gara."}</span>`
         : `<strong>0/5</strong><span>Completa la checklist prima della gara per guidare meglio l'AI.</span>`;
+
+    const checklist = document.getElementById("coachPreflightChecklist");
+    if(checklist){
+        const items = [
+            {label:"Partita", ok:Boolean(coachState.match), detail:coachState.match ? `${getTeamName("home")} vs ${getTeamName("away")}` : "Crea setup gara"},
+            {label:"Titolari", ok:starters > 0, detail:starters > 0 ? `${starters} inseriti` : "Inserisci formazione"},
+            {label:"Panchina", ok:bench > 0, detail:bench > 0 ? `${bench} riserve` : "Aggiungi riserve se disponibili"},
+            {label:"Piano", ok:filled >= 2, detail:filled >= 2 ? `${filled}/5 punti` : "Salva almeno obiettivo e rischio"},
+            {label:"Note", ok:notesReady, detail:notesReady ? "Contesto presente" : "Aggiungi note pre-gara"}
+        ];
+        checklist.innerHTML = items.map(item => `
+            <div class="coach-preflight-item ${item.ok ? "done" : ""}">
+                <strong>${item.ok ? "OK" : "Da fare"} - ${esc(item.label)}</strong>
+                <span>${esc(item.detail)}</span>
+            </div>
+        `).join("");
+    }
 }
 
 function renderTeamMemory(){
