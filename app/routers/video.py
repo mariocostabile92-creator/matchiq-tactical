@@ -1368,7 +1368,8 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
     if not data.rights_confirmed:
         raise HTTPException(status_code=400, detail="Conferma di avere diritto a usare questo link video.")
 
-    safe_url = validate_import_url(data.source_url)
+    import_info = validate_import_url(data.source_url)
+    safe_url = import_info.get("url", "")
     result = create_video_asset(
         user_id=user["id"],
         title=_clean_text(data.title, 180) or "Video importato",
@@ -1376,11 +1377,20 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
         category=_clean_text(data.category, 80),
         source_type="url",
         source_url=safe_url,
+        mime_type=import_info.get("content_type", ""),
+        size_bytes=int(import_info.get("size_bytes") or 0),
         rights_confirmed=True,
         status="ready",
         metadata={
             "notes": _clean_text(data.notes, 500),
             "storage": "remote_url",
+            "import_check": {
+                "content_type": import_info.get("content_type", ""),
+                "size_bytes": int(import_info.get("size_bytes") or 0),
+                "extension": import_info.get("extension", ""),
+                "redirects": import_info.get("redirects", [])[:4],
+                "checked_at": datetime.utcnow().isoformat(),
+            },
             "home_team": _clean_text(data.home_team, 120),
             "away_team": _clean_text(data.away_team, 120),
             "competition": _clean_text(data.competition, 120),
