@@ -1840,6 +1840,51 @@ def update_video_asset_status(
     return get_video_asset(user_id, asset_id)
 
 
+def update_video_asset_details(
+    user_id: int,
+    asset_id: int,
+    title: str = "",
+    club_name: str = "",
+    category: str = "",
+    metadata: dict = None,
+):
+    asset = get_video_asset(user_id, asset_id)
+    if not asset:
+        return None
+
+    current_metadata = asset.get("metadata") or {}
+    if isinstance(current_metadata, str):
+        try:
+            current_metadata = json.loads(current_metadata)
+        except json.JSONDecodeError:
+            current_metadata = {}
+    if not isinstance(current_metadata, dict):
+        current_metadata = {}
+    if isinstance(metadata, dict):
+        current_metadata.update(metadata)
+
+    payload = _asset_payload(current_metadata)
+    now = utc_now()
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        UPDATE video_assets
+        SET title = ?, club_name = ?, category = ?, metadata = ?, updated_at = ?
+        WHERE user_id = ? AND id = ?
+    """), (
+        title or asset.get("title") or "",
+        club_name or asset.get("club_name") or "",
+        category or asset.get("category") or "",
+        payload,
+        now,
+        user_id,
+        asset_id,
+    ))
+    conn.commit()
+    conn.close()
+    return get_video_asset(user_id, asset_id)
+
+
 def delete_video_asset(user_id: int, asset_id: int):
     asset = get_video_asset(user_id, asset_id)
     if not asset:

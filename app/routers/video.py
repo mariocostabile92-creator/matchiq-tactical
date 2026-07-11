@@ -170,6 +170,7 @@ class VideoSessionRequest(BaseModel):
     opponent: Optional[str] = ""
     competition: Optional[str] = ""
     category: Optional[str] = ""
+    focus: Optional[str] = ""
     result: Optional[str] = ""
     field: Optional[str] = ""
     duration_seconds: Optional[float] = 0

@@ -7,6 +7,7 @@ from database import (
     create_video_asset,
     get_video_asset,
     get_video_assets,
+    update_video_asset_details,
     update_video_asset_status,
     utc_now,
 )
@@ -101,6 +102,7 @@ def normalize_session_payload(data: dict) -> Dict[str, Any]:
         "result": _clean_text(data.get("result"), 40),
         "field": _clean_text(data.get("field") or data.get("field_name"), 120),
         "duration_seconds": _clean_float(data.get("duration_seconds")),
+        "focus": _clean_text(data.get("focus"), 160),
         "source_provider": _clean_text(data.get("source_provider") or data.get("provider"), 80) or "matchiq",
         "external_id": _clean_text(data.get("external_id"), 180),
         "original_name": _clean_text(data.get("original_name"), 220),
@@ -133,6 +135,7 @@ def public_video_session(row: dict) -> Dict[str, Any]:
         "opponent": metadata.get("opponent") or metadata.get("away_team") or "",
         "competition": metadata.get("competition") or "",
         "category": row.get("category") or metadata.get("category") or "",
+        "focus": metadata.get("focus") or "",
         "result": metadata.get("result") or "",
         "field": metadata.get("field") or metadata.get("field_name") or "",
         "duration_seconds": _clean_float(metadata.get("duration_seconds")),
@@ -196,6 +199,16 @@ def patch_video_session(user_id: int, asset_id: int, data: dict) -> Optional[Dic
     metadata.update({key: value for key, value in patch.items() if value not in ("", [], 0.0)})
     metadata["updated_from"] = "video_hub"
     metadata["updated_at"] = utc_now()
+    detailed = update_video_asset_details(
+        user_id=user_id,
+        asset_id=asset_id,
+        title=_clean_text((data or {}).get("title"), 180),
+        club_name=_clean_text((data or {}).get("club_name") or (data or {}).get("team"), 160),
+        category=_clean_text((data or {}).get("category"), 80),
+        metadata=metadata,
+    )
+    if not detailed:
+        return None
     status = _pick_status((data or {}).get("status") or asset.get("status") or metadata.get("status"))
     updated = update_video_asset_status(
         user_id=user_id,
@@ -216,7 +229,10 @@ def archive_video_session(user_id: int, asset_id: int, archived: bool = True) ->
     metadata = _metadata(asset)
     metadata["archive_state"] = "archived" if archived else "active"
     metadata["archived_at" if archived else "restored_at"] = utc_now()
-    status = "archived" if archived else _pick_status(metadata.get("job", {}).get("status") if isinstance(metadata.get("job"), dict) else "ready")
+    previous_status = ""
+    if isinstance(metadata.get("job"), dict):
+        previous_status = metadata["job"].get("status") or ""
+    status = "archived" if archived else ("ready" if previous_status == "archived" else _pick_status(previous_status or "ready"))
     updated = update_video_asset_status(
         user_id=user_id,
         asset_id=asset_id,

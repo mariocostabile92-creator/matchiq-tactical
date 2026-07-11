@@ -1122,9 +1122,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10480">Home</a>
-        <a class="btn dark" href="/coach.html?v=10480">Coach</a>
-        <a class="btn dark" href="/account.html?v=10480">Account</a>
+        <a class="btn dark" href="/index.html?v=10481">Home</a>
+        <a class="btn dark" href="/coach.html?v=10481">Coach</a>
+        <a class="btn dark" href="/account.html?v=10481">Account</a>
     </nav>
 </header>
 
@@ -1194,7 +1194,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10480">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10481">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1204,7 +1204,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10480">Scopri piano club</a>
+                    <a href="/account.html?v=10481">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1585,7 +1585,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10480";
+const APP_VERSION = "10481";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -2927,6 +2927,7 @@ function renderVideoLibrary(){
         const lastUsed = formatDateLabel(item.last_used_at);
         const teamLine = getLibraryTeamsLabel(item);
         const sourceProvider = item.source_provider || item.source_type || "matchiq";
+        const isArchived = Boolean(item.is_archived || item.archive_state === "archived");
         return `
         <div class="library-item">
             ${item.thumbnail ? `<img class="library-thumb" src="${escapeHtml(item.thumbnail)}" alt="Anteprima ${escapeHtml(item.title || "video")}">` : `<div class="library-thumb placeholder">Video</div>`}
@@ -2952,7 +2953,8 @@ function renderVideoLibrary(){
             <div class="library-actions">
                 <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})" ${disabled}>Apri nel Video AI</button>
                 <button class="btn dark small" type="button" onclick="prepareSessionAnalysis(${Number(item.id)})" ${disabled}>Analizza</button>
-                <button class="btn dark small" type="button" onclick="archiveVideoSession(${Number(item.id)}, true)">Archivia</button>
+                <button class="btn dark small" type="button" onclick="saveSessionMetadata(${Number(item.id)})">Salva dati</button>
+                <button class="btn dark small" type="button" onclick="archiveVideoSession(${Number(item.id)}, ${isArchived ? "false" : "true"})">${isArchived ? "Ripristina" : "Archivia"}</button>
                 <button class="btn red small" type="button" onclick="deleteLibraryVideo(${Number(item.id)})">Elimina</button>
             </div>
         </div>
@@ -3252,6 +3254,52 @@ function prefillVideoFormFromSession(item){
     if(Array.isArray(item.tags) && item.tags.length) document.getElementById("videoTags").value = item.tags.join(", ");
 }
 
+function collectVideoHubPayload(){
+    return {
+        title: document.getElementById("libraryTitle").value.trim() || document.getElementById("videoTitle").value.trim() || "Sessione video MatchIQ",
+        club_name: document.getElementById("libraryClub").value.trim() || document.getElementById("clubName").value.trim(),
+        session_type: document.getElementById("librarySessionType").value || "official_match",
+        season: document.getElementById("librarySeason").value.trim(),
+        session_date: new Date().toISOString().slice(0, 10),
+        team: document.getElementById("homeTeamName").value.trim(),
+        home_team: document.getElementById("homeTeamName").value.trim(),
+        away_team: document.getElementById("awayTeamName").value.trim(),
+        opponent: document.getElementById("awayTeamName").value.trim(),
+        competition: document.getElementById("videoCompetition").value.trim(),
+        category: document.getElementById("videoCategory").value,
+        focus: document.getElementById("videoFocus").value,
+        result: document.getElementById("libraryResult").value.trim(),
+        field: document.getElementById("libraryField").value.trim(),
+        duration_seconds: Number(videoPreview.duration || 0),
+        notes: document.getElementById("videoNotes").value.trim(),
+        tags: document.getElementById("videoTags").value.trim().split(",").map(tag => tag.trim()).filter(Boolean),
+        thumbnail: captureLibraryThumbnail()
+    };
+}
+
+async function saveSessionMetadata(assetId){
+    if(!getAuthToken()) return;
+    try{
+        const targetId = Number(assetId || currentVideoAssetId || 0);
+        if(!targetId){
+            showStatus("Apri o seleziona una sessione prima di salvare i dati.", "warn");
+            return;
+        }
+        const res = await fetch(`${API_BASE}/video/hub/sessions/${encodeURIComponent(targetId)}`, {
+            method:"PATCH",
+            headers:apiHeaders(),
+            body:JSON.stringify(collectVideoHubPayload())
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Salvataggio non riuscito"));
+        videoLibraryItems = videoLibraryItems.map(item => Number(item.id) === targetId ? data.item : item);
+        renderVideoLibrary();
+        showStatus("Dati sessione aggiornati nel Video Hub.", "ok");
+    }catch(err){
+        showStatus(err.message || "Salvataggio non riuscito.", "err");
+    }
+}
+
 async function touchVideoHubSession(assetId){
     try{
         const res = await fetch(`${API_BASE}/video/hub/sessions/${encodeURIComponent(assetId)}/open`, {
@@ -3291,8 +3339,40 @@ async function archiveVideoSession(assetId, archived){
     }
 }
 
+async function loadVideoSessionById(assetId){
+    if(!getAuthToken() || !assetId) return null;
+    const res = await fetch(`${API_BASE}/video/hub/sessions/${encodeURIComponent(assetId)}`, {headers:apiAuthHeaders()});
+    const data = await res.json();
+    if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Sessione non disponibile"));
+    return data.item;
+}
+
+async function openSessionFromUrl(){
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = Number(params.get("session") || params.get("video_session") || 0);
+    if(!sessionId) return;
+    try{
+        let item = videoLibraryItems.find(asset => Number(asset.id) === sessionId);
+        if(!item){
+            item = await loadVideoSessionById(sessionId);
+            if(item && !videoLibraryItems.some(asset => Number(asset.id) === Number(item.id))){
+                videoLibraryItems = [item, ...videoLibraryItems];
+                renderVideoLibrary();
+            }
+        }
+        if(item){
+            await openLibraryVideo(sessionId);
+            showStatus("Sessione caricata dal Video Hub.", "ok");
+        }
+    }catch(err){
+        showStatus(err.message || "Non riesco ad aprire questa sessione.", "err");
+    }
+}
+
 async function deleteLibraryVideo(assetId){
     if(!getAuthToken()) return;
+    const ok = window.confirm("Eliminare definitivamente questa sessione video? L'operazione non si puo annullare.");
+    if(!ok) return;
     try{
         const res = await fetch(`${API_BASE}/video/library/${encodeURIComponent(assetId)}`, {
             method:"DELETE",
@@ -4044,7 +4124,7 @@ function downloadBase64Pdf(pdfBase64, rawTitle){
 
 renderArchive();
 loadCloudArchive();
-refreshVideoHub();
+refreshVideoHub().then(openSessionFromUrl).catch(() => {});
 refreshPlayerNameOptions();
 
 if("scrollRestoration" in history){
