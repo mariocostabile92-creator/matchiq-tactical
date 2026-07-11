@@ -705,6 +705,8 @@ video{
 }
 .library-chip.processing{color:#8fb7ff;border-color:rgba(47,145,255,.35);background:rgba(47,145,255,.11)}
 .library-chip.error{color:#ff8ea8;border-color:rgba(255,72,116,.35);background:rgba(255,72,116,.12)}
+.library-chip.review{color:var(--gold);border-color:rgba(255,226,138,.40);background:rgba(255,226,138,.12)}
+.library-chip.approved{color:#8fffd4;border-color:rgba(0,245,160,.45);background:rgba(0,245,160,.16)}
 .library-item .library-progress{min-width:140px;flex:1;margin-top:0}
 .library-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 .session-modal-backdrop{
@@ -1208,9 +1210,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10482">Home</a>
-        <a class="btn dark" href="/coach.html?v=10482">Coach</a>
-        <a class="btn dark" href="/account.html?v=10482">Account</a>
+        <a class="btn dark" href="/index.html?v=10483">Home</a>
+        <a class="btn dark" href="/coach.html?v=10483">Coach</a>
+        <a class="btn dark" href="/account.html?v=10483">Account</a>
     </nav>
 </header>
 
@@ -1280,7 +1282,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10482">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10483">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1290,7 +1292,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10482">Scopri piano club</a>
+                    <a href="/account.html?v=10483">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1429,6 +1431,17 @@ video{
                                 <option value="goalkeeper">Portieri</option>
                                 <option value="youth">Settore giovanile</option>
                                 <option value="other">Altro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Stato lavoro</label>
+                            <select id="hubWorkflowFilter" onchange="loadVideoHubSessions()">
+                                <option value="all">Tutti</option>
+                                <option value="to_analyze">Da analizzare</option>
+                                <option value="in_analysis">In analisi</option>
+                                <option value="report_ready">Report pronto</option>
+                                <option value="needs_review">Da rivedere</option>
+                                <option value="approved">Approvata</option>
                             </select>
                         </div>
                         <div>
@@ -1700,6 +1713,16 @@ video{
                     </select>
                 </div>
                 <div>
+                    <label>Stato lavoro</label>
+                    <select id="modalWorkflowState">
+                        <option value="to_analyze">Da analizzare</option>
+                        <option value="in_analysis">In analisi</option>
+                        <option value="report_ready">Report pronto</option>
+                        <option value="needs_review">Da rivedere</option>
+                        <option value="approved">Approvata</option>
+                    </select>
+                </div>
+                <div>
                     <label>Stagione</label>
                     <input id="modalSeason" placeholder="2026/27" />
                 </div>
@@ -1750,7 +1773,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10482";
+const APP_VERSION = "10483";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -1814,6 +1837,7 @@ const libraryJobStatus = document.getElementById("libraryJobStatus");
 const cloudProvidersBox = document.getElementById("cloudProviders");
 const hubSearch = document.getElementById("hubSearch");
 const hubTypeFilter = document.getElementById("hubTypeFilter");
+const hubWorkflowFilter = document.getElementById("hubWorkflowFilter");
 const hubArchiveFilter = document.getElementById("hubArchiveFilter");
 const sessionModalBackdrop = document.getElementById("sessionModalBackdrop");
 const sessionDetailList = document.getElementById("sessionDetailList");
@@ -3034,6 +3058,36 @@ function getAssetStatusLabel(item){
     return labels[status] || "pronto";
 }
 
+function getWorkflowState(item){
+    const state = String(item.workflow_state || "").toLowerCase();
+    if(state) return state;
+    const status = String(item.status || "ready").toLowerCase();
+    if(status === "draft" || status === "uploading" || status === "importing") return "to_analyze";
+    if(status === "processing" || status === "queued") return "in_analysis";
+    if(status === "failed" || status === "error") return "needs_review";
+    return "report_ready";
+}
+
+function getWorkflowLabel(item){
+    const labels = {
+        to_analyze: "Da analizzare",
+        in_analysis: "In analisi",
+        report_ready: "Report pronto",
+        needs_review: "Da rivedere",
+        approved: "Approvata"
+    };
+    const state = getWorkflowState(item);
+    return item.workflow_label || labels[state] || "Da analizzare";
+}
+
+function getWorkflowClass(item){
+    const state = getWorkflowState(item);
+    if(state === "in_analysis") return "processing";
+    if(state === "needs_review") return "review";
+    if(state === "approved" || state === "report_ready") return "approved";
+    return "";
+}
+
 function getSessionTypeLabel(item){
     const labels = {
         official_match: "Partita ufficiale",
@@ -3062,6 +3116,8 @@ function videoHubMatchesSearch(item){
         item.competition,
         item.season,
         item.result,
+        item.workflow_label,
+        item.workflow_state,
         item.notes,
         ...(Array.isArray(item.tags) ? item.tags : [])
     ].join(" ").toLowerCase();
@@ -3089,6 +3145,7 @@ function renderVideoLibrary(){
     videoLibraryList.innerHTML = visibleItems.map(item => {
         const progress = getAssetProgress(item);
         const statusClass = getAssetStatusClass(item);
+        const workflowClass = getWorkflowClass(item);
         const disabled = String(item.status || "ready").toLowerCase() === "error" ? "disabled" : "";
         const tags = getLibraryTags(item);
         const duration = formatDurationLabel(item.duration_seconds);
@@ -3113,6 +3170,7 @@ function renderVideoLibrary(){
                     ${tags.map(tag => `<b>#${escapeHtml(tag)}</b>`).join("")}
                 </div>
                 <div class="library-state">
+                    <b class="library-chip ${workflowClass}">${escapeHtml(getWorkflowLabel(item))}</b>
                     <b class="library-chip ${statusClass}">${escapeHtml(getAssetStatusLabel(item))}</b>
                     <div class="library-progress"><span style="width:${progress}%"></span></div>
                     ${item.job_error ? `<span>${escapeHtml(item.job_error)}</span>` : ""}
@@ -3167,6 +3225,7 @@ function renderSessionDetails(item){
     if(!sessionDetailList) return;
     const progress = getAssetProgress(item);
     const status = getAssetStatusLabel(item);
+    const workflow = getWorkflowLabel(item);
     const provider = item.source_provider || item.source_type || "matchiq";
     const size = item.size_bytes ? formatBytes(item.size_bytes) : "Non indicata";
     const duration = item.duration_seconds ? formatDurationLabel(item.duration_seconds) : "Non indicata";
@@ -3174,6 +3233,7 @@ function renderSessionDetails(item){
     const lastUsed = formatDateLabel(item.last_used_at) || "Mai aperta";
     const source = item.source_type === "url" ? "Link autorizzato" : item.source_type === "session" ? "Sessione senza file" : "Upload MatchIQ";
     sessionDetailList.innerHTML = `
+        <div><label>Stato lavoro</label><strong>${escapeHtml(workflow)}</strong></div>
         <div><label>Stato lavorazione</label><strong>${escapeHtml(status)} - ${progress}%</strong><div class="library-progress"><span style="width:${progress}%"></span></div></div>
         <div><label>Sorgente</label><strong>${escapeHtml(source)}</strong></div>
         <div><label>Provider</label><strong>${escapeHtml(provider)}</strong></div>
@@ -3193,6 +3253,7 @@ function fillSessionModal(item){
     document.getElementById("sessionModalSubtitle").textContent = `${getLibraryTeamsLabel(item)} - ${getSessionTypeLabel(item)} - ${item.archive_state === "archived" ? "archiviata" : "attiva"}`;
     setInputValue("modalSessionTitle", item.title || "");
     setInputValue("modalSessionType", item.type || item.session_type || "official_match");
+    setInputValue("modalWorkflowState", getWorkflowState(item));
     setInputValue("modalSeason", item.season || "");
     setInputValue("modalHomeTeam", item.home_team || item.team || "");
     setInputValue("modalAwayTeam", item.away_team || item.opponent || "");
@@ -3229,6 +3290,7 @@ function collectSessionModalPayload(){
         title: getInputValue("modalSessionTitle") || "Sessione video MatchIQ",
         club_name: getInputValue("modalHomeTeam"),
         session_type: getInputValue("modalSessionType") || "official_match",
+        workflow_state: getInputValue("modalWorkflowState") || "to_analyze",
         season: getInputValue("modalSeason"),
         team: getInputValue("modalHomeTeam"),
         home_team: getInputValue("modalHomeTeam"),
@@ -3322,6 +3384,7 @@ async function loadVideoLibrary(){
     try{
         const params = new URLSearchParams({
             type: hubTypeFilter ? hubTypeFilter.value : "all",
+            workflow_state: hubWorkflowFilter ? hubWorkflowFilter.value : "all",
             archive_state: hubArchiveFilter ? hubArchiveFilter.value : "active",
             limit: "80",
             offset: "0"
@@ -3394,6 +3457,7 @@ async function createDraftVideoSession(){
                 field: document.getElementById("libraryField").value.trim(),
                 notes: document.getElementById("videoNotes").value.trim(),
                 tags: document.getElementById("videoTags").value.trim().split(",").map(tag => tag.trim()).filter(Boolean),
+                workflow_state: "to_analyze",
                 rights_confirmed: false
             })
         });
@@ -3439,6 +3503,7 @@ async function saveCurrentVideoToLibrary(){
     form.append("tags", document.getElementById("videoTags").value.trim());
     form.append("duration_seconds", String(videoPreview.duration || 0));
     form.append("thumbnail", captureLibraryThumbnail());
+    form.append("workflow_state", "to_analyze");
     form.append("rights_confirmed", "true");
 
     try{
@@ -3481,6 +3546,7 @@ async function importVideoUrlToLibrary(){
                 away_team: document.getElementById("awayTeamName").value.trim(),
                 competition: document.getElementById("videoCompetition").value.trim(),
                 tags: document.getElementById("videoTags").value.trim(),
+                workflow_state: "to_analyze",
                 source_url: sourceUrl,
                 rights_confirmed: true
             })

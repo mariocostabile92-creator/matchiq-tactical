@@ -154,6 +154,7 @@ class VideoImportRequest(BaseModel):
     away_team: Optional[str] = ""
     competition: Optional[str] = ""
     tags: Optional[str] = ""
+    workflow_state: Optional[str] = "to_analyze"
     source_url: str
     rights_confirmed: bool = False
     notes: Optional[str] = ""
@@ -188,6 +189,7 @@ class VideoSessionRequest(BaseModel):
     tags: Optional[list] = Field(default_factory=list)
     rights_confirmed: Optional[bool] = False
     status: Optional[str] = ""
+    workflow_state: Optional[str] = ""
     archive_state: Optional[str] = "active"
 
 
@@ -1233,6 +1235,7 @@ def list_video_hub_sessions(
     search: str = "",
     type: str = "all",
     status: str = "all",
+    workflow_state: str = "all",
     provider: str = "all",
     archive_state: str = "active",
     limit: int = 40,
@@ -1245,6 +1248,7 @@ def list_video_hub_sessions(
             "search": search,
             "type": type,
             "status": status,
+            "workflow_state": workflow_state,
             "provider": provider,
             "archive_state": archive_state,
             "limit": limit,
@@ -1491,6 +1495,7 @@ def upload_video_library_item(
     result: str = Form(""),
     field: str = Form(""),
     tags: str = Form(""),
+    workflow_state: str = Form("to_analyze"),
     duration_seconds: float = Form(0),
     thumbnail: str = Form(""),
     rights_confirmed: bool = Form(False),
@@ -1530,6 +1535,7 @@ def upload_video_library_item(
             "field": _clean_text(field, 120),
             "source_provider": "matchiq",
             "archive_state": "active",
+            "workflow_state": _clean_text(workflow_state, 40) or "to_analyze",
             "focus": _clean_text(focus, 160),
             "tags": _clean_tags(tags),
             "thumbnail": _safe_thumbnail(thumbnail),
@@ -1572,6 +1578,7 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
             "opponent": _clean_text(data.away_team, 120),
             "source_provider": "authorized_url",
             "archive_state": "active",
+            "workflow_state": _clean_text(data.workflow_state, 40) or "to_analyze",
             "import_check": {
                 "content_type": import_info.get("content_type", ""),
                 "size_bytes": int(import_info.get("size_bytes") or 0),

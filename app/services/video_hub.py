@@ -27,6 +27,13 @@ SESSION_TYPES = {
 
 SESSION_STATES = {"draft", "uploading", "importing", "processing", "ready", "failed", "archived"}
 ARCHIVE_STATES = {"active", "archived"}
+WORKFLOW_STATES = {
+    "to_analyze": "Da analizzare",
+    "in_analysis": "In analisi",
+    "report_ready": "Report pronto",
+    "needs_review": "Da rivedere",
+    "approved": "Approvata",
+}
 
 
 def _clean_text(value: Any, limit: int = 240) -> str:
@@ -84,6 +91,20 @@ def _pick_archive_state(value: Any) -> str:
     return value if value in ARCHIVE_STATES else "active"
 
 
+def _pick_workflow_state(value: Any, fallback_status: str = "") -> str:
+    value = _clean_text(value, 40).lower()
+    if value in WORKFLOW_STATES:
+        return value
+    fallback_status = _pick_status(fallback_status)
+    if fallback_status in {"draft", "uploading", "importing"}:
+        return "to_analyze"
+    if fallback_status == "processing":
+        return "in_analysis"
+    if fallback_status == "failed":
+        return "needs_review"
+    return "report_ready" if fallback_status == "ready" else "to_analyze"
+
+
 def normalize_session_payload(data: dict) -> Dict[str, Any]:
     data = data or {}
     session_type = _pick_session_type(data.get("session_type") or data.get("type"))
@@ -113,6 +134,7 @@ def normalize_session_payload(data: dict) -> Dict[str, Any]:
         "notes": _clean_text(data.get("notes"), 2000),
         "tags": _clean_tags(data.get("tags")),
         "archive_state": _pick_archive_state(data.get("archive_state")),
+        "workflow_state": _pick_workflow_state(data.get("workflow_state") or data.get("work_state"), data.get("status")),
     }
 
 
@@ -121,6 +143,7 @@ def public_video_session(row: dict) -> Dict[str, Any]:
     job = metadata.get("job") if isinstance(metadata.get("job"), dict) else {}
     status = _pick_status(row.get("status") or job.get("status") or metadata.get("status"))
     archive_state = _pick_archive_state(metadata.get("archive_state"))
+    workflow_state = _pick_workflow_state(metadata.get("workflow_state") or metadata.get("work_state"), status)
     return {
         "id": row.get("id"),
         "owner_id": row.get("user_id"),
@@ -150,6 +173,8 @@ def public_video_session(row: dict) -> Dict[str, Any]:
         "size_bytes": int(row.get("size_bytes") or 0),
         "thumbnail": metadata.get("thumbnail") or "",
         "status": status,
+        "workflow_state": workflow_state,
+        "workflow_label": WORKFLOW_STATES.get(workflow_state, "Da analizzare"),
         "progress": max(0, min(100, int(job.get("progress") if job.get("progress") is not None else (100 if status == "ready" else 0)))),
         "notes": metadata.get("notes") or "",
         "tags": metadata.get("tags") if isinstance(metadata.get("tags"), list) else [],
@@ -266,6 +291,7 @@ def list_video_sessions(user_id: int, filters: dict) -> Dict[str, Any]:
     search = _clean_text(filters.get("search"), 160).lower()
     type_filter = _clean_text(filters.get("type"), 80)
     status_filter = _clean_text(filters.get("status"), 40).lower()
+    workflow_filter = _clean_text(filters.get("workflow_state") or filters.get("work_state"), 40).lower()
     provider_filter = _clean_text(filters.get("provider"), 80).lower()
     archive_filter = _clean_text(filters.get("archive_state") or "active", 40).lower()
 
@@ -278,6 +304,8 @@ def list_video_sessions(user_id: int, filters: dict) -> Dict[str, Any]:
         if type_filter and type_filter != "all" and session.get("type") != type_filter:
             return False
         if status_filter and status_filter != "all" and session.get("status") != status_filter:
+            return False
+        if workflow_filter and workflow_filter != "all" and session.get("workflow_state") != workflow_filter:
             return False
         if provider_filter and provider_filter != "all" and str(session.get("source_provider") or "").lower() != provider_filter:
             return False
@@ -298,5 +326,6 @@ def list_video_sessions(user_id: int, filters: dict) -> Dict[str, Any]:
         "limit": limit,
         "offset": offset,
         "session_types": [{"id": key, "label": value} for key, value in SESSION_TYPES.items()],
+        "workflow_states": [{"id": key, "label": value} for key, value in WORKFLOW_STATES.items()],
         "states": sorted(SESSION_STATES),
     }
