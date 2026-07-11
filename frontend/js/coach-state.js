@@ -1,4 +1,4 @@
-APP_VERSION = "10492";
+APP_VERSION = "10493";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
@@ -41,6 +41,7 @@ function normalizeCoachLive(live){
 function normalizeCoachMemory(memory){
     const base = memory && typeof memory === "object" ? memory : {};
     const precheck = base.precheck && typeof base.precheck === "object" ? base.precheck : {};
+    const voiceCoach = base.voiceCoach && typeof base.voiceCoach === "object" ? base.voiceCoach : {};
     return {
         precheck: {
             objective: String(precheck.objective || ""),
@@ -51,7 +52,14 @@ function normalizeCoachMemory(memory){
         },
         tags: Array.isArray(base.tags) ? base.tags : [],
         teamNotes: Array.isArray(base.teamNotes) ? base.teamNotes : [],
-        trainingPlan: Array.isArray(base.trainingPlan) ? base.trainingPlan : []
+        trainingPlan: Array.isArray(base.trainingPlan) ? base.trainingPlan : [],
+        voiceCoach: {
+            observations: Array.isArray(voiceCoach.observations) ? voiceCoach.observations : [],
+            themes: voiceCoach.themes && typeof voiceCoach.themes === "object" ? voiceCoach.themes : {},
+            players: voiceCoach.players && typeof voiceCoach.players === "object" ? voiceCoach.players : {},
+            lastProposal: voiceCoach.lastProposal && typeof voiceCoach.lastProposal === "object" ? voiceCoach.lastProposal : null,
+            lastStatus: String(voiceCoach.lastStatus || "")
+        }
     };
 }
 function normalizeCoachPhase(phase){

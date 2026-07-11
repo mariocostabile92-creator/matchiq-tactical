@@ -673,6 +673,8 @@ function organizeCoachPhaseBlocks(){
 function renderCoachPostSummary(){
     const box = document.getElementById("coachPostSummary");
     if(!box) return;
+    const voice = typeof ensureCoachVoiceMemory === "function" ? ensureCoachVoiceMemory() : {observations:[], themes:{}};
+    const voiceThemes = Object.values(voice.themes || {}).sort((a,b) => Number(b.count || 0) - Number(a.count || 0)).slice(0, 3);
     const history = loadHistory();
     const hasCurrentInHistory = history.some(item => {
         const m = item.match || {};
@@ -683,7 +685,8 @@ function renderCoachPostSummary(){
         {label:"Eventi", value:String(coachState.events.length), detail:coachState.events.length ? "Cronologia disponibile" : "Registra eventi o note"},
         {label:"Pagelle", value:String(coachState.ratings.length), detail:coachState.ratings.length ? "Valutazioni presenti" : "Completa almeno i giocatori chiave"},
         {label:"Report", value:coachState.report ? "Pronto" : "Da generare", detail:coachState.report ? "Puoi copiare o scaricare" : "Genera il report tecnico"},
-        {label:"Archivio", value:hasCurrentInHistory ? "Salvata" : "Da salvare", detail:hasCurrentInHistory ? "Riapribile dallo storico" : "Salva quando hai finito"}
+        {label:"Archivio", value:hasCurrentInHistory ? "Salvata" : "Da salvare", detail:hasCurrentInHistory ? "Riapribile dallo storico" : "Salva quando hai finito"},
+        {label:"Voice Coach", value:String((voice.observations || []).length), detail:voiceThemes.length ? voiceThemes.map(t => `${t.label} ${t.count}x`).join(" - ") : "Nessuna osservazione vocale"}
     ];
     box.innerHTML = `
         <span class="badge gold">POST-PARTITA</span>
@@ -697,6 +700,10 @@ function renderCoachPostSummary(){
                     <span>${esc(item.detail)}</span>
                 </div>
             `).join("")}
+        </div>
+        <div class="coach-post-voice">
+            <h3>Osservazioni registrate con AI Voice Coach</h3>
+            ${voiceThemes.length ? voiceThemes.map(t => `<span>${esc(t.label)}: ${esc(t.count)} segnalazioni</span>`).join("") : `<span>Nessun tema ricorrente ancora disponibile.</span>`}
         </div>
     `;
 }
@@ -784,6 +791,7 @@ function renderAll(){
     renderCoachPhaseShell();
     renderCoachPostSummary();
     renderLiveAssistant();
+    if(typeof renderCoachVoiceCoach === "function") renderCoachVoiceCoach();
     if(typeof renderLineup === "function") renderLineup();
     renderTimeline();
     renderRatings();

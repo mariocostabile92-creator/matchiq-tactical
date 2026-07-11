@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
-<link rel="stylesheet" href="/css/coach.css?v=10492">
+<link rel="stylesheet" href="/css/coach.css?v=10493">
 
 <style>
 .coach-onboarding{
@@ -1077,7 +1077,7 @@
                 <button class="coach-live-btn danger" type="button" onclick="addLiveEvent('errore_difensivo','Errore difensivo','ERR')"><strong>Errore dif.</strong><span>Copertura o marcatura</span></button>
                 <button class="coach-live-btn warn" type="button" onclick="addLiveEvent('pressing','Pressing','PRESS')"><strong>Pressing</strong><span>Fase da ricordare</span></button>
                 <button class="coach-live-btn warn" type="button" onclick="addLiveEvent('cambio','Cambio','CAMBIO')"><strong>Cambio</strong><span>Sostituzione o modulo</span></button>
-                <button class="coach-live-btn" id="coachVoiceBtn" type="button" onclick="startCoachVoiceNote()"><strong>Voce</strong><span>Detta nota tattica</span></button>
+                <button class="coach-live-btn" id="coachVoiceBtn" type="button" onclick="startCoachVoiceNote()"><strong>AI Voice Coach</strong><span>Parla con Coach</span></button>
                 <button class="coach-live-btn danger" type="button" onclick="addTacticalLiveEvent('errore_difensivo','Linea bassa','LINEA','Linea difensiva troppo bassa: controllare distanze e profondita.', 'home')"><strong>Linea bassa</strong><span>Difesa da alzare</span></button>
                 <button class="coach-live-btn warn" type="button" onclick="addTacticalLiveEvent('seconda_palla','Seconda palla','2BALL','Seconda palla persa: accorciare dopo il duello e aggredire la respinta.', 'home')"><strong>2a palla</strong><span>Duelli e rimbalzi</span></button>
                 <button class="coach-live-btn warn" type="button" onclick="addTacticalLiveEvent('ampiezza','Ampiezza','WIDTH','Manca ampiezza in possesso: aprire lato debole e dare piu linee di passaggio.', 'home')"><strong>Ampiezza</strong><span>Squadra stretta</span></button>
@@ -1088,16 +1088,30 @@
                 <button class="coach-live-btn warn" type="button" onclick="addTacticalLiveEvent('comunicazione','Comunicazione','VOICE','Manca comunicazione tra reparti: richiamare guida e marcature.', 'home')"><strong>Comunica</strong><span>Staff alert</span></button>
             </div>
 
-            <div class="coach-live-note">
-                <input id="coachVoiceInput" type="text" placeholder="Parla con Voce o scrivi qui: es. palla persa nostra al 18..." />
-                <button class="btn green" type="button" onclick="startCoachVoiceNote()">Detta ora</button>
-                <button class="btn dark" type="button" onclick="addLiveNote()">Aggiungi nota</button>
+            <div class="coach-voice-panel" id="coachVoicePanel">
+                <div class="coach-voice-panel-head">
+                    <div>
+                        <span class="badge green">AI VOICE COACH</span>
+                        <h3>Parla in modo naturale</h3>
+                        <p>MatchIQ prova a riconoscere eventi, cambi, giocatori, zone e osservazioni. Se il comando e ambiguo ti chiede conferma.</p>
+                    </div>
+                    <button class="btn green" type="button" onclick="startCoachVoiceNote()">Parla con Coach</button>
+                </div>
+                <div class="coach-live-note">
+                    <input id="coachVoiceInput" type="text" aria-label="Scrivi il comando" placeholder="Scrivi il comando: es. Cambio Rossi per Bianchi" />
+                    <button class="btn dark" type="button" onclick="addLiveNote()">Interpreta</button>
+                </div>
+                <div class="coach-voice-status" id="coachVoiceStatus">
+                    <span class="coach-voice-dot"></span>
+                    <span>Premi <strong>Parla con Coach</strong> oppure usa <strong>Scrivi il comando</strong>. Il microfono parte solo dopo il tuo tocco.</span>
+                </div>
+                <div class="coach-voice-hint" id="coachVoiceAutopilotHint"></div>
+                <div id="coachVoicePreview"></div>
+                <div class="coach-voice-themes-box">
+                    <h3>Temi vocali ricorrenti</h3>
+                    <div id="coachVoiceThemes"></div>
+                </div>
             </div>
-            <div class="coach-voice-status" id="coachVoiceStatus">
-                <span class="coach-voice-dot"></span>
-                <span>Premi <strong>Voce</strong> o <strong>Detta ora</strong>. Se il browser chiede il permesso microfono, scegli Consenti. Se non parte, scrivi la nota qui sopra e premi Aggiungi nota.</span>
-            </div>
-            <div class="coach-voice-hint" id="coachVoiceAutopilotHint"></div>
         </div>
 
         <div class="coach-ai-panel">
@@ -1484,11 +1498,15 @@
     <a class="active" href="/coach.html">Coach</a>
     <a href="/account.html">Account</a>
 </nav>
-<script src="/js/coach-state.js?v=10492"></script>
-<script src="/js/coach-storage.js?v=10492"></script>
-<script src="/js/coach-actions.js?v=10492"></script>
-<script src="/js/coach-report.js?v=10492"></script>
-<script src="/js/coach-render.js?v=10492"></script>
-<script src="/js/coach-core.js?v=10492"></script>
+<script src="/js/coach-state.js?v=10493"></script>
+<script src="/js/coach-voice-state.js?v=10493"></script>
+<script src="/js/coach-storage.js?v=10493"></script>
+<script src="/js/coach-actions.js?v=10493"></script>
+<script src="/js/coach-voice-parser.js?v=10493"></script>
+<script src="/js/coach-voice-actions.js?v=10493"></script>
+<script src="/js/coach-report.js?v=10493"></script>
+<script src="/js/coach-render.js?v=10493"></script>
+<script src="/js/coach-voice-render.js?v=10493"></script>
+<script src="/js/coach-core.js?v=10493"></script>
 </body>
 </html>

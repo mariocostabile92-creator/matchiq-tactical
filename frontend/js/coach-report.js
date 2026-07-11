@@ -151,6 +151,26 @@ function buildHalftimeReportText(){
     return talk.map((line,index) => `${index + 1}. ${line}`).join("\n");
 }
 
+function buildVoiceCoachReportText(){
+    const voice = typeof ensureCoachVoiceMemory === "function" ? ensureCoachVoiceMemory() : null;
+    if(!voice || !Array.isArray(voice.observations) || !voice.observations.length){
+        return "- Nessuna osservazione registrata con AI Voice Coach.";
+    }
+    const themes = Object.values(voice.themes || {})
+        .sort((a,b) => Number(b.count || 0) - Number(a.count || 0))
+        .slice(0, 5)
+        .map(item => `- ${item.label}: ${item.count} segnalazioni${Array.isArray(item.minutes) && item.minutes.length ? ` (min. ${item.minutes.join(", ")})` : ""}`)
+        .join("\n");
+    const recent = voice.observations.slice(0, 6).map(item => `- ${item.minute}' ${item.label}: ${item.note}`).join("\n");
+    return `Note vocali strutturate: ${voice.observations.length}
+
+Temi ricorrenti:
+${themes || "- Nessun tema ricorrente forte."}
+
+Ultime osservazioni:
+${recent}`;
+}
+
 function buildCriticalIssues(){
     const issues=[];
     const homeLost=getEventCount("palla_persa","home");
@@ -328,6 +348,9 @@ ${buildTagMemoryReportText()}
 
 <strong>Cosa dire all'intervallo</strong>
 ${buildHalftimeReportText()}
+
+<strong>Osservazioni registrate con AI Voice Coach</strong>
+${buildVoiceCoachReportText()}
 
 <strong>Promemoria automatici</strong>
 ${typeof buildCoachReminders === "function" ? buildCoachReminders().map(x => "- " + x).join("\n") : "- Nessun promemoria disponibile."}

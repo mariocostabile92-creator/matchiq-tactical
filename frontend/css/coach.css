@@ -1504,6 +1504,146 @@ select option{
     display:none;
 }
 
+.coach-voice-panel{
+    margin-top:18px;
+    padding:18px;
+    border:1px solid rgba(0,245,160,.28);
+    border-radius:18px;
+    background:linear-gradient(135deg,rgba(0,245,160,.09),rgba(35,107,255,.07));
+}
+
+.coach-voice-panel-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:14px;
+}
+
+.coach-voice-panel-head h3,
+.coach-voice-themes-box h3,
+.coach-voice-preview-card h3,
+.coach-post-voice h3{
+    margin:8px 0 6px;
+}
+
+.coach-voice-panel-head p{
+    margin:0;
+    color:var(--muted);
+    line-height:1.45;
+}
+
+.coach-voice-panel .coach-live-note{
+    margin-top:12px;
+}
+
+.coach-voice-panel .coach-live-note input{
+    min-height:48px;
+}
+
+.coach-voice-preview-card{
+    margin-top:14px;
+    padding:16px;
+    border-radius:16px;
+    background:rgba(4,10,22,.72);
+    border:1px solid rgba(0,245,160,.26);
+}
+
+.coach-voice-preview-head,
+.coach-voice-actions-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.coach-voice-fields{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    margin:12px 0;
+}
+
+.coach-voice-fields div{
+    padding:10px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:12px;
+    background:rgba(255,255,255,.04);
+}
+
+.coach-voice-fields span{
+    display:block;
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:4px;
+}
+
+.coach-voice-warnings{
+    display:grid;
+    gap:6px;
+    margin:10px 0;
+}
+
+.coach-voice-warnings span{
+    padding:8px 10px;
+    border-radius:10px;
+    color:#ffd88a;
+    background:rgba(255,190,76,.1);
+    border:1px solid rgba(255,190,76,.24);
+}
+
+.coach-voice-themes-box{
+    margin-top:14px;
+}
+
+.coach-voice-theme,
+.coach-post-voice span{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(255,255,255,.04);
+    margin-top:8px;
+}
+
+.coach-voice-theme span,
+.coach-post-voice span{
+    color:var(--muted);
+}
+
+.coach-post-voice{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid rgba(255,255,255,.08);
+}
+
+@media(max-width:760px){
+    .coach-voice-panel{
+        padding:14px;
+    }
+
+    .coach-voice-panel-head{
+        display:grid;
+    }
+
+    .coach-voice-panel-head .btn{
+        width:100%;
+        min-height:50px;
+    }
+
+    .coach-voice-fields{
+        grid-template-columns:1fr;
+    }
+
+    .coach-voice-theme,
+    .coach-post-voice span{
+        display:grid;
+    }
+}
+
 @media print{
     @page{
         size:A4;
