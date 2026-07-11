@@ -1247,9 +1247,9 @@ video{
         </div>
     </div>
     <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10485">Home</a>
-        <a class="btn dark" href="/coach.html?v=10485">Coach</a>
-        <a class="btn dark" href="/account.html?v=10485">Account</a>
+        <a class="btn dark" href="/index.html?v=10486">Home</a>
+        <a class="btn dark" href="/coach.html?v=10486">Coach</a>
+        <a class="btn dark" href="/account.html?v=10486">Account</a>
     </nav>
 </header>
 
@@ -1319,7 +1319,7 @@ video{
                         <div>Archivio cloud fino a 50 report</div>
                         <div>PDF tecnici pronti da condividere</div>
                     </div>
-                    <a href="/account.html?v=10485">Vedi cosa sblocca Pro</a>
+                    <a href="/account.html?v=10486">Vedi cosa sblocca Pro</a>
                 </div>
                 <div class="plan-card">
                     <div class="plan-kicker">Società</div>
@@ -1329,7 +1329,7 @@ video{
                         <div>Più squadre e più report</div>
                         <div>Materiale pronto per staff e dirigenti</div>
                     </div>
-                    <a href="/account.html?v=10485">Scopri piano club</a>
+                    <a href="/account.html?v=10486">Scopri piano club</a>
                 </div>
             </div>
 
@@ -1836,6 +1836,7 @@ video{
         </div>
         <div class="session-modal-actions">
             <button class="btn" type="button" onclick="openModalSessionInVideoAi()">Apri nel Video AI</button>
+            <button class="btn dark" type="button" onclick="resumeModalSessionReport()">Riprendi report</button>
             <button class="btn dark" type="button" onclick="saveSessionModal()">Salva scheda</button>
             <button class="btn dark" type="button" onclick="archiveModalSession()">Archivia/Ripristina</button>
         </div>
@@ -1844,7 +1845,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10485";
+const APP_VERSION = "10486";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -3458,6 +3459,16 @@ async function openModalSessionInVideoAi(){
     await openLibraryVideo(activeSessionModalId);
 }
 
+async function resumeModalSessionReport(){
+    const item = getSessionModalItem();
+    if(!item){
+        showStatus("Apri prima una scheda sessione.", "warn");
+        return;
+    }
+    const restored = await restoreLatestSessionReport(item, {quiet:false});
+    if(restored) closeSessionModal();
+}
+
 async function archiveModalSession(){
     const item = getSessionModalItem();
     if(!item || !activeSessionModalId) return;
@@ -3732,6 +3743,7 @@ async function openLibraryVideo(assetId){
             resetVideoWorkspace("Sessione aperta. Carica una clip o collega un video per analizzarla.");
             prefillVideoFormFromSession(item);
             await touchVideoHubSession(item.id);
+            await restoreLatestSessionReport(item, {quiet:true});
             return;
         }
 
@@ -3751,6 +3763,7 @@ async function openLibraryVideo(assetId){
 
         prefillVideoFormFromSession(item);
         await touchVideoHubSession(item.id);
+        await restoreLatestSessionReport(item, {quiet:true});
     }catch(err){
         showStatus(err.message || "Non riesco ad aprire questo video.", "err");
     }
@@ -4074,12 +4087,104 @@ function findArchivedReport(id){
 function loadArchivedReport(id){
     const item = findArchivedReport(id);
     if(!item) return;
+    applyArchivedReportToWorkspace(item, "archivio");
+}
+
+function applyArchivedReportToWorkspace(item, sourceLabel="archivio"){
     reportBox.textContent = item.report || "Report non disponibile.";
     latestPdfBase64 = item.pdf_base64 || "";
     renderAiSlides(item.slides || [], item.deck_summary || "", item.coach_next_click || "");
+    latestSlides = item.slides || [];
+    latestDeckSummary = item.deck_summary || "";
+    latestCoachNextClick = item.coach_next_click || "";
+    if(Array.isArray(item.frame_times) && item.frame_times.length){
+        extractedFrameTimes = item.frame_times.map(value => Math.max(0, Number(value || 0)));
+        extractedFrames = [];
+        candidateFrameResults = [];
+        rejectedFrameResults = [];
+        selectedFrameIndex = 0;
+        updateSelectedFrameLabel();
+        if(framesGrid){
+            framesGrid.innerHTML = `<div class="frame-section"><strong>Tempi frame ripristinati</strong><span>Riapri il video e, se vuoi nuove anteprime, estrai di nuovo i fotogrammi. Il report e le slide restano disponibili.</span></div>`;
+        }
+    }
+    if(Array.isArray(item.frame_meta) && item.frame_meta.length){
+        extractedFrameMeta = item.frame_meta;
+        aiLineSuggestions = {};
+        extractedFrameMeta.forEach((meta,index) => {
+            if(Array.isArray(meta.line_suggestions) && meta.line_suggestions.length){
+                aiLineSuggestions[String(index)] = meta.line_suggestions;
+            }
+        });
+    }
+    if(Array.isArray(item.tactical_lines)){
+        tacticalLines = item.tactical_lines.slice(0, 20);
+        renderTacticalLineList();
+        drawTacticalLines();
+    }
+    if(item.video_asset_id){
+        currentVideoAssetId = Number(item.video_asset_id) || currentVideoAssetId;
+    }
     downloadPdfBtn.disabled = !latestPdfBase64;
     updateReportMeta("report", item.frames || "Archivio");
-    showStatus("Report archivio aperto.", "ok");
+    showStatus(sourceLabel === "sessione" ? "Ultimo report della sessione ripristinato." : "Report archivio aperto.", "ok");
+}
+
+async function ensureCloudArchiveReady(){
+    if(!getAuthToken()) return;
+    if(!cloudArchive.length){
+        await loadCloudArchive();
+    }
+}
+
+function findSessionReport(item){
+    const latestReport = item && item.latest_report && typeof item.latest_report === "object" ? item.latest_report : {};
+    const latestId = latestReport.id ? String(latestReport.id) : "";
+    if(latestId){
+        const exact = cloudArchive.find(report => String(report.id) === latestId);
+        if(exact) return exact;
+    }
+    const sessionId = Number(item && item.id);
+    if(sessionId){
+        const reports = cloudArchive
+            .filter(report => Number(report.video_asset_id || 0) === sessionId)
+            .sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
+        if(reports[0]) return reports[0];
+    }
+    return null;
+}
+
+async function restoreLatestSessionReport(item, options={}){
+    if(!item) return false;
+    await ensureCloudArchiveReady();
+    const report = findSessionReport(item);
+    if(report){
+        applyArchivedReportToWorkspace(report, "sessione");
+        return true;
+    }
+    const latestReport = item.latest_report && typeof item.latest_report === "object" ? item.latest_report : {};
+    const hasLightState = Array.isArray(latestReport.frame_times) || Array.isArray(latestReport.frame_meta) || Array.isArray(latestReport.tactical_lines);
+    if(hasLightState){
+        applyArchivedReportToWorkspace({
+            title: latestReport.title || item.title || "Video Report MatchIQ",
+            report: "",
+            pdf_base64: "",
+            frames: latestReport.frames || 0,
+            frame_times: latestReport.frame_times || [],
+            frame_meta: latestReport.frame_meta || [],
+            tactical_lines: latestReport.tactical_lines || [],
+            slides: [],
+            deck_summary: latestReport.deck_summary || "",
+            coach_next_click: "",
+            video_asset_id: item.id
+        }, "sessione");
+        reportBox.textContent = "Report collegato trovato, ma il testo completo non e' ancora caricato in archivio. Apri il report cloud o genera una nuova analisi.";
+        return true;
+    }
+    if(!options.quiet){
+        showStatus("Nessun report precedente collegato a questa sessione.", "warn");
+    }
+    return false;
 }
 
 function downloadArchivedPdf(id){
