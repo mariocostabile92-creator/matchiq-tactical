@@ -441,7 +441,7 @@ function buildTrainingPlan(){
     if(s.width >= 1 || s.chancesHome + s.chancesAway <= 1) push("Ampiezza e rifinitura", "Sviluppo lato forte, cambio lato e attacco area con tre riferimenti.", "Creare piu soluzioni negli ultimi metri.");
     if(s.pressing >= 1 || s.recoveriesHome + s.recoveriesAway >= 3) push("Pressing organizzato", "Trigger di pressione su retropassaggio, controllo orientato male e palla laterale.", "Trasformare recupero in occasione.");
     if(s.communication >= 1) push("Comunicazione reparto", "Situazionale con chiamate obbligatorie: uomo, solo, sali, copri.", "Aumentare guida e responsabilita.");
-    if(!plan.length) push("Seduta base MatchIQ", "20 minuti possesso, 20 transizioni, 20 finalizzazione.", "Dare continuita ai principi senza sovraccaricare.");
+    if(!plan.length) push("Dati da completare", "Completa eventi, note e pagelle per ottenere indicazioni piu utili nel post-partita.", "Nessuna priorita forte rilevata dai dati disponibili.");
     return plan.slice(0,4);
 }
 
@@ -657,11 +657,48 @@ function organizeCoachPhaseBlocks(){
     [setup, precheck, lineup, onboarding].forEach(block => moveCoachBlock(pre, block));
     [live, timelinePanel].forEach(block => moveCoachBlock(match, block));
     [reportPanel, ratings, playerArchive, memoryTraining, history].forEach(block => moveCoachBlock(post, block));
+    if(post && !document.getElementById("coachPostSummary")){
+        const summary = document.createElement("div");
+        summary.id = "coachPostSummary";
+        summary.className = "panel coach-post-summary";
+        post.prepend(summary);
+    }
     if(timelineReportGrid && !timelineReportGrid.children.length){
         timelineReportGrid.remove();
     }
 
     pre.dataset.organized = "1";
+}
+
+function renderCoachPostSummary(){
+    const box = document.getElementById("coachPostSummary");
+    if(!box) return;
+    const history = loadHistory();
+    const hasCurrentInHistory = history.some(item => {
+        const m = item.match || {};
+        return coachState.match && m.homeTeam === coachState.match.homeTeam && m.awayTeam === coachState.match.awayTeam && m.date === coachState.match.date;
+    });
+    const items = [
+        {label:"Risultato", value:coachState.match ? `${getGoals("home")} - ${getGoals("away")}` : "--", detail:coachState.match ? `${getTeamName("home")} vs ${getTeamName("away")}` : "Nessuna partita attiva"},
+        {label:"Eventi", value:String(coachState.events.length), detail:coachState.events.length ? "Cronologia disponibile" : "Registra eventi o note"},
+        {label:"Pagelle", value:String(coachState.ratings.length), detail:coachState.ratings.length ? "Valutazioni presenti" : "Completa almeno i giocatori chiave"},
+        {label:"Report", value:coachState.report ? "Pronto" : "Da generare", detail:coachState.report ? "Puoi copiare o scaricare" : "Genera il report tecnico"},
+        {label:"Archivio", value:hasCurrentInHistory ? "Salvata" : "Da salvare", detail:hasCurrentInHistory ? "Riapribile dallo storico" : "Salva quando hai finito"}
+    ];
+    box.innerHTML = `
+        <span class="badge gold">POST-PARTITA</span>
+        <h2>Chiudi il lavoro dello staff</h2>
+        <p>Controlla cosa manca prima di consegnare report, sintesi e memoria partita.</p>
+        <div class="coach-post-grid">
+            ${items.map(item => `
+                <div class="coach-post-item">
+                    <small>${esc(item.label)}</small>
+                    <strong>${esc(item.value)}</strong>
+                    <span>${esc(item.detail)}</span>
+                </div>
+            `).join("")}
+        </div>
+    `;
 }
 
 function getCoachPhaseCopy(phase){
@@ -745,6 +782,7 @@ function renderAll(){
     renderCoachPrecheck();
     renderStatus();
     renderCoachPhaseShell();
+    renderCoachPostSummary();
     renderLiveAssistant();
     if(typeof renderLineup === "function") renderLineup();
     renderTimeline();

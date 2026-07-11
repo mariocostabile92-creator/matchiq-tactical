@@ -714,6 +714,42 @@ select option{
     background:rgba(24,240,139,.07);
 }
 
+.coach-post-summary{
+    border-color:rgba(255,209,102,.24);
+    background:
+        radial-gradient(circle at 90% 0,rgba(255,209,102,.10),transparent 32%),
+        linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+}
+
+.coach-post-grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:10px;
+    margin-top:16px;
+}
+
+.coach-post-item{
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.05);
+    border-radius:16px;
+    padding:13px;
+}
+
+.coach-post-item small,
+.coach-post-item span{
+    display:block;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:900;
+    line-height:1.35;
+}
+
+.coach-post-item strong{
+    display:block;
+    margin:5px 0;
+    font-size:19px;
+}
+
 .timeline{
     display:grid;
     gap:10px;
@@ -921,6 +957,10 @@ select option{
 
     #coachPhaseMatch .timeline{
         max-height:300px;
+    }
+
+    .coach-post-grid{
+        grid-template-columns:1fr 1fr;
     }
 
     h1{
