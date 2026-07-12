@@ -8,6 +8,7 @@ from app.routers.admin_beta import router as admin_beta_router, require_admin_to
 from app.routers.admin_users import router as admin_users_router
 from app.routers.admin_analytics import router as admin_analytics_router
 from app.routers.coach_tracking import router as coach_tracking_router
+from app.routers.coach_voice import router as coach_voice_router
 from app.routers.video import router as video_router
 from app.routers.frontend import router as frontend_router, FRONTEND_DIR
 from app.routers.match import create_match_router
@@ -136,6 +137,7 @@ init_db()
 app.include_router(auth_router)
 app.include_router(payments_router)
 app.include_router(coach_tracking_router)
+app.include_router(coach_voice_router)
 app.include_router(video_router)
 
 

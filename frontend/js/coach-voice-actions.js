@@ -86,13 +86,25 @@ function addLiveNote(){
     processCoachVoiceCommand(value, "text");
 }
 
-function processCoachVoiceCommand(text, source="text"){
+async function processCoachVoiceCommand(text, source="text"){
     if(!coachState.match){
         showNotice("Prima crea una partita manuale.", "warn");
         return null;
     }
     ensureCoachStateShape();
-    const proposal = buildCoachVoiceProposal(text, source);
+    let proposal = null;
+    if(typeof interpretCoachVoiceCommandFromServer === "function" && navigator.onLine !== false){
+        try{
+            setCoachVoiceUiStatus("Sto interpretando il comando con MatchIQ...", "idle");
+            proposal = await interpretCoachVoiceCommandFromServer(text, source);
+        }catch{
+            proposal = buildCoachVoiceProposal(text, source);
+            proposal.warnings = [...(proposal.warnings || []), "Connessione o servizio non disponibile: interpretazione locale usata."];
+        }
+    }else{
+        proposal = buildCoachVoiceProposal(text, source);
+        proposal.warnings = [...(proposal.warnings || []), "Offline: interpretazione locale usata."];
+    }
     const vc = ensureCoachVoiceMemory();
     vc.lastProposal = proposal;
     saveState();
