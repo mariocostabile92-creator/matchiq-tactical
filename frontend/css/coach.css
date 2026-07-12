@@ -75,10 +75,10 @@ button{
 }
 
 .brand img{
-    width:48px;
-    height:48px;
+    width:54px;
+    height:54px;
     object-fit:contain;
-    border-radius:14px;
+    border-radius:16px;
     filter:drop-shadow(0 10px 22px rgba(0,0,0,.28));
 }
 
