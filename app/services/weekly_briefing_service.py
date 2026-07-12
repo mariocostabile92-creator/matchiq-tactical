@@ -6,6 +6,7 @@ from typing import Any, Dict, List
 
 from app.models.weekly_briefing import WeeklyBriefingGenerateRequest
 from app.repositories import knowledge_repository, weekly_briefing_repository
+from app.services.knowledge_intelligence_sync import sync_module_safely
 
 
 def initialize_weekly_briefing() -> None:
@@ -138,4 +139,5 @@ def generate(user_id: int, request: WeeklyBriefingGenerateRequest) -> Dict[str, 
         return {"generated": False, "changed": False, "briefing": existing}
     content = build_briefing(sources)
     briefing = weekly_briefing_repository.save_week(user_id, int(workspace["id"]), week_key, fingerprint, sources, content, content["priorities"])
+    sync_module_safely(user_id,"weekly_briefing")
     return {"generated": True, "changed": bool(existing), "briefing": briefing}

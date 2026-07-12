@@ -15,6 +15,7 @@ from app.routers.knowledge import router as knowledge_router
 from app.routers.weekly_briefing import router as weekly_briefing_router
 from app.routers.pattern_intelligence import router as pattern_intelligence_router
 from app.routers.training_planner import router as training_planner_router
+from app.routers.knowledge_intelligence import router as knowledge_intelligence_router
 from app.routers.frontend import router as frontend_router, FRONTEND_DIR
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
@@ -71,6 +72,7 @@ from app.services.voice_coach_intelligence_service import initialize_voice_coach
 from app.services.weekly_briefing_service import initialize_weekly_briefing
 from app.services.pattern_intelligence_service import initialize_pattern_intelligence
 from app.services.training_planner_service import initialize_training_planner
+from app.services.knowledge_intelligence_service import initialize_knowledge_intelligence
 from auth import create_verification_for_user
 from brevo_service import send_verification_email, is_email_configured
 from usage_guard import (
@@ -149,6 +151,7 @@ initialize_voice_coach_intelligence()
 initialize_pattern_intelligence()
 initialize_training_planner()
 initialize_weekly_briefing()
+initialize_knowledge_intelligence()
 app.include_router(auth_router)
 app.include_router(payments_router)
 app.include_router(coach_tracking_router)
@@ -159,6 +162,7 @@ app.include_router(knowledge_router)
 app.include_router(weekly_briefing_router)
 app.include_router(pattern_intelligence_router)
 app.include_router(training_planner_router)
+app.include_router(knowledge_intelligence_router)
 
 
 # =========================================================

@@ -1,0 +1,1 @@
+(function(){const params=new URLSearchParams(location.search);[["node_type","knowledgeType"],["source_module","knowledgeModule"],["tactical_topic","knowledgeTopic"],["zone","knowledgeZone"]].forEach(([name,id])=>{const value=params.get(name),control=document.getElementById(id);if(value&&control)control.value=value})})();

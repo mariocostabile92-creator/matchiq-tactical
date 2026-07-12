@@ -5,6 +5,7 @@ from app.repositories import knowledge_repository, pattern_intelligence_reposito
 from app.services.pattern_intelligence_aggregator import collect_sources, fingerprint
 from app.services.pattern_intelligence_config import ALGORITHM_VERSION, STAFF_STATUSES
 from app.services.pattern_intelligence_engine import detect, impact
+from app.services.knowledge_intelligence_sync import sync_module_safely
 
 
 def initialize_pattern_intelligence() -> None:
@@ -28,6 +29,7 @@ def run(user_id: int, request: PatternRunRequest) -> Dict[str, Any]:
     data=pattern_intelligence_repository.list_patterns(user_id,{"page":1,"page_size":50})
     for item in data["items"]:
         knowledge_repository.upsert_source_link(int(workspace["id"]),"pattern_intelligence_pattern",str(item["id"]),{"run_id":record["id"],"topic":item["canonical_topic"],"status":item["status"],"confidence":item["confidence_level"]})
+    sync_module_safely(user_id,"pattern_intelligence")
     return {"generated":True,"changed":bool(latest),"data":data}
 
 
@@ -46,11 +48,14 @@ def set_status(user_id: int, pattern_id: int, status: str) -> Optional[Dict[str,
     if item:
         workspace=knowledge_repository.get_or_create_workspace(user_id)
         knowledge_repository.upsert_source_link(int(workspace["id"]),"pattern_intelligence_pattern",str(pattern_id),{"run_id":item["run_id"],"topic":item["canonical_topic"],"status":item["status"],"confidence":item["confidence_level"]})
+        sync_module_safely(user_id,"pattern_intelligence")
     return item
 
 
 def add_note(user_id: int, pattern_id: int, note: str) -> Optional[Dict[str, Any]]:
-    return pattern_intelligence_repository.update_pattern(user_id,pattern_id,note=note.strip())
+    item=pattern_intelligence_repository.update_pattern(user_id,pattern_id,note=note.strip())
+    if item: sync_module_safely(user_id,"pattern_intelligence")
+    return item
 
 
 def summary(user_id: int) -> Dict[str, Any]:

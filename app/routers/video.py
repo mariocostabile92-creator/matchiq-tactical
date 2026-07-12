@@ -50,6 +50,7 @@ from app.services.video_hub import (
     touch_video_session,
 )
 from app.services.video_taxonomy import validate_selection_result
+from app.services.knowledge_intelligence_sync import sync_module_safely
 from usage_guard import get_optional_user, require_user
 
 
@@ -1193,7 +1194,7 @@ def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: st
     if not user:
         return {"success": False, "reason": "login_required"}
 
-    return save_video_report(
+    saved = save_video_report(
         user_id=user["id"],
         title=_clean_text(data.title, 180) or "Video Report MatchIQ",
         club_name=_clean_text(data.club_name, 160),
@@ -1221,6 +1222,9 @@ def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: st
             "lineup_notes": _clean_text(data.lineup_notes, 1400),
         },
     )
+    if saved.get("success"):
+        sync_module_safely(int(user["id"]),"video_ai")
+    return saved
 
 
 def _require_video_library_capacity(user: dict) -> dict:
@@ -1597,6 +1601,7 @@ def upload_video_library_item(
         },
     )
     asset = get_video_asset(user["id"], result["id"])
+    sync_module_safely(int(user["id"]),"video_ai")
     return {"ok": True, "item": _public_video_asset(asset), "library_usage": library_usage}
 
 
@@ -1656,6 +1661,7 @@ def import_video_library_url(data: VideoImportRequest, user=Depends(require_user
         },
     )
     asset = get_video_asset(user["id"], result["id"])
+    sync_module_safely(int(user["id"]),"video_ai")
     return {"ok": True, "item": _public_video_asset(asset), "library_usage": library_usage}
 
 
@@ -1725,6 +1731,7 @@ def remove_video_library_item(asset_id: int, user=Depends(require_user)):
     if not asset:
         raise HTTPException(status_code=404, detail="Video non trovato")
     remove_library_file(asset.get("file_path"), parse_asset_metadata(asset))
+    sync_module_safely(int(user["id"]),"video_ai")
     return {"ok": True, "deleted": True}
 
 
@@ -1780,6 +1787,7 @@ def create_video_report(data: CloudVideoReportRequest, user=Depends(require_user
             },
         )
 
+    sync_module_safely(int(user["id"]),"video_ai")
     return {"ok": True, "id": result.get("id")}
 
 
@@ -1789,7 +1797,7 @@ def remove_video_report(report_id: int, user=Depends(require_user)):
 
     if not deleted:
         raise HTTPException(status_code=404, detail="Report video non trovato")
-
+    sync_module_safely(int(user["id"]),"video_ai")
     return {"ok": True}
 
 
@@ -1820,4 +1828,5 @@ def create_frame_feedback(data: FrameFeedbackRequest, user=Depends(require_user)
         metadata=data.metadata or {},
     )
 
+    sync_module_safely(int(user["id"]),"video_ai")
     return {"ok": True, "id": result.get("id"), "created_at": result.get("created_at")}

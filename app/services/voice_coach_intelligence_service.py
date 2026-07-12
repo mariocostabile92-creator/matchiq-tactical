@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from app.models.voice_coach_intelligence import VoiceObservationCreate
 from app.repositories import knowledge_repository, voice_coach_repository
 from app.services import knowledge_service
+from app.services.knowledge_intelligence_sync import sync_module_safely
 from app.services.voice_coach_schemas import VoiceCoachInterpretRequest, VoiceCoachInterpretResponse
 
 
@@ -149,6 +150,7 @@ def save_observation(user_id: int, payload: VoiceObservationCreate) -> Dict[str,
             },
         )
     themes = voice_coach_repository.rebuild_themes(user_id, knowledge_id, payload.match_key)
+    sync_module_safely(user_id,"voice_coach")
     return {"observation": observation, "themes": themes}
 
 
@@ -158,6 +160,7 @@ def cancel_observation(user_id: int, client_id: str) -> Optional[Dict[str, Any]]
         return None
     knowledge_repository.delete_source_link(int(observation["knowledge_id"]), "voice_coach", client_id)
     voice_coach_repository.rebuild_themes(user_id, int(observation["knowledge_id"]), observation["match_key"])
+    sync_module_safely(user_id,"voice_coach")
     return observation
 
 
@@ -174,11 +177,14 @@ def match_intelligence(user_id: int, match_key: str) -> Dict[str, Any]:
 
 
 def update_theme_status(user_id: int, match_key: str, theme_id: int, status: str) -> Optional[Dict[str, Any]]:
-    return voice_coach_repository.set_theme_status(user_id, match_key, theme_id, status)
+    item=voice_coach_repository.set_theme_status(user_id, match_key, theme_id, status)
+    if item: sync_module_safely(user_id,"voice_coach")
+    return item
 
 
 def delete_match_intelligence(user_id: int, match_key: str) -> int:
     links = voice_coach_repository.delete_match_intelligence(user_id, match_key)
     for link in links:
         knowledge_repository.delete_source_link(int(link["knowledge_id"]), "voice_coach", str(link["client_id"]))
+    sync_module_safely(user_id,"voice_coach")
     return len(links)

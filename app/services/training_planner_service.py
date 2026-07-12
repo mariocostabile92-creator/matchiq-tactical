@@ -6,6 +6,7 @@ from app.repositories import knowledge_repository,training_planner_repository
 from app.services.training_library import library_items
 from app.services.training_planner_aggregator import collect,fingerprint
 from app.services.training_planner_selector import build_week,select
+from app.services.knowledge_intelligence_sync import sync_module_safely
 
 
 PLAN_STATUSES={"bozza","proposta_ai","accettata","modificata","completata","archiviata","rifiutata"}
@@ -36,6 +37,7 @@ def generate(user_id: int,request: TrainingPlanGenerateRequest) -> Dict[str,Any]
     if latest and request.force: training_planner_repository.update_plan(user_id,latest["id"],status="archiviata",action="regenerated",note="Sostituito da una nuova proposta AI.")
     plan=training_planner_repository.save_plan(user_id,int(bundle["workspace"]["id"]),week_key(),request.training_days,bundle["priorities"],sum((item["sources"] for item in bundle["priorities"]),[]),plan_payload,source_fingerprint)
     knowledge_repository.upsert_source_link(int(bundle["workspace"]["id"]),"training_plan",str(plan["id"]),{"status":plan["status"],"week_key":plan["week_key"],"pattern_run_id":bundle.get("pattern_run_id"),"weekly_id":bundle.get("weekly_id"),"version":plan["version"]})
+    sync_module_safely(user_id,"training_planner")
     return {"generated":True,"changed":bool(latest),"data":{"plan":plan,"sufficient":True}}
 
 
@@ -51,6 +53,7 @@ def get(user_id: int,plan_id: int) -> Optional[Dict[str,Any]]:
 def modify(user_id: int,plan_id: int,current_plan: Dict[str,Any],note: Optional[str]) -> Optional[Dict[str,Any]]:
     item=training_planner_repository.update_plan(user_id,plan_id,current=current_plan,status="modificata",note=note,action="modified")
     if item: _link(user_id,item,"modified")
+    if item: sync_module_safely(user_id,"training_planner")
     return item
 
 
@@ -59,10 +62,11 @@ def action(user_id: int,plan_id: int,action_name: str,note: Optional[str]) -> Op
         source=training_planner_repository.get_plan(user_id,plan_id)
         if not source: return None
         workspace=knowledge_repository.get_or_create_workspace(user_id)
-        copy=training_planner_repository.save_plan(user_id,int(workspace["id"]),source["week_key"],source["training_days"],source["priorities"],source["sources"],source["current_plan"],source["source_fingerprint"]+f":copy:{source['id']}",status="bozza",version=1); _link(user_id,copy,"duplicated"); return copy
+        copy=training_planner_repository.save_plan(user_id,int(workspace["id"]),source["week_key"],source["training_days"],source["priorities"],source["sources"],source["current_plan"],source["source_fingerprint"]+f":copy:{source['id']}",status="bozza",version=1); _link(user_id,copy,"duplicated"); sync_module_safely(user_id,"training_planner"); return copy
     if action_name not in ACTIONS: raise ValueError("Azione piano non valida")
     item=training_planner_repository.update_plan(user_id,plan_id,status=ACTIONS[action_name],note=note,action=action_name)
     if item: _link(user_id,item,action_name)
+    if item: sync_module_safely(user_id,"training_planner")
     return item
 
 

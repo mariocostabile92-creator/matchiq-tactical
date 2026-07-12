@@ -1,10 +1,11 @@
-const CACHE_NAME = "matchiq-pwa-v107";
+const CACHE_NAME = "matchiq-pwa-v108";
 const APP_SHELL = [
-  "/index.html?v=10507",
-  "/mobile.html?v=10507",
+  "/index.html?v=10508",
+  "/mobile.html?v=10508",
   "/weekly-briefing.html",
   "/pattern-intelligence.html",
   "/training-planner.html",
+  "/knowledge.html",
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
@@ -17,6 +18,8 @@ const APP_SHELL = [
   "/css/training-planner.css?v=10507",
   "/css/training-planner-order.css?v=10507",
   "/css/training-planner-home.css?v=10507",
+  "/css/knowledge-intelligence.css?v=10508",
+  "/css/knowledge-entry.css?v=10508",
   "/css/global-nav.css?v=10503",
   "/js/auth.js?v=10503",
   "/js/global-nav-config.js?v=10503",
@@ -52,6 +55,13 @@ const APP_SHELL = [
   "/js/training-planner-home.js?v=10507",
   "/js/training-planner-weekly.js?v=10507",
   "/js/coach-training-planner.js?v=10507",
+  "/js/knowledge-intelligence-state.js?v=10508",
+  "/js/knowledge-intelligence-api.js?v=10508",
+  "/js/knowledge-intelligence-render.js?v=10508",
+  "/js/knowledge-intelligence-detail.js?v=10508",
+  "/js/knowledge-intelligence-query.js?v=10508",
+  "/js/knowledge-intelligence.js?v=10508",
+  "/js/knowledge-entry.js?v=10508",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -87,7 +97,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10507")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10508")))
     );
     return;
   }
