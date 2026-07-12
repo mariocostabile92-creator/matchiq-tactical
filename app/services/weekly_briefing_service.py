@@ -96,7 +96,12 @@ def build_briefing(sources: Dict[str, Any]) -> Dict[str, Any]:
     if general["available"] and not report and len(improve) < 3:
         improve.append({"title":"Completare il post-partita", "reason":"L'ultima partita disponibile non contiene ancora un report Coach.", "level":"operativa", "evidence":[_source("Report mancanti", 1, "Coach", "/coach.html")]})
 
-    patterns = [item for item in (local.get("patterns") or []) if isinstance(item, dict) and item.get("label") and item.get("count")]
+    local_patterns = [item for item in (local.get("patterns") or []) if isinstance(item, dict) and item.get("label") and item.get("count")]
+    historical_patterns = [item for item in (cloud.get("historical_patterns") or []) if isinstance(item, dict) and not item.get("contradictory")]
+    patterns = [{"id":item.get("id"),"label":item.get("title"),"count":item.get("matches_count"),"source":"Pattern Intelligence","url":f"/pattern-intelligence.html?pattern={item.get('id')}"} for item in historical_patterns] or local_patterns
+    if historical_patterns and len(improve) < 3:
+        item=historical_patterns[0]
+        improve.append({"title":item.get("title") or "Pattern storico", "reason":item.get("normalized_summary") or "Pattern storico supportato dalle fonti disponibili.", "level":"alta" if item.get("confidence_level")=="alta" else "media", "evidence":[_source("Pattern storico",int(item.get("matches_count") or 0),"Pattern Intelligence",f"/pattern-intelligence.html?pattern={item.get('id')}")]})
     priorities = [{"rank":index + 1, "title":item["title"], "reason":item["reason"], "origin":item["evidence"], "level":item.get("level", "media")} for index, item in enumerate(improve[:3])]
     materials = {
         "reports": len(cloud.get("video_reports") or []) + (1 if report else 0),

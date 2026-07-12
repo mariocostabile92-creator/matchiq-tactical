@@ -1,8 +1,9 @@
-const CACHE_NAME = "matchiq-pwa-v105";
+const CACHE_NAME = "matchiq-pwa-v106";
 const APP_SHELL = [
-  "/index.html?v=10505",
-  "/mobile.html?v=10505",
+  "/index.html?v=10506",
+  "/mobile.html?v=10506",
   "/weekly-briefing.html",
+  "/pattern-intelligence.html",
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
@@ -10,6 +11,8 @@ const APP_SHELL = [
   "/css/home.css?v=10503",
   "/css/weekly-briefing.css?v=10505",
   "/css/weekly-briefing-home.css?v=10505",
+  "/css/pattern-intelligence.css?v=10506",
+  "/css/pattern-intelligence-home.css?v=10506",
   "/css/global-nav.css?v=10503",
   "/js/auth.js?v=10503",
   "/js/global-nav-config.js?v=10503",
@@ -25,9 +28,17 @@ const APP_SHELL = [
   "/js/home.js?v=10503",
   "/js/weekly-briefing-state.js?v=10505",
   "/js/weekly-briefing-api.js?v=10505",
-  "/js/weekly-briefing-render.js?v=10505",
+  "/js/weekly-briefing-render.js?v=10506",
   "/js/weekly-briefing.js?v=10505",
   "/js/weekly-briefing-home.js?v=10505",
+  "/js/pattern-intelligence-state.js?v=10506",
+  "/js/pattern-intelligence-api.js?v=10506",
+  "/js/pattern-intelligence-filters.js?v=10506",
+  "/js/pattern-intelligence-render.js?v=10506",
+  "/js/pattern-intelligence-pagination.js?v=10506",
+  "/js/pattern-intelligence-detail.js?v=10506",
+  "/js/pattern-intelligence.js?v=10506",
+  "/js/pattern-intelligence-home.js?v=10506",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -63,7 +74,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10505")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10506")))
     );
     return;
   }

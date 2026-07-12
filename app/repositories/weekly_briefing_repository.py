@@ -116,5 +116,11 @@ def collect_cloud_sources(user_id: int, week_start: str) -> Dict[str, Any]:
     matches = fetchall(cur)
     cur.execute(q("SELECT COUNT(*) AS total FROM video_frame_feedback WHERE user_id = ? AND created_at >= ?"), (user_id, week_start))
     frames = int((fetchone(cur) or {}).get("total") or 0)
+    cur.execute(q("""SELECT p.id,p.canonical_topic,p.title,p.normalized_summary,p.polarity,p.matches_count,p.matches_total,p.confidence_score,p.confidence_level,p.status,p.contradictory
+        FROM pattern_intelligence_patterns p JOIN pattern_intelligence_runs r ON r.id=p.run_id
+        WHERE r.user_id=? AND r.id=(SELECT id FROM pattern_intelligence_runs WHERE user_id=? ORDER BY created_at DESC,id DESC LIMIT 1)
+        AND p.status IN ('established','confirmed_by_staff','monitoring') AND p.confidence_score>=55
+        ORDER BY p.confidence_score DESC,p.matches_count DESC LIMIT 5"""),(user_id,user_id))
+    historical_patterns=[dict(row) for row in fetchall(cur)]
     conn.close()
-    return {"voice_observations": voice, "video_reports": reports, "video_sessions": sessions, "saved_matches": matches, "reviewed_frames": frames, "week_start": week_start}
+    return {"voice_observations": voice, "video_reports": reports, "video_sessions": sessions, "saved_matches": matches, "reviewed_frames": frames, "historical_patterns":historical_patterns, "week_start": week_start}

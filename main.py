@@ -13,6 +13,7 @@ from app.routers.video import router as video_router
 from app.routers.home import router as home_router
 from app.routers.knowledge import router as knowledge_router
 from app.routers.weekly_briefing import router as weekly_briefing_router
+from app.routers.pattern_intelligence import router as pattern_intelligence_router
 from app.routers.frontend import router as frontend_router, FRONTEND_DIR
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
@@ -67,6 +68,7 @@ from database import init_db
 from app.services.knowledge_service import initialize_foundation
 from app.services.voice_coach_intelligence_service import initialize_voice_coach_intelligence
 from app.services.weekly_briefing_service import initialize_weekly_briefing
+from app.services.pattern_intelligence_service import initialize_pattern_intelligence
 from auth import create_verification_for_user
 from brevo_service import send_verification_email, is_email_configured
 from usage_guard import (
@@ -142,6 +144,7 @@ app.add_middleware(
 init_db()
 initialize_foundation()
 initialize_voice_coach_intelligence()
+initialize_pattern_intelligence()
 initialize_weekly_briefing()
 app.include_router(auth_router)
 app.include_router(payments_router)
@@ -151,6 +154,7 @@ app.include_router(video_router)
 app.include_router(home_router)
 app.include_router(knowledge_router)
 app.include_router(weekly_briefing_router)
+app.include_router(pattern_intelligence_router)
 
 
 # =========================================================
