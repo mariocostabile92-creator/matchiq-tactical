@@ -1,6 +1,5 @@
 import re
 import unicodedata
-from difflib import SequenceMatcher
 from typing import Dict, List, Optional, Tuple
 
 from app.services.voice_coach_schemas import (
@@ -8,6 +7,8 @@ from app.services.voice_coach_schemas import (
     VoiceCoachInterpretResponse,
     VoiceCoachPlayer,
 )
+from app.services.voice_coach_player_resolver import resolve_players
+from app.services.voice_coach_taxonomy import classify_tactical_topic
 
 
 EVENT_MAP = {
@@ -17,19 +18,6 @@ EVENT_MAP = {
     "lost_ball": {"type": "palla_persa", "label": "Palla persa", "icon": "PERSA"},
     "yellow_card": {"type": "cartellino", "label": "Cartellino giallo", "icon": "GIALLO"},
 }
-
-THEME_RULES = [
-    ("second_post", "Secondo palo", "area", "high", r"\b(secondo palo|palo dietro|palo libero)\b"),
-    ("right_flank", "Fascia destra", "right_flank", "high", r"\b(destra|fascia destra|lato destro)\b"),
-    ("left_flank", "Fascia sinistra", "left_flank", "medium", r"\b(sinistra|fascia sinistra|lato sinistro)\b"),
-    ("low_press", "Pressing basso", "central", "medium", r"\b(pressiamo bassi|pressione bassa|troppo bassi|pressing basso)\b"),
-    ("build_up", "Costruzione dal basso", "build_up", "medium", r"\b(usciamo dal basso|uscendo bene|costruzione|dal portiere|uscita bassa)\b"),
-    ("negative_transition", "Transizione negativa", "central", "high", r"\b(transizione|ripartenza|contropiede|rest defense)\b"),
-    ("duels", "Duelli e seconde palle", "duel", "medium", r"\b(duelli|seconda palla|rimbalzi|spizzata)\b"),
-    ("tiredness", "Stanchezza", "individual", "medium", r"\b(stanco|stanchezza|non ne ha|fatica)\b"),
-    ("team_long", "Distanza tra reparti", "central", "high", r"\b(squadra lunga|reparti|distanze|troppo lunghi)\b"),
-]
-
 
 def _clean(text: str) -> str:
     value = unicodedata.normalize("NFD", str(text or "").lower())
@@ -55,8 +43,14 @@ def _minute(text: str, current: int) -> Tuple[int, str]:
     return value, ""
 
 
-def _team(text: str, selected: str) -> Tuple[str, bool]:
+def _team(text: str, selected: str, home_team: str = "", away_team: str = "") -> Tuple[str, bool]:
     clean = _clean(text)
+    home_name = _clean(home_team)
+    away_name = _clean(away_team)
+    if away_name and len(away_name) >= 3 and away_name in clean:
+        return "away", False
+    if home_name and len(home_name) >= 3 and home_name in clean:
+        return "home", False
     if re.search(r"\b(loro|avversari|avversario|ospiti|trasferta|subiamo|ci pressano|ci attaccano|gol loro)\b", clean):
         return "away", False
     if re.search(r"\b(noi|nostra|nostro|casa|recuperiamo|pressiamo|gol nostro|segnamo|segnato noi)\b", clean):
@@ -65,31 +59,13 @@ def _team(text: str, selected: str) -> Tuple[str, bool]:
 
 
 def _resolve_player(text: str, lineup: List[VoiceCoachPlayer]) -> Tuple[Optional[VoiceCoachPlayer], float, List[VoiceCoachPlayer]]:
-    clean = _clean(text)
-    scored = []
-    for player in lineup:
-        name = _clean(player.name)
-        if not name:
-            continue
-        score = 0.0
-        if name in clean:
-            score = 1.0
-        else:
-            parts = [part for part in name.split(" ") if len(part) >= 3]
-            if any(part in clean for part in parts):
-                score = 0.76
-            elif player.number and re.search(rf"\b(?:numero\s*)?{re.escape(str(player.number))}\b", clean):
-                score = 0.72
-            else:
-                score = SequenceMatcher(None, clean, name).ratio() * 0.55
-        if score >= 0.55:
-            scored.append((score, player))
-    scored.sort(key=lambda item: item[0], reverse=True)
-    if not scored:
+    result = resolve_players(text, [player.model_dump() for player in lineup])
+    if not result["player"]:
         return None, 0.0, []
-    top = scored[0][0]
-    alternatives = [player for score, player in scored if score >= top - 0.08][:4]
-    return scored[0][1], top, alternatives
+    by_id = {str(player.id): player for player in lineup}
+    selected = by_id.get(str(result["player"].get("id")))
+    alternatives = [by_id[str(item.get("id"))] for item in result["candidates"] if str(item.get("id")) in by_id]
+    return selected, float(result["confidence"]), alternatives
 
 
 def _event_key(text: str) -> Optional[Tuple[str, float]]:
@@ -108,11 +84,7 @@ def _event_key(text: str) -> Optional[Tuple[str, float]]:
 
 
 def _theme(text: str) -> Dict[str, str]:
-    clean = _clean(text)
-    for key, label, zone, priority, pattern in THEME_RULES:
-        if re.search(pattern, clean):
-            return {"topic": key, "topic_label": label, "zone": zone, "priority": priority}
-    return {"topic": "general_note", "topic_label": "Nota staff", "zone": "not_specified", "priority": "medium"}
+    return classify_tactical_topic(text)
 
 
 def _sentiment(text: str) -> str:
@@ -195,8 +167,9 @@ def interpret_voice_coach_command(payload: VoiceCoachInterpretRequest) -> VoiceC
     text = payload.transcript.strip()
     clean = _clean(text)
     context = payload.context
+    available_players = [*context.lineup, *context.bench]
     minute, minute_warning = _minute(text, context.current_minute)
-    team, team_ambiguous = _team(text, context.selected_team)
+    team, team_ambiguous = _team(text, context.selected_team, context.home_team, context.away_team)
     warnings = [minute_warning] if minute_warning else []
     ambiguities: List[str] = []
 
@@ -211,7 +184,7 @@ def interpret_voice_coach_command(payload: VoiceCoachInterpretRequest) -> VoiceC
             privacy={"audio_stored": False, "transcript_source": payload.source},
         )
 
-    substitution = _substitution(text, context.lineup)
+    substitution = _substitution(text, available_players)
     if substitution:
         out_player = substitution.get("out")
         in_player = substitution.get("in")
@@ -255,7 +228,7 @@ def interpret_voice_coach_command(payload: VoiceCoachInterpretRequest) -> VoiceC
             privacy={"audio_stored": False, "transcript_source": payload.source},
         )
 
-    player, player_confidence, alternatives = _resolve_player(text, context.lineup)
+    player, player_confidence, alternatives = _resolve_player(text, available_players)
     event = _event_key(text)
     if event:
         key, confidence = event

@@ -12,6 +12,7 @@ function boot(){
         bindCoachVoiceInput();
     }
     renderAll();
+    if(typeof loadCoachVoiceIntelligence === "function") loadCoachVoiceIntelligence();
 }
 
 boot();

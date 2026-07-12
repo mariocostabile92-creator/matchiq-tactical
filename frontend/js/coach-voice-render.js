@@ -69,6 +69,8 @@ function renderCoachVoiceProposalCard(proposal){
             </div>
             <h3>Ho capito questo</h3>
             <p>${esc(proposal.normalized_summary || proposal.transcript || "")}</p>
+            ${proposal.explanation ? `<div class="coach-voice-explanation"><strong>Perche</strong><span>${esc(proposal.explanation)}</span></div>` : ""}
+            ${Array.isArray(proposal.evidence) && proposal.evidence.length ? `<div class="coach-voice-evidence">${proposal.evidence.map(item => `<span>${esc(item)}</span>`).join("")}</div>` : ""}
             ${renderCoachVoiceProposalEditor(proposal)}
             <div class="coach-voice-fields">
                 ${fields.map(([label, value]) => `
@@ -76,6 +78,11 @@ function renderCoachVoiceProposalCard(proposal){
                 `).join("")}
             </div>
             ${notes.length ? `<div class="coach-voice-warnings">${notes.map(n => `<span>${esc(n.text)}</span>`).join("")}</div>` : ""}
+            ${proposal.clarification_question ? `
+                <div class="coach-voice-clarification">
+                    <strong>${esc(proposal.clarification_question)}</strong>
+                    <div>${(proposal.clarification_options || []).map(option => `<button type="button" onclick="applyCoachVoiceClarification('${esc(proposal.id)}','${esc(option)}')">${esc(option)}</button>`).join("")}</div>
+                </div>` : ""}
             <div class="coach-voice-actions-row">
                 <button class="btn green" type="button" onclick="applyCoachVoiceProposal('${esc(proposal.id)}')">Conferma</button>
                 <button class="btn dark" type="button" onclick="editCoachVoiceProposal()">Modifica</button>
@@ -90,14 +97,32 @@ function renderCoachVoiceThemes(){
     const themes = Object.entries(vc.themes || {})
         .map(([key, item]) => ({key, ...item}))
         .sort((a,b) => Number(b.count || 0) - Number(a.count || 0))
-        .slice(0, 6);
+        .filter(item => item.status !== "ignored" && item.status !== "resolved")
+        .slice(0, 5);
     if(!themes.length){
-        return `<div class="empty">Ancora nessun tema vocale ricorrente. Detti o scrivi 2-3 osservazioni durante il Match Day.</div>`;
+        return `<div class="empty">Ancora nessun tema emerso. Detti o scrivi osservazioni durante il Match Day.</div>`;
     }
     return themes.map(item => `
         <div class="coach-voice-theme">
             <strong>${esc(item.label || item.key)}</strong>
-            <span>${esc(item.count || 0)} segnalazioni${Array.isArray(item.minutes) && item.minutes.length ? ` - min. ${item.minutes.map(m => `${esc(m)}'`).join(", ")}` : ""}</span>
+            <span>${esc(item.count || 0)} segnalazioni${Array.isArray(item.minutes) && item.minutes.length ? ` - ${esc(item.minutes[0])}'-${esc(item.minutes[item.minutes.length - 1])}'` : ""}${item.zone ? ` - ${esc(item.zone)}` : ""}</span>
+            ${Array.isArray(item.players) && item.players.length ? `<small>${item.players.map(esc).join(", ")}</small>` : ""}
+            <button type="button" onclick="openCoachVoiceThemeDetails('${esc(item.key)}')">Apri dettagli</button>
+        </div>
+    `).join("");
+}
+
+function renderCoachVoiceProactive(){
+    const vc = ensureCoachVoiceMemory();
+    const now = Date.now();
+    return (vc.proactiveSuggestions || []).filter(item => {
+        const dismissed = Number(vc.notifications?.[item.key] || 0);
+        return !dismissed || now - dismissed > Number(item.cooldown_seconds || 600) * 1000;
+    }).slice(0, 2).map(item => `
+        <div class="coach-voice-proactive">
+            <span>${esc(item.message)}</span>
+            <button type="button" onclick="${item.type === 'halftime' ? 'prepareCoachHalftimeSummary()' : `document.getElementById('coachVoiceThemes')?.scrollIntoView({behavior:'smooth'})`}">Apri</button>
+            <button type="button" onclick="dismissCoachVoiceSuggestion('${esc(item.key)}')">Non ora</button>
         </div>
     `).join("");
 }
@@ -108,6 +133,8 @@ function renderCoachVoiceCoach(){
     const preview = document.getElementById("coachVoicePreview");
     const themes = document.getElementById("coachVoiceThemes");
     const hint = document.getElementById("coachVoiceAutopilotHint");
+    const proactive = document.getElementById("coachVoiceProactive");
+    const undo = document.getElementById("coachVoiceUndo");
 
     if(panel){
         panel.classList.toggle("has-proposal", Boolean(vc.lastProposal));
@@ -118,6 +145,8 @@ function renderCoachVoiceCoach(){
     if(themes){
         themes.innerHTML = renderCoachVoiceThemes();
     }
+    if(proactive) proactive.innerHTML = renderCoachVoiceProactive();
+    if(undo) undo.hidden = !(vc.observations || []).length;
     if(hint){
         hint.textContent = "Esempi: Gol di Rossi, Cambio Rossi per Bianchi, stiamo soffrendo a destra, secondo palo libero, grande recupero di Marco.";
     }

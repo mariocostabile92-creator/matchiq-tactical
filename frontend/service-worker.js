@@ -1,4 +1,4 @@
-const CACHE_NAME = "matchiq-pwa-v103";
+const CACHE_NAME = "matchiq-pwa-v104";
 const APP_SHELL = [
   "/index.html?v=10503",
   "/mobile.html?v=10503",

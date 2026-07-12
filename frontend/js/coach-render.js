@@ -347,6 +347,15 @@ function buildCoachHalftimeTalk(){
     const talk = [];
     const home = getTeamName("home");
     const away = getTeamName("away");
+    const voice = typeof ensureCoachVoiceMemory === "function" ? ensureCoachVoiceMemory() : {themes:{}};
+    const voiceThemes = Object.values(voice.themes || {})
+        .filter(item => Number(item.count || 0) > 0 && item.status !== "ignored")
+        .sort((a,b) => Number(b.count || 0) - Number(a.count || 0))
+        .slice(0,2);
+
+    voiceThemes.forEach(item => {
+        talk.push(`Osservazione dello staff: ${String(item.label || "tema tattico").toLowerCase()} segnalata ${item.count} volte${Array.isArray(item.minutes) && item.minutes.length ? ` tra il ${item.minutes[0]}' e il ${item.minutes[item.minutes.length - 1]}'` : ""}.`);
+    });
 
     if(s.lostHome >= 2) talk.push(`${home}: uscita palla da semplificare, serve piu sostegno vicino e meno forzature centrali.`);
     if(s.lostAway >= 2) talk.push(`${away}: perdita palla ricorrente, possibile tema da attaccare con pressione orientata.`);

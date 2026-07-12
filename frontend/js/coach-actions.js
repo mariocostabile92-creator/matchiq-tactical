@@ -25,6 +25,8 @@ function createManualMatch(){
 
 function clearCurrentMatch(){
     if(!confirm("Vuoi resettare partita, eventi, formazione e report Coach Mode?")) return;
+    const voiceMatchKey = typeof getCoachVoiceMatchKey === "function" ? getCoachVoiceMatchKey() : "";
+    if(voiceMatchKey && typeof deleteCoachVoiceMatchIntelligence === "function") deleteCoachVoiceMatchIntelligence(voiceMatchKey).catch(()=>{});
     stopCoachLiveClock(false);
     coachState = {match:null, events:[], ratings:[], lineup:[], report:"", live:null, memory:null};
     localStorage.removeItem(STORAGE_KEY);
@@ -98,6 +100,7 @@ function buildCoachEvent(type, label, icon, options={}){
         playerRole: selectedPlayer ? selectedPlayer.role : "",
         note,
         source: options.source || (options.voice ? "voice" : "quick"),
+        voiceObservationId: options.voiceObservationId || "",
         matchElapsedSeconds: useLiveMinute ? getCoachLiveElapsedSeconds() : null,
         createdAt: new Date().toISOString()
     };

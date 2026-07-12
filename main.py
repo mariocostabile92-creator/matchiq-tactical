@@ -64,6 +64,7 @@ from app.services.full_analysis_service import (
 from auth import router as auth_router
 from database import init_db
 from app.services.knowledge_service import initialize_foundation
+from app.services.voice_coach_intelligence_service import initialize_voice_coach_intelligence
 from auth import create_verification_for_user
 from brevo_service import send_verification_email, is_email_configured
 from usage_guard import (
@@ -138,6 +139,7 @@ app.add_middleware(
 
 init_db()
 initialize_foundation()
+initialize_voice_coach_intelligence()
 app.include_router(auth_router)
 app.include_router(payments_router)
 app.include_router(coach_tracking_router)

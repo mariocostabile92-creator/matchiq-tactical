@@ -320,3 +320,34 @@ def list_source_links(knowledge_id: int) -> list:
     rows = fetchall(cur)
     conn.close()
     return [_deserialize_row(row) for row in rows]
+
+
+def upsert_source_link(knowledge_id: int, source_type: str, source_id: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    conn = get_connection()
+    cur = conn.cursor()
+    now = utc_now()
+    cur.execute(q("SELECT id FROM knowledge_source_links WHERE knowledge_id = ? AND source_type = ? AND source_id = ?"), (knowledge_id, source_type, source_id))
+    existing = fetchone(cur)
+    encoded = _json_dump(metadata or {})
+    if existing:
+        cur.execute(q("UPDATE knowledge_source_links SET metadata = ?, updated_at = ? WHERE id = ?"), (encoded, now, existing["id"]))
+        link_id = existing["id"]
+    else:
+        returning = " RETURNING id" if USE_POSTGRES else ""
+        cur.execute(q(f"INSERT INTO knowledge_source_links (knowledge_id, source_type, source_id, metadata, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?){returning}"), (knowledge_id, source_type, source_id, encoded, now, now))
+        link_id = get_last_insert_id(cur)
+    conn.commit()
+    cur.execute(q("SELECT * FROM knowledge_source_links WHERE id = ? AND knowledge_id = ?"), (link_id, knowledge_id))
+    row = fetchone(cur)
+    conn.close()
+    return _deserialize_row(row)
+
+
+def delete_source_link(knowledge_id: int, source_type: str, source_id: str) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("DELETE FROM knowledge_source_links WHERE knowledge_id = ? AND source_type = ? AND source_id = ?"), (knowledge_id, source_type, source_id))
+    deleted = cur.rowcount > 0
+    conn.commit()
+    conn.close()
+    return deleted

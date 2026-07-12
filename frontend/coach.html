@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
-<link rel="stylesheet" href="/css/coach.css?v=10498">
+<link rel="stylesheet" href="/css/coach.css?v=10504">
 
 <style>
 .coach-onboarding{
@@ -1092,10 +1092,13 @@
                 </div>
                 <div class="coach-voice-hint" id="coachVoiceAutopilotHint"></div>
                 <div id="coachVoicePreview"></div>
+                <div id="coachVoiceProactive"></div>
                 <div class="coach-voice-themes-box">
-                    <h3>Temi vocali ricorrenti</h3>
+                    <h3>MatchIQ sta imparando</h3>
+                    <p>Temi emersi dalle osservazioni registrate durante la partita.</p>
                     <div id="coachVoiceThemes"></div>
                 </div>
+                <button class="btn dark" id="coachVoiceUndo" type="button" onclick="undoLastCoachVoiceObservation()" hidden>Annulla ultimo salvataggio</button>
             </div>
         </div>
 
@@ -1477,17 +1480,17 @@
 
 </div>
 
-<script src="/js/coach-state.js?v=10501"></script>
-<script src="/js/coach-voice-state.js?v=10498"></script>
-<script src="/js/coach-storage.js?v=10498"></script>
-<script src="/js/coach-actions.js?v=10501"></script>
-<script src="/js/coach-voice-parser.js?v=10498"></script>
-<script src="/js/coach-voice-api.js?v=10498"></script>
-<script src="/js/coach-voice-actions.js?v=10498"></script>
-<script src="/js/coach-report.js?v=10498"></script>
-<script src="/js/coach-render.js?v=10501"></script>
-<script src="/js/coach-voice-render.js?v=10498"></script>
-<script src="/js/coach-core.js?v=10498"></script>
+<script src="/js/coach-state.js?v=10504"></script>
+<script src="/js/coach-voice-state.js?v=10504"></script>
+<script src="/js/coach-storage.js?v=10504"></script>
+<script src="/js/coach-actions.js?v=10504"></script>
+<script src="/js/coach-voice-parser.js?v=10504"></script>
+<script src="/js/coach-voice-api.js?v=10504"></script>
+<script src="/js/coach-voice-actions.js?v=10504"></script>
+<script src="/js/coach-report.js?v=10504"></script>
+<script src="/js/coach-render.js?v=10504"></script>
+<script src="/js/coach-voice-render.js?v=10504"></script>
+<script src="/js/coach-core.js?v=10504"></script>
 <script src="/js/app-meta.js"></script>
 <script src="/js/global-nav-config.js?v=10503"></script>
 <script src="/js/global-nav-state.js?v=10503"></script>

@@ -1,4 +1,5 @@
 let coachVoiceRecognition = null;
+let coachVoiceStopTimer = null;
 
 function setCoachVoiceUiStatus(message, mode="idle"){
     const vc = ensureCoachVoiceMemory();
@@ -37,6 +38,7 @@ function beginCoachVoiceListening(){
     recognition.maxAlternatives = 1;
     recognition.onstart = () => setCoachVoiceUiStatus("Sto ascoltando... parla in modo naturale e breve.", "listening");
     recognition.onresult = event => {
+        clearTimeout(coachVoiceStopTimer);
         const text = event.results?.[0]?.[0]?.transcript || "";
         setInputValue("coachVoiceInput", text);
         coachVoiceRecognition = null;
@@ -44,6 +46,7 @@ function beginCoachVoiceListening(){
         else setCoachVoiceUiStatus("Audio ricevuto ma senza testo. Riprova o scrivi il comando.", "blocked");
     };
     recognition.onerror = event => {
+        clearTimeout(coachVoiceStopTimer);
         coachVoiceRecognition = null;
         const denied = event?.error === "not-allowed" || event?.error === "service-not-allowed";
         setCoachVoiceUiStatus(denied
@@ -51,6 +54,7 @@ function beginCoachVoiceListening(){
             : "Non ho capito l'audio. Prova una frase piu breve o usa il testo.", "blocked");
     };
     recognition.onend = () => {
+        clearTimeout(coachVoiceStopTimer);
         if(coachVoiceRecognition === recognition){
             coachVoiceRecognition = null;
             setCoachVoiceUiStatus("Ascolto chiuso. Se non vedi una proposta, scrivi il comando.", "idle");
@@ -58,6 +62,9 @@ function beginCoachVoiceListening(){
     };
     try{
         recognition.start();
+        coachVoiceStopTimer = setTimeout(() => {
+            if(coachVoiceRecognition === recognition) recognition.stop();
+        }, 15000);
     }catch{
         coachVoiceRecognition = null;
         setCoachVoiceUiStatus("Il browser non ha avviato il microfono. Usa Scrivi il comando.", "blocked");
@@ -198,6 +205,7 @@ function coachVoiceEventOptionsFromProposal(proposal){
         player: proposal.entities?.player_name || "",
         note: proposal.transcript,
         source: "ai-voice",
+        voiceObservationId: proposal.id,
         tags: [proposal.entities?.topic_label, proposal.entities?.zone, "AI Voice Coach"].filter(Boolean)
     };
 }
@@ -233,13 +241,12 @@ function applyCoachVoiceProposal(id, silent=false){
         const topic = proposal.entities?.topic || "general_note";
         const rule = getCoachVoiceThemeRule(topic);
         const type = topic === "second_post" || topic === "right_flank" || topic === "left_flank" ? "errore_difensivo"
-            : topic === "low_press" ? "pressing"
+            : topic === "pressing" || topic === "low_press" ? "pressing"
             : topic === "build_up" ? "uscita_lato"
             : topic === "negative_transition" ? "transizione"
             : topic === "duels" ? "seconda_palla"
             : "nota";
         addQuickEvent(type, proposal.entities?.topic_label || "Nota tattica", "VOICE", coachVoiceEventOptionsFromProposal(proposal));
-        recordCoachVoiceObservation(proposal, rule);
     }else if(proposal.intent === "match_control"){
         setCoachVoiceUiStatus("Comando partita non applicato automaticamente: usa i pulsanti timer/fase per sicurezza.", "blocked");
         return;
@@ -247,12 +254,24 @@ function applyCoachVoiceProposal(id, silent=false){
         showNotice("Comando non supportato. Salvo come nota staff se confermi con una frase piu chiara.", "warn");
         return;
     }
+    const observation = recordCoachVoiceObservation(proposal, getCoachVoiceThemeRule(proposal.entities?.topic));
+    if(typeof persistCoachVoiceObservation === "function"){
+        persistCoachVoiceObservation(proposal, observation).then(result => {
+            observation.syncStatus = result?.local ? "local" : "synced";
+            if(Array.isArray(result?.themes)) loadCoachVoiceIntelligence();
+            saveState(); renderCoachVoiceCoach();
+        }).catch(() => {
+            observation.syncStatus = "pending";
+            saveState(); renderCoachVoiceCoach();
+            setCoachVoiceUiStatus("Osservazione salvata localmente, sincronizzazione in attesa.", "blocked");
+        });
+    }
     const vc = ensureCoachVoiceMemory();
     vc.lastProposal = null;
     saveState();
     renderAll();
     setCoachVoiceUiStatus("Evento salvato da AI Voice Coach.", "idle");
-    if(!silent) showNotice("AI Voice Coach ha salvato l'azione nella timeline.", "ok", 3200);
+    if(!silent) showNotice("AI Voice Coach ha salvato l'azione nella timeline. Puoi annullare dal pannello.", "ok", 4200);
 }
 
 function applyCoachVoiceScoreUpdate(proposal){
@@ -269,7 +288,7 @@ function applyCoachVoiceScoreUpdate(proposal){
             minute: proposal.minute,
             side: "home",
             note: `Aggiornamento punteggio da voce: ${targetHome}-${targetAway}.`,
-            source: "ai-voice"
+            source: "ai-voice", voiceObservationId: proposal.id
         });
     }
     for(let i=currentAway; i<targetAway; i++){
@@ -277,7 +296,7 @@ function applyCoachVoiceScoreUpdate(proposal){
             minute: proposal.minute,
             side: "away",
             note: `Aggiornamento punteggio da voce: ${targetHome}-${targetAway}.`,
-            source: "ai-voice"
+            source: "ai-voice", voiceObservationId: proposal.id
         });
     }
     if(targetHome === currentHome && targetAway === currentAway){
@@ -285,7 +304,7 @@ function applyCoachVoiceScoreUpdate(proposal){
             minute: proposal.minute,
             side: proposal.team || "home",
             note: `Punteggio confermato da voce: ${targetHome}-${targetAway}.`,
-            source: "ai-voice"
+            source: "ai-voice", voiceObservationId: proposal.id
         });
     }
 }
@@ -300,7 +319,9 @@ function applyCoachVoiceSubstitution(proposal){
         return;
     }
     outPlayer.status = "Panchina";
+    outPlayer.substituted = true;
     inPlayer.status = "Titolare";
+    inPlayer.substituted = false;
     inPlayer.side = outPlayer.side || inPlayer.side;
     inPlayer.team = getTeamName(inPlayer.side);
     addQuickEvent("cambio", "Cambio", "CAMBIO", {
@@ -308,17 +329,19 @@ function applyCoachVoiceSubstitution(proposal){
         side: outPlayer.side || proposal.team || "home",
         player: `${formatLineupPlayer(outPlayer)} -> ${formatLineupPlayer(inPlayer)}`,
         note: proposal.normalized_summary,
-        source: "ai-voice"
+        source: "ai-voice", voiceObservationId: proposal.id
     });
 }
 
 function recordCoachVoiceObservation(proposal, rule=null){
     const vc = ensureCoachVoiceMemory();
-    const topic = proposal.entities?.topic || "general_note";
-    const label = proposal.entities?.topic_label || rule?.label || "Nota staff";
+    const existing = vc.observations.find(item => String(item.id) === String(proposal.id));
+    if(existing) return existing;
+    const topic = proposal.tactical_topic || proposal.entities?.topic || proposal.entities?.event_key || proposal.intent || "general_note";
+    const label = proposal.entities?.topic_label || proposal.entities?.event_label || rule?.label || COACH_VOICE_INTENTS[proposal.intent] || "Nota staff";
     const match = coachState.match || {};
     const elapsedSeconds = typeof getCoachLiveElapsedSeconds === "function" ? getCoachLiveElapsedSeconds() : 0;
-    vc.observations.unshift({
+    const observation = {
         id: proposal.id,
         matchId: match.id || match.createdAt || "",
         matchLabel: match.homeTeam && match.awayTeam ? `${match.homeTeam} vs ${match.awayTeam}` : "",
@@ -333,13 +356,17 @@ function recordCoachVoiceObservation(proposal, rule=null){
         intent: proposal.intent,
         topic,
         label,
-        zone: proposal.entities?.zone || rule?.zone || "not_specified",
-        priority: proposal.entities?.priority || rule?.priority || "medium",
-        sentiment: proposal.entities?.sentiment || "neutral",
-        player: proposal.entities?.player_name || "",
+        zone: proposal.zone || proposal.entities?.zone || rule?.zone || "not_specified",
+        priority: proposal.priority || proposal.entities?.priority || rule?.priority || "medium",
+        sentiment: proposal.polarity || proposal.entities?.sentiment || "neutral",
+        player: [proposal.entities?.player_name, proposal.entities?.player_out_name, proposal.entities?.player_in_name].filter(Boolean).join(" / "),
         note: proposal.transcript,
+        explanation: proposal.explanation || "",
+        syncStatus: navigator.onLine === false ? "pending" : "local",
+        status: "confirmed",
         createdAt: new Date().toISOString()
-    });
+    };
+    vc.observations.unshift(observation);
     vc.observations = vc.observations.slice(0, 80);
     const current = vc.themes[topic] || { label, count: 0, minutes: [], priority: proposal.entities?.priority || "medium" };
     current.label = label;
@@ -347,10 +374,58 @@ function recordCoachVoiceObservation(proposal, rule=null){
     current.minutes = [...(current.minutes || []), proposal.minute].slice(-8);
     current.priority = proposal.entities?.priority || current.priority || "medium";
     vc.themes[topic] = current;
-    if(proposal.entities?.player_name){
-        const key = proposal.entities.player_name;
+    if(observation.player){
+        const key = observation.player;
         vc.players[key] = (Number(vc.players[key] || 0) || 0) + 1;
     }
+    return observation;
+}
+
+async function undoLastCoachVoiceObservation(){
+    const vc = ensureCoachVoiceMemory();
+    const observation = vc.observations[0];
+    if(!observation){ showNotice("Nessuna osservazione Voice Coach da annullare.", "warn"); return; }
+    vc.observations.shift();
+    coachState.events = (coachState.events || []).filter(event => String(event.voiceObservationId || "") !== String(observation.id));
+    const current = vc.themes[observation.topic];
+    if(current){
+        current.count = Math.max(0, Number(current.count || 0) - 1);
+        current.minutes = (current.minutes || []).filter((_, index, list) => index !== list.length - 1);
+        if(!current.count) delete vc.themes[observation.topic];
+    }
+    saveState(); renderAll();
+    try{ if(typeof cancelPersistedCoachVoiceObservation === "function") await cancelPersistedCoachVoiceObservation(observation.id); }catch{}
+    showNotice("Ultima osservazione Voice Coach annullata.", "ok");
+}
+
+function applyCoachVoiceClarification(id, option){
+    const proposal = getCoachVoiceProposalById(id);
+    if(!proposal) return;
+    proposal.entities = proposal.entities || {};
+    if(option === "Calcio d'angolo" || option === "Punizione laterale" || option === "Azione aperta"){
+        proposal.entities.context_detail = option;
+        proposal.evidence = [...(proposal.evidence || []), `Chiarimento staff: ${option}`];
+    }else if(option !== "Salva senza specificare"){
+        proposal.entities.context_detail = option;
+    }
+    proposal.clarification_question = "";
+    proposal.clarification_options = [];
+    proposal.requires_confirmation = true;
+    saveState(); renderCoachVoiceCoach();
+}
+
+function dismissCoachVoiceSuggestion(key){
+    const vc = ensureCoachVoiceMemory();
+    vc.notifications[key] = Date.now();
+    saveState(); renderCoachVoiceCoach();
+}
+
+function openCoachVoiceThemeDetails(key){
+    const item = ensureCoachVoiceMemory().themes?.[key];
+    if(!item) return;
+    const minutes = Array.isArray(item.minutes) && item.minutes.length ? ` Minuti: ${item.minutes.join("', ")}'.` : "";
+    const examples = Array.isArray(item.examples) && item.examples.length ? ` Esempi staff: ${item.examples.slice(0,2).join(" / ")}.` : "";
+    showNotice(`${item.label}: ${item.count || 0} segnalazioni.${minutes}${examples}`, "ok", 7000);
 }
 
 function cancelCoachVoiceProposal(){
@@ -380,4 +455,15 @@ function bindCoachVoiceInput(){
             addLiveNote();
         }
     });
+    if(document.body.dataset.voiceVisibilityBound !== "1"){
+        document.body.dataset.voiceVisibilityBound = "1";
+        document.addEventListener("visibilitychange", () => {
+            if(document.hidden && coachVoiceRecognition){
+                coachVoiceRecognition.stop();
+                coachVoiceRecognition = null;
+                clearTimeout(coachVoiceStopTimer);
+                setCoachVoiceUiStatus("Registrazione interrotta quando l'app e passata in background. Puoi riprovare o scrivere.", "blocked");
+            }
+        });
+    }
 }

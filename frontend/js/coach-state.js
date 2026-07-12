@@ -1,4 +1,4 @@
-APP_VERSION = "10501";
+APP_VERSION = "10504";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
@@ -58,7 +58,11 @@ function normalizeCoachMemory(memory){
             themes: voiceCoach.themes && typeof voiceCoach.themes === "object" ? voiceCoach.themes : {},
             players: voiceCoach.players && typeof voiceCoach.players === "object" ? voiceCoach.players : {},
             lastProposal: voiceCoach.lastProposal && typeof voiceCoach.lastProposal === "object" ? voiceCoach.lastProposal : null,
-            lastStatus: String(voiceCoach.lastStatus || "")
+            lastStatus: String(voiceCoach.lastStatus || ""),
+            proactiveSuggestions: Array.isArray(voiceCoach.proactiveSuggestions) ? voiceCoach.proactiveSuggestions : [],
+            notifications: voiceCoach.notifications && typeof voiceCoach.notifications === "object" ? voiceCoach.notifications : {},
+            halftime: voiceCoach.halftime && typeof voiceCoach.halftime === "object" ? voiceCoach.halftime : {},
+            postMatch: voiceCoach.postMatch && typeof voiceCoach.postMatch === "object" ? voiceCoach.postMatch : {}
         }
     };
 }
