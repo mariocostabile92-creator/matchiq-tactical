@@ -132,6 +132,64 @@ function getCoachVoiceProposalById(id){
     return proposal && String(proposal.id) === String(id) ? proposal : null;
 }
 
+function clampCoachVoiceNumber(value, min, max){
+    const parsed = Number(value);
+    if(!Number.isFinite(parsed)) return min;
+    return Math.max(min, Math.min(max, Math.round(parsed)));
+}
+
+function refreshCoachVoiceProposalSummary(proposal){
+    const e = proposal.entities || {};
+    if(proposal.intent === "score_update"){
+        proposal.normalized_summary = `Aggiornamento punteggio: ${getTeamName("home")} ${e.home_goals || 0} - ${e.away_goals || 0} ${getTeamName("away")}.`;
+    }else if(proposal.intent === "substitution"){
+        proposal.normalized_summary = e.player_out_name && e.player_in_name
+            ? `Cambio: ${e.player_out_name} esce, ${e.player_in_name} entra al ${proposal.minute}'.`
+            : "Cambio da completare: non ho riconosciuto tutti i giocatori.";
+    }else if(proposal.intent === "player_event"){
+        proposal.normalized_summary = `${e.event_label || "Evento"}${e.player_name ? " di " + e.player_name : ""} al ${proposal.minute}'.`;
+    }else if(proposal.intent === "tactical_note" || proposal.intent === "player_note"){
+        proposal.normalized_summary = `${e.topic_label || "Nota staff"}: ${proposal.transcript || e.note_original || ""}`;
+    }
+}
+
+function updateCoachVoiceProposalField(id, field, value){
+    const proposal = getCoachVoiceProposalById(id);
+    if(!proposal) return;
+    proposal.entities = proposal.entities || {};
+    if(field === "minute"){
+        proposal.minute = clampCoachVoiceNumber(value, 0, 130);
+    }else if(field === "team"){
+        proposal.team = value === "away" ? "away" : "home";
+    }else if(field === "player_id"){
+        const player = value ? getLineupPlayerById(value) : null;
+        proposal.entities.player_id = player?.id || "";
+        proposal.entities.player_name = player ? formatLineupPlayer(player) : "";
+    }else if(field === "player_out_id" || field === "player_in_id"){
+        const player = value ? getLineupPlayerById(value) : null;
+        proposal.entities[field] = player?.id || "";
+        proposal.entities[field.replace("_id", "_name")] = player ? formatLineupPlayer(player) : "";
+    }else if(field === "event_key"){
+        const mapped = COACH_VOICE_EVENT_MAP[value] || COACH_VOICE_EVENT_MAP.recovery;
+        proposal.entities.event_key = value;
+        proposal.entities.event_type = mapped.type;
+        proposal.entities.event_label = mapped.label;
+        proposal.entities.event_icon = mapped.icon;
+    }else if(field === "topic"){
+        const rule = getCoachVoiceThemeRule(value) || {key:"general_note", label:"Nota staff", zone:"not_specified", priority:"medium"};
+        proposal.entities.topic = rule.key;
+        proposal.entities.topic_label = rule.label;
+        proposal.entities.zone = rule.zone;
+        proposal.entities.priority = rule.priority;
+    }else if(field === "home_goals" || field === "away_goals"){
+        proposal.entities[field] = clampCoachVoiceNumber(value, 0, 30);
+    }
+    proposal.requires_confirmation = true;
+    refreshCoachVoiceProposalSummary(proposal);
+    saveState();
+    renderCoachVoiceCoach();
+}
+
 function coachVoiceEventOptionsFromProposal(proposal){
     return {
         minute: proposal.minute,
