@@ -316,9 +316,20 @@ function recordCoachVoiceObservation(proposal, rule=null){
     const vc = ensureCoachVoiceMemory();
     const topic = proposal.entities?.topic || "general_note";
     const label = proposal.entities?.topic_label || rule?.label || "Nota staff";
+    const match = coachState.match || {};
+    const elapsedSeconds = typeof getCoachLiveElapsedSeconds === "function" ? getCoachLiveElapsedSeconds() : 0;
     vc.observations.unshift({
         id: proposal.id,
+        matchId: match.id || match.createdAt || "",
+        matchLabel: match.homeTeam && match.awayTeam ? `${match.homeTeam} vs ${match.awayTeam}` : "",
         minute: proposal.minute,
+        matchElapsedSeconds: elapsedSeconds,
+        videoContext: {
+            ready: false,
+            videoSessionId: "",
+            frameId: "",
+            clipId: ""
+        },
         intent: proposal.intent,
         topic,
         label,

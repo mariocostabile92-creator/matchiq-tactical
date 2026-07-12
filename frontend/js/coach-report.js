@@ -161,11 +161,29 @@ function buildVoiceCoachReportText(){
         .slice(0, 5)
         .map(item => `- ${item.label}: ${item.count} segnalazioni${Array.isArray(item.minutes) && item.minutes.length ? ` (min. ${item.minutes.join(", ")})` : ""}`)
         .join("\n");
-    const recent = voice.observations.slice(0, 6).map(item => `- ${item.minute}' ${item.label}: ${item.note}`).join("\n");
+    const players = Object.entries(voice.players || {})
+        .sort((a,b) => Number(b[1] || 0) - Number(a[1] || 0))
+        .slice(0, 5)
+        .map(([name, count]) => `- ${name}: citato ${count} volte`)
+        .join("\n");
+    const positives = voice.observations.filter(item => item.sentiment === "positive").length;
+    const critical = voice.observations.filter(item => item.sentiment === "negative" || item.priority === "high").length;
+    const recent = voice.observations.slice(0, 6).map(item => {
+        const clock = item.matchElapsedSeconds ? ` (${formatCoachClock(item.matchElapsedSeconds)})` : "";
+        return `- ${item.minute}'${clock} ${item.label}: ${item.note}`;
+    }).join("\n");
     return `Note vocali strutturate: ${voice.observations.length}
 
 Temi ricorrenti:
 ${themes || "- Nessun tema ricorrente forte."}
+
+Giocatori citati:
+${players || "- Nessun giocatore citato in modo ricorrente."}
+
+Lettura staff:
+- Osservazioni positive: ${positives}
+- Criticita o priorita alte: ${critical}
+- Nota: questi dati derivano da osservazioni live dello staff e vanno letti come supporto decisionale, non come valutazione oggettiva automatica.
 
 Ultime osservazioni:
 ${recent}`;

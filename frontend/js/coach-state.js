@@ -1,4 +1,4 @@
-APP_VERSION = "10494";
+APP_VERSION = "10495";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
