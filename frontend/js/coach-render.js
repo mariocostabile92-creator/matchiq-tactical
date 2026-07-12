@@ -140,7 +140,7 @@ function renderStatus(){
     if(lastEventText){
         const last = coachState.events[0];
         lastEventText.textContent = last
-            ? `${last.icon} ${last.label} · ${last.team} · ${last.minute}'`
+            ? `${last.icon} ${last.label} · ${last.team} · ${formatCoachEventTime(last)}`
             : "Nessun evento";
     }
 
@@ -612,7 +612,7 @@ function renderLiveAssistant(){
 
     if(last){
         const event = coachState.events[0];
-        last.textContent = event ? `${event.minute}' ${event.label} - ${event.team}` : "Nessun evento live";
+        last.textContent = event ? `${formatCoachEventTime(event)} ${event.label} - ${event.team}` : "Nessun evento live";
     }
 
     if(insights){

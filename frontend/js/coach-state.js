@@ -1,4 +1,4 @@
-APP_VERSION = "10500";
+APP_VERSION = "10501";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
@@ -91,12 +91,21 @@ function formatCoachClock(totalSeconds){
 function getCoachLiveMinute(){
     const elapsedMinutes = Math.max(0, Math.floor(getCoachLiveElapsedSeconds() / 60));
     const period = coachState.live?.period || "1T";
-    const offset = period === "INT" ? 45 : period === "2T" ? 45 : period === "ET1" ? 90 : period === "ET2" ? 105 : 0;
+    const offset = period === "2T" ? 45 : period === "ET1" ? 90 : period === "ET2" ? 105 : 0;
     return Math.min(130, offset + elapsedMinutes);
 }
 function getLiveMinuteLabel(){
     const minute = getCoachLiveMinute();
     return minute > 0 ? minute : 0;
+}
+function formatCoachEventTime(event){
+    if(event?.period === "INT"){
+        const hasExactClock = event.matchElapsedSeconds !== null
+            && event.matchElapsedSeconds !== undefined
+            && Number.isFinite(Number(event.matchElapsedSeconds));
+        return hasExactClock ? `Intervallo ${formatCoachClock(event.matchElapsedSeconds)}` : "Intervallo";
+    }
+    return `${event?.minute ?? "--"}'`;
 }
 function esc(value){ return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
 function showNotice(message,type="ok",timeout=4500){ const el=document.getElementById("pageNotice"); if(!el)return; el.textContent=message; el.className=`notice show ${type}`; if(timeout){ setTimeout(()=>{ el.className="notice"; },timeout); } }

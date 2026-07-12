@@ -98,6 +98,7 @@ function buildCoachEvent(type, label, icon, options={}){
         playerRole: selectedPlayer ? selectedPlayer.role : "",
         note,
         source: options.source || (options.voice ? "voice" : "quick"),
+        matchElapsedSeconds: useLiveMinute ? getCoachLiveElapsedSeconds() : null,
         createdAt: new Date().toISOString()
     };
     event.tags = Array.isArray(options.tags) ? options.tags : getCoachEventTags(event);
