@@ -1,12 +1,15 @@
-const CACHE_NAME = "matchiq-pwa-v104";
+const CACHE_NAME = "matchiq-pwa-v105";
 const APP_SHELL = [
-  "/index.html?v=10503",
-  "/mobile.html?v=10503",
+  "/index.html?v=10505",
+  "/mobile.html?v=10505",
+  "/weekly-briefing.html",
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
   "/js/app-meta.js",
   "/css/home.css?v=10503",
+  "/css/weekly-briefing.css?v=10505",
+  "/css/weekly-briefing-home.css?v=10505",
   "/css/global-nav.css?v=10503",
   "/js/auth.js?v=10503",
   "/js/global-nav-config.js?v=10503",
@@ -20,6 +23,11 @@ const APP_SHELL = [
   "/js/home-actions.js?v=10503",
   "/js/home-onboarding.js?v=10503",
   "/js/home.js?v=10503",
+  "/js/weekly-briefing-state.js?v=10505",
+  "/js/weekly-briefing-api.js?v=10505",
+  "/js/weekly-briefing-render.js?v=10505",
+  "/js/weekly-briefing.js?v=10505",
+  "/js/weekly-briefing-home.js?v=10505",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -55,7 +63,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10503")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10505")))
     );
     return;
   }
