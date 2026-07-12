@@ -11,7 +11,7 @@
   <title>MatchIQ Home | Assistente AI per lo staff tecnico</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
-  <link rel="stylesheet" href="/css/home.css?v=10499">
+  <link rel="stylesheet" href="/css/home.css?v=10500">
 </head>
 <body>
   <a class="skip-link" href="#homeMain">Vai al contenuto</a>
@@ -23,7 +23,7 @@
     <nav class="desktop-nav" aria-label="Navigazione principale">
       <a href="/coach.html">Coach</a>
       <a href="/video.html">Video AI</a>
-      <a href="/video.html#videoHubSection">Video Hub</a>
+      <a href="#liveMatchesSection">Partite Live</a>
       <a href="/scout.html">Scout</a>
       <a href="/account.html">Account</a>
       <a id="adminNav" href="/admin-beta.html" hidden>Admin</a>
@@ -47,7 +47,7 @@
         <div class="primary-actions" aria-label="Azioni principali">
           <a class="button button-primary" href="/coach.html">Apri Coach</a>
           <a class="button button-blue" href="/video.html">Apri Video AI</a>
-          <a class="button button-blue" href="/video.html#videoHubSection">Apri Video Hub</a>
+          <a class="button button-blue" href="#liveMatchesSection">Partite Live</a>
           <a class="button button-muted" href="/scout.html">Apri Scout</a>
         </div>
       </div>
@@ -74,6 +74,23 @@
       <div id="statsGrid" class="stats-grid" aria-live="polite"></div>
     </section>
 
+    <section id="liveMatchesSection" class="live-section" aria-labelledby="liveTitle">
+      <div class="section-heading">
+        <div><span class="section-label">MATCH</span><h2 id="liveTitle">Partite Live</h2></div>
+        <p>Apri una partita disponibile e analizzala con MatchIQ.</p>
+      </div>
+      <div class="live-toolbar">
+        <span id="liveSummary" class="live-summary">Caricamento partite...</span>
+        <button class="button button-muted" type="button" data-live-retry>Riprova</button>
+      </div>
+      <div id="liveMatchesList" class="live-matches-grid" aria-live="polite" aria-busy="true">
+        <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+      </div>
+      <div id="liveMoreRow" class="live-more" hidden>
+        <button class="button button-muted" type="button" data-live-more>Vedi tutte le partite</button>
+      </div>
+    </section>
+
     <section class="work-grid">
       <div class="work-panel" aria-labelledby="continueTitle">
         <div class="section-heading compact"><div><span class="section-label">RIPRENDI</span><h2 id="continueTitle">Continua da dove eri rimasto</h2></div><button class="icon-button" type="button" title="Aggiorna" aria-label="Aggiorna attività" data-home-retry>↻</button></div>
@@ -95,8 +112,8 @@
         <div class="quick-grid">
           <a href="/coach.html#matchSetup">Crea una partita <span>→</span></a>
           <a href="/video.html#videoUpload">Carica un video <span>→</span></a>
-          <a href="/video.html#videoHubSection">Apri il Video Hub <span>→</span></a>
-          <a href="/video.html">Avvia un'analisi <span>→</span></a>
+          <a href="/video.html">Apri Video AI <span>→</span></a>
+          <a href="#liveMatchesSection">Vedi Partite Live <span>→</span></a>
           <a href="/scout.html">Cerca un giocatore <span>→</span></a>
           <a id="latestReportAction" href="/video.html">Apri ultimo report <span>→</span></a>
         </div>
@@ -105,19 +122,21 @@
   </main>
 
   <nav class="mobile-nav" aria-label="Navigazione mobile">
-    <a class="active" href="/index.html"><span>⌂</span>Home</a>
+    <a class="active" href="/index.html" aria-current="page"><span>⌂</span>Home</a>
     <a href="/coach.html"><span>▣</span>Coach</a>
     <a href="/video.html"><span>▶</span>Video</a>
+    <a href="#liveMatchesSection"><span>●</span>Live</a>
     <a href="/scout.html"><span>⌕</span>Scout</a>
     <a href="/account.html"><span>◎</span>Account</a>
   </nav>
 
-  <script src="/js/auth.js?v=10499"></script>
-  <script src="/js/app-meta.js?v=10499"></script>
-  <script src="/js/home-state.js?v=10499"></script>
-  <script src="/js/home-api.js?v=10499"></script>
-  <script src="/js/home-render.js?v=10499"></script>
-  <script src="/js/home-actions.js?v=10499"></script>
-  <script src="/js/home.js?v=10499"></script>
+  <script src="/js/auth.js?v=10500"></script>
+  <script src="/js/app-meta.js?v=10500"></script>
+  <script src="/js/home-state.js?v=10500"></script>
+  <script src="/js/home-api.js?v=10500"></script>
+  <script src="/js/home-render.js?v=10500"></script>
+  <script src="/js/home-live.js?v=10500"></script>
+  <script src="/js/home-actions.js?v=10500"></script>
+  <script src="/js/home.js?v=10500"></script>
 </body>
 </html>

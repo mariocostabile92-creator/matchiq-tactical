@@ -6,21 +6,43 @@
     return token ? {Authorization:`Bearer ${token}`} : {};
   };
 
-  H.fetchJson = async function(url){
-    const response = await fetch(url, {headers:{Accept:"application/json", ...H.authHeaders()}, cache:"no-store"});
-    if(!response.ok){
-      const payload = await response.json().catch(() => ({}));
-      throw new Error(payload?.detail?.message || payload?.detail || `Errore ${response.status}`);
+  H.fetchJson = async function(url, timeoutMs=9000){
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try{
+      const response = await fetch(url, {headers:{Accept:"application/json", ...H.authHeaders()}, cache:"no-store", signal:controller.signal});
+      if(!response.ok){
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.detail?.message || payload?.detail || `Errore ${response.status}`);
+      }
+      return response.json();
+    }catch(error){
+      if(error?.name === "AbortError") throw new Error("Tempo di risposta scaduto");
+      throw error;
+    }finally{
+      clearTimeout(timeout);
     }
-    return response.json();
+  };
+
+  H.loadLiveMatches = async function(){
+    H.state.live.loading = true;
+    H.state.live.error = "";
+    try{
+      const payload = await H.fetchJson(`/api/live-matches?top_only=false&ts=${Date.now()}`, 10000);
+      H.applyLivePayload(payload);
+    }catch(error){
+      H.state.live = {...H.state.live, loading:false, matches:[], error:error?.message || "Partite live non disponibili"};
+    }
+    return H.state.live;
   };
 
   H.loadHomeData = async function(){
     H.state.loading = true;
     H.state.error = "";
-    const [accountResult, summaryResult] = await Promise.allSettled([
+    const [accountResult, summaryResult, liveResult] = await Promise.allSettled([
       H.fetchJson(`/api/account/limits?ts=${Date.now()}`),
-      H.fetchJson(`/api/home/summary?ts=${Date.now()}`)
+      H.fetchJson(`/api/home/summary?ts=${Date.now()}`),
+      H.loadLiveMatches()
     ]);
 
     if(accountResult.status === "fulfilled"){
@@ -34,10 +56,19 @@
     }
     if(summaryResult.status === "fulfilled"){
       H.state.remote = summaryResult.value || H.state.remote;
-      if(summaryResult.value?.account){ H.state.account = {...H.state.account, ...summaryResult.value.account}; }
+      if(summaryResult.value?.account){
+        H.state.account = {
+          ...H.state.account,
+          ...summaryResult.value.account,
+          limits:{...(H.state.account?.limits || {}), ...(summaryResult.value.account?.limits || {})}
+        };
+      }
     }else{
       H.state.error = "Alcuni dati personali non sono disponibili. I collegamenti ai moduli restano attivi.";
       H.state.remote = {stats:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:["home_summary"]};
+    }
+    if(liveResult.status === "rejected"){
+      H.state.live = {...H.state.live, loading:false, matches:[], error:"Le partite live non sono disponibili in questo momento."};
     }
     H.state.loading = false;
     return H.mergeData();

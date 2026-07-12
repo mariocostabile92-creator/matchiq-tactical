@@ -47,11 +47,10 @@
 
   H.renderModules = function(){
     const stats = H.state.view?.stats || {};
-    const authenticated = H.isAuthenticated();
     const modules = [
       {id:"coach", icon:"▣", title:"Coach", description:"Prepara la partita, gestisci il Match Day e trasforma eventi, note e pagelle in indicazioni per il post-gara.", url:"/coach.html", action:"Apri Coach", meta:`${stats.coach_matches || 0} partite locali`},
-      {id:"video", icon:"▶", title:"Video AI", description:"Analizza partite, allenamenti e clip. Trova frame rilevanti e prepara materiale tecnico per lo staff.", url:"/video.html", action:"Apri Video AI", meta:`${stats.video_reports || 0} report`},
-      {id:"hub", icon:"▤", title:"Video Hub", description:"Organizza tutte le Sessioni Video della stagione e continua il lavoro senza ripartire da zero.", url:authenticated?"/video.html#videoHubSection":"/login.html?next=/video.html%23videoHubSection", action:authenticated?"Apri Video Hub":"Accedi per usare Hub", meta:`${stats.video_sessions || 0} sessioni`},
+      {id:"video", icon:"▶", title:"Video AI", description:"Carica o riapri una Sessione Video, analizza partite e allenamenti, trova frame rilevanti e organizza tutto nel Video Hub.", url:"/video.html", action:"Apri Video AI", secondaryUrl:H.isAuthenticated()?"/video.html#videoUploadSection":"/login.html?next=/video.html%23videoUploadSection", secondaryAction:"Vai all'archivio", meta:`${stats.video_sessions || 0} sessioni · ${stats.video_reports || 0} report`},
+      {id:"live", icon:"●", title:"Partite Live", description:"Consulta le partite disponibili, apri quelle in corso e accedi all'analisi live del modulo Match.", url:"#liveMatchesSection", action:"Apri Partite Live", meta:`${stats.live_matches || 0} disponibili`},
       {id:"scout", icon:"⌕", title:"Scout", description:"Analizza profili, salva giocatori e individua opportunità utili per la squadra.", url:"/scout.html", action:"Apri Scout", meta:`${stats.players_observed || 0} profili salvati`}
     ];
     const grid = $("moduleGrid"); grid.replaceChildren();
@@ -59,7 +58,10 @@
       const card = document.createElement("article"); card.className="module-card"; card.dataset.module=item.id;
       card.append(text("div", item.icon, "module-icon"), text("h3", item.title), text("p", item.description));
       const meta = document.createElement("div"); meta.className="module-meta"; meta.append(text("span", item.meta));
-      card.append(meta, link(item.action, item.url, `button ${item.id === "coach" ? "button-primary" : "button-muted"}`));
+      const actions=document.createElement("div"); actions.className="module-actions";
+      actions.append(link(item.action, item.url, `button ${item.id === "coach" ? "button-primary" : "button-muted"}`));
+      if(item.secondaryUrl) actions.append(link(item.secondaryAction,item.secondaryUrl,"module-secondary"));
+      card.append(meta, actions);
       grid.append(card);
     });
   };
@@ -70,7 +72,7 @@
       ["Partite Coach", stats.coach_matches, "salvate su questo dispositivo"],
       ["Sessioni Video", stats.video_sessions, "nel tuo Video Hub"],
       ["Report Video", stats.video_reports, "nel tuo archivio"],
-      ["Frame analizzati", stats.frames_saved, "nei report salvati"],
+      ["Partite Live", stats.live_matches, "disponibili nel modulo Match"],
       ["Giocatori", stats.players_observed, "osservati o salvati"],
       ["Piano", H.isOwner()?"Owner":(H.state.account?.label || H.plan()), "accesso attuale"]
     ];
@@ -101,7 +103,8 @@
     if(!items.length){ box.append(H.emptyState("Nessuna priorità disponibile.","Completa una partita o analizza un video per ricevere una sintesi operativa.",[{label:"Apri Coach",url:"/coach.html",primary:true}])); return; }
     items.forEach(item => {
       const row=document.createElement("article"); row.className="priority-item";
-      const content=document.createElement("div"); content.append(text("span",item.type === "confirmed" ? "Dato certo" : "Stato operativo","priority-type"),text("strong",item.title),text("small",item.text || ""));
+      const typeLabel=item.type === "confirmed" ? "Dato certo" : item.type === "system" ? "Informazione di sistema" : "Stato operativo";
+      const content=document.createElement("div"); content.append(text("span",typeLabel,"priority-type"),text("strong",item.title),text("small",item.text || ""));
       row.append(content,link(item.action || "Apri",item.url || "/index.html")); box.append(row);
     });
   };
@@ -125,7 +128,7 @@
   };
 
   H.renderHome = function(){
-    H.renderAccount(); H.renderModules(); H.renderStats(); H.renderContinue(); H.renderAi(); H.renderActivity(); H.renderNotice();
+    H.renderAccount(); H.renderModules(); H.renderStats(); H.renderLiveMatches?.(); H.renderContinue(); H.renderAi(); H.renderActivity(); H.renderNotice();
     const latest=(H.state.view?.activities || []).find(item => item.kind === "video_report");
     if(latest) $("latestReportAction").href=latest.url;
   };

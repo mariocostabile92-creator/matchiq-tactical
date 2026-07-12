@@ -6,6 +6,7 @@
     user: null,
     remote: {stats:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:[]},
     local: {coachHistory:[], coachCurrent:null, scoutWatchlist:[]},
+    live: {loading:true, matches:[], error:"", expanded:false, source:""},
     error: ""
   };
 
@@ -86,8 +87,16 @@
     const stats = {...(remote.stats || {})};
     stats.coach_matches = local.coachHistory.length + (current ? 1 : 0);
     stats.players_observed = Math.max(Number(stats.players_observed || 0), local.scoutWatchlist.length);
+    stats.live_matches = H.state.live.matches.length;
 
     const priorities = [...(remote.ai_priorities || [])];
+    if(H.state.live.matches.length){
+      priorities.push({
+        type:"system", title:"Partite live disponibili",
+        text:`${H.state.live.matches.length} ${H.state.live.matches.length === 1 ? "partita è disponibile" : "partite sono disponibili"} nel modulo Match.`,
+        url:"#liveMatchesSection", action:"Vedi Partite Live"
+      });
+    }
     if(current){
       const ratings = Array.isArray(local.coachCurrent?.ratings) ? local.coachCurrent.ratings.length : 0;
       const report = String(local.coachCurrent?.report || "").trim();

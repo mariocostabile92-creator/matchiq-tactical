@@ -1,5 +1,5 @@
 const MATCHIQ_APP_META = {
-    version: "10499",
+    version: "10500",
     year: "2026",
     product: "MatchIQ"
 };
