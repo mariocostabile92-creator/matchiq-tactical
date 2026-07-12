@@ -124,6 +124,47 @@ def _sentiment(text: str) -> str:
     return "neutral"
 
 
+def _score(text: str) -> Optional[Dict[str, int]]:
+    clean = _clean(text)
+    words = {
+        "zero": 0,
+        "uno": 1,
+        "una": 1,
+        "due": 2,
+        "tre": 3,
+        "quattro": 4,
+        "cinque": 5,
+        "sei": 6,
+        "sette": 7,
+        "otto": 8,
+        "nove": 9,
+    }
+
+    def number(value: str) -> Optional[int]:
+        if value.isdigit():
+            return int(value)
+        return words.get(value)
+
+    token = r"(\d+|zero|uno|una|due|tre|quattro|cinque|sei|sette|otto|nove)"
+    match = re.search(rf"\b(?:siamo|stiamo)\s+{token}\s+(?:a|-)\s+{token}\b", clean)
+    perspective = "home"
+    if not match:
+        match = re.search(rf"\b(?:loro|avversari)\s+{token}\s+(?:a|-)\s+{token}\b", clean)
+        perspective = "away"
+    if not match:
+        match = re.search(rf"\bpareggio\s+{token}\s+(?:a|-)\s+{token}\b", clean)
+        perspective = "draw"
+    if not match:
+        return None
+    first = number(match.group(1))
+    second = number(match.group(2))
+    if first is None or second is None:
+        return None
+    if perspective == "away":
+        return {"home": second, "away": first}
+    return {"home": first, "away": second}
+
+
 def _substitution(text: str, lineup: List[VoiceCoachPlayer]) -> Optional[Dict[str, object]]:
     clean = _clean(text)
     if not re.search(r"\b(cambio|sostituzione|esce|entra|al posto di|per)\b", clean):
@@ -196,6 +237,20 @@ def interpret_voice_coach_command(payload: VoiceCoachInterpretRequest) -> VoiceC
                 else "Cambio da completare: non ho riconosciuto tutti i giocatori."
             ),
             ambiguities=ambiguities,
+            warnings=warnings,
+            privacy={"audio_stored": False, "transcript_source": payload.source},
+        )
+
+    score = _score(text)
+    if score:
+        return VoiceCoachInterpretResponse(
+            intent="score_update",
+            confidence=0.82,
+            requires_confirmation=True,
+            minute=minute,
+            team=team,
+            entities={"home_goals": score["home"], "away_goals": score["away"]},
+            normalized_summary=f"Aggiornamento punteggio: {context.home_team} {score['home']} - {score['away']} {context.away_team}.",
             warnings=warnings,
             privacy={"audio_stored": False, "transcript_source": payload.source},
         )

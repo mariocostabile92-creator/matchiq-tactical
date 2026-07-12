@@ -144,6 +144,16 @@ function coachVoiceEventOptionsFromProposal(proposal){
     };
 }
 
+function isCoachVoiceDuplicateEvent(type, proposal){
+    const player = proposal.entities?.player_name || "";
+    return coachState.events.some(event =>
+        event.source === "ai-voice" &&
+        event.type === type &&
+        String(event.minute) === String(proposal.minute) &&
+        String(event.player || "") === String(player)
+    );
+}
+
 function applyCoachVoiceProposal(id, silent=false){
     const proposal = getCoachVoiceProposalById(id);
     if(!proposal){
@@ -154,7 +164,13 @@ function applyCoachVoiceProposal(id, silent=false){
         applyCoachVoiceSubstitution(proposal);
     }else if(proposal.intent === "player_event"){
         const e = proposal.entities || {};
+        if(isCoachVoiceDuplicateEvent(e.event_type || "nota", proposal)){
+            showNotice("Evento gia registrato con AI Voice Coach: evito il doppione.", "warn");
+            return;
+        }
         addQuickEvent(e.event_type || "nota", e.event_label || "Evento", e.event_icon || "NOTE", coachVoiceEventOptionsFromProposal(proposal));
+    }else if(proposal.intent === "score_update"){
+        applyCoachVoiceScoreUpdate(proposal);
     }else if(proposal.intent === "tactical_note" || proposal.intent === "player_note"){
         const topic = proposal.entities?.topic || "general_note";
         const rule = getCoachVoiceThemeRule(topic);
@@ -179,6 +195,41 @@ function applyCoachVoiceProposal(id, silent=false){
     renderAll();
     setCoachVoiceUiStatus("Evento salvato da AI Voice Coach.", "idle");
     if(!silent) showNotice("AI Voice Coach ha salvato l'azione nella timeline.", "ok", 3200);
+}
+
+function applyCoachVoiceScoreUpdate(proposal){
+    const targetHome = Math.max(0, Number(proposal.entities?.home_goals || 0) || 0);
+    const targetAway = Math.max(0, Number(proposal.entities?.away_goals || 0) || 0);
+    const currentHome = getGoals("home");
+    const currentAway = getGoals("away");
+    if(targetHome < currentHome || targetAway < currentAway){
+        showNotice("Punteggio incoerente: non elimino gol gia registrati. Correggi manualmente la timeline se serve.", "warn", 5000);
+        return;
+    }
+    for(let i=currentHome; i<targetHome; i++){
+        addQuickEvent("gol", "Gol", "GOL", {
+            minute: proposal.minute,
+            side: "home",
+            note: `Aggiornamento punteggio da voce: ${targetHome}-${targetAway}.`,
+            source: "ai-voice"
+        });
+    }
+    for(let i=currentAway; i<targetAway; i++){
+        addQuickEvent("gol", "Gol", "GOL", {
+            minute: proposal.minute,
+            side: "away",
+            note: `Aggiornamento punteggio da voce: ${targetHome}-${targetAway}.`,
+            source: "ai-voice"
+        });
+    }
+    if(targetHome === currentHome && targetAway === currentAway){
+        addQuickEvent("nota", "Conferma punteggio", "SCORE", {
+            minute: proposal.minute,
+            side: proposal.team || "home",
+            note: `Punteggio confermato da voce: ${targetHome}-${targetAway}.`,
+            source: "ai-voice"
+        });
+    }
 }
 
 function applyCoachVoiceSubstitution(proposal){

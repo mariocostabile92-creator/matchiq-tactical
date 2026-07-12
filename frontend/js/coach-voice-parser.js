@@ -79,6 +79,28 @@ function detectCoachVoiceSentiment(text){
     return "neutral";
 }
 
+function parseCoachVoiceScore(text){
+    const clean = normalizeCoachVoiceText(text);
+    const words = {zero:0, uno:1, una:1, due:2, tre:3, quattro:4, cinque:5, sei:6, sette:7, otto:8, nove:9};
+    const number = value => /^\d+$/.test(value) ? Number(value) : words[value];
+    let match = clean.match(/\b(?:siamo|stiamo)\s+(\d+|zero|uno|una|due|tre|quattro|cinque|sei|sette|otto|nove)\s+(?:a|-)\s+(\d+|zero|uno|una|due|tre|quattro|cinque|sei|sette|otto|nove)\b/);
+    let perspective = "home";
+    if(!match){
+        match = clean.match(/\b(?:loro|avversari)\s+(\d+|zero|uno|una|due|tre|quattro|cinque|sei|sette|otto|nove)\s+(?:a|-)\s+(\d+|zero|uno|una|due|tre|quattro|cinque|sei|sette|otto|nove)\b/);
+        perspective = "away";
+    }
+    if(!match){
+        match = clean.match(/\bpareggio\s+(\d+|zero|uno|una|due|tre|quattro|cinque|sei|sette|otto|nove)\s+(?:a|-)\s+(\d+|zero|uno|una|due|tre|quattro|cinque|sei|sette|otto|nove)\b/);
+        perspective = "draw";
+    }
+    if(!match) return null;
+    const first = number(match[1]);
+    const second = number(match[2]);
+    if(!Number.isFinite(first) || !Number.isFinite(second)) return null;
+    if(perspective === "away") return {home:second, away:first};
+    return {home:first, away:second};
+}
+
 function detectCoachVoiceEvent(text){
     const clean = normalizeCoachVoiceText(text);
     if(/\b(gol|rete|segnato)\b/.test(clean)) return { key: "goal", confidence: 0.91 };
@@ -142,6 +164,17 @@ function buildCoachVoiceProposal(text, source="text"){
             normalized_summary: substitution.outPlayer && substitution.inPlayer
                 ? `Cambio: ${formatLineupPlayer(substitution.outPlayer)} esce, ${formatLineupPlayer(substitution.inPlayer)} entra al ${minute.value}'.`
                 : "Cambio da completare: non ho riconosciuto tutti i giocatori.",
+            ambiguities, warnings
+        };
+    }
+
+    const score = parseCoachVoiceScore(original);
+    if(score){
+        return {
+            id: coachVoiceNowId(), intent: "score_update", confidence: 0.82, requires_confirmation: true,
+            minute: minute.value, team: team.side, source, transcript: original,
+            entities: { home_goals: score.home, away_goals: score.away },
+            normalized_summary: `Aggiornamento punteggio: ${getTeamName("home")} ${score.home} - ${score.away} ${getTeamName("away")}.`,
             ambiguities, warnings
         };
     }
