@@ -349,7 +349,9 @@ function startCoachLiveClock(){
 function stopCoachLiveClock(persist=true){
     ensureCoachStateShape();
     if(coachState.live.running){
-        coachState.live.elapsed = getCoachLiveElapsedSeconds();
+        const currentElapsed = Math.max(0, Number(coachState.live.elapsed || 0) || 0);
+        const pausedElapsed = getCoachLiveElapsedSeconds();
+        coachState.live.elapsed = Math.max(currentElapsed, pausedElapsed);
         coachState.live.running = false;
         coachState.live.startedAt = null;
     }

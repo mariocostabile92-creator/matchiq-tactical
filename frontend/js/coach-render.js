@@ -604,7 +604,10 @@ function renderLiveAssistant(){
 
     if(clock) clock.textContent = formatCoachClock(getCoachLiveElapsedSeconds());
     if(period) period.value = coachState.live?.period || "1T";
-    if(toggle) toggle.textContent = coachState.live?.running ? "Pausa timer" : "Avvia timer";
+    if(toggle){
+        const elapsed = getCoachLiveElapsedSeconds();
+        toggle.textContent = coachState.live?.running ? "Pausa timer" : elapsed > 0 ? "Riprendi timer" : "Avvia timer";
+    }
     if(minute) minute.textContent = `${getLiveMinuteLabel()}'`;
 
     if(last){

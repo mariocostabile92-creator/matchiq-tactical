@@ -1,4 +1,4 @@
-APP_VERSION = "10496";
+APP_VERSION = "10497";
 const STORAGE_KEY = "matchiq_coach_v13";
 const HISTORY_KEY = "matchiq_coach_history_v14";
 const OWNER_EMAIL = "mario.costabile92@outlook.it";
@@ -78,7 +78,9 @@ function getCoachLiveElapsedSeconds(){
     const live = coachState.live;
     const base = Math.max(0, Number(live.elapsed || 0) || 0);
     if(!live.running || !live.startedAt) return base;
-    return base + Math.max(0, Math.floor((Date.now() - new Date(live.startedAt).getTime()) / 1000));
+    const startedAt = new Date(live.startedAt).getTime();
+    if(!Number.isFinite(startedAt)) return base;
+    return base + Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
 }
 function formatCoachClock(totalSeconds){
     const total = Math.max(0, Math.floor(Number(totalSeconds || 0)));
