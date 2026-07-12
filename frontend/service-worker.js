@@ -1,9 +1,10 @@
-const CACHE_NAME = "matchiq-pwa-v106";
+const CACHE_NAME = "matchiq-pwa-v107";
 const APP_SHELL = [
-  "/index.html?v=10506",
-  "/mobile.html?v=10506",
+  "/index.html?v=10507",
+  "/mobile.html?v=10507",
   "/weekly-briefing.html",
   "/pattern-intelligence.html",
+  "/training-planner.html",
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
@@ -13,6 +14,9 @@ const APP_SHELL = [
   "/css/weekly-briefing-home.css?v=10505",
   "/css/pattern-intelligence.css?v=10506",
   "/css/pattern-intelligence-home.css?v=10506",
+  "/css/training-planner.css?v=10507",
+  "/css/training-planner-order.css?v=10507",
+  "/css/training-planner-home.css?v=10507",
   "/css/global-nav.css?v=10503",
   "/js/auth.js?v=10503",
   "/js/global-nav-config.js?v=10503",
@@ -39,6 +43,15 @@ const APP_SHELL = [
   "/js/pattern-intelligence-detail.js?v=10506",
   "/js/pattern-intelligence.js?v=10506",
   "/js/pattern-intelligence-home.js?v=10506",
+  "/js/training-planner-state.js?v=10507",
+  "/js/training-planner-api.js?v=10507",
+  "/js/training-planner-render.js?v=10507",
+  "/js/training-planner-editor.js?v=10507",
+  "/js/training-planner-order.js?v=10507",
+  "/js/training-planner.js?v=10507",
+  "/js/training-planner-home.js?v=10507",
+  "/js/training-planner-weekly.js?v=10507",
+  "/js/coach-training-planner.js?v=10507",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -74,7 +87,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10506")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10507")))
     );
     return;
   }

@@ -1,0 +1,6 @@
+.order-tools{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin-bottom:9px}
+.order-tools strong{margin-right:auto}
+.order-tools button{padding:6px 10px}
+.order-tools button:disabled{cursor:not-allowed;opacity:.35}
+.drill-order{float:right;margin-left:10px}
+@media(max-width:520px){.order-tools{flex-wrap:wrap}.order-tools button{flex:0 0 auto}}
