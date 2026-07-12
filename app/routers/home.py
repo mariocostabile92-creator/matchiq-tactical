@@ -30,6 +30,22 @@ def _metadata(value):
         return {}
 
 
+def _report_payload(row):
+    return _metadata(row.get("payload"))
+
+
+def _workflow_state(row, meta=None):
+    meta = meta or _metadata(row.get("metadata"))
+    raw = str(meta.get("workflow_state") or meta.get("workflow") or row.get("status") or "ready").lower().strip()
+    if raw in {"queued", "pending", "processing", "uploading", "analyzing", "elaborazione", "in_progress"}:
+        return "processing"
+    if raw in {"failed", "error", "errore"}:
+        return "failed"
+    if raw in {"archived", "archiviata"} or str(meta.get("archive_state") or "").lower() == "archived":
+        return "archived"
+    return "ready"
+
+
 def _iso(value):
     text = str(value or "").strip()
     return text or None
@@ -53,30 +69,43 @@ def _safe_call(name, callback, errors):
 
 def _asset_item(row):
     meta = _metadata(row.get("metadata"))
-    workflow = meta.get("workflow_state") or meta.get("workflow") or row.get("status") or "ready"
+    workflow = _workflow_state(row, meta)
+    labels = {
+        "processing": "In elaborazione",
+        "failed": "Elaborazione non riuscita",
+        "archived": "Archiviata",
+        "ready": "Pronta",
+    }
     return {
         "id": row.get("id"),
+        "record_key": f"video_session:{row.get('id')}",
         "kind": "video_session",
         "module": "Video Hub",
         "title": row.get("title") or row.get("file_name") or "Sessione Video",
-        "status": str(workflow).replace("_", " ").title(),
+        "status": labels[workflow],
+        "workflow_state": workflow,
         "created_at": _iso(row.get("created_at")),
         "updated_at": _iso(row.get("updated_at") or row.get("created_at")),
         "url": f"/video.html?session={row.get('id')}",
-        "action": "Continua",
+        "action": "Controlla stato" if workflow == "processing" else "Continua",
     }
 
 
 def _report_item(row):
+    payload = _report_payload(row)
+    asset_id = payload.get("video_asset_id")
+    url = f"/video.html?session={asset_id}" if asset_id else "/video.html#archiveList"
     return {
         "id": row.get("id"),
+        "record_key": f"video_report:{row.get('id')}",
         "kind": "video_report",
         "module": "Video AI",
         "title": row.get("title") or "Report Video AI",
         "status": "Report pronto",
+        "video_asset_id": asset_id,
         "created_at": _iso(row.get("created_at")),
         "updated_at": _iso(row.get("created_at")),
-        "url": f"/video.html?report={row.get('id')}",
+        "url": url,
         "action": "Apri",
     }
 
@@ -108,11 +137,14 @@ def home_summary(user=Depends(get_optional_user)):
 
     plan = "owner" if is_owner_user(user) else normalize_plan(user.get("plan") or "free")
     limits = get_plan_limits(plan)
-    activity = [_asset_item(row) for row in assets] + [_report_item(row) for row in reports]
+    asset_items = [_asset_item(row) for row in assets]
+    report_items = [_report_item(row) for row in reports]
+    activity = asset_items + report_items
 
     for row in scout_reports[:8]:
         activity.append({
-            "id": row.get("id"), "kind": "scout_report", "module": "Scout",
+            "id": row.get("id"), "record_key": f"scout_report:{row.get('id')}",
+            "kind": "scout_report", "module": "Scout",
             "title": row.get("title") or "Analisi Scout", "status": "Analisi salvata",
             "created_at": _iso(row.get("created_at")), "updated_at": _iso(row.get("created_at")),
             "url": "/scout.html", "action": "Apri Scout",
@@ -126,24 +158,33 @@ def home_summary(user=Depends(get_optional_user)):
         if str(meta.get("archive_state") or "").lower() == "archived":
             archived += 1
 
+    report_asset_ids = {str(item.get("video_asset_id")) for item in report_items if item.get("video_asset_id")}
+    active_assets = [item for item in asset_items if item["workflow_state"] != "archived"]
+    continue_items = sorted(active_assets, key=_sort_key, reverse=True)[:3]
+
     priorities = []
-    if assets:
-        latest_asset = _asset_item(max(assets, key=lambda row: _sort_key({"updated_at": row.get("updated_at"), "created_at": row.get("created_at")})))
+    processing_assets = [item for item in active_assets if item["workflow_state"] == "processing"]
+    ready_without_report = [
+        item for item in active_assets
+        if item["workflow_state"] == "ready" and str(item["id"]) not in report_asset_ids
+    ]
+    if processing_assets:
+        latest_asset = max(processing_assets, key=_sort_key)
         priorities.append({
             "type": "operational",
-            "title": "Sessione Video pronta da continuare",
+            "title": "Video in elaborazione",
             "text": latest_asset["title"],
             "url": latest_asset["url"],
-            "action": "Apri Video AI",
+            "action": "Controlla stato",
         })
-    if reports:
-        latest_report = _report_item(max(reports, key=lambda row: _sort_key({"created_at": row.get("created_at")})))
+    if ready_without_report:
+        latest_asset = max(ready_without_report, key=_sort_key)
         priorities.append({
-            "type": "confirmed",
-            "title": "Ultimo report disponibile",
-            "text": latest_report["title"],
-            "url": latest_report["url"],
-            "action": "Apri report",
+            "type": "operational",
+            "title": "Sessione Video pronta: manca il report",
+            "text": latest_asset["title"],
+            "url": latest_asset["url"],
+            "action": "Genera report",
         })
 
     return {
@@ -170,7 +211,16 @@ def home_summary(user=Depends(get_optional_user)):
             "archived_items": archived,
             "usage_today": sum(int(value or 0) for value in usage.values() if isinstance(value, (int, float))),
         },
-        "continue_items": activity[:3],
+        "stats_available": {
+            "video_sessions": "video_sessions" not in errors,
+            "video_reports": "video_reports" not in errors,
+            "frames_saved": "video_reports" not in errors,
+            "players_observed": "saved_players" not in errors,
+            "scout_reports": "scout_reports" not in errors,
+            "saved_matches": "saved_matches" not in errors,
+            "usage_today": "usage" not in errors,
+        },
+        "continue_items": continue_items,
         "activities": activity[:8],
         "ai_priorities": priorities[:3],
         "section_errors": errors,

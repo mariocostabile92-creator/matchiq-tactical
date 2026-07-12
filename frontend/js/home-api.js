@@ -39,6 +39,7 @@
   H.loadHomeData = async function(){
     H.state.loading = true;
     H.state.error = "";
+    H.loadLocalContext();
     const [accountResult, summaryResult, liveResult] = await Promise.allSettled([
       H.fetchJson(`/api/account/limits?ts=${Date.now()}`),
       H.fetchJson(`/api/home/summary?ts=${Date.now()}`),
@@ -53,6 +54,8 @@
         is_owner:data.is_owner === true,
         limits:data.limits || data.features || {}
       };
+    }else if(H.isAuthenticated()){
+      H.state.error = "Il piano account non è disponibile. Le attività personali restano accessibili.";
     }
     if(summaryResult.status === "fulfilled"){
       H.state.remote = summaryResult.value || H.state.remote;
@@ -65,7 +68,7 @@
       }
     }else{
       H.state.error = "Alcuni dati personali non sono disponibili. I collegamenti ai moduli restano attivi.";
-      H.state.remote = {stats:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:["home_summary"]};
+      H.state.remote = {stats:{}, stats_available:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:["home_summary"]};
     }
     if(liveResult.status === "rejected"){
       H.state.live = {...H.state.live, loading:false, matches:[], error:"Le partite live non sono disponibili in questo momento."};

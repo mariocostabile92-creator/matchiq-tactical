@@ -19,9 +19,9 @@
     const code = clean(match?.status || match?.fixture_status, "LIVE").toUpperCase();
     const minute = Number(match?.minute ?? match?.elapsed ?? 0) || 0;
     if(HALF_CODES.has(code)) return {code, label:"Intervallo", className:"half", rank:1, detail:"Intervallo"};
+    if(FINISHED_CODES.has(code)) return {code, label:"Terminata", className:"finished", rank:3, detail:"Terminata"};
     if(LIVE_CODES.has(code) || minute > 0) return {code, label:"Live", className:"live", rank:0, detail:minute > 0 ? `${minute}'` : clean(match?.status_long,"In corso")};
     if(SCHEDULED_CODES.has(code)) return {code, label:"In programma", className:"scheduled", rank:2, detail:clean(match?.status_long,"In programma")};
-    if(FINISHED_CODES.has(code)) return {code, label:"Terminata", className:"finished", rank:3, detail:"Terminata"};
     return {code, label:clean(match?.status_long, code), className:"scheduled", rank:2, detail:clean(match?.status_long, code)};
   }
 
@@ -41,7 +41,10 @@
       score:typeof match?.score === "string" ? match.score : `${Number(homeGoals)||0}-${Number(awayGoals)||0}`,
       status,
       date:match?.fixture_date || match?.date || match?.kickoff || "",
-      url:id ? clean(match?.url_match,`/match.html?id=${encodeURIComponent(id)}&v=${window.MATCHIQ_APP_VERSION || "10500"}`) : ""
+      url:id ? (() => {
+        const candidate=clean(match?.url_match);
+        return candidate.startsWith("/") ? candidate : `/match.html?id=${encodeURIComponent(id)}&v=${window.MATCHIQ_APP_VERSION || "10502"}`;
+      })() : ""
     };
   };
 
@@ -111,7 +114,7 @@
     if(!live.matches.length){
       summary.textContent="Nessuna partita disponibile";
       const message=live.error ? "Le partite live non sono disponibili in questo momento." : "Non ci sono partite live disponibili ora.";
-      list.append(H.emptyState("Partite Live",message,[{label:"Riprova",url:"#liveMatchesSection",primary:true}]));
+      list.append(H.emptyState("Partite Live",message));
       moreRow.hidden=true; return;
     }
     const accountLimit=Number(H.state.account?.limits?.max_live_matches || live.matches.length) || live.matches.length;

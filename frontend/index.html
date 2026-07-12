@@ -11,7 +11,7 @@
   <title>MatchIQ Home | Assistente AI per lo staff tecnico</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
-  <link rel="stylesheet" href="/css/home.css?v=10500">
+  <link rel="stylesheet" href="/css/home.css?v=10502">
 </head>
 <body>
   <a class="skip-link" href="#homeMain">Vai al contenuto</a>
@@ -30,6 +30,7 @@
     </nav>
     <div class="header-actions">
       <span id="headerPlan" class="plan-chip">Guest</span>
+      <button class="button button-muted guide-button" type="button" data-home-tour aria-label="Apri la guida iniziale">Guida</button>
       <a id="authAction" class="button button-muted" href="/login.html">Accedi</a>
     </div>
   </header>
@@ -42,7 +43,7 @@
         <div id="heroBadges" class="badge-row" aria-label="Stato account"></div>
         <p id="heroGreeting" class="eyebrow">Bentornato in MatchIQ</p>
         <h1 id="heroTitle">L'assistente AI per lo staff tecnico.</h1>
-        <p class="hero-lead">Prepara la partita, gestiscila dal bordo campo, analizza i video e trasforma eventi, osservazioni e dati in indicazioni utili per il lavoro settimanale.</p>
+        <p id="heroLead" class="hero-lead">Prepara la partita, gestiscila dal bordo campo, analizza i video e trasforma eventi, osservazioni e dati in indicazioni utili per il lavoro settimanale.</p>
         <p class="mission">Progettato per portare strumenti da professionisti nel calcio dilettantistico.</p>
         <div class="primary-actions" aria-label="Azioni principali">
           <a class="button button-primary" href="/coach.html">Apri Coach</a>
@@ -110,8 +111,8 @@
       <div class="work-panel" aria-labelledby="quickTitle">
         <div class="section-heading compact"><div><span class="section-label">SCORCIATOIE</span><h2 id="quickTitle">Azioni rapide</h2></div></div>
         <div class="quick-grid">
-          <a href="/coach.html#matchSetup">Crea una partita <span>→</span></a>
-          <a href="/video.html#videoUpload">Carica un video <span>→</span></a>
+          <a href="/coach.html">Crea una partita <span>→</span></a>
+          <a href="/video.html#videoUploadSection">Carica un video <span>→</span></a>
           <a href="/video.html">Apri Video AI <span>→</span></a>
           <a href="#liveMatchesSection">Vedi Partite Live <span>→</span></a>
           <a href="/scout.html">Cerca un giocatore <span>→</span></a>
@@ -120,6 +121,22 @@
       </div>
     </section>
   </main>
+
+  <dialog id="homeOnboarding" class="onboarding-dialog" aria-labelledby="onboardingTitle" aria-describedby="onboardingDescription">
+    <div class="onboarding-shell">
+      <div class="onboarding-head">
+        <span id="onboardingStep" class="section-label">PASSO 1 DI 4</span>
+        <button class="icon-button" type="button" data-onboarding-close aria-label="Chiudi la guida">×</button>
+      </div>
+      <div id="onboardingContent" class="onboarding-content"></div>
+      <div class="onboarding-progress" aria-hidden="true"><span id="onboardingProgress"></span></div>
+      <div class="onboarding-actions">
+        <button class="button button-muted" type="button" data-onboarding-skip>Salta</button>
+        <button class="button button-muted" type="button" data-onboarding-back>Indietro</button>
+        <button class="button button-primary" type="button" data-onboarding-next>Continua</button>
+      </div>
+    </div>
+  </dialog>
 
   <nav class="mobile-nav" aria-label="Navigazione mobile">
     <a class="active" href="/index.html" aria-current="page"><span>⌂</span>Home</a>
@@ -130,13 +147,14 @@
     <a href="/account.html"><span>◎</span>Account</a>
   </nav>
 
-  <script src="/js/auth.js?v=10500"></script>
-  <script src="/js/app-meta.js?v=10500"></script>
-  <script src="/js/home-state.js?v=10500"></script>
-  <script src="/js/home-api.js?v=10500"></script>
-  <script src="/js/home-render.js?v=10500"></script>
-  <script src="/js/home-live.js?v=10500"></script>
-  <script src="/js/home-actions.js?v=10500"></script>
-  <script src="/js/home.js?v=10500"></script>
+  <script src="/js/auth.js?v=10502"></script>
+  <script src="/js/app-meta.js?v=10502"></script>
+  <script src="/js/home-state.js?v=10502"></script>
+  <script src="/js/home-api.js?v=10502"></script>
+  <script src="/js/home-render.js?v=10502"></script>
+  <script src="/js/home-live.js?v=10502"></script>
+  <script src="/js/home-actions.js?v=10502"></script>
+  <script src="/js/home-onboarding.js?v=10502"></script>
+  <script src="/js/home.js?v=10502"></script>
 </body>
 </html>
