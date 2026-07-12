@@ -1,11 +1,18 @@
-const CACHE_NAME = "matchiq-pwa-v98";
+const CACHE_NAME = "matchiq-pwa-v99";
 const APP_SHELL = [
-  "/index.html?v=10498",
-  "/mobile.html?v=10498",
+  "/index.html?v=10499",
+  "/mobile.html?v=10499",
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
   "/js/app-meta.js",
+  "/css/home.css?v=10499",
+  "/js/auth.js?v=10499",
+  "/js/home-state.js?v=10499",
+  "/js/home-api.js?v=10499",
+  "/js/home-render.js?v=10499",
+  "/js/home-actions.js?v=10499",
+  "/js/home.js?v=10499",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -41,7 +48,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10498")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10499")))
     );
     return;
   }

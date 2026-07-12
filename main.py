@@ -10,6 +10,7 @@ from app.routers.admin_analytics import router as admin_analytics_router
 from app.routers.coach_tracking import router as coach_tracking_router
 from app.routers.coach_voice import router as coach_voice_router
 from app.routers.video import router as video_router
+from app.routers.home import router as home_router
 from app.routers.frontend import router as frontend_router, FRONTEND_DIR
 from app.routers.match import create_match_router
 from app.utils.safe import safe_float, safe_int, clamp, safe_percentage, normalize_score
@@ -139,6 +140,7 @@ app.include_router(payments_router)
 app.include_router(coach_tracking_router)
 app.include_router(coach_voice_router)
 app.include_router(video_router)
+app.include_router(home_router)
 
 
 # =========================================================
