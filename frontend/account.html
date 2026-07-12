@@ -903,10 +903,11 @@ body.account-active .unlock-grid{
     }
 }
 </style>
+<link rel="stylesheet" href="/css/global-nav.css?v=10503">
 </head>
-<body>
+<body data-miq-module="account">
 
-<div class="topbar">
+<template><div class="topbar">
     <div class="brand">
         <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
         <div>
@@ -922,7 +923,7 @@ body.account-active .unlock-grid{
         <button class="btn soft" id="loginTopBtn" onclick="goLogin()">Login</button>
         <button class="btn red" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
     </div>
-</div>
+</div></template>
 
 <div class="main">
 
@@ -1283,12 +1284,12 @@ body.account-active .unlock-grid{
 
 </div>
 
-<nav class="bottom-nav">
+<template><nav class="bottom-nav">
     <a href="/index.html">Home</a>
     <a href="/scout.html">Scout</a>
     <a href="/coach.html">Coach</a>
     <a class="active" href="/account.html">Account</a>
-</nav>
+</nav></template>
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
@@ -1918,5 +1919,9 @@ if("serviceWorker" in navigator){
 </script>
 
 <script src="/js/app-meta.js"></script>
+<script src="/js/global-nav-config.js?v=10503"></script>
+<script src="/js/global-nav-state.js?v=10503"></script>
+<script src="/js/global-nav-render.js?v=10503"></script>
+<script src="/js/global-nav-menu.js?v=10503"></script>
 </body>
 </html>

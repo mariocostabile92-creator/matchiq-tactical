@@ -66,10 +66,11 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
   .stat strong{font-size:26px}
 }
 </style>
+<link rel="stylesheet" href="/css/global-nav.css?v=10503">
 </head>
 
-<body>
-<div class="topbar">
+<body data-miq-module="admin">
+<template><div class="topbar">
   <div>
     <div class="logo">📊 MatchIQ Admin Analytics</div>
     <div class="subtitle">Metriche SaaS + Coach Mode · V9 Professional</div>
@@ -80,6 +81,13 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
     <button class="btn dark" onclick="location.href='/admin-users.html?v=10472'">Admin Users</button>
     <button class="btn green" onclick="loadAnalytics()">Aggiorna</button>
   </div>
+</div></template>
+
+<div class="miq-module-toolbar" aria-label="Strumenti Admin Analytics">
+  <span class="miq-toolbar-state">Analytics</span>
+  <button class="btn dark" type="button" onclick="location.href='/admin-beta.html?v=10503'">Richieste Beta</button>
+  <button class="btn dark" type="button" onclick="location.href='/admin-users.html?v=10503'">Utenti</button>
+  <button class="btn green" type="button" onclick="loadAnalytics()">Aggiorna</button>
 </div>
 
 <div class="main">
@@ -200,12 +208,12 @@ th{color:#9fb2e7;font-size:12px;text-transform:uppercase}
   </div>
 </div>
 
-<nav class="bottom-nav">
+<template><nav class="bottom-nav">
   <a href="/index.html?v=10472">🏠<br>Home</a>
   <a href="/admin-users.html?v=10472">👥<br>Users</a>
   <a href="/admin-beta.html?v=10472">🎯<br>Beta</a>
   <a class="active" href="/admin-analytics.html?v=10472">📊<br>Analytics</a>
-</nav>
+</nav></template>
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
@@ -451,6 +459,10 @@ window.addEventListener("DOMContentLoaded",()=>{
   loadAnalytics();
 });
 </script>
-<script src="/js/app-meta.js"></script>
+<script src="/js/global-nav-config.js?v=10503"></script>
+<script src="/js/global-nav-state.js?v=10503"></script>
+<script src="/js/global-nav-render.js?v=10503"></script>
+<script src="/js/global-nav-menu.js?v=10503"></script>
+<script src="/js/app-meta.js?v=10503"></script>
 </body>
 </html>

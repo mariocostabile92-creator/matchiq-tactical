@@ -11,29 +11,15 @@
   <title>MatchIQ Home | Assistente AI per lo staff tecnico</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
-  <link rel="stylesheet" href="/css/home.css?v=10502">
+  <link rel="stylesheet" href="/css/home.css?v=10503">
+  <link rel="stylesheet" href="/css/global-nav.css?v=10503">
 </head>
-<body>
+<body data-miq-module="home">
   <a class="skip-link" href="#homeMain">Vai al contenuto</a>
-  <header class="home-header">
-    <a class="brand" href="/index.html" aria-label="MatchIQ Home">
-      <img src="/assets/matchiq-logo.png" alt="" width="44" height="44">
-      <span><strong>MatchIQ</strong><small>AI Football Technology</small></span>
-    </a>
-    <nav class="desktop-nav" aria-label="Navigazione principale">
-      <a href="/coach.html">Coach</a>
-      <a href="/video.html">Video AI</a>
-      <a href="#liveMatchesSection">Partite Live</a>
-      <a href="/scout.html">Scout</a>
-      <a href="/account.html">Account</a>
-      <a id="adminNav" href="/admin-beta.html" hidden>Admin</a>
-    </nav>
-    <div class="header-actions">
-      <span id="headerPlan" class="plan-chip">Guest</span>
-      <button class="button button-muted guide-button" type="button" data-home-tour aria-label="Apri la guida iniziale">Guida</button>
-      <a id="authAction" class="button button-muted" href="/login.html">Accedi</a>
-    </div>
-  </header>
+  <div class="miq-module-toolbar" aria-label="Strumenti Home">
+    <span class="miq-toolbar-state">Workspace MatchIQ</span>
+    <button class="button button-muted guide-button" type="button" data-home-tour aria-label="Apri la guida iniziale">Guida</button>
+  </div>
 
   <main id="homeMain" class="home-shell">
     <div id="homeNotice" class="notice" role="status" aria-live="polite" hidden></div>
@@ -138,23 +124,27 @@
     </div>
   </dialog>
 
-  <nav class="mobile-nav" aria-label="Navigazione mobile">
+  <template><nav class="mobile-nav" aria-label="Navigazione mobile">
     <a class="active" href="/index.html" aria-current="page"><span>⌂</span>Home</a>
     <a href="/coach.html"><span>▣</span>Coach</a>
     <a href="/video.html"><span>▶</span>Video</a>
     <a href="#liveMatchesSection"><span>●</span>Live</a>
     <a href="/scout.html"><span>⌕</span>Scout</a>
     <a href="/account.html"><span>◎</span>Account</a>
-  </nav>
+  </nav></template>
 
-  <script src="/js/auth.js?v=10502"></script>
-  <script src="/js/app-meta.js?v=10502"></script>
-  <script src="/js/home-state.js?v=10502"></script>
-  <script src="/js/home-api.js?v=10502"></script>
-  <script src="/js/home-render.js?v=10502"></script>
-  <script src="/js/home-live.js?v=10502"></script>
-  <script src="/js/home-actions.js?v=10502"></script>
-  <script src="/js/home-onboarding.js?v=10502"></script>
-  <script src="/js/home.js?v=10502"></script>
+  <script src="/js/auth.js?v=10503"></script>
+  <script src="/js/global-nav-config.js?v=10503"></script>
+  <script src="/js/global-nav-state.js?v=10503"></script>
+  <script src="/js/global-nav-render.js?v=10503"></script>
+  <script src="/js/global-nav-menu.js?v=10503"></script>
+  <script src="/js/app-meta.js?v=10503"></script>
+  <script src="/js/home-state.js?v=10503"></script>
+  <script src="/js/home-api.js?v=10503"></script>
+  <script src="/js/home-render.js?v=10503"></script>
+  <script src="/js/home-live.js?v=10503"></script>
+  <script src="/js/home-actions.js?v=10503"></script>
+  <script src="/js/home-onboarding.js?v=10503"></script>
+  <script src="/js/home.js?v=10503"></script>
 </body>
 </html>

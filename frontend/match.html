@@ -6,6 +6,7 @@
 <title>MatchIQ - Analisi partita</title>
 
 <link rel="stylesheet" href="css/match.css">
+<link rel="stylesheet" href="/css/global-nav.css?v=10503">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="js/auth.js"></script>
@@ -19,8 +20,8 @@
 <script src="js/match-render.js"></script>
 </head>
 
-<body>
-<div class="topbar">
+<body data-miq-module="live">
+<template><div class="topbar">
     <div>
         <div class="logo">⚽ MatchIQ</div>
         <div class="subtitle">Analisi tattica live</div>
@@ -38,6 +39,14 @@
         <button class="pdf-btn" onclick="downloadPDFReport()">📄 Scarica PDF</button>
         <button class="dashboard-btn" onclick="goBackToDashboard()">Dashboard</button>
     </div>
+</div></template>
+
+<div class="miq-module-toolbar" aria-label="Strumenti partita live">
+    <div class="miq-toolbar-state live-badge">
+        <span class="live-dot"></span><span id="liveUpdateText">Live</span><span id="refreshTimerText">Aggiornamento --s</span>
+    </div>
+    <button class="refresh-btn" type="button" onclick="manualRefresh()">Aggiorna</button>
+    <button class="pdf-btn" type="button" onclick="downloadPDFReport()">Scarica PDF</button>
 </div>
 
 <div class="live-overlay" id="liveOverlay">
@@ -50,6 +59,11 @@
         <div class="section-content">Caricamento analisi...</div>
     </div>
 </div>
+
+<script src="/js/global-nav-config.js?v=10503"></script>
+<script src="/js/global-nav-state.js?v=10503"></script>
+<script src="/js/global-nav-render.js?v=10503"></script>
+<script src="/js/global-nav-menu.js?v=10503"></script>
 
 <script>
 function isMobileDevice(){

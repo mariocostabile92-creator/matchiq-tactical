@@ -10,6 +10,7 @@
   <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
   <link rel="stylesheet" href="css/scout.css?v=10454">
+  <link rel="stylesheet" href="/css/global-nav.css?v=10503">
 
   <script src="js/scout-state.js?v=10454"></script>
   <script src="js/scout-utils.js?v=10454"></script>
@@ -22,7 +23,7 @@
   <script src="js/scout-core.js?v=10454"></script>
 </head>
 
-<body>
+<body data-miq-module="scout">
   <div class="loading show" id="loading">
     <div class="loader-card">
       <div class="spinner"></div>
@@ -34,7 +35,13 @@
   </div>
 
   <div class="app">
-    <header class="topbar">
+    <div class="miq-module-toolbar" aria-label="Strumenti Scout">
+      <span class="miq-toolbar-state"><span class="dot"></span> Dati live <span id="apiSafePill">Scout</span></span>
+      <button class="btn" type="button" onclick="manualRefresh()">Aggiorna</button>
+      <button class="btn btn-green" id="exportScoutBtn" type="button" onclick="exportScoutReport()">Export report</button>
+      <button class="btn btn-primary" id="simulateEventBtn" type="button" onclick="simulateHighImpactEvent()">Simula evento</button>
+    </div>
+    <template><header class="topbar">
       <div class="brand-head">
         <img class="brand-logo" src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
         <div>
@@ -53,20 +60,20 @@
         </div>
 
         <div class="pill pill-clean" id="adminActionsPill">Admin</div>
-        <div class="pill pill-api" id="apiSafePill">Anteprima Free</div>
+        <div class="pill pill-api">Anteprima Free</div>
 
         <button class="btn" id="scoutAccountBtn" onclick="goAccount()">Account</button>
         <button class="btn" onclick="manualRefresh()">Aggiorna ora</button>
 
-        <button class="btn btn-green" id="exportScoutBtn" onclick="exportScoutReport()">
+        <button class="btn btn-green" onclick="exportScoutReport()">
           Export report
         </button>
 
-        <button class="btn btn-primary" id="simulateEventBtn" onclick="simulateHighImpactEvent()">
+        <button class="btn btn-primary" onclick="simulateHighImpactEvent()">
           Simula evento
         </button>
       </div>
-    </header>
+    </header></template>
 
     <div class="ticker" id="tickerText">
       MatchIQ Scout · Anteprima Free attiva · passa a Pro per sbloccare player cards complete, watchlist, export e simulazioni.
@@ -371,12 +378,16 @@
 
     <div class="toast-area" id="toastArea"></div>
 
-  <nav class="bottom-nav">
+  <template><nav class="bottom-nav">
     <a href="/index.html?v=10454">Home</a>
     <a class="active" href="/scout.html?v=10454">Scout</a>
     <a href="/coach.html?v=10454">Coach</a>
     <a href="/account.html?v=10454">Account</a>
-  </nav>
+  </nav></template>
 <script src="/js/app-meta.js"></script>
+  <script src="/js/global-nav-config.js?v=10503"></script>
+  <script src="/js/global-nav-state.js?v=10503"></script>
+  <script src="/js/global-nav-render.js?v=10503"></script>
+  <script src="/js/global-nav-menu.js?v=10503"></script>
 </body>
 </html>

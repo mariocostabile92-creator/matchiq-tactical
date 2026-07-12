@@ -318,6 +318,7 @@
 }
 @media(max-width:420px){.plan-limit-grid{grid-template-columns:1fr;}}
 </style>
+<link rel="stylesheet" href="/css/global-nav.css?v=10503">
 
 <style>
 /* Coach V1.7.9 - Mobile compact polish */
@@ -850,23 +851,7 @@
 
 </head>
 
-<body>
-
-<div class="topbar">
-    <div class="brand">
-        <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
-        <div>
-            <div class="logo">MatchIQ Coach</div>
-            <div class="subtitle">Match analyst AI per il calcio dilettantistico</div>
-        </div>
-    </div>
-
-    <div class="actions">
-        <button class="btn dark" onclick="goHome()">Home</button>
-        <button class="btn green" onclick="goScout()">Scout</button>
-        <button class="btn soft" onclick="goAccount()">Account</button>
-    </div>
-</div>
+<body data-miq-module="coach">
 
 <div class="main">
     <div id="pageNotice" class="notice"></div>
@@ -1492,12 +1477,6 @@
 
 </div>
 
-<nav class="bottom-nav">
-    <a href="/mobile.html">Home</a>
-    <a href="/scout.html">Scout</a>
-    <a class="active" href="/coach.html">Coach</a>
-    <a href="/account.html">Account</a>
-</nav>
 <script src="/js/coach-state.js?v=10501"></script>
 <script src="/js/coach-voice-state.js?v=10498"></script>
 <script src="/js/coach-storage.js?v=10498"></script>
@@ -1510,5 +1489,9 @@
 <script src="/js/coach-voice-render.js?v=10498"></script>
 <script src="/js/coach-core.js?v=10498"></script>
 <script src="/js/app-meta.js"></script>
+<script src="/js/global-nav-config.js?v=10503"></script>
+<script src="/js/global-nav-state.js?v=10503"></script>
+<script src="/js/global-nav-render.js?v=10503"></script>
+<script src="/js/global-nav-menu.js?v=10503"></script>
 </body>
 </html>

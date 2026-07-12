@@ -67,10 +67,11 @@ td{color:#eaf0ff}
   .filter-actions{flex-direction:column;align-items:stretch}
 }
 </style>
+<link rel="stylesheet" href="/css/global-nav.css?v=10503">
 </head>
 
-<body>
-<div class="topbar">
+<body data-miq-module="admin">
+<template><div class="topbar">
   <div>
     <div class="logo">🛡️ MatchIQ Admin Users</div>
     <div class="subtitle">Gestione utenti, piani, verifica email e stato account · V9 Professional</div>
@@ -81,6 +82,13 @@ td{color:#eaf0ff}
     <button class="btn dark" onclick="goAnalytics()">Analytics</button>
     <button class="btn green" onclick="loadUsers()">Aggiorna</button>
   </div>
+</div></template>
+
+<div class="miq-module-toolbar" aria-label="Strumenti Admin Users">
+  <span class="miq-toolbar-state">Gestione utenti</span>
+  <button class="btn dark" type="button" onclick="goAdminBeta()">Richieste Beta</button>
+  <button class="btn dark" type="button" onclick="goAnalytics()">Analytics</button>
+  <button class="btn green" type="button" onclick="loadUsers()">Aggiorna</button>
 </div>
 
 <div class="main">
@@ -553,6 +561,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   loadUsers();
 });
 </script>
-<script src="/js/app-meta.js"></script>
+<script src="/js/global-nav-config.js?v=10503"></script>
+<script src="/js/global-nav-state.js?v=10503"></script>
+<script src="/js/global-nav-render.js?v=10503"></script>
+<script src="/js/global-nav-menu.js?v=10503"></script>
+<script src="/js/app-meta.js?v=10503"></script>
 </body>
 </html>

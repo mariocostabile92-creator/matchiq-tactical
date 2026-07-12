@@ -1,20 +1,25 @@
-const CACHE_NAME = "matchiq-pwa-v102";
+const CACHE_NAME = "matchiq-pwa-v103";
 const APP_SHELL = [
-  "/index.html?v=10502",
-  "/mobile.html?v=10502",
+  "/index.html?v=10503",
+  "/mobile.html?v=10503",
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
   "/js/app-meta.js",
-  "/css/home.css?v=10502",
-  "/js/auth.js?v=10502",
-  "/js/home-state.js?v=10502",
-  "/js/home-api.js?v=10502",
-  "/js/home-render.js?v=10502",
-  "/js/home-live.js?v=10502",
-  "/js/home-actions.js?v=10502",
-  "/js/home-onboarding.js?v=10502",
-  "/js/home.js?v=10502",
+  "/css/home.css?v=10503",
+  "/css/global-nav.css?v=10503",
+  "/js/auth.js?v=10503",
+  "/js/global-nav-config.js?v=10503",
+  "/js/global-nav-state.js?v=10503",
+  "/js/global-nav-render.js?v=10503",
+  "/js/global-nav-menu.js?v=10503",
+  "/js/home-state.js?v=10503",
+  "/js/home-api.js?v=10503",
+  "/js/home-render.js?v=10503",
+  "/js/home-live.js?v=10503",
+  "/js/home-actions.js?v=10503",
+  "/js/home-onboarding.js?v=10503",
+  "/js/home.js?v=10503",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -50,7 +55,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10502")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10503")))
     );
     return;
   }

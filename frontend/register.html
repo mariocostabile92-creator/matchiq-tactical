@@ -559,11 +559,12 @@ p{
     }
 }
 </style>
+<link rel="stylesheet" href="/css/global-nav.css?v=10503">
 </head>
-<body>
+<body data-miq-module="auth">
 <div class="page">
 
-<header class="topbar">
+<template><header class="topbar">
     <div class="brand">
         <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
         <div>
@@ -577,7 +578,7 @@ p{
         <a class="btn dark" href="/login.html?v=10350">Login</a>
         <a class="btn green" href="/coach.html?v=10350">Coach</a>
     </div>
-</header>
+</header></template>
 
 <main class="main">
 
@@ -683,12 +684,12 @@ p{
 
 </main>
 
-<nav class="bottom-nav" aria-label="Navigazione mobile">
+<template><nav class="bottom-nav" aria-label="Navigazione mobile">
     <a href="/index.html?v=10350">🏠<br>Home</a>
     <a href="/scout.html?v=10350">🧠<br>Scout</a>
     <a href="/coach.html?v=10350">📝<br>Coach</a>
     <a class="active" href="/account.html?v=10350">👤<br>Account</a>
-</nav>
+</nav></template>
 
 </div>
 
@@ -832,6 +833,10 @@ if("serviceWorker" in navigator){
 }
 </script>
 
-<script src="/js/app-meta.js"></script>
+<script src="/js/global-nav-config.js?v=10503"></script>
+<script src="/js/global-nav-state.js?v=10503"></script>
+<script src="/js/global-nav-render.js?v=10503"></script>
+<script src="/js/global-nav-menu.js?v=10503"></script>
+<script src="/js/app-meta.js?v=10503"></script>
 </body>
 </html>

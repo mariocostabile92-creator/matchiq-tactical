@@ -35,13 +35,19 @@
     const plan = H.plan();
     const owner = H.isOwner();
     const name = H.userName();
-    $("headerPlan").textContent = owner ? "Owner" : (H.state.account?.label || plan || "Guest");
-    $("headerPlan").classList.toggle("owner", owner);
+    const headerPlan = $("headerPlan");
+    if(headerPlan){
+      headerPlan.textContent = owner ? "Owner" : (H.state.account?.label || plan || "Guest");
+      headerPlan.classList.toggle("owner", owner);
+    }
     $("heroGreeting").textContent = name ? `Bentornato, ${name}` : "Bentornato in MatchIQ";
-    $("adminNav").hidden = !owner;
+    const adminNav = $("adminNav");
+    if(adminNav) adminNav.hidden = !owner;
     const auth = $("authAction");
-    if(H.isAuthenticated()){ auth.textContent = "Account"; auth.href = "/account.html"; }
-    else{ auth.textContent = "Accedi"; auth.href = "/login.html"; }
+    if(auth){
+      if(H.isAuthenticated()){ auth.textContent = "Account"; auth.href = "/account.html"; }
+      else{ auth.textContent = "Accedi"; auth.href = "/login.html"; }
+    }
     const badges = $("heroBadges"); badges.replaceChildren();
     const planBadge = text("span", owner ? "Owner Pro" : `${H.state.account?.label || plan} plan`, `badge ${owner ? "gold" : ""}`);
     badges.append(planBadge);

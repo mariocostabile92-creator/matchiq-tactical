@@ -71,11 +71,12 @@ td{color:#eaf0ff;font-size:14px}
 .updated,.template-preview,.code-help{color:#aebee7;font-size:12px;line-height:1.45;margin-top:8px}
 @media(max-width:900px){.topbar{flex-direction:column;align-items:flex-start}.panel-head{flex-direction:column;align-items:flex-start}.actions,.controls{width:100%}.btn{width:100%}.main{padding:18px}}
 </style>
+<link rel="stylesheet" href="/css/global-nav.css?v=10503">
 </head>
 
-<body>
+<body data-miq-module="admin">
 
-<div class="topbar">
+<template><div class="topbar">
   <div>
     <div class="logo">⚽ MatchIQ Admin</div>
     <div class="subtitle">Beta Requests · V9 Professional</div>
@@ -87,6 +88,14 @@ td{color:#eaf0ff;font-size:14px}
     <button class="btn green" onclick="loadBetaRequests()">Aggiorna</button>
     <button class="btn gold" onclick="exportBetaCSV()">Export CSV</button>
   </div>
+</div></template>
+
+<div class="miq-module-toolbar" aria-label="Strumenti amministrazione Beta">
+  <span class="miq-toolbar-state">Richieste Beta</span>
+  <button class="btn dark" type="button" onclick="goUsers()">Utenti</button>
+  <button class="btn dark" type="button" onclick="goAnalytics()">Analytics</button>
+  <button class="btn green" type="button" onclick="loadBetaRequests()">Aggiorna</button>
+  <button class="btn gold" type="button" onclick="exportBetaCSV()">Export CSV</button>
 </div>
 
 <div class="main">
@@ -693,6 +702,10 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 </script>
 
-<script src="/js/app-meta.js"></script>
+<script src="/js/global-nav-config.js?v=10503"></script>
+<script src="/js/global-nav-state.js?v=10503"></script>
+<script src="/js/global-nav-render.js?v=10503"></script>
+<script src="/js/global-nav-menu.js?v=10503"></script>
+<script src="/js/app-meta.js?v=10503"></script>
 </body>
 </html>

@@ -1393,23 +1393,9 @@ video{
     .panel:first-child{min-height:calc(100vh - 150px)}
 }
 </style>
+<link rel="stylesheet" href="/css/global-nav.css?v=10503">
 </head>
-<body>
-<header class="topbar">
-    <div class="brand-block">
-        <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
-        <div>
-        <div class="brand">MatchIQ Video AI</div>
-        <div class="sub">Video analysis intelligente per staff e match analyst</div>
-        </div>
-    </div>
-    <nav class="nav">
-        <a class="btn dark" href="/index.html?v=10488">Home</a>
-        <a class="btn dark" href="/coach.html?v=10488">Coach</a>
-        <a class="btn dark" href="/account.html?v=10488">Account</a>
-    </nav>
-</header>
-
+<body data-miq-module="video">
 <main class="wrap">
     <section class="hero">
         <div class="panel">
@@ -5201,5 +5187,9 @@ if("serviceWorker" in navigator){
 }
 </script>
 <script src="/js/app-meta.js"></script>
+<script src="/js/global-nav-config.js?v=10503"></script>
+<script src="/js/global-nav-state.js?v=10503"></script>
+<script src="/js/global-nav-render.js?v=10503"></script>
+<script src="/js/global-nav-menu.js?v=10503"></script>
 </body>
 </html>
