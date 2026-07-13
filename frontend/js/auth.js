@@ -110,6 +110,28 @@ function clearAdminTokens(){
   });
 }
 
+function clearSensitiveLocalState(){
+  const clearStorage = storage => {
+    const keys = [];
+    for(let index = 0; index < storage.length; index += 1){
+      const key = storage.key(index);
+      if(key) keys.push(key);
+    }
+
+    keys.forEach(key => {
+      if(
+        key.startsWith("matchiq_") ||
+        ["token", "access_token", "user"].includes(key)
+      ){
+        storage.removeItem(key);
+      }
+    });
+  };
+
+  clearStorage(localStorage);
+  clearStorage(sessionStorage);
+}
+
 function adminHeaders(extra = {}){
   const authToken = getAuthToken();
   const ownerAuth = authToken && isOwnerOrAdmin();
@@ -186,19 +208,7 @@ function requireAdminPage(){
 }
 
 function logout(){
-  [
-    "matchiq_auth_user",
-    "matchiq_user",
-    "matchiq_auth_token",
-    "matchiq_user_email",
-    "matchiq_user_plan"
-  ].forEach(key => localStorage.removeItem(key));
-
-  [
-    "matchiq_auth_user",
-    "matchiq_user",
-    "matchiq_auth_token"
-  ].forEach(key => sessionStorage.removeItem(key));
+  clearSensitiveLocalState();
 
   window.location.href = "/index.html?v=" + Date.now();
 }
@@ -212,6 +222,7 @@ window.MatchIQAuth = {
   authHeaders,
   getAdminToken,
   clearAdminTokens,
+  clearSensitiveLocalState,
   adminHeaders,
   hasAdminAccess,
   requireLogin,

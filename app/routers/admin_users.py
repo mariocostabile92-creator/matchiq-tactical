@@ -389,7 +389,7 @@ def admin_resend_user_verification(user_id: int, admin_ok: bool = Depends(requir
             "email_configured": bool(is_email_configured()),
             "user": user,
             "data": user,
-            "verification_link": verification_link if os.getenv("EMAIL_VERIFICATION_EXPOSE_LINK", "1") == "1" else None
+            "verification_link": verification_link if os.getenv("EMAIL_VERIFICATION_EXPOSE_LINK", "0") == "1" else None
         }
 
     except HTTPException:

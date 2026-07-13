@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 router = APIRouter(prefix="/api", tags=["system"])
 
@@ -11,6 +11,7 @@ def create_system_router(
     full_analysis_cache_seconds,
     scout_players_cache_seconds,
     services_provider,
+    admin_dependency,
 ):
     @router.get("/health")
     def health_check():
@@ -30,7 +31,7 @@ def create_system_router(
         }
 
     @router.get("/cache-status")
-    def cache_status():
+    def cache_status(admin_ok: bool = Depends(admin_dependency)):
         return {
             "live_matches_cache": {
                 "seconds": live_matches_cache_seconds,
@@ -50,7 +51,7 @@ def create_system_router(
         }
 
     @router.post("/clear-cache")
-    def clear_cache():
+    def clear_cache(admin_ok: bool = Depends(admin_dependency)):
         live_matches_cache.clear()
         full_analysis_cache.clear()
         scout_players_cache.clear()

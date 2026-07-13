@@ -635,7 +635,6 @@ def stripe_status():
     return {
         "ok": True,
         "stripe_secret_configured": bool(STRIPE_SECRET_KEY),
-        "stripe_secret_prefix": STRIPE_SECRET_KEY[:7] + "..." if STRIPE_SECRET_KEY else "",
         "webhook_secret_configured": bool(STRIPE_WEBHOOK_SECRET),
         "price_pro_monthly_configured": bool(STRIPE_PRICE_PRO_MONTHLY),
         "price_pro_yearly_configured": bool(STRIPE_PRICE_PRO_YEARLY),
@@ -654,26 +653,30 @@ async def stripe_webhook(request: Request):
     sig_header = request.headers.get("stripe-signature")
 
     if not STRIPE_WEBHOOK_SECRET:
-        logger.warning("[STRIPE] STRIPE_WEBHOOK_SECRET non configurato")
+        logger.error("[STRIPE] Webhook rifiutato: STRIPE_WEBHOOK_SECRET non configurato")
+        raise HTTPException(
+            status_code=503,
+            detail="Webhook Stripe non configurato"
+        )
+
+    if not sig_header:
+        raise HTTPException(
+            status_code=400,
+            detail="Firma Stripe mancante"
+        )
 
     try:
-        if STRIPE_WEBHOOK_SECRET:
-            event = stripe.Webhook.construct_event(
-                payload=payload,
-                sig_header=sig_header,
-                secret=STRIPE_WEBHOOK_SECRET
-            )
-        else:
-            event = stripe.Event.construct_from(
-                await request.json(),
-                stripe.api_key
-            )
+        event = stripe.Webhook.construct_event(
+            payload=payload,
+            sig_header=sig_header,
+            secret=STRIPE_WEBHOOK_SECRET
+        )
 
-    except Exception as e:
+    except Exception:
         logger.exception("[STRIPE] Webhook invalid")
         raise HTTPException(
             status_code=400,
-            detail=f"Webhook non valido: {str(e)}"
+            detail="Webhook Stripe non valido"
         )
 
     event_type = event["type"]

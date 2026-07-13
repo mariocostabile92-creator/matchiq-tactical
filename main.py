@@ -604,6 +604,7 @@ system_router = create_system_router(
     full_analysis_cache_seconds=FULL_ANALYSIS_CACHE_SECONDS,
     scout_players_cache_seconds=SCOUT_PLAYERS_CACHE_SECONDS,
     services_provider=get_services_status,
+    admin_dependency=require_admin_token,
 )
 
 app.include_router(system_router)

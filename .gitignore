@@ -7,3 +7,4 @@ matchiq.db
 *.sqlite
 *.sqlite3
 reports/
+storage/.jwt_secret

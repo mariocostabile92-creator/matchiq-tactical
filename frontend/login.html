@@ -706,6 +706,7 @@ p{
 
 </div>
 
+<script src="/js/auth.js?v=10513"></script>
 <script>
 const API_BASE = `${window.location.origin}/api`;
 const APP_VERSION = "10330";
@@ -715,6 +716,7 @@ function getToken(){
 }
 
 function saveAuth(token,user){
+    window.MatchIQAuth?.clearSensitiveLocalState();
     localStorage.setItem("matchiq_auth_token", token);
     localStorage.setItem("matchiq_auth_user", JSON.stringify(user || {}));
 
