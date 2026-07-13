@@ -1,5 +1,5 @@
 const MATCHIQ_APP_META = {
-    version: "10510",
+    version: "10511",
     year: "2026",
     product: "MatchIQ"
 };
@@ -108,12 +108,19 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
         document.body.appendChild(footer);
     }
 
+    function injectDecisionEntryAssets(){
+        if(currentPath().endsWith("/decision-engine.html") || document.querySelector('script[src*="decision-engine-entry.js"]')) return;
+        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/decision-engine-entry.css?v=10511"; document.head.appendChild(style);
+        const script=document.createElement("script"); script.src="/js/decision-engine-entry.js?v=10511"; script.defer=true; document.body.appendChild(script);
+    }
+
     function boot(){
         injectStyle();
         injectFooter();
         injectAiDisclaimer();
         injectVideoDisclaimer();
         injectMicrophoneDisclaimer();
+        injectDecisionEntryAssets();
     }
 
     if(document.readyState === "loading"){

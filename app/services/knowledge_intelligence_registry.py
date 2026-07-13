@@ -30,6 +30,10 @@ NODE_TYPES: Dict[str, dict] = {
     "tactical_identity_dimension": {"owner": "tactical_identity", "source": "tactical_identity_dimension", "versioned": True, "on_delete": "retain"},
     "identity_change": {"owner": "tactical_identity", "source": "identity_change", "versioned": True, "on_delete": "retain"},
     "staff_validation": {"owner": "tactical_identity", "source": "staff_validation", "versioned": True, "on_delete": "retain"},
+    "decision_case": {"owner": "decision_engine", "source": "decision_case", "versioned": True, "on_delete": "retain"},
+    "decision_option": {"owner": "decision_engine", "source": "decision_option", "versioned": True, "on_delete": "retain"},
+    "staff_decision": {"owner": "decision_engine", "source": "staff_decision", "versioned": True, "on_delete": "retain"},
+    "observed_outcome": {"owner": "decision_engine", "source": "observed_outcome", "versioned": True, "on_delete": "retain"},
 }
 
 RELATION_TYPES: FrozenSet[str] = frozenset({
@@ -37,6 +41,7 @@ RELATION_TYPES: FrozenSet[str] = frozenset({
     "includes", "belongs_to", "occurred_in", "involves_player", "concerns_zone", "concerns_topic",
     "generated_from", "used_by", "produced", "followed_by", "preceded_by", "addressed_by",
     "selected_for", "modified_from", "validated_by_staff", "dismissed_by_staff", "resolved_by", "evolved_from", "observed_in", "related_to",
+    "selected_by_staff", "rejected_by_staff", "concerns_pattern", "aligned_with_identity", "contradicts_identity",
 })
 
 ALLOWED_RELATIONS = {
@@ -59,6 +64,10 @@ ALLOWED_RELATIONS = {
     "tactical_identity_dimension": {"belongs_to", "supported_by", "contradicts", "validated_by_staff", "observed_in", "evolved_from", "related_to"},
     "identity_change": {"belongs_to", "evolved_from", "supported_by", "related_to"},
     "staff_validation": {"belongs_to", "validated_by_staff", "related_to"},
+    "decision_case": {"generated_from", "supported_by", "followed_by", "concerns_pattern", "related_to"},
+    "decision_option": {"belongs_to", "supported_by", "selected_by_staff", "rejected_by_staff", "aligned_with_identity", "contradicts_identity", "related_to"},
+    "staff_decision": {"belongs_to", "selected_by_staff", "rejected_by_staff", "followed_by", "related_to"},
+    "observed_outcome": {"belongs_to", "followed_by", "supported_by", "related_to"},
 }
 
 

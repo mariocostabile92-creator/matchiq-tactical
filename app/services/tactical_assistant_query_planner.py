@@ -37,7 +37,7 @@ def plan(question: str,conversation_context: Dict[str,Any],request_context: Dict
     if not players and any(word in text.lower() for word in ("lui","giocatore","e nelle")): players=list(conversation_context.get("players") or [])[:2]
     scope={**(conversation_context or {}),**(request_context or {})}; clarification=_needs_clarification(text,intent,themes,players,scope)
     node_types=SOURCE_BY_INTENT.get(intent,[]); source_id=None; node_id=None
-    for key,node_type in (("pattern_id","historical_pattern"),("briefing_id","weekly_briefing"),("training_plan_id","training_plan"),("video_id","video_session"),("identity_dimension_id","tactical_identity_dimension"),("identity_profile_id","tactical_identity_profile")):
+    for key,node_type in (("pattern_id","historical_pattern"),("briefing_id","weekly_briefing"),("training_plan_id","training_plan"),("video_id","video_session"),("identity_dimension_id","tactical_identity_dimension"),("identity_profile_id","tactical_identity_profile"),("decision_case_id","decision_case"),("decision_option_id","decision_option")):
         if request_context.get(key): source_id=str(request_context[key]); node_types=[node_type]; break
     if request_context.get("knowledge_node_id"):
         try: node_id=int(request_context["knowledge_node_id"])

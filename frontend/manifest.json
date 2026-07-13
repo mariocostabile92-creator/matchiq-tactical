@@ -2,7 +2,7 @@
   "name": "MatchIQ Tactical",
   "short_name": "MatchIQ",
   "description": "AI Football Intelligence Platform per analisi live, scouting e player insights.",
-  "start_url": "/index.html?v=10510",
+  "start_url": "/index.html?v=10511",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

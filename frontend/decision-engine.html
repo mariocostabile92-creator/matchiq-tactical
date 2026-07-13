@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050914">
+  <title>AI Decision Engine | MatchIQ</title><link rel="manifest" href="/manifest.json"><link rel="stylesheet" href="/css/decision-engine.css?v=10511">
+</head>
+<body data-miq-module="decision-engine">
+  <a class="skip" href="#decisionMain">Vai al Decision Engine</a>
+  <header class="decision-topbar"><a class="brand" href="/index.html"><img src="/assets/matchiq-logo.png" alt=""><span><strong>MatchIQ</strong><small>AI Decision Engine</small></span></a><nav aria-label="Navigazione Decision Engine"><a href="/index.html">Home</a><a href="/coach.html">Coach</a><a href="/tactical-assistant.html">Assistant</a></nav></header>
+  <main id="decisionMain" class="decision-shell">
+    <section class="decision-hero"><div><span class="eyebrow">AI DECISION SUPPORT</span><h1>Decidi meglio, senza cedere il controllo.</h1><p>MatchIQ legge il contesto disponibile, espone limiti e rischi e propone poche alternative verificabili. La decisione resta sempre allo staff.</p></div><div class="guardrail"><strong>Nessuna azione automatica</strong><span>Massimo 2 proposte e 1 alternativa prudente.</span></div></section>
+    <section class="decision-workspace">
+      <form id="decisionForm" class="context-panel" aria-labelledby="contextTitle"><div class="section-head"><div><span class="eyebrow">CONTESTO</span><h2 id="contextTitle">Cosa dobbiamo decidere?</h2></div></div>
+        <div class="form-grid"><label>Momento<select id="decisionPhase"><option value="pre_match">Pre-partita</option><option value="live_match">Partita live</option><option value="halftime">Intervallo</option><option value="post_match">Post-partita</option><option value="weekly">Settimana</option></select></label><label>Minuto<input id="decisionMinute" type="number" min="0" max="180" inputmode="numeric" placeholder="Es. 62"></label><label>Punteggio<input id="decisionScore" maxlength="40" placeholder="Es. 1-0"></label><label class="full">Domanda allo staff<input id="decisionPrompt" maxlength="600" placeholder="Es. Come proteggiamo il lato destro senza rinunciare alla pressione?"></label><label>Squadra<input id="decisionTeam" maxlength="100" placeholder="Squadra osservata"></label><label>Avversario<input id="decisionOpponent" maxlength="100" placeholder="Avversario"></label><label>Modulo<input id="decisionFormation" maxlength="40" placeholder="Es. 4-3-3"></label><label>Stanchezza<select id="decisionFatigue"><option value="">Non indicata</option><option value="low">Bassa</option><option value="medium">Media</option><option value="high">Alta</option></select></label></div>
+        <button id="decisionEvaluate" class="primary" type="submit">Valuta opzioni</button><p class="microcopy">La valutazione parte solo su richiesta. MatchIQ non applica cambi, moduli o sostituzioni.</p>
+      </form>
+      <aside class="history-panel"><div class="section-head"><div><span class="eyebrow">STORICO</span><h2>Decisioni recenti</h2></div><button id="decisionRefresh" class="icon" type="button" aria-label="Aggiorna storico">&#8635;</button></div><div id="decisionHistory" class="history-list"></div></aside>
+    </section>
+    <div id="decisionNotice" class="notice" role="status" aria-live="polite">Inserisci il contesto e avvia una valutazione.</div>
+    <section id="decisionSituation" class="situation-band" hidden></section>
+    <section id="decisionResults" hidden aria-labelledby="optionsTitle"><div class="section-head"><div><span class="eyebrow">OPZIONI</span><h2 id="optionsTitle">Alternative per lo staff</h2></div><button id="decisionCompare" class="secondary" type="button">Confronta</button></div><div id="decisionOptions" class="options-grid"></div></section>
+    <section id="decisionSourcesSection" hidden aria-labelledby="sourcesTitle"><div class="section-head"><div><span class="eyebrow">PERCHÉ</span><h2 id="sourcesTitle">Fonti, limiti e identità</h2></div></div><div id="decisionSources" class="sources-list"></div></section>
+  </main>
+  <dialog id="decisionDialog" aria-labelledby="decisionDialogTitle"><div class="dialog-head"><h2 id="decisionDialogTitle">Confronto opzioni</h2><button id="decisionClose" class="icon" type="button" aria-label="Chiudi confronto">&times;</button></div><div id="decisionComparison"></div></dialog>
+  <script src="/js/auth.js?v=10503"></script><script src="/js/decision-engine-state.js?v=10511"></script><script src="/js/decision-engine-api.js?v=10511"></script><script src="/js/decision-engine-situation.js?v=10511"></script><script src="/js/decision-engine-options.js?v=10511"></script><script src="/js/decision-engine-sources.js?v=10511"></script><script src="/js/decision-engine-history.js?v=10511"></script><script src="/js/decision-engine.js?v=10511"></script><script src="/js/app-meta.js?v=10511"></script>
+</body></html>
