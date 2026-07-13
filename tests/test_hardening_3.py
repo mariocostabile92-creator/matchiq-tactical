@@ -83,9 +83,9 @@ class HardeningThreeTests(unittest.TestCase):
             if path.suffix.lower() in {".html", ".js", ".json"}:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10516"})
+        self.assertEqual(query_versions, {"10517"})
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v116"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v117"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -131,6 +131,20 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertIn("#coachAiTrainingPlanner", styles)
         self.assertIn(".coach-training-plan-actions .btn", styles)
         self.assertIn("width:100%", styles)
+
+    def test_coach_lineup_can_be_prepared_before_match_creation(self):
+        coach = (FRONTEND / "coach.html").read_text(encoding="utf-8")
+        actions = (FRONTEND / "js" / "coach-actions.js").read_text(encoding="utf-8")
+        add_player = actions.split("function addLineupPlayer(){", 1)[1].split(
+            "function deleteLineupPlayer", 1
+        )[0]
+
+        self.assertNotIn("if(!coachState.match)", add_player)
+        self.assertIn("coachState.lineup.push(player)", add_player)
+        self.assertIn(
+            'type="button" onclick="addLineupPlayer()"',
+            coach,
+        )
 
     def test_existing_pdf_download_contracts_remain_real_downloads(self):
         match_router = (ROOT / "app" / "routers" / "match.py").read_text(encoding="utf-8")

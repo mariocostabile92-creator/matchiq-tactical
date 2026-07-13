@@ -684,10 +684,6 @@ function clearLineupForm(){
 }
 
 function addLineupPlayer(){
-    if(!coachState.match){
-        showNotice("Prima crea una partita manuale.", "warn");
-        return;
-    }
     ensureCoachStateShape();
     const name = getInputValue("lineupNameInput", "");
     if(!name){
