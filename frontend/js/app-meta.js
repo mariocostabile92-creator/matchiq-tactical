@@ -45,7 +45,7 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
     }
 
     function isAiPage(path){
-        return ["/index.html", "/mobile.html", "/coach.html", "/video.html", "/scout.html", "/match.html"].some(item => path.endsWith(item)) || path === "/";
+        return ["/index.html", "/mobile.html", "/coach.html", "/video.html", "/scout.html", "/match.html", "/tactical-assistant.html"].some(item => path.endsWith(item)) || path === "/";
     }
 
     function isVideoPage(path){

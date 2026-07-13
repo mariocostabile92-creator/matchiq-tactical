@@ -12,6 +12,9 @@ def execute(workspace_id: int,query: Dict[str,Any]) -> Dict[str,Any]:
       "team":query.get("team"),"date_from":(query.get("period") or {}).get("from"),"date_to":(query.get("period") or {}).get("to"),
       "tactical_topic":(query.get("themes") or [None])[0],"player_id":(query.get("players") or [None])[0],"zone":(query.get("zones") or [None])[0],
       "source_module":(query.get("source_types") or [None])[0],"page":1,"page_size":min(100,int(query.get("limit") or 20)),
+      "node_type":(query.get("node_types") or [None])[0],"match_id":query.get("match_id"),"season":query.get("season"),
+      "validation_state":query.get("validation_state"),
+      "source_id":query.get("source_id"),"node_id":query.get("node_id"),
     }
     result=search_repository.search(workspace_id,filters); minimum=RELIABILITY_ORDER.get(query.get("minimum_reliability"),0)
     items=[item for item in result["items"] if RELIABILITY_ORDER.get(item.get("reliability_level"),0)>=minimum]

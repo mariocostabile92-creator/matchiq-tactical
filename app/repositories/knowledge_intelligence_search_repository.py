@@ -6,6 +6,7 @@ from app.repositories.knowledge_intelligence_repository import _decode, _dump, g
 
 
 FILTER_COLUMNS={
+  "node_id":"n.id","source_id":"n.source_id",
   "node_type":"n.node_type","source_module":"n.source_module","team":"n.team_name","match_id":"n.match_id",
   "player_id":"n.player_id","tactical_topic":"n.tactical_topic","zone":"n.zone","reliability_level":"n.reliability_level",
   "validation_state":"n.validation_state","polarity":"n.polarity","season":"n.season",

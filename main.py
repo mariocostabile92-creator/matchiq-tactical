@@ -73,6 +73,8 @@ from app.services.weekly_briefing_service import initialize_weekly_briefing
 from app.services.pattern_intelligence_service import initialize_pattern_intelligence
 from app.services.training_planner_service import initialize_training_planner
 from app.services.knowledge_intelligence_service import initialize_knowledge_intelligence
+from app.services.tactical_assistant_service import initialize_tactical_assistant
+from app.routers.tactical_assistant import router as tactical_assistant_router
 from auth import create_verification_for_user
 from brevo_service import send_verification_email, is_email_configured
 from usage_guard import (
@@ -152,6 +154,7 @@ initialize_pattern_intelligence()
 initialize_training_planner()
 initialize_weekly_briefing()
 initialize_knowledge_intelligence()
+initialize_tactical_assistant()
 app.include_router(auth_router)
 app.include_router(payments_router)
 app.include_router(coach_tracking_router)
@@ -163,6 +166,7 @@ app.include_router(weekly_briefing_router)
 app.include_router(pattern_intelligence_router)
 app.include_router(training_planner_router)
 app.include_router(knowledge_intelligence_router)
+app.include_router(tactical_assistant_router)
 
 
 # =========================================================

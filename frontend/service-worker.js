@@ -1,11 +1,12 @@
-const CACHE_NAME = "matchiq-pwa-v108";
+const CACHE_NAME = "matchiq-pwa-v109";
 const APP_SHELL = [
-  "/index.html?v=10508",
-  "/mobile.html?v=10508",
+  "/index.html?v=10509",
+  "/mobile.html?v=10509",
   "/weekly-briefing.html",
   "/pattern-intelligence.html",
   "/training-planner.html",
   "/knowledge.html",
+  "/tactical-assistant.html",
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
@@ -20,6 +21,8 @@ const APP_SHELL = [
   "/css/training-planner-home.css?v=10507",
   "/css/knowledge-intelligence.css?v=10508",
   "/css/knowledge-entry.css?v=10508",
+  "/css/tactical-assistant.css?v=10509",
+  "/css/tactical-assistant-entry.css?v=10509",
   "/css/global-nav.css?v=10503",
   "/js/auth.js?v=10503",
   "/js/global-nav-config.js?v=10503",
@@ -62,6 +65,15 @@ const APP_SHELL = [
   "/js/knowledge-intelligence-query.js?v=10508",
   "/js/knowledge-intelligence.js?v=10508",
   "/js/knowledge-entry.js?v=10508",
+  "/js/tactical-assistant-state.js?v=10509",
+  "/js/tactical-assistant-api.js?v=10509",
+  "/js/tactical-assistant-sources.js?v=10509",
+  "/js/tactical-assistant-render.js?v=10509",
+  "/js/tactical-assistant-conversations.js?v=10509",
+  "/js/tactical-assistant-feedback.js?v=10509",
+  "/js/tactical-assistant.js?v=10509",
+  "/js/tactical-assistant-entry.js?v=10509",
+  "/js/tactical-assistant-context.js?v=10509",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -97,7 +109,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10508")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10509")))
     );
     return;
   }
