@@ -37,6 +37,10 @@ def initialize_schema() -> None:
       id {ident},identity_dimension_id INTEGER NOT NULL,user_id INTEGER NOT NULL,action TEXT NOT NULL,note TEXT,declared_value TEXT,created_at TEXT NOT NULL,
       FOREIGN KEY(identity_dimension_id) REFERENCES tactical_identity_dimensions(id) ON DELETE CASCADE,
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)""")
+    # Preserve the base schema before optional compatibility migrations. On
+    # PostgreSQL, rolling back a duplicate-column migration would otherwise
+    # also roll back every CREATE TABLE above and make index creation fail.
+    conn.commit()
     migrations = (
       ("tactical_identity_profiles", "competition", "TEXT NOT NULL DEFAULT ''"),
       ("tactical_identity_profiles", "formation", "TEXT NOT NULL DEFAULT ''"),

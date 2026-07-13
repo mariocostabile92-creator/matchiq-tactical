@@ -125,6 +125,47 @@ class TacticalIdentityTest(unittest.TestCase):
         ):
             self.assertIn(dimension, DIMENSIONS)
 
+    def test_postgres_schema_survives_duplicate_column_migrations(self):
+        class TransactionalConnection:
+            def __init__(self):
+                self.pending_tables = False
+                self.committed_tables = False
+                self.indexes = 0
+
+            def cursor(self):
+                return self
+
+            def execute(self, statement):
+                normalized = " ".join(statement.split()).upper()
+                if normalized.startswith("CREATE TABLE"):
+                    self.pending_tables = True
+                elif normalized.startswith("ALTER TABLE"):
+                    raise RuntimeError("duplicate column")
+                elif normalized.startswith("CREATE INDEX"):
+                    if not self.committed_tables:
+                        raise RuntimeError("undefined table")
+                    self.indexes += 1
+
+            def commit(self):
+                if self.pending_tables:
+                    self.committed_tables = True
+                    self.pending_tables = False
+
+            def rollback(self):
+                self.pending_tables = False
+
+            def close(self):
+                return None
+
+        connection = TransactionalConnection()
+        with patch.object(tactical_identity_schema, "get_connection", return_value=connection), patch.object(
+            tactical_identity_schema, "USE_POSTGRES", True
+        ):
+            tactical_identity_schema.initialize_schema()
+
+        self.assertTrue(connection.committed_tables)
+        self.assertEqual(connection.indexes, 8)
+
     def test_engine_separates_declared_observed_and_explains_limits(self):
         result = build([self.coach_node(), *self.pressing_nodes()])
         pressing = next(item for item in result["dimensions"] if item["dimension_type"] == "defence.high_press")
