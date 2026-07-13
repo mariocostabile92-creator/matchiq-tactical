@@ -1,5 +1,5 @@
 const MATCHIQ_APP_META = {
-    version: "10511",
+    version: "10512",
     year: "2026",
     product: "MatchIQ"
 };
@@ -45,7 +45,7 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
     }
 
     function isAiPage(path){
-        return ["/index.html", "/mobile.html", "/coach.html", "/video.html", "/scout.html", "/match.html", "/tactical-assistant.html", "/tactical-identity.html"].some(item => path.endsWith(item)) || path === "/";
+        return ["/index.html", "/mobile.html", "/coach.html", "/video.html", "/scout.html", "/match.html", "/tactical-assistant.html", "/tactical-identity.html", "/club-intelligence.html"].some(item => path.endsWith(item)) || path === "/";
     }
 
     function isVideoPage(path){
@@ -114,6 +114,12 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
         const script=document.createElement("script"); script.src="/js/decision-engine-entry.js?v=10511"; script.defer=true; document.body.appendChild(script);
     }
 
+    function injectClubEntryAssets(){
+        if(currentPath().endsWith("/club-intelligence.html") || document.querySelector('script[src*="club-intelligence-entry.js"]')) return;
+        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/club-intelligence-entry.css?v=10512"; document.head.appendChild(style);
+        const script=document.createElement("script"); script.src="/js/club-intelligence-entry.js?v=10512"; script.defer=true; document.body.appendChild(script);
+    }
+
     function boot(){
         injectStyle();
         injectFooter();
@@ -121,6 +127,7 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
         injectVideoDisclaimer();
         injectMicrophoneDisclaimer();
         injectDecisionEntryAssets();
+        injectClubEntryAssets();
     }
 
     if(document.readyState === "loading"){

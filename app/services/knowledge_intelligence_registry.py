@@ -34,6 +34,11 @@ NODE_TYPES: Dict[str, dict] = {
     "decision_option": {"owner": "decision_engine", "source": "decision_option", "versioned": True, "on_delete": "retain"},
     "staff_decision": {"owner": "decision_engine", "source": "staff_decision", "versioned": True, "on_delete": "retain"},
     "observed_outcome": {"owner": "decision_engine", "source": "observed_outcome", "versioned": True, "on_delete": "retain"},
+    "club_profile": {"owner": "club_intelligence", "source": "club_profile", "versioned": True, "on_delete": "retain"},
+    "club_team": {"owner": "club_intelligence", "source": "club_team", "versioned": True, "on_delete": "retain"},
+    "club_principle": {"owner": "club_intelligence", "source": "club_principle", "versioned": True, "on_delete": "retain"},
+    "club_intelligence_snapshot": {"owner": "club_intelligence", "source": "club_snapshot", "versioned": True, "on_delete": "retain"},
+    "shared_club_resource": {"owner": "club_intelligence", "source": "club_resource", "versioned": True, "on_delete": "invalidate"},
 }
 
 RELATION_TYPES: FrozenSet[str] = frozenset({
@@ -42,6 +47,7 @@ RELATION_TYPES: FrozenSet[str] = frozenset({
     "generated_from", "used_by", "produced", "followed_by", "preceded_by", "addressed_by",
     "selected_for", "modified_from", "validated_by_staff", "dismissed_by_staff", "resolved_by", "evolved_from", "observed_in", "related_to",
     "selected_by_staff", "rejected_by_staff", "concerns_pattern", "aligned_with_identity", "contradicts_identity",
+    "declared_by_club", "shared_with", "applies_to_team", "aligned_with_club", "differs_by_context",
 })
 
 ALLOWED_RELATIONS = {
@@ -68,6 +74,11 @@ ALLOWED_RELATIONS = {
     "decision_option": {"belongs_to", "supported_by", "selected_by_staff", "rejected_by_staff", "aligned_with_identity", "contradicts_identity", "related_to"},
     "staff_decision": {"belongs_to", "selected_by_staff", "rejected_by_staff", "followed_by", "related_to"},
     "observed_outcome": {"belongs_to", "followed_by", "supported_by", "related_to"},
+    "club_profile": {"includes", "summarizes", "related_to"},
+    "club_team": {"belongs_to", "aligned_with_club", "differs_by_context", "related_to"},
+    "club_principle": {"declared_by_club", "applies_to_team", "validated_by_staff", "related_to"},
+    "club_intelligence_snapshot": {"summarizes", "generated_from", "supported_by", "related_to"},
+    "shared_club_resource": {"shared_with", "generated_from", "applies_to_team", "related_to"},
 }
 
 

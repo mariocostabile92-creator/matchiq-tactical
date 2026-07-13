@@ -1,0 +1,1 @@
+window.ClubIQState={clubs:[],activeClubId:null,detail:null,overview:null,online:navigator.onLine,cacheKey:"matchiq_club_intelligence_cache_v1",setCache(data){try{localStorage.setItem(this.cacheKey,JSON.stringify(data))}catch(e){}},getCache(){try{return JSON.parse(localStorage.getItem(this.cacheKey)||"null")}catch(e){return null}}};

@@ -1,7 +1,7 @@
-const CACHE_NAME = "matchiq-pwa-v111";
+const CACHE_NAME = "matchiq-pwa-v112";
 const APP_SHELL = [
-  "/index.html?v=10511",
-  "/mobile.html?v=10511",
+  "/index.html?v=10512",
+  "/mobile.html?v=10512",
   "/weekly-briefing.html",
   "/pattern-intelligence.html",
   "/training-planner.html",
@@ -9,6 +9,7 @@ const APP_SHELL = [
   "/tactical-assistant.html",
   "/tactical-identity.html",
   "/decision-engine.html",
+  "/club-intelligence.html",
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
@@ -29,6 +30,8 @@ const APP_SHELL = [
   "/css/tactical-identity-entry.css?v=10510",
   "/css/decision-engine.css?v=10511",
   "/css/decision-engine-entry.css?v=10511",
+  "/css/club-intelligence.css?v=10512",
+  "/css/club-intelligence-entry.css?v=10512",
   "/css/global-nav.css?v=10503",
   "/js/auth.js?v=10503",
   "/js/global-nav-config.js?v=10503",
@@ -95,6 +98,11 @@ const APP_SHELL = [
   "/js/decision-engine-history.js?v=10511",
   "/js/decision-engine.js?v=10511",
   "/js/decision-engine-entry.js?v=10511",
+  "/js/club-intelligence-state.js?v=10512",
+  "/js/club-intelligence-api.js?v=10512",
+  "/js/club-intelligence-render.js?v=10512",
+  "/js/club-intelligence.js?v=10512",
+  "/js/club-intelligence-entry.js?v=10512",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -130,7 +138,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10511")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10512")))
     );
     return;
   }
