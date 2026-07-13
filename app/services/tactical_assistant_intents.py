@@ -12,6 +12,7 @@ INTENTS: Dict[str, Dict[str, Any]] = {
     "available_material":{"label":"Materiale disponibile","keywords":["clip","video","report","materiale","abbiamo sulla"]},
     "clarification":{"label":"Approfondimento","keywords":["spiegami meglio","fonti","solo le evidenze","approfondisci"]},
     "operational_action":{"label":"Azione operativa","keywords":["apri","portami","vai al"]},
+    "tactical_identity":{"label":"Identita tattica","keywords":["identita tattica","come giochiamo","come vorrei","mia filosofia","coerenti","blocco medio","perche matchiq dice"]},
 }
 
 THEMES={
@@ -26,6 +27,7 @@ SOURCE_BY_INTENT={
   "pattern_explanation":["historical_pattern"],"weekly_preparation":["weekly_briefing","training_plan"],
   "match_preparation":["historical_pattern","weekly_briefing"],"squad_analysis":["player","voice_observation","scout_report"],
   "available_material":["video_session","video_frame","video_report","coach_report"],
+  "tactical_identity":["tactical_identity_profile","tactical_identity_dimension"],
 }
 
 

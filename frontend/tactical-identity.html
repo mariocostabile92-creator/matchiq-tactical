@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050914">
+  <title>AI Tactical Identity | MatchIQ</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/tactical-identity.css?v=10510">
+</head>
+<body data-miq-module="tactical-identity">
+  <a class="skip" href="#identityMain">Vai all'identita tattica</a>
+  <header class="identity-topbar">
+    <a class="brand" href="/index.html"><img src="/assets/matchiq-logo.png" alt=""><span><strong>MatchIQ</strong><small>AI Tactical Identity</small></span></a>
+    <nav aria-label="Navigazione Tactical Identity"><a href="/index.html">Home</a><a href="/pattern-intelligence.html">Pattern</a><a href="/tactical-assistant.html">Assistant</a></nav>
+  </header>
+  <main id="identityMain" class="identity-shell">
+    <section class="identity-hero">
+      <div><span class="eyebrow">AI TACTICAL IDENTITY</span><h1>La tua identita tattica, spiegata dai dati.</h1><p>Scopri come la squadra vuole giocare, come gioca realmente e come la sua identita evolve nel tempo.</p></div>
+      <button id="identityRun" class="primary" type="button">Aggiorna identita</button>
+    </section>
+    <div id="identityNotice" class="notice" role="status" aria-live="polite">Caricamento dell'ultima identita salvata...</div>
+    <section class="filters" aria-label="Filtri identita">
+      <label>Stagione<input id="filterSeason" placeholder="2026/27"></label>
+      <label>Da<input id="filterFrom" type="date"></label>
+      <label>A<input id="filterTo" type="date"></label>
+      <label>Competizione<input id="filterCompetition" placeholder="Es. Campionato"></label>
+      <label>Modulo<input id="filterFormation" placeholder="Es. 4-3-3"></label>
+      <label>Fonte<select id="filterSource"><option value="">Tutte</option><option value="coach">Coach</option><option value="voice_coach">Voice Coach</option><option value="pattern_intelligence">Pattern</option><option value="training_planner">Training</option><option value="video_ai">Video AI</option></select></label>
+      <label>Area<select id="filterGroup"><option value="">Tutte</option><option value="structure">Struttura</option><option value="buildup">Costruzione</option><option value="attack">Fase offensiva</option><option value="defence">Fase difensiva</option><option value="transitions">Transizioni</option><option value="set_pieces">Palle inattive</option><option value="game_management">Gestione gara</option><option value="squad">Rosa</option></select></label>
+      <label>Affidabilita<select id="filterConfidence"><option value="">Tutte</option><option value="alta">Alta</option><option value="media">Media</option><option value="bassa">Bassa</option></select></label>
+      <label>Validazione<select id="filterValidation"><option value="">Tutte</option><option value="confirmed_by_staff">Confermate</option><option value="contested_by_staff">Contestate</option><option value="monitor">Da monitorare</option><option value="not_representative">Non rappresentative</option><option value="not_validated">Non validate</option></select></label>
+      <button id="filterApply" type="button">Applica filtri</button>
+    </section>
+    <section id="identityMeta" class="meta-grid" aria-label="Stato identita"></section>
+    <section id="identityEmpty" class="empty-state" hidden><span class="eyebrow">IDENTITA IN COSTRUZIONE</span><h2>Servono piu dati reali.</h2><p>Non ci sono ancora partite sufficienti per costruire l'identita tattica. Aggiungi le preferenze del mister e registra piu partite per confrontare dichiarato e osservato.</p></section>
+    <section id="identitySummarySection" aria-labelledby="summaryTitle"><div class="section-head"><div><span class="eyebrow">PROFILO SINTETICO</span><h2 id="summaryTitle">Cosa emerge nel periodo</h2></div><a id="identityAsk" class="secondary-link" href="/tactical-assistant.html">Approfondisci nel Tactical Assistant</a></div><div id="identitySummary" class="summary-band"></div></section>
+    <section aria-labelledby="comparisonTitle"><div class="section-head"><div><span class="eyebrow">CONFRONTO</span><h2 id="comparisonTitle">Volonta, comportamento e conferma staff</h2></div></div><div id="identityComparison" class="comparison-grid"></div></section>
+    <section aria-labelledby="dimensionsTitle"><div class="section-head"><div><span class="eyebrow">DIMENSIONI</span><h2 id="dimensionsTitle">Identita per fase di gioco</h2></div></div><div id="identityDimensions" class="dimension-groups"></div></section>
+    <section aria-labelledby="timelineTitle"><div class="section-head"><div><span class="eyebrow">EVOLUZIONE</span><h2 id="timelineTitle">Timeline identita</h2></div></div><ol id="identityTimeline" class="timeline"></ol></section>
+  </main>
+  <dialog id="identityDialog" aria-labelledby="identityDialogTitle"><div class="dialog-head"><div><span class="eyebrow">PERCHE MATCHIQ LO CONSIDERA PARTE DELL'IDENTITA?</span><h2 id="identityDialogTitle">Dettaglio dimensione</h2></div><button id="identityClose" class="icon" type="button" aria-label="Chiudi dettaglio">&times;</button></div><div id="identityDetail" class="dialog-body"></div></dialog>
+  <script src="/js/auth.js?v=10503"></script>
+  <script src="/js/tactical-identity-state.js?v=10510"></script><script src="/js/tactical-identity-api.js?v=10510"></script><script src="/js/tactical-identity-render.js?v=10510"></script><script src="/js/tactical-identity-detail.js?v=10510"></script><script src="/js/tactical-identity-validation.js?v=10510"></script><script src="/js/tactical-identity.js?v=10510"></script><script src="/js/app-meta.js?v=10510"></script>
+</body>
+</html>

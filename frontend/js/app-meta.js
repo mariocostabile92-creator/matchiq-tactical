@@ -1,5 +1,5 @@
 const MATCHIQ_APP_META = {
-    version: "10503",
+    version: "10510",
     year: "2026",
     product: "MatchIQ"
 };
@@ -45,7 +45,7 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
     }
 
     function isAiPage(path){
-        return ["/index.html", "/mobile.html", "/coach.html", "/video.html", "/scout.html", "/match.html", "/tactical-assistant.html"].some(item => path.endsWith(item)) || path === "/";
+        return ["/index.html", "/mobile.html", "/coach.html", "/video.html", "/scout.html", "/match.html", "/tactical-assistant.html", "/tactical-identity.html"].some(item => path.endsWith(item)) || path === "/";
     }
 
     function isVideoPage(path){

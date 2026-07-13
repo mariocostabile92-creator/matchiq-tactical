@@ -1,12 +1,13 @@
-const CACHE_NAME = "matchiq-pwa-v109";
+const CACHE_NAME = "matchiq-pwa-v110";
 const APP_SHELL = [
-  "/index.html?v=10509",
-  "/mobile.html?v=10509",
+  "/index.html?v=10510",
+  "/mobile.html?v=10510",
   "/weekly-briefing.html",
   "/pattern-intelligence.html",
   "/training-planner.html",
   "/knowledge.html",
   "/tactical-assistant.html",
+  "/tactical-identity.html",
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
@@ -23,6 +24,8 @@ const APP_SHELL = [
   "/css/knowledge-entry.css?v=10508",
   "/css/tactical-assistant.css?v=10509",
   "/css/tactical-assistant-entry.css?v=10509",
+  "/css/tactical-identity.css?v=10510",
+  "/css/tactical-identity-entry.css?v=10510",
   "/css/global-nav.css?v=10503",
   "/js/auth.js?v=10503",
   "/js/global-nav-config.js?v=10503",
@@ -74,6 +77,13 @@ const APP_SHELL = [
   "/js/tactical-assistant.js?v=10509",
   "/js/tactical-assistant-entry.js?v=10509",
   "/js/tactical-assistant-context.js?v=10509",
+  "/js/tactical-identity-state.js?v=10510",
+  "/js/tactical-identity-api.js?v=10510",
+  "/js/tactical-identity-render.js?v=10510",
+  "/js/tactical-identity-detail.js?v=10510",
+  "/js/tactical-identity-validation.js?v=10510",
+  "/js/tactical-identity.js?v=10510",
+  "/js/tactical-identity-entry.js?v=10510",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -109,7 +119,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10509")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10510")))
     );
     return;
   }

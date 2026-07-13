@@ -10,7 +10,7 @@ from usage_guard import get_effective_plan
 
 
 INJECTION_MARKERS=("ignore previous","ignora le istruzioni","system prompt","developer message","esegui codice","reveal secret","api key")
-ACTION_WHITELIST={"historical_pattern":"/pattern-intelligence.html","weekly_briefing":"/weekly-briefing.html","training_plan":"/training-planner.html","training_session":"/training-planner.html","video_session":"/video.html","video_frame":"/video.html","video_report":"/video.html","match":"/coach.html","coach_report":"/coach.html","player":"/knowledge.html","voice_observation":"/knowledge.html"}
+ACTION_WHITELIST={"historical_pattern":"/pattern-intelligence.html","weekly_briefing":"/weekly-briefing.html","training_plan":"/training-planner.html","training_session":"/training-planner.html","video_session":"/video.html","video_frame":"/video.html","video_report":"/video.html","match":"/coach.html","coach_report":"/coach.html","player":"/knowledge.html","voice_observation":"/knowledge.html","tactical_identity_profile":"/tactical-identity.html","tactical_identity_dimension":"/tactical-identity.html"}
 
 
 def validate_question(text: str) -> str:

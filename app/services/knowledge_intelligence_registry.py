@@ -26,13 +26,17 @@ NODE_TYPES: Dict[str, dict] = {
     "tag": {"owner": "knowledge", "source": "tag", "versioned": False, "on_delete": "invalidate"},
     "timeline_event": {"owner": "knowledge", "source": "timeline_event", "versioned": False, "on_delete": "invalidate"},
     "scout_report": {"owner": "scout", "source": "scout_report", "versioned": True, "on_delete": "invalidate"},
+    "tactical_identity_profile": {"owner": "tactical_identity", "source": "tactical_identity_profile", "versioned": True, "on_delete": "retain"},
+    "tactical_identity_dimension": {"owner": "tactical_identity", "source": "tactical_identity_dimension", "versioned": True, "on_delete": "retain"},
+    "identity_change": {"owner": "tactical_identity", "source": "identity_change", "versioned": True, "on_delete": "retain"},
+    "staff_validation": {"owner": "tactical_identity", "source": "staff_validation", "versioned": True, "on_delete": "retain"},
 }
 
 RELATION_TYPES: FrozenSet[str] = frozenset({
     "derives_from", "supported_by", "contradicts", "confirms", "weakens", "summarizes",
     "includes", "belongs_to", "occurred_in", "involves_player", "concerns_zone", "concerns_topic",
     "generated_from", "used_by", "produced", "followed_by", "preceded_by", "addressed_by",
-    "selected_for", "modified_from", "validated_by_staff", "dismissed_by_staff", "resolved_by", "related_to",
+    "selected_for", "modified_from", "validated_by_staff", "dismissed_by_staff", "resolved_by", "evolved_from", "observed_in", "related_to",
 })
 
 ALLOWED_RELATIONS = {
@@ -51,6 +55,10 @@ ALLOWED_RELATIONS = {
     "player": {"related_to"},
     "match": {"produced", "followed_by", "preceded_by", "includes", "related_to"},
     "scout_report": {"involves_player", "generated_from", "related_to"},
+    "tactical_identity_profile": {"supported_by", "evolved_from", "belongs_to", "related_to"},
+    "tactical_identity_dimension": {"belongs_to", "supported_by", "contradicts", "validated_by_staff", "observed_in", "evolved_from", "related_to"},
+    "identity_change": {"belongs_to", "evolved_from", "supported_by", "related_to"},
+    "staff_validation": {"belongs_to", "validated_by_staff", "related_to"},
 }
 
 
