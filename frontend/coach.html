@@ -13,29 +13,23 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
-<link rel="stylesheet" href="/css/coach.css?v=10517">
+<link rel="stylesheet" href="/css/coach.css?v=10518">
 
 <style>
 .coach-onboarding{
-    display:grid;
-    grid-template-columns:1.1fr .9fr;
-    gap:18px;
+    display:block;
     margin:22px 0;
 }
-.coach-guide-card,.coach-plan-card{
+.coach-plan-card{
     background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
     border:1px solid rgba(255,255,255,.10);
     border-radius:28px;
     padding:24px;
     box-shadow:0 20px 60px rgba(0,0,0,.20);
 }
-.coach-guide-card h2,.coach-plan-card h2{margin:10px 0 10px;font-size:26px;}
-.coach-guide-card p,.coach-plan-card p{color:#aebee7;line-height:1.6;}
-.coach-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px;}
-.coach-step{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:13px;}
-.coach-step strong{display:block;color:#00f5a0;font-size:18px;margin-bottom:6px;}
-.coach-step span{display:block;color:#dbe6ff;font-size:12px;font-weight:900;line-height:1.35;}
-.plan-limit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px;}
+.coach-plan-card h2{margin:10px 0 10px;font-size:26px;}
+.coach-plan-card p{color:#aebee7;line-height:1.6;}
+.plan-limit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px;}
 .plan-limit-card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:13px;}
 .plan-limit-label{color:#8fa3d7;font-size:11px;font-weight:1000;text-transform:uppercase;margin-bottom:5px;}
 .plan-limit-value{font-size:15px;font-weight:1000;color:#fff;}
@@ -305,20 +299,18 @@
 .training-plan-card span{color:#dbe6ff;font-size:13px;line-height:1.45;margin-top:7px;}
 .training-plan-card small{color:#aebee7;font-size:11px;line-height:1.4;margin-top:8px;}
 @media(max-width:900px){
-    .coach-onboarding{grid-template-columns:1fr;gap:14px;margin:16px 0;}
+    .coach-onboarding{margin:16px 0;}
     .coach-live-board{grid-template-columns:1fr;gap:14px;margin:16px 0;}
     .coach-live-card,.coach-ai-panel{padding:18px;border-radius:22px;}
     .coach-live-actions{grid-template-columns:repeat(2,minmax(0,1fr));}
     .coach-live-btn{min-height:98px;}
     .coach-precheck-grid,.training-plan-list{grid-template-columns:1fr;}
-    .coach-guide-card,.coach-plan-card{padding:18px;border-radius:22px;}
-    .coach-steps{grid-template-columns:1fr;gap:8px;}
-    .coach-step{display:grid;grid-template-columns:42px 1fr;align-items:center;gap:10px;}
+    .coach-plan-card{padding:18px;border-radius:22px;}
     .plan-limit-grid{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:420px){.plan-limit-grid{grid-template-columns:1fr;}}
 </style>
-<link rel="stylesheet" href="/css/global-nav.css?v=10517">
+<link rel="stylesheet" href="/css/global-nav.css?v=10518">
 
 <style>
 /* Coach V1.7.9 - Mobile compact polish */
@@ -961,19 +953,6 @@
     <div id="coachPhasePost" class="coach-phase-content hidden" role="tabpanel" aria-labelledby="coachPhasePostBtn"></div>
 
     <div class="coach-onboarding">
-        <div class="coach-guide-card">
-            <span class="badge green">PRIMA VOLTA?</span>
-            <h2>Segui questi 5 step</h2>
-            <p>Coach Mode serve per trasformare la partita in un report tecnico ordinato. Ti basta seguire il flusso dall’alto verso il basso.</p>
-            <div class="coach-steps">
-                <div class="coach-step"><strong>1</strong><span>Crea partita</span></div>
-                <div class="coach-step"><strong>2</strong><span>Segna eventi</span></div>
-                <div class="coach-step"><strong>3</strong><span>Aggiungi pagelle</span></div>
-                <div class="coach-step"><strong>4</strong><span>Genera report</span></div>
-                <div class="coach-step"><strong>5</strong><span>PDF / WhatsApp</span></div>
-            </div>
-        </div>
-
         <div class="coach-plan-card" id="coachPlanCard">
             <span class="badge gold" id="coachPlanBadgeLarge">PIANO</span>
             <h2 id="coachPlanTitle">Limiti Coach</h2>
@@ -1481,30 +1460,30 @@
 
 </div>
 
-<script src="/js/safe-render.js?v=10517"></script>
-<script src="/js/coach-state.js?v=10517"></script>
-<script src="/js/coach-voice-state.js?v=10517"></script>
-<script src="/js/coach-storage.js?v=10517"></script>
-<script src="/js/coach-actions.js?v=10517"></script>
-<script src="/js/coach-voice-parser.js?v=10517"></script>
-<script src="/js/coach-voice-api.js?v=10517"></script>
-<script src="/js/coach-voice-actions.js?v=10517"></script>
-<script src="/js/coach-report.js?v=10517"></script>
-<script src="/js/coach-render.js?v=10517"></script>
-<script src="/js/coach-voice-render.js?v=10517"></script>
-<script src="/js/coach-core.js?v=10517"></script>
-<script src="/js/coach-pattern-impact.js?v=10517"></script>
-<script src="/js/coach-training-planner.js?v=10517"></script>
-<link rel="stylesheet" href="/css/knowledge-entry.css?v=10517">
-<link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10517">
-<link rel="stylesheet" href="/css/tactical-identity-entry.css?v=10517">
-<script src="/js/knowledge-entry.js?v=10517"></script>
-<script src="/js/tactical-assistant-entry.js?v=10517"></script>
-<script src="/js/tactical-identity-entry.js?v=10517"></script>
+<script src="/js/safe-render.js?v=10518"></script>
+<script src="/js/coach-state.js?v=10518"></script>
+<script src="/js/coach-voice-state.js?v=10518"></script>
+<script src="/js/coach-storage.js?v=10518"></script>
+<script src="/js/coach-actions.js?v=10518"></script>
+<script src="/js/coach-voice-parser.js?v=10518"></script>
+<script src="/js/coach-voice-api.js?v=10518"></script>
+<script src="/js/coach-voice-actions.js?v=10518"></script>
+<script src="/js/coach-report.js?v=10518"></script>
+<script src="/js/coach-render.js?v=10518"></script>
+<script src="/js/coach-voice-render.js?v=10518"></script>
+<script src="/js/coach-core.js?v=10518"></script>
+<script src="/js/coach-pattern-impact.js?v=10518"></script>
+<script src="/js/coach-training-planner.js?v=10518"></script>
+<link rel="stylesheet" href="/css/knowledge-entry.css?v=10518">
+<link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10518">
+<link rel="stylesheet" href="/css/tactical-identity-entry.css?v=10518">
+<script src="/js/knowledge-entry.js?v=10518"></script>
+<script src="/js/tactical-assistant-entry.js?v=10518"></script>
+<script src="/js/tactical-identity-entry.js?v=10518"></script>
 <script src="/js/app-meta.js"></script>
-<script src="/js/global-nav-config.js?v=10517"></script>
-<script src="/js/global-nav-state.js?v=10517"></script>
-<script src="/js/global-nav-render.js?v=10517"></script>
-<script src="/js/global-nav-menu.js?v=10517"></script>
+<script src="/js/global-nav-config.js?v=10518"></script>
+<script src="/js/global-nav-state.js?v=10518"></script>
+<script src="/js/global-nav-render.js?v=10518"></script>
+<script src="/js/global-nav-menu.js?v=10518"></script>
 </body>
 </html>

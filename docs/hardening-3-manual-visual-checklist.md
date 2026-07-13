@@ -1,6 +1,6 @@
 # Hardening 3 - Checklist visuale e PWA
 
-Release da verificare: `10517`
+Release da verificare: `10518`
 
 ## Viewport
 

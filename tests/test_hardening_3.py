@@ -83,9 +83,9 @@ class HardeningThreeTests(unittest.TestCase):
             if path.suffix.lower() in {".html", ".js", ".json"}:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10517"})
+        self.assertEqual(query_versions, {"10518"})
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v117"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v118"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -145,6 +145,12 @@ class HardeningThreeTests(unittest.TestCase):
             'type="button" onclick="addLineupPlayer()"',
             coach,
         )
+
+    def test_coach_removes_redundant_five_step_onboarding(self):
+        coach = (FRONTEND / "coach.html").read_text(encoding="utf-8")
+        self.assertNotIn("Segui questi 5 step", coach)
+        self.assertNotIn("coach-guide-card", coach)
+        self.assertIn('id="coachPlanCard"', coach)
 
     def test_existing_pdf_download_contracts_remain_real_downloads(self):
         match_router = (ROOT / "app" / "routers" / "match.py").read_text(encoding="utf-8")
