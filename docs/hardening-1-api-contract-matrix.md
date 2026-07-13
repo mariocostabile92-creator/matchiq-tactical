@@ -108,7 +108,7 @@ Il limiter applicativo e in memoria per processo. In produzione con piu repliche
 - [ ] Installa su desktop e smartphone; verifica icona/start URL.
 - [ ] Login, navigazione moduli, background e ritorno.
 - [ ] Offline: app shell disponibile, API non cache sensibile.
-- [ ] Ritorno online e aggiornamento service worker v114.
+- [ ] Ritorno online e aggiornamento service worker v115.
 - [ ] Logout e cambio utente: nessun dato del precedente account.
 - [ ] Microfono/video in PWA e safe-area portrait/landscape.
 
@@ -121,4 +121,20 @@ cd C:\Users\Mario\Desktop\matchiq-tactical\matchiq-tactical\backend
 .\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8793
 ```
 
-Aprire poi `http://127.0.0.1:8793/index.html?v=10514`, DevTools Console/Application e completare le checklist dispositivo/provider sopra.
+Aprire poi `http://127.0.0.1:8793/index.html?v=10515`, DevTools Console/Application e completare le checklist dispositivo/provider sopra.
+
+## Contratti frontend Hardening 3
+
+| Contratto | Evidenza | Stato |
+|---|---|---|
+| Release unica | tutte le query asset `10515` | `fixed_in_hardening_3` |
+| Cache PWA unica | `matchiq-pwa-v115` | `fixed_in_hardening_3` |
+| Risorse condivise | `app-meta.js` carica componenti, UX e nav | `fixed_in_hardening_3` |
+| Navigazione moduli | config riconosce 8 moduli intelligence | `fixed_in_hardening_3` |
+| Stati rete | offline, online, ultimo aggiornamento e retry | `fixed_in_hardening_3` |
+| Errori runtime | messaggio recuperabile senza stack pubblico | `fixed_in_hardening_3` |
+| File sensibili/grandi | PDF, video, audio e CSV non cache runtime | `fixed_in_hardening_3` |
+| PDF Coach | finestra di stampa A4 | `verified_static_contract` |
+| PDF Video | Blob `application/pdf` e download | `verified_static_contract` |
+| PDF Match | `FileResponse` con filename | `verified_static_contract` |
+| Browser/device/PWA reale | checklist dedicata | `manual_verification_required` |

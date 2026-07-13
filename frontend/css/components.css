@@ -1,0 +1,134 @@
+/* MatchIQ Hardening 3: shared operational UX primitives. */
+:root {
+  --miq-focus: #58b7ff;
+  --miq-success: #00e7a4;
+  --miq-warning: #ffc857;
+  --miq-danger: #ff617b;
+  --miq-surface: #111b2d;
+  --miq-line: rgba(151, 174, 222, .24);
+}
+
+html { text-size-adjust: 100%; }
+body { overflow-wrap: anywhere; }
+img, video, canvas, svg { max-width: 100%; }
+button, a, input, select, textarea { letter-spacing: 0; }
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--miq-focus) !important;
+  outline-offset: 2px !important;
+}
+button:disabled,
+[aria-disabled="true"] { cursor: not-allowed; opacity: .58; }
+[hidden] { display: none !important; }
+
+.miq-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 7px;
+}
+.miq-table-scroll > table { min-width: 640px; }
+
+.miq-network-status,
+.miq-runtime-error {
+  position: fixed;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 5000;
+  width: min(560px, calc(100% - 24px));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 200, 87, .58);
+  border-radius: 7px;
+  background: #211b0c;
+  color: #fff2c9;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, .42);
+  font: 800 13px/1.45 Inter, system-ui, sans-serif;
+}
+.miq-runtime-error { border-color: rgba(255, 97, 123, .58); background: #2a1018; }
+.miq-network-status button,
+.miq-runtime-error button {
+  flex: none;
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+dialog {
+  max-width: calc(100vw - 24px) !important;
+  max-height: calc(100dvh - 24px) !important;
+  overscroll-behavior: contain;
+}
+dialog[open] { overflow: auto; }
+
+/* Operational modules need different content widths, not one generic column. */
+.weekly-shell { width: min(1120px, calc(100% - 28px)); }
+.weekly-hero { padding-top: 18px; }
+.pattern-shell,
+.identity-shell,
+.decision-shell,
+.club-shell,
+body:has(#knowledgeMain) main { width: min(1320px, calc(100% - 28px)); }
+
+@media (max-width: 1024px) {
+  .comparison-grid { grid-template-columns: 1fr !important; }
+  .decision-workspace { grid-template-columns: 1fr !important; }
+  .options-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .filters { min-width: 0; }
+}
+
+@media (max-width: 700px) {
+  button,
+  input,
+  select,
+  textarea,
+  a[class*="button"],
+  a[class*="action"] { min-height: 44px; }
+  .miq-network-status,
+  .miq-runtime-error { align-items: stretch; flex-direction: column; }
+  .miq-network-status button,
+  .miq-runtime-error button { width: 100%; }
+  .weekly-shell,
+  .pattern-shell,
+  .identity-shell,
+  .decision-shell,
+  .club-shell,
+  body:has(#knowledgeMain) main { width: calc(100% - 18px); }
+  .weekly-general-grid,
+  .weekly-metrics,
+  .weekly-materials,
+  .options-grid { grid-template-columns: 1fr !important; }
+  .comparison-table th,
+  .comparison-table td { min-width: 150px; }
+  .assistant-shell { min-height: calc(100dvh - 62px); height: auto; }
+  .conversation-panel { min-height: calc(100dvh - 62px); }
+  .composer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+}
+
+@media (display-mode: standalone) {
+  body { padding-bottom: env(safe-area-inset-bottom); }
+  .miq-global-nav { padding-top: max(8px, env(safe-area-inset-top)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

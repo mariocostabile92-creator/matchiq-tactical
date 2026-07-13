@@ -1,9 +1,13 @@
 (function(){
   "use strict";
 
+  const escapeHtml = (value) => window.MatchIQSafe?.escapeHtml
+    ? window.MatchIQSafe.escapeHtml(value)
+    : String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+
   function linkMarkup(item, activeKey, className){
     const active = item.key === activeKey;
-    return `<a class="${className}${active ? " is-active" : ""}" data-miq-nav-key="${item.key}" href="${item.href}"${active ? ' aria-current="page"' : ""}>${item.label}</a>`;
+    return `<a class="${className}${active ? " is-active" : ""}" data-miq-nav-key="${escapeHtml(item.key)}" href="${escapeHtml(item.href)}"${active ? ' aria-current="page"' : ""}>${escapeHtml(item.label)}</a>`;
   }
 
   function mount(){
@@ -25,15 +29,15 @@
     nav.className = "miq-global-nav";
     nav.dataset.miqGlobalNav = "";
     nav.innerHTML = `
-      <a class="miq-nav-brand" href="${module.href}" aria-label="${module.title}">
+      <a class="miq-nav-brand" href="${escapeHtml(module.href)}" aria-label="${escapeHtml(module.title)}">
         <img src="/assets/matchiq-logo.png" width="40" height="40" alt="">
-        <span><strong>${module.title}</strong><small>${module.subtitle}</small></span>
+        <span><strong>${escapeHtml(module.title)}</strong><small>${escapeHtml(module.subtitle)}</small></span>
       </a>
       <nav class="miq-nav-links" aria-label="Navigazione principale">
         ${config.navigation.map((item) => linkMarkup(item, activeKey, "miq-nav-link")).join("")}
       </nav>
       <div class="miq-nav-user">
-        <a class="miq-nav-plan" href="${config.withVersion("/account.html")}" aria-label="Piano ${state.plan}">${state.plan}</a>
+        <a class="miq-nav-plan" href="${config.withVersion("/account.html")}" aria-label="Piano ${escapeHtml(state.plan)}">${escapeHtml(state.plan)}</a>
         <a class="miq-nav-account" href="${config.withVersion("/account.html")}">Account</a>
         ${adminLink}
         <button class="miq-nav-menu-button" type="button" aria-label="Apri menu" aria-expanded="false" aria-controls="miqMobileMenu">
@@ -41,10 +45,10 @@
         </button>
       </div>
       <div id="miqMobileMenu" class="miq-nav-drawer" hidden>
-        <div class="miq-nav-drawer-head"><strong>Menu</strong><button type="button" data-miq-menu-close aria-label="Chiudi menu">&times;</button></div>
+        <div class="miq-nav-drawer-head"><strong>${escapeHtml(module.title)}</strong><button type="button" data-miq-menu-close aria-label="Chiudi menu">&times;</button></div>
         <nav aria-label="Navigazione mobile">
           ${config.navigation.map((item) => linkMarkup(item, activeKey, "miq-nav-drawer-link")).join("")}
-          <a class="miq-nav-drawer-link" href="${config.withVersion("/account.html")}">Account <span>${state.plan}</span></a>
+          <a class="miq-nav-drawer-link" href="${config.withVersion("/account.html")}">Account <span>${escapeHtml(state.plan)}</span></a>
           ${state.canAdmin ? `<a class="miq-nav-drawer-link" href="${config.withVersion("/admin-beta.html")}">Admin</a>` : ""}
         </nav>
       </div>`;

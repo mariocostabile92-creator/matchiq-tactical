@@ -1,5 +1,5 @@
 const MATCHIQ_APP_META = {
-    version: "10514",
+    version: "10515",
     year: "2026",
     product: "MatchIQ"
 };
@@ -44,8 +44,59 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
         return String(window.location.pathname || "").toLowerCase();
     }
 
+    function ensureStylesheet(href, marker){
+        if(document.querySelector(`link[data-miq-asset="${marker}"]`) || document.querySelector(`link[href^="${href.split("?")[0]}"]`)) return;
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = href;
+        link.dataset.miqAsset = marker;
+        document.head.appendChild(link);
+    }
+
+    function loadScript(src, globalName){
+        if(globalName && window[globalName]) return Promise.resolve();
+        const existing = document.querySelector(`script[src^="${src.split("?")[0]}"]`);
+        if(existing){
+            if(!globalName || window[globalName]) return Promise.resolve();
+            return new Promise((resolve) => {
+                existing.addEventListener("load", resolve, { once: true });
+                window.setTimeout(resolve, 1200);
+            });
+        }
+        return new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = src;
+            script.dataset.miqAsset = "shared";
+            script.addEventListener("load", resolve, { once: true });
+            script.addEventListener("error", reject, { once: true });
+            (document.head || document.documentElement).appendChild(script);
+        });
+    }
+
+    function shouldMountGlobalNavigation(path){
+        return !["/privacy.html", "/terms.html", "/cookies.html", "/lp.html", "/video-demo.html", "/mobile.html"].some(item => path.endsWith(item));
+    }
+
+    function injectSharedUx(){
+        const version = MATCHIQ_APP_META.version;
+        ensureStylesheet(`/css/components.css?v=${version}`, "components");
+        loadScript(`/js/ux-hardening.js?v=${version}`, "MatchIQUXHardening").catch(() => {});
+    }
+
+    function injectGlobalNavigation(){
+        if(!shouldMountGlobalNavigation(currentPath())) return;
+        const version = MATCHIQ_APP_META.version;
+        ensureStylesheet(`/css/global-nav.css?v=${version}`, "global-nav");
+        loadScript(`/js/global-nav-config.js?v=${version}`, "MatchIQGlobalNavConfig")
+            .then(() => loadScript(`/js/global-nav-state.js?v=${version}`, "MatchIQGlobalNavState"))
+            .then(() => loadScript(`/js/global-nav-render.js?v=${version}`, "MatchIQGlobalNavRender"))
+            .then(() => loadScript(`/js/global-nav-menu.js?v=${version}`))
+            .then(() => window.MatchIQGlobalNavRender?.mount())
+            .catch(() => {});
+    }
+
     function isAiPage(path){
-        return ["/index.html", "/mobile.html", "/coach.html", "/video.html", "/scout.html", "/match.html", "/tactical-assistant.html", "/tactical-identity.html", "/club-intelligence.html"].some(item => path.endsWith(item)) || path === "/";
+        return ["/index.html", "/mobile.html", "/coach.html", "/video.html", "/scout.html", "/match.html", "/weekly-briefing.html", "/pattern-intelligence.html", "/training-planner.html", "/knowledge.html", "/tactical-assistant.html", "/tactical-identity.html", "/decision-engine.html", "/club-intelligence.html"].some(item => path.endsWith(item)) || path === "/";
     }
 
     function isVideoPage(path){
@@ -110,17 +161,18 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
 
     function injectDecisionEntryAssets(){
         if(currentPath().endsWith("/decision-engine.html") || document.querySelector('script[src*="decision-engine-entry.js"]')) return;
-        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/decision-engine-entry.css?v=10511"; document.head.appendChild(style);
-        const script=document.createElement("script"); script.src="/js/decision-engine-entry.js?v=10511"; script.defer=true; document.body.appendChild(script);
+        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/decision-engine-entry.css?v=10515"; document.head.appendChild(style);
+        const script=document.createElement("script"); script.src="/js/decision-engine-entry.js?v=10515"; script.defer=true; document.body.appendChild(script);
     }
 
     function injectClubEntryAssets(){
         if(currentPath().endsWith("/club-intelligence.html") || document.querySelector('script[src*="club-intelligence-entry.js"]')) return;
-        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/club-intelligence-entry.css?v=10512"; document.head.appendChild(style);
-        const script=document.createElement("script"); script.src="/js/club-intelligence-entry.js?v=10512"; script.defer=true; document.body.appendChild(script);
+        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/club-intelligence-entry.css?v=10515"; document.head.appendChild(style);
+        const script=document.createElement("script"); script.src="/js/club-intelligence-entry.js?v=10515"; script.defer=true; document.body.appendChild(script);
     }
 
     function boot(){
+        injectGlobalNavigation();
         injectStyle();
         injectFooter();
         injectAiDisclaimer();
@@ -130,6 +182,7 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
         injectClubEntryAssets();
     }
 
+    injectSharedUx();
     if(document.readyState === "loading"){
         document.addEventListener("DOMContentLoaded", boot);
     }else{

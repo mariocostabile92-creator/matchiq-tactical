@@ -59,7 +59,7 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Causa: logout cancellava solo cinque chiavi auth.
 - File: `frontend/js/auth.js`, pagine login/register/account e PWA.
 - Fix: pulizia centralizzata localStorage/sessionStorage per chiavi MatchIQ e auth generiche.
-- Test: source contract + test login/sessione + cache release 10514.
+- Test: source contract + test login/sessione + cache release corrente 10515.
 - Stato: `fixed_in_hardening_1`
 
 ## H1-006 - Route Live e operation ID duplicati
@@ -204,4 +204,49 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - File: `security.py` e altri punti data/ora da censire.
 - Fix consigliato: migrare in blocco dedicato a datetime UTC timezone-aware, verificando serializzazione e PostgreSQL.
 - Test richiesto: scadenza token e confronti timestamp SQLite/PostgreSQL.
+- Stato: `open`
+
+## H3-001 - Navigazione e versione non uniformi tra moduli
+
+- Modulo: Frontend globale/PWA
+- Severita: P1
+- Impatto: orientamento incoerente e cache di release diverse.
+- Fix: riconoscimento moduli centralizzato, release `10515`, cache `v115`.
+- Test: versione unica, asset esistenti e configurazione moduli.
+- Stato: `fixed_in_hardening_3`
+
+## H3-002 - Stati offline ed errori non omogenei
+
+- Modulo: Frontend globale
+- Severita: P1
+- Impatto: pagina apparentemente bloccata e nessun recupero chiaro.
+- Fix: banner condiviso, ultimo aggiornamento, retry e messaggio runtime recuperabile.
+- Test: contratto statico piu checklist offline/online.
+- Stato: `fixed_in_hardening_3`
+
+## H3-003 - Tabelle, dialog e touch target fragili su schermi piccoli
+
+- Modulo: Frontend responsive
+- Severita: P2
+- Impatto: dati tagliati o comandi difficili da usare su tablet/PWA.
+- Fix: wrapper tabelle, dialog viewport-safe, focus e touch target condivisi.
+- Test: parser/statico; verifica visuale device ancora necessaria.
+- Stato: `manual_verification_required`
+
+## H3-004 - Cache PWA poteva includere export e media grandi
+
+- Modulo: PWA/Storage browser
+- Severita: P1
+- Impatto: spazio occupato, dati non necessari offline e aggiornamenti fragili.
+- Fix: allowlist asset statici; esclusi PDF, video, audio e CSV.
+- Test: contratto service worker.
+- Stato: `fixed_in_hardening_3`
+
+## H3-005 - Copertura visuale automatica assente
+
+- Modulo: QA frontend
+- Severita: P2
+- Impatto: regressioni layout rilevabili solo manualmente.
+- Fix consigliato: Playwright con screenshot desktop/tablet/mobile e PWA smoke.
+- Test richiesto: matrice in `docs/hardening-3-manual-visual-checklist.md`.
 - Stato: `open`

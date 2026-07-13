@@ -128,8 +128,8 @@ Le suite confermano: Weekly non rigenera senza cambi, Pattern deduplica, Trainin
 
 ## 9. PWA
 
-- Manifest valido, scope `/`, display standalone e start URL aggiornato a `10514`.
-- Cache aggiornata a `matchiq-pwa-v114`.
+- Manifest valido, scope `/`, display standalone e start URL aggiornato a `10515`.
+- Cache aggiornata a `matchiq-pwa-v115`.
 - API non vengono salvate nell'app shell.
 - Il service worker elimina cache storiche e usa network-first per navigazioni/asset same-origin.
 - Logout/cambio utente puliscono cache applicativa sensibile lato storage browser.
@@ -159,8 +159,9 @@ Misure locali:
 
 ## 12. Test eseguiti
 
-- `python -m unittest discover -s tests -v`: 89 test, tutti passati.
+- `python -m unittest discover -s tests -v`: 97 test, tutti passati.
 - Test nuovi Hardening 2: 14, tutti passati.
+- Test nuovi Hardening 3: 8, tutti passati.
 - `python -m compileall`: passato.
 - Import FastAPI e OpenAPI: passati.
 - Uvicorn + health + 23 pagine/asset core: passati.
@@ -175,3 +176,14 @@ Non verificati come E2E reali in questo runtime: PostgreSQL Railway, deploy Rail
 ## 14. Esito
 
 P0 trovati e corretti: 2. P1 trovati e corretti: 3. Hardening 2 chiude inoltre route duplicate, ownership Video in scrittura, rate limiting applicativo, errori pubblici grezzi, ID Match duplicati e i sink XSS ad alto rischio inclusi nel perimetro. I residui P2/P3 e i limiti di staging/dispositivo restano registrati nel backlog.
+
+## 15. Hardening 3 - UX, PWA, PDF e demo readiness
+
+- Release frontend unica portata a `10515`; cache PWA portata a `matchiq-pwa-v115`.
+- Navigazione condivisa estesa al riconoscimento di tutti i moduli operativi.
+- Stati offline, errore recuperabile e retry centralizzati senza cambiare API o logica prodotto.
+- Focus, touch target, tabelle, dialog, safe-area, tastiera virtuale e reduced motion consolidati nel layer CSS condiviso.
+- Immagini impostate lazy e video su metadata; PDF, video, audio e CSV esclusi dalla cache runtime PWA.
+- Contratti PDF esistenti di Coach, Video e Match preservati e coperti da test statici.
+- Inventario di 27 pagine, checklist visuale/device e scaletta demo aggiunti in `docs/`.
+- Stato browser/dispositivo reale: `manual_verification_required`; nessun esito visivo non eseguito viene dichiarato passato.
