@@ -175,6 +175,9 @@ async function loadMatch({silent=false,force=false}={}){
 function showError(msg){
     const app=document.getElementById("app");
     if(app){
-        app.innerHTML=`<div class="error-box">❌ ${msg}</div>`;
+        const box=document.createElement("div");
+        box.className="error-box";
+        box.textContent=`Errore: ${String(msg||"Operazione non riuscita")}`;
+        app.replaceChildren(box);
     }
 }

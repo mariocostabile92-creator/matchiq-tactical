@@ -18,6 +18,6 @@ def admin_analytics(admin_ok: bool = Depends(require_admin_token)):
             "ok": True,
             **data
         }
-    except Exception as e:
+    except Exception:
         logger.exception("[ADMIN ANALYTICS] Errore caricamento analytics")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Impossibile caricare le analytics")

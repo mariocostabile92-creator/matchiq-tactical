@@ -451,9 +451,8 @@ function downloadReportTxt(){
 }
 
 function stripReportHtml(html){
-    const div = document.createElement("div");
-    div.innerHTML = String(html || "");
-    return div.textContent || div.innerText || "";
+    const parsed = new DOMParser().parseFromString(String(html || ""), "text/html");
+    return parsed.body.textContent || "";
 }
 
 function escapePrintHtml(value){

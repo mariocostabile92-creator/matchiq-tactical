@@ -1,10 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.models.decision_engine import DecisionEnvelope, DecisionEvaluateRequest, DecisionNoteRequest, DecisionOutcomeRequest, StaffDecisionRequest
 from app.services import decision_engine_service as service
 from usage_guard import require_user
+from app.security.rate_limit import enforce_rate_limit
 
 
 router=APIRouter(prefix="/api/decision-engine",tags=["decision-engine"])
@@ -12,7 +13,8 @@ def _id(user): return int(user["id"])
 
 
 @router.post("/evaluate",response_model=DecisionEnvelope)
-def evaluate(payload: DecisionEvaluateRequest,user=Depends(require_user)):
+def evaluate(payload: DecisionEvaluateRequest,request:Request,user=Depends(require_user)):
+    enforce_rate_limit(request,"decision_engine.evaluate",20,60,str(user["id"]))
     try: return DecisionEnvelope(data=service.evaluate(_id(user),payload.model_dump(exclude_none=True)))
     except ValueError as exc: raise HTTPException(status_code=422,detail=str(exc)) from exc
 

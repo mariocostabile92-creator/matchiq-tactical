@@ -16,6 +16,7 @@ usa query helper con placeholder corretti per SQLite (?) e PostgreSQL (%s).
 import os
 import json
 import sqlite3
+import threading
 import psycopg2
 import psycopg2.extras
 from datetime import datetime, timezone, date
@@ -24,6 +25,7 @@ from pathlib import Path
 DB_PATH = Path(__file__).resolve().parent / "matchiq.db"
 DATABASE_URL = os.getenv("DATABASE_URL")
 USE_POSTGRES = bool(DATABASE_URL)
+_VIDEO_REPORT_WRITE_LOCK = threading.RLock()
 
 
 # =========================================================
@@ -1587,6 +1589,7 @@ def save_video_report(
     report: str = "",
     pdf_base64: str = "",
     payload: dict = None,
+    idempotency_key: str = "",
 ):
     user = get_user_by_id(user_id)
     limits = get_plan_limits(user.get("plan", "free") if user else "free")
@@ -1595,43 +1598,76 @@ def save_video_report(
     if archive_limit <= 0:
         return {"success": False, "error": "Archivio video cloud non disponibile per questo piano", "limit": archive_limit}
 
-    if count_video_reports(user_id) >= archive_limit:
-        return {"success": False, "error": "Limite archivio video raggiunto", "limit": archive_limit}
+    request_key = str(idempotency_key or "").strip()[:120]
+    payload_data = dict(payload or {})
+    if request_key:
+        payload_data["_idempotency_key"] = request_key
 
-    now = utc_now()
-    payload_text = json.dumps(payload or {}, ensure_ascii=False)
-    conn = get_connection()
-    cur = conn.cursor()
+    with _VIDEO_REPORT_WRITE_LOCK:
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            if request_key:
+                cur.execute(q("""
+                    SELECT id, payload, created_at
+                    FROM video_reports
+                    WHERE user_id = ?
+                    ORDER BY created_at DESC
+                """), (user_id,))
+                for existing in fetchall(cur):
+                    existing_payload = existing.get("payload") or {}
+                    if isinstance(existing_payload, str):
+                        try:
+                            existing_payload = json.loads(existing_payload)
+                        except json.JSONDecodeError:
+                            existing_payload = {}
+                    if isinstance(existing_payload, dict) and existing_payload.get("_idempotency_key") == request_key:
+                        return {
+                            "success": True,
+                            "id": existing.get("id"),
+                            "created_at": existing.get("created_at"),
+                            "deduplicated": True,
+                        }
 
-    if USE_POSTGRES:
-        cur.execute("""
-            INSERT INTO video_reports (
-                user_id, title, club_name, category, focus, observed_team,
-                report_style, frames_analyzed, report, pdf_base64, payload, created_at
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id
-        """, (
-            user_id, title, club_name, category, focus, observed_team,
-            report_style, int(frames_analyzed or 0), report, pdf_base64, payload_text, now,
-        ))
-        report_id = get_last_insert_id(cur)
-    else:
-        cur.execute("""
-            INSERT INTO video_reports (
-                user_id, title, club_name, category, focus, observed_team,
-                report_style, frames_analyzed, report, pdf_base64, payload, created_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            user_id, title, club_name, category, focus, observed_team,
-            report_style, int(frames_analyzed or 0), report, pdf_base64, payload_text, now,
-        ))
-        report_id = cur.lastrowid
+            cur.execute(q("SELECT COUNT(*) AS total FROM video_reports WHERE user_id = ?"), (user_id,))
+            row = fetchone(cur)
+            if int((row or {}).get("total") or 0) >= archive_limit:
+                return {"success": False, "error": "Limite archivio video raggiunto", "limit": archive_limit}
 
-    conn.commit()
-    conn.close()
-    return {"success": True, "id": report_id}
+            now = utc_now()
+            payload_text = json.dumps(payload_data, ensure_ascii=False)
+            if USE_POSTGRES:
+                cur.execute("""
+                    INSERT INTO video_reports (
+                        user_id, title, club_name, category, focus, observed_team,
+                        report_style, frames_analyzed, report, pdf_base64, payload, created_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id
+                """, (
+                    user_id, title, club_name, category, focus, observed_team,
+                    report_style, int(frames_analyzed or 0), report, pdf_base64, payload_text, now,
+                ))
+                report_id = get_last_insert_id(cur)
+            else:
+                cur.execute("""
+                    INSERT INTO video_reports (
+                        user_id, title, club_name, category, focus, observed_team,
+                        report_style, frames_analyzed, report, pdf_base64, payload, created_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    user_id, title, club_name, category, focus, observed_team,
+                    report_style, int(frames_analyzed or 0), report, pdf_base64, payload_text, now,
+                ))
+                report_id = cur.lastrowid
+            conn.commit()
+            return {"success": True, "id": report_id, "created_at": now, "deduplicated": False}
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
 
 def get_video_reports(user_id: int, limit: int = 50):
@@ -1650,9 +1686,27 @@ def get_video_reports(user_id: int, limit: int = 50):
     return rows
 
 
+def get_video_report(user_id: int, report_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(q("""
+        SELECT id, user_id, title, club_name, category, focus, observed_team,
+               report_style, frames_analyzed, report, pdf_base64, payload, created_at
+        FROM video_reports
+        WHERE user_id = ? AND id = ?
+    """), (user_id, report_id))
+    row = fetchone(cur)
+    conn.close()
+    return row
+
+
 def delete_video_report(user_id: int, report_id: int):
     conn = get_connection()
     cur = conn.cursor()
+    cur.execute(q("""
+        DELETE FROM video_frame_feedback
+        WHERE user_id = ? AND report_id = ?
+    """), (user_id, report_id))
     cur.execute(q("""
         DELETE FROM video_reports
         WHERE user_id = ? AND id = ?
@@ -1892,6 +1946,38 @@ def delete_video_asset(user_id: int, asset_id: int):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(q("""
+        DELETE FROM video_frame_feedback
+        WHERE user_id = ? AND video_asset_id = ?
+    """), (user_id, asset_id))
+
+    cur.execute(q("""
+        SELECT id, payload
+        FROM video_reports
+        WHERE user_id = ?
+    """), (user_id,))
+    for report_row in fetchall(cur):
+        payload = report_row.get("payload") or {}
+        if isinstance(payload, str):
+            try:
+                payload = json.loads(payload)
+            except json.JSONDecodeError:
+                payload = {}
+        if not isinstance(payload, dict):
+            continue
+        try:
+            linked_asset_id = int(payload.get("video_asset_id"))
+        except (TypeError, ValueError):
+            linked_asset_id = None
+        if linked_asset_id != int(asset_id):
+            continue
+        payload["video_asset_id"] = None
+        cur.execute(q("""
+            UPDATE video_reports
+            SET payload = ?
+            WHERE user_id = ? AND id = ?
+        """), (json.dumps(payload, ensure_ascii=False), user_id, report_row.get("id")))
+
+    cur.execute(q("""
         DELETE FROM video_assets
         WHERE user_id = ? AND id = ?
     """), (user_id, asset_id))
@@ -1923,6 +2009,37 @@ def save_video_frame_feedback(
     payload = json.dumps(metadata or {}, ensure_ascii=False)
     conn = get_connection()
     cur = conn.cursor()
+
+    cur.execute(q("""
+        SELECT id, created_at
+        FROM video_frame_feedback
+        WHERE user_id = ?
+          AND ((video_asset_id = ?) OR (video_asset_id IS NULL AND ? IS NULL))
+          AND ((report_id = ?) OR (report_id IS NULL AND ? IS NULL))
+          AND frame_index = ?
+          AND status = ?
+          AND corrected_phase = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+    """), (
+        user_id,
+        video_asset_id,
+        video_asset_id,
+        report_id,
+        report_id,
+        int(frame_index or 0),
+        status,
+        corrected_phase,
+    ))
+    existing = fetchone(cur)
+    if existing:
+        conn.close()
+        return {
+            "success": True,
+            "id": existing.get("id"),
+            "created_at": existing.get("created_at"),
+            "deduplicated": True,
+        }
 
     if USE_POSTGRES:
         cur.execute("""

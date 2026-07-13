@@ -450,35 +450,6 @@ def api_scout_live(
     )
 
 
-@app.get("/api/scout-live")
-def api_scout_live_alias(
-    match_id: int = Query(None),
-    user=Depends(get_optional_user)
-):
-    """
-    Alias compatibile con scout.html.
-    Ritorna sempre match + players, inclusi fallback virtual roles
-    se API-Football non fornisce giocatori reali.
-    """
-    if not SCOUT_PUBLIC_BETA:
-        enforce_premium_feature(user, "scout")
-        enforce_guest_or_user_limit(
-            user=user,
-            feature="scout",
-            endpoint="/api/scout-live"
-        )
-
-    return build_real_scout_response(
-        match_id=match_id,
-        scout_players_cache=SCOUT_PLAYERS_CACHE,
-        scout_players_cache_seconds=SCOUT_PLAYERS_CACHE_SECONDS,
-        get_match_live_data_func=get_match_live_data,
-        get_cached_full_analysis_func=get_cached_full_analysis,
-        build_live_scout_func=build_live_scout,
-        scout_engine_available=SCOUT_ENGINE_AVAILABLE
-    )
-
-
 @app.get("/api/live-memory-status")
 def live_memory_status():
     items = []

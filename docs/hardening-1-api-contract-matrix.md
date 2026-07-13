@@ -1,6 +1,6 @@
 # Hardening 1 - API, permessi e checklist E2E
 
-Contratto misurato: 161 path OpenAPI, 179 operazioni. Route registrate per enforcement: 45 pubbliche, 110 utente, 9 optional/guest-limited, 16 admin. La route Live duplicata spiega la differenza di una operazione.
+Contratto rimisurato dopo Hardening 2: 161 path OpenAPI, 179 operazioni e 179 operation ID univoci. Route registrate per enforcement: 45 pubbliche, 110 utente, 9 optional/guest-limited, 16 admin.
 
 ## Matrice API per famiglia
 
@@ -13,9 +13,9 @@ Contratto misurato: 161 path OpenAPI, 179 operazioni. Route registrate per enfor
 | `/api/home/*` | GET | user/optional | sessione | riepilogo moduli | Home | HTTP/statico |
 | `/api/coach/*`, `/api/coach-track` | GET/POST/PATCH/DELETE | user o guest-limited | match, eventi, report | stato Coach | Coach | suite moduli + manuale |
 | `/api/coach-voice/*` | GET/POST | user/optional limitato | testo e contesto match | proposta/tema/ack | Voice Coach | 7 test |
-| `/api/video/*`, `/api/video-*` | GET/POST/PATCH/DELETE | user/optional limitato | asset, URL, frame, feedback | job/asset/report/frame | Video AI/Hub | statico + hardening |
+| `/api/video/*`, `/api/video-*` | GET/POST/PATCH/DELETE | user/optional limitato | asset, URL, frame, feedback | job/asset/report/frame | Video AI/Hub | ownership + integrita H2 |
 | `/api/scout*` | GET/POST | user/entitlement | ricerca/filtri/player | match/player/report | Scout | statico/manuale |
-| `/api/live*`, `/api/match*` | GET/POST | user/optional | match ID/filtri | feed/dettaglio/cache | Match/Home/Scout | HTTP; duplicato P2 |
+| `/api/live*`, `/api/match*` | GET/POST | user/optional | match ID/filtri | feed/dettaglio/cache | Match/Home/Scout | route e operation ID univoci |
 | `/api/weekly-briefing/*` | GET/POST/PATCH | user | periodo/fonti | briefing/stato | Weekly/Home | 4 test |
 | `/api/pattern-intelligence/*` | GET/POST/PATCH | user | fonti/soglie/stato | pattern/evidenze | Pattern/Coach | 7 test |
 | `/api/training-planner/*` | GET/POST/PATCH | user | priorita/vincoli | piano/esercizi/storia | Training | 6 test |
@@ -57,7 +57,21 @@ Il frontend nasconde o disabilita le funzioni in base al piano, ma la decisione 
 | Identity | `user_id`, scope | version/feedback altrui | test repository |
 | Decision | `user_id`, case ID | direct route | test ownership |
 | Club | membership, role, team IDs | hidden team, demotion owner | 11 test |
-| Video | `user_id`, asset/report ID e directory | path, URL, stream/delete | statico; gap scrittura P2 |
+| Video | `user_id`, asset/report ID e directory | path, URL, stream/delete/write/retry | test ownership, parent consistency e idempotenza |
+
+## Matrice scritture Video Hardening 2
+
+| Operazione | Endpoint | Ownership | Integrita/retry | Stato e test |
+|---|---|---|---|---|
+| Analisi e report AI | `POST /api/video/analyze` | asset opzionale verificato su `user_id` | chiave idempotenza persistita; UI blocca doppio click | test source + repository |
+| Salvataggio report cloud | `POST /api/video/reports` | asset verificato prima dell'insert | replay restituisce lo stesso report | test DB dedicato |
+| Feedback frame | `POST /api/video/frame-feedback` | asset e report verificati; parent coerenti | feedback identico deduplicato | test cross-user e deduplica |
+| Cancellazione report | `DELETE /api/video/reports/{id}` | delete owner-scoped | elimina i feedback figli dello stesso utente | test cascata applicativa |
+| Cancellazione asset | `DELETE /api/video/library/{id}` | lookup e delete owner-scoped | elimina feedback asset e scollega i report | test consistenza riferimenti |
+| Upload/import | `POST /api/video/library/upload`, `POST /api/video/library/import` | utente richiesto | limite anti-abuso e controlli URL/file esistenti | test statico + checklist E2E |
+| Clip/playlist/collegamenti Pattern | nessuna API di scrittura dedicata rilevata | n/a | nessuna duplicazione possibile nel contratto attuale | non applicabile |
+
+Il limiter applicativo e in memoria per processo. In produzione con piu repliche resta consigliato un rate limiter condiviso al proxy/Redis; la chiave idempotenza dei report resta persistita nel database.
 
 ## Checklist E2E ripetibile
 
@@ -94,7 +108,7 @@ Il frontend nasconde o disabilita le funzioni in base al piano, ma la decisione 
 - [ ] Installa su desktop e smartphone; verifica icona/start URL.
 - [ ] Login, navigazione moduli, background e ritorno.
 - [ ] Offline: app shell disponibile, API non cache sensibile.
-- [ ] Ritorno online e aggiornamento service worker v113.
+- [ ] Ritorno online e aggiornamento service worker v114.
 - [ ] Logout e cambio utente: nessun dato del precedente account.
 - [ ] Microfono/video in PWA e safe-area portrait/landscape.
 
@@ -107,4 +121,4 @@ cd C:\Users\Mario\Desktop\matchiq-tactical\matchiq-tactical\backend
 .\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8793
 ```
 
-Aprire poi `http://127.0.0.1:8793/index.html?v=10513`, DevTools Console/Application e completare le checklist dispositivo/provider sopra.
+Aprire poi `http://127.0.0.1:8793/index.html?v=10514`, DevTools Console/Application e completare le checklist dispositivo/provider sopra.

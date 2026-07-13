@@ -5,11 +5,12 @@ from typing import Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from fastapi import APIRouter, Query, Depends, Body, HTTPException
+from fastapi import APIRouter, Query, Depends, Body, HTTPException, Request
 
 from auth import create_verification_for_user
 from brevo_service import send_verification_email, is_email_configured
 from app.routers.admin_beta import require_admin_token, get_database_url
+from app.security.rate_limit import enforce_rate_limit
 
 logger = logging.getLogger("matchiq")
 
@@ -229,9 +230,9 @@ def admin_users(
             "data": users
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("[ADMIN USERS] Errore caricamento utenti")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Impossibile caricare gli utenti")
 
     finally:
         if conn:
@@ -241,9 +242,11 @@ def admin_users(
 @router.patch("/api/admin/users/{user_id}/plan", tags=["Admin"])
 def admin_update_user_plan(
     user_id: int,
+    request: Request,
     payload: dict = Body(...),
     admin_ok: bool = Depends(require_admin_token)
 ):
+    enforce_rate_limit(request, "admin.users.plan", 30, 60, str(user_id))
     database_url = get_database_url()
 
     if not database_url:
@@ -295,11 +298,11 @@ def admin_update_user_plan(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         if conn:
             conn.rollback()
         logger.exception("[ADMIN USERS] Errore aggiornamento piano utente")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Impossibile aggiornare il piano utente")
 
     finally:
         if conn:
@@ -307,7 +310,8 @@ def admin_update_user_plan(
 
 
 @router.post("/api/admin/users/{user_id}/activate", tags=["Admin"])
-def admin_activate_user(user_id: int, admin_ok: bool = Depends(require_admin_token)):
+def admin_activate_user(user_id: int, request: Request, admin_ok: bool = Depends(require_admin_token)):
+    enforce_rate_limit(request, "admin.users.activate", 30, 60, str(user_id))
     database_url = get_database_url()
     if not database_url:
         return {"ok": False, "message": "DATABASE_URL non configurato"}
@@ -323,16 +327,17 @@ def admin_activate_user(user_id: int, admin_ok: bool = Depends(require_admin_tok
         return {"ok": True, "message": "Utente riattivato", "user": user, "data": user}
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         if conn: conn.rollback()
         logger.exception("[ADMIN USERS] Errore riattivazione utente")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Impossibile riattivare l'utente")
     finally:
         if conn: conn.close()
 
 
 @router.post("/api/admin/users/{user_id}/deactivate", tags=["Admin"])
-def admin_deactivate_user(user_id: int, admin_ok: bool = Depends(require_admin_token)):
+def admin_deactivate_user(user_id: int, request: Request, admin_ok: bool = Depends(require_admin_token)):
+    enforce_rate_limit(request, "admin.users.deactivate", 30, 60, str(user_id))
     database_url = get_database_url()
     if not database_url:
         return {"ok": False, "message": "DATABASE_URL non configurato"}
@@ -348,16 +353,17 @@ def admin_deactivate_user(user_id: int, admin_ok: bool = Depends(require_admin_t
         return {"ok": True, "message": "Utente disattivato", "user": user, "data": user}
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         if conn: conn.rollback()
         logger.exception("[ADMIN USERS] Errore disattivazione utente")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Impossibile disattivare l'utente")
     finally:
         if conn: conn.close()
 
 
 @router.post("/api/admin/users/{user_id}/resend-verification", tags=["Admin"])
-def admin_resend_user_verification(user_id: int, admin_ok: bool = Depends(require_admin_token)):
+def admin_resend_user_verification(user_id: int, request: Request, admin_ok: bool = Depends(require_admin_token)):
+    enforce_rate_limit(request, "admin.users.resend_verification", 10, 300, str(user_id))
     database_url = get_database_url()
     if not database_url:
         return {"ok": False, "message": "DATABASE_URL non configurato"}
@@ -394,8 +400,8 @@ def admin_resend_user_verification(user_id: int, admin_ok: bool = Depends(requir
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("[ADMIN USERS] Errore reinvio verifica email")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Impossibile reinviare la verifica email")
     finally:
         if conn: conn.close()

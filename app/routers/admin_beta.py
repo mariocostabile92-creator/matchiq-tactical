@@ -10,12 +10,13 @@ from typing import Optional
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from fastapi import APIRouter, Query, Depends, Body, Header, HTTPException
+from fastapi import APIRouter, Query, Depends, Body, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr
 
 from usage_guard import get_optional_user, is_owner_user
 from database import track_marketing_event
+from app.security.rate_limit import enforce_rate_limit
 
 logger = logging.getLogger("matchiq")
 router = APIRouter()
@@ -286,11 +287,11 @@ def save_beta_request_to_db(payload: BetaRequestPayload):
             "request": normalize_beta_row(row)
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("[BETA REQUEST] Errore salvataggio")
         return {
             "saved": False,
-            "reason": str(e)
+            "reason": "Servizio richieste Beta temporaneamente non disponibile"
         }
 
     finally:
@@ -299,7 +300,8 @@ def save_beta_request_to_db(payload: BetaRequestPayload):
 
 
 @router.post("/api/beta-request")
-def create_beta_request(payload: BetaRequestPayload):
+def create_beta_request(payload: BetaRequestPayload, request: Request):
+    enforce_rate_limit(request, "public.beta_request", 5, 1800, str(payload.email))
     if not payload.name.strip():
         return {
             "ok": False,
@@ -329,7 +331,7 @@ def create_beta_request(payload: BetaRequestPayload):
         "ok": False,
         "saved": False,
         "message": "Database non disponibile, usa fallback frontend",
-        "reason": result.get("reason")
+        "reason": "Servizio richieste Beta temporaneamente non disponibile"
     }
 
 
@@ -452,12 +454,12 @@ def list_beta_requests(
             "leads": requests
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("[BETA REQUEST] Errore lettura")
         return {
             "ok": False,
             "requests": [],
-            "message": str(e)
+            "message": "Impossibile caricare le richieste Beta"
         }
 
     finally:
@@ -468,9 +470,11 @@ def list_beta_requests(
 @router.patch("/api/beta-requests/{lead_id}")
 def update_beta_request(
     lead_id: int,
+    request: Request,
     payload: BetaLeadUpdatePayload = Body(...),
     admin_ok: bool = Depends(require_admin_token)
 ):
+    enforce_rate_limit(request, "admin.beta.update", 30, 60, str(lead_id))
 
     database_url = get_database_url()
 
@@ -560,13 +564,13 @@ def update_beta_request(
             "data": lead
         }
 
-    except Exception as e:
+    except Exception:
         if conn:
             conn.rollback()
         logger.exception("[BETA REQUEST] Errore aggiornamento lead")
         return {
             "ok": False,
-            "message": str(e)
+            "message": "Impossibile aggiornare la richiesta Beta"
         }
 
     finally:
@@ -577,15 +581,22 @@ def update_beta_request(
 @router.put("/api/beta-requests/{lead_id}")
 def update_beta_request_put(
     lead_id: int,
+    request: Request,
     payload: BetaLeadUpdatePayload = Body(...),
     admin_ok: bool = Depends(require_admin_token)
 ):
-    return update_beta_request(lead_id, payload, admin_ok)
+    return update_beta_request(
+        lead_id=lead_id,
+        request=request,
+        payload=payload,
+        admin_ok=admin_ok,
+    )
 
 
 @router.post("/api/beta-requests/{lead_id}/generate-code")
 def generate_beta_code_for_lead(
     lead_id: int,
+    request: Request,
     admin_ok: bool = Depends(require_admin_token)
 ):
     """
@@ -593,6 +604,7 @@ def generate_beta_code_for_lead(
     Se il lead ha già un codice, lo mantiene e lo restituisce.
     """
 
+    enforce_rate_limit(request, "admin.beta.generate_code", 10, 300, str(lead_id))
     database_url = get_database_url()
 
     if not database_url:
@@ -702,13 +714,13 @@ def generate_beta_code_for_lead(
             "data": lead
         }
 
-    except Exception as e:
+    except Exception:
         if conn:
             conn.rollback()
         logger.exception("[BETA REQUEST] Errore generazione beta code")
         return {
             "ok": False,
-            "message": str(e)
+            "message": "Impossibile generare il codice Beta"
         }
 
     finally:
@@ -801,11 +813,11 @@ def beta_requests_stats(admin_ok: bool = Depends(require_admin_token)):
             "by_plan": by_plan
         }
 
-    except Exception as e:
+    except Exception:
         logger.exception("[BETA REQUEST] Errore statistiche")
         return {
             "ok": False,
-            "message": str(e),
+            "message": "Impossibile caricare le statistiche Beta",
             "total": 0,
             "by_status": [],
             "by_profile": [],

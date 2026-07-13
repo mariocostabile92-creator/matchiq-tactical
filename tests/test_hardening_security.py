@@ -6,15 +6,34 @@ from pathlib import Path
 from unittest.mock import patch
 
 from fastapi import HTTPException
+from starlette.requests import Request
 
 import payments
 import auth
 import database
 from app.routers.system import create_system_router
+from app.security.rate_limit import reset_rate_limits_for_tests
 from security import load_jwt_secret
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def make_request(ip="127.0.0.1", headers=None):
+    raw_headers = [
+        (str(key).lower().encode("latin-1"), str(value).encode("latin-1"))
+        for key, value in (headers or {}).items()
+    ]
+    return Request({
+        "type": "http",
+        "method": "POST",
+        "path": "/",
+        "headers": raw_headers,
+        "client": (ip, 12345),
+        "server": ("testserver", 80),
+        "scheme": "http",
+        "query_string": b"",
+    })
 
 
 class FakeRequest:
@@ -115,15 +134,17 @@ class HardeningSecurityTests(unittest.TestCase):
         manifest = (ROOT / "frontend" / "manifest.json").read_text(encoding="utf-8")
         worker = (ROOT / "frontend" / "service-worker.js").read_text(encoding="utf-8")
         app_meta = (ROOT / "frontend" / "js" / "app-meta.js").read_text(encoding="utf-8")
-        self.assertIn('"/index.html?v=10513"', worker)
-        self.assertIn('"start_url": "/index.html?v=10513"', manifest)
-        self.assertIn('version: "10513"', app_meta)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v113"', worker)
-        self.assertIn('"/js/auth.js?v=10513"', worker)
+        self.assertIn('"/index.html?v=10514"', worker)
+        self.assertIn('"start_url": "/index.html?v=10514"', manifest)
+        self.assertIn('version: "10514"', app_meta)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v114"', worker)
+        self.assertIn('"/js/auth.js?v=10514"', worker)
+        self.assertIn('"/js/safe-render.js?v=10514"', worker)
 
 
 class AuthenticationFlowTests(unittest.TestCase):
     def setUp(self):
+        reset_rate_limits_for_tests()
         handle = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
         self.database_path = Path(handle.name)
         handle.close()
@@ -134,6 +155,7 @@ class AuthenticationFlowTests(unittest.TestCase):
         database.init_db()
 
     def tearDown(self):
+        reset_rate_limits_for_tests()
         database.DB_PATH = self.original_path
         database.USE_POSTGRES = self.original_postgres
         try:
@@ -144,10 +166,12 @@ class AuthenticationFlowTests(unittest.TestCase):
     def register_and_login(self):
         with patch.object(auth, "send_verification_email", return_value=False):
             registered = auth.register(
-                auth.RegisterRequest(email="coach@example.com", password="password-forte")
+                auth.RegisterRequest(email="coach@example.com", password="password-forte"),
+                make_request(),
             )
         logged = auth.login(
-            auth.LoginRequest(email="coach@example.com", password="password-forte")
+            auth.LoginRequest(email="coach@example.com", password="password-forte"),
+            make_request(),
         )
         return registered, logged
 

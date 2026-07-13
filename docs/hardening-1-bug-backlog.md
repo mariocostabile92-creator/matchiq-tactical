@@ -59,7 +59,7 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Causa: logout cancellava solo cinque chiavi auth.
 - File: `frontend/js/auth.js`, pagine login/register/account e PWA.
 - Fix: pulizia centralizzata localStorage/sessionStorage per chiavi MatchIQ e auth generiche.
-- Test: source contract + test login/sessione + cache release 10513.
+- Test: source contract + test login/sessione + cache release 10514.
 - Stato: `fixed_in_hardening_1`
 
 ## H1-006 - Route Live e operation ID duplicati
@@ -70,9 +70,9 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Impatto: client generation ambigua e manutenzione fragile; runtime non bloccato.
 - Causa: alias definito in `main.py` e `app/routers/live.py`.
 - File: `main.py`, `app/routers/live.py`
-- Fix consigliato: mantenere una sola route e alias stabile, aggiungere test OpenAPI senza duplicati.
-- Test richiesto: unique `(path, method)` e operation ID.
-- Stato: `open`
+- Fix: mantenuta la sola route canonica del router Live; rimosso l'alias duplicato in `main.py`.
+- Test: contratto OpenAPI con singolo GET e 179 operation ID univoci.
+- Stato: `fixed_in_hardening_2`
 
 ## H1-007 - Ownership asset Video non validata esplicitamente in tutte le scritture
 
@@ -82,9 +82,9 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Impatto: possibile collegamento di metadati incoerente; le letture restano filtrate per utente, nessuna esposizione confermata.
 - Causa: alcuni flussi validano ownership in lettura ma non prima di ogni insert correlato.
 - File: `app/routers/video.py`, `app/services/video_hub.py`, repository video.
-- Fix consigliato: lookup owner-scoped obbligatorio e foreign key/constraint applicativa.
-- Test richiesto: utente A asset, utente B create feedback/report deve ricevere 404/403.
-- Stato: `open`
+- Fix: lookup owner-scoped obbligatorio per analisi/report/feedback, verifica parent asset-report e pulizia figli in cancellazione.
+- Test: utente A/B, parent incoerente, delete asset/report e deduplica feedback.
+- Stato: `fixed_in_hardening_2`
 
 ## H1-008 - Login/reset senza rate limit dedicato
 
@@ -94,9 +94,9 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Impatto: brute force, abuso email e carico.
 - Causa: nessun limiter persistente rilevato.
 - File: `auth.py`, configurazione proxy/Railway.
-- Fix consigliato: rate limit IP+account al proxy o middleware leggero, audit log e backoff.
-- Test richiesto: soglia, reset finestra, proxy header affidabile.
-- Stato: `open`
+- Fix: limiter IP+identita su auth/reset/verifica e sugli endpoint costosi/sensibili; `Retry-After` e proxy header opt-in validato.
+- Test: soglia, identita separata, reset finestra, proxy header valido/non valido.
+- Stato: `fixed_in_hardening_2` (limiter condiviso tra repliche consigliato)
 
 ## H1-009 - Dettagli eccezione esposti in alcune API
 
@@ -106,9 +106,9 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Impatto: possibili informazioni interne/provider esposte.
 - Causa: `detail=str(e)` e messaggi Stripe interpolati.
 - File: `payments.py`, `app/routers/admin_analytics.py`, `app/routers/admin_users.py`.
-- Fix consigliato: error code pubblico, correlation ID e dettaglio solo nei log.
-- Test richiesto: risposta non contiene path, SQL, token o testo provider.
-- Stato: `open`
+- Fix: messaggi pubblici generici; dettagli tecnici conservati solo nei log server.
+- Test: source contract su Payments e router Admin.
+- Stato: `fixed_in_hardening_2`
 
 ## H1-010 - Audit XSS da completare sulle renderizzazioni HTML dinamiche
 
@@ -118,9 +118,9 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Impatto: XSS se un nuovo campo bypassa le funzioni escape.
 - Causa: ampio uso storico di template HTML; molte aree usano escape, copertura non completa.
 - File: `frontend/video.html`, Admin, Coach render, render moduli AI.
-- Fix consigliato: inventario sink/source, `textContent` per testo, sanitizer centralizzato solo dove serve markup.
-- Test richiesto: payload XSS per ogni modulo operativo.
-- Stato: `open`
+- Fix: utility condivisa escape/sanitize/safe URL e conversione dei sink dinamici ad alto rischio in Tactical Assistant, API error e Coach report.
+- Test: payload script, URL `javascript:`/`data:` e contratto renderer.
+- Stato: `fixed_in_hardening_2_core` (migrazione sink legacy continua)
 
 ## H1-011 - Router/pagina Video ad alta complessita
 
@@ -154,9 +154,9 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Impatto: selettori possono aggiornare il nodo sbagliato.
 - Causa: toolbar nuova e azioni legacy convivono.
 - File: `frontend/match.html`
-- Fix consigliato: rimuovere blocco legacy dopo test UI.
-- Test richiesto: unicita ID e aggiornamento timer/live.
-- Stato: `open`
+- Fix: rinominati gli ID del template legacy senza alterare il blocco visibile.
+- Test: parser HTML verifica unicita ID.
+- Stato: `fixed_in_hardening_2`
 
 ## H1-014 - File auth frontend legacy non referenziato
 

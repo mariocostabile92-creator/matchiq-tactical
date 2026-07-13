@@ -8,7 +8,7 @@ import hashlib
 import secrets
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from pydantic import BaseModel, EmailStr
 
 from database import (
@@ -42,6 +42,7 @@ from security import (
     create_access_token,
     decode_access_token
 )
+from app.security.rate_limit import clear_rate_limit, enforce_rate_limit
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
@@ -166,7 +167,8 @@ def get_current_user(authorization: str = Header(None)):
 
 
 @router.post("/register")
-def register(data: RegisterRequest):
+def register(data: RegisterRequest, request: Request):
+    enforce_rate_limit(request, "auth.register", 5, 900)
     init_db()
     email = data.email.lower().strip()
     existing_user = get_user_by_email(email)
@@ -200,9 +202,11 @@ def register(data: RegisterRequest):
 
 
 @router.post("/login")
-def login(data: LoginRequest):
+def login(data: LoginRequest, request: Request):
     init_db()
     email = data.email.lower().strip()
+    enforce_rate_limit(request, "auth.login.ip", 30, 600)
+    enforce_rate_limit(request, "auth.login.identity", 8, 600, email)
     user = get_user_by_email(email)
     if not user:
         raise HTTPException(status_code=401, detail="Email o password non corretti")
@@ -216,6 +220,7 @@ def login(data: LoginRequest):
     if EMAIL_VERIFICATION_LOGIN_BLOCK and not user.get("email_verified") and not is_owner_or_admin(user):
         raise HTTPException(status_code=403, detail="Devi verificare la tua email prima di accedere.")
     token = create_access_token(user_id=user["id"], email=user["email"], plan=user["plan"])
+    clear_rate_limit(request, "auth.login.identity", email)
     return {
         "success": True,
         "message": "Login effettuato",
@@ -248,9 +253,10 @@ def me(current_user=Depends(get_current_user)):
 
 
 @router.post("/password-reset/request")
-def request_password_reset(data: PasswordResetRequest):
+def request_password_reset(data: PasswordResetRequest, request: Request):
     init_db()
     email = data.email.lower().strip()
+    enforce_rate_limit(request, "auth.password_reset.request", 5, 1800, email)
     user = get_user_by_email(email)
     public_message = "Se l'email è registrata, riceverai le istruzioni per reimpostare la password."
     if not user or not user.get("is_active"):
@@ -276,7 +282,8 @@ def request_password_reset(data: PasswordResetRequest):
 
 
 @router.post("/password-reset/confirm")
-def confirm_password_reset(data: PasswordResetConfirmRequest):
+def confirm_password_reset(data: PasswordResetConfirmRequest, request: Request):
+    enforce_rate_limit(request, "auth.password_reset.confirm", 10, 1800)
     init_db()
     token = (data.token or "").strip()
     new_password = data.password or ""
@@ -304,9 +311,10 @@ def confirm_password_reset(data: PasswordResetConfirmRequest):
 
 
 @router.post("/email-verification/request")
-def request_email_verification(data: EmailVerificationRequest):
+def request_email_verification(data: EmailVerificationRequest, request: Request):
     init_db()
     email = data.email.lower().strip()
+    enforce_rate_limit(request, "auth.email_verification.request", 5, 1800, email)
     user = get_user_by_email(email)
     public_message = "Se l'email è registrata, riceverai le istruzioni per verificare l'account."
     if not user or not user.get("is_active"):
@@ -329,7 +337,8 @@ def request_email_verification(data: EmailVerificationRequest):
 
 
 @router.post("/email-verification/confirm")
-def confirm_email_verification(data: EmailVerificationConfirmRequest):
+def confirm_email_verification(data: EmailVerificationConfirmRequest, request: Request):
+    enforce_rate_limit(request, "auth.email_verification.confirm", 10, 1800)
     init_db()
     token = (data.token or "").strip()
     if not token:

@@ -5052,8 +5052,12 @@ async function analyzeVideo(){
     reportBox.textContent = "Analisi AI in corso...";
     showStatus("Sto generando il report. Per clip lunghe può volerci qualche secondo.", "warn");
 
+    window.matchiqVideoAnalysisRequestKey = window.matchiqVideoAnalysisRequestKey || (
+        window.crypto?.randomUUID?.() || `video-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
     const payload = {
         video_asset_id: currentVideoAssetId || null,
+        idempotency_key: window.matchiqVideoAnalysisRequestKey,
         title: document.getElementById("videoTitle").value.trim(),
         club_name: document.getElementById("clubName").value.trim(),
         category: document.getElementById("videoCategory").value,
@@ -5115,6 +5119,7 @@ async function analyzeVideo(){
         }
         updateReportMeta("report", data.frames_analyzed || extractedFrames.length);
         showStatus(`Report generato con ${data.frames_analyzed || extractedFrames.length} fotogrammi${data.cloud_saved ? " e salvato nel cloud" : ""}.`, "ok");
+        window.matchiqVideoAnalysisRequestKey = "";
     }catch(err){
         reportBox.textContent = "Errore generazione report.";
         showStatus(err.message || "Errore analisi video", "err");

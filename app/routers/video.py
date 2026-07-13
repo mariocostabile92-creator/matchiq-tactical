@@ -8,7 +8,7 @@ from typing import List, Optional
 
 import requests
 from dotenv import load_dotenv
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from reportlab.lib import colors
@@ -25,6 +25,7 @@ from database import (
     get_plan_limits,
     get_video_asset,
     get_video_assets,
+    get_video_report,
     get_video_reports,
     save_video_report,
     save_video_frame_feedback,
@@ -52,6 +53,7 @@ from app.services.video_hub import (
 from app.services.video_taxonomy import validate_selection_result
 from app.services.knowledge_intelligence_sync import sync_module_safely
 from usage_guard import get_optional_user, require_user
+from app.security.rate_limit import enforce_rate_limit
 
 
 load_dotenv()
@@ -70,6 +72,7 @@ MAX_FRAME_CHARS = int(os.getenv("VIDEO_REPORT_MAX_FRAME_CHARS", "900000"))
 
 class VideoReportRequest(BaseModel):
     video_asset_id: Optional[int] = None
+    idempotency_key: Optional[str] = ""
     title: Optional[str] = ""
     club_name: Optional[str] = ""
     category: Optional[str] = "Dilettanti"
@@ -137,6 +140,7 @@ class FrameFeedbackRequest(BaseModel):
 
 class CloudVideoReportRequest(BaseModel):
     video_asset_id: Optional[int] = None
+    idempotency_key: Optional[str] = ""
     title: Optional[str] = ""
     club_name: Optional[str] = ""
     category: Optional[str] = ""
@@ -200,6 +204,42 @@ class VideoSessionRequest(BaseModel):
 def _clean_text(value: str, limit: int = 1200) -> str:
     value = str(value or "").strip()
     return value[:limit]
+
+
+def _require_owned_video_asset(user_id: int, asset_id: Optional[int]):
+    if asset_id is None:
+        return None
+    asset = get_video_asset(user_id, int(asset_id))
+    if not asset:
+        raise HTTPException(status_code=404, detail="Video non trovato")
+    return asset
+
+
+def _require_owned_video_report(user_id: int, report_id: Optional[int]):
+    if report_id is None:
+        return None
+    report = get_video_report(user_id, int(report_id))
+    if not report:
+        raise HTTPException(status_code=404, detail="Report video non trovato")
+    return report
+
+
+def _report_video_asset_id(report: Optional[dict]):
+    if not report:
+        return None
+    payload = report.get("payload") or {}
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except json.JSONDecodeError:
+            payload = {}
+    if not isinstance(payload, dict):
+        return None
+    value = payload.get("video_asset_id")
+    try:
+        return int(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
 
 
 def _clean_tags(value: str, limit: int = 8) -> list:
@@ -1205,6 +1245,7 @@ def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: st
         frames_analyzed=frames_count,
         report=report,
         pdf_base64=pdf_base64,
+        idempotency_key=_clean_text(data.idempotency_key, 120),
         payload={
             "duration_seconds": data.duration_seconds,
             "video_asset_id": data.video_asset_id,
@@ -1222,7 +1263,7 @@ def _save_cloud_report_for_user(user: dict, data: VideoReportRequest, report: st
             "lineup_notes": _clean_text(data.lineup_notes, 1400),
         },
     )
-    if saved.get("success"):
+    if saved.get("success") and not saved.get("deduplicated"):
         sync_module_safely(int(user["id"]),"video_ai")
     return saved
 
@@ -1347,7 +1388,7 @@ def import_video_from_hub_provider(provider_id: str, data: dict = None, user=Dep
 
 
 @router.post("/analyze")
-def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)):
+def analyze_video_clip(data: VideoReportRequest, request: Request, user=Depends(get_optional_user)):
     frames = _sanitize_frames(data.frames)
 
     if len(frames) < 2:
@@ -1366,6 +1407,9 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
                 "message": "Accedi o registrati per generare report video AI."
             }
         )
+
+    _require_owned_video_asset(int(user["id"]), data.video_asset_id)
+    enforce_rate_limit(request, "video.analyze", 10, 600, str(user["id"]))
 
     usage = can_use_feature(user["id"], "video_report")
     if not usage.get("allowed"):
@@ -1390,7 +1434,7 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
     pdf_base64 = _build_pdf_base64(title, report, data, len(frames), slides)
     track_api_usage(user["id"], "/api/video/analyze", "video_report")
     cloud_save = _save_cloud_report_for_user(user, data, report, pdf_base64, len(frames), slides)
-    if data.video_asset_id and cloud_save and cloud_save.get("success"):
+    if data.video_asset_id and cloud_save and cloud_save.get("success") and not cloud_save.get("deduplicated"):
         record_video_session_activity(
             user["id"],
             int(data.video_asset_id),
@@ -1424,6 +1468,7 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
         "generated_at": datetime.utcnow().isoformat(),
         "cloud_saved": bool(cloud_save and cloud_save.get("success")),
         "cloud_report_id": cloud_save.get("id") if cloud_save and cloud_save.get("success") else None,
+        "idempotent_replay": bool(cloud_save and cloud_save.get("deduplicated")),
         "cloud_error": cloud_save.get("error") if cloud_save and not cloud_save.get("success") else None,
         "usage": {
             **usage,
@@ -1433,8 +1478,9 @@ def analyze_video_clip(data: VideoReportRequest, user=Depends(get_optional_user)
 
 
 @router.post("/select-frames")
-def select_video_frames(data: FrameSelectionRequest, user=Depends(get_optional_user)):
+def select_video_frames(data: FrameSelectionRequest, request: Request, user=Depends(get_optional_user)):
     frames = _sanitize_selection_frames(data.frames)
+    enforce_rate_limit(request, "video.select_frames", 30, 600, str((user or {}).get("id") or "guest"))
 
     if len(frames) < 2:
         raise HTTPException(
@@ -1527,6 +1573,7 @@ def list_video_library(user=Depends(require_user)):
 
 @router.post("/library/upload")
 def upload_video_library_item(
+    request: Request,
     title: str = Form(""),
     club_name: str = Form(""),
     category: str = Form(""),
@@ -1548,6 +1595,7 @@ def upload_video_library_item(
     file: UploadFile = File(...),
     user=Depends(require_user),
 ):
+    enforce_rate_limit(request, "video.library.upload", 10, 600, str(user["id"]))
     if not rights_confirmed:
         raise HTTPException(status_code=400, detail="Conferma di avere diritto a usare questo video.")
 
@@ -1606,7 +1654,8 @@ def upload_video_library_item(
 
 
 @router.post("/library/import-url")
-def import_video_library_url(data: VideoImportRequest, user=Depends(require_user)):
+def import_video_library_url(data: VideoImportRequest, request: Request, user=Depends(require_user)):
+    enforce_rate_limit(request, "video.library.import_url", 10, 600, str(user["id"]))
     if not data.rights_confirmed:
         raise HTTPException(status_code=400, detail="Conferma di avere diritto a usare questo link video.")
 
@@ -1750,6 +1799,7 @@ def list_video_reports(user=Depends(require_user)):
 
 @router.post("/reports")
 def create_video_report(data: CloudVideoReportRequest, user=Depends(require_user)):
+    _require_owned_video_asset(int(user["id"]), data.video_asset_id)
     result = save_video_report(
         user_id=user["id"],
         title=_clean_text(data.title, 180) or "Video Report MatchIQ",
@@ -1761,12 +1811,13 @@ def create_video_report(data: CloudVideoReportRequest, user=Depends(require_user
         frames_analyzed=int(data.frames_analyzed or 0),
         report=_clean_text(data.report, 12000),
         pdf_base64=str(data.pdf_base64 or ""),
+        idempotency_key=_clean_text(data.idempotency_key, 120),
         payload={**(data.payload or {}), "video_asset_id": data.video_asset_id},
     )
 
     if not result.get("success"):
         raise HTTPException(status_code=402, detail=result)
-    if data.video_asset_id:
+    if data.video_asset_id and not result.get("deduplicated"):
         record_video_session_activity(
             user["id"],
             int(data.video_asset_id),
@@ -1787,8 +1838,9 @@ def create_video_report(data: CloudVideoReportRequest, user=Depends(require_user
             },
         )
 
-    sync_module_safely(int(user["id"]),"video_ai")
-    return {"ok": True, "id": result.get("id")}
+    if not result.get("deduplicated"):
+        sync_module_safely(int(user["id"]),"video_ai")
+    return {"ok": True, "id": result.get("id"), "idempotent_replay": bool(result.get("deduplicated"))}
 
 
 @router.delete("/reports/{report_id}")
@@ -1812,6 +1864,15 @@ def create_frame_feedback(data: FrameFeedbackRequest, user=Depends(require_user)
     if status == "categoria corretta" and not corrected_phase:
         raise HTTPException(status_code=400, detail="Indica la categoria corretta")
 
+    if data.video_asset_id is None and data.report_id is None:
+        raise HTTPException(status_code=422, detail="Collega il feedback a un video o a un report")
+
+    asset = _require_owned_video_asset(int(user["id"]), data.video_asset_id)
+    report = _require_owned_video_report(int(user["id"]), data.report_id)
+    report_asset_id = _report_video_asset_id(report)
+    if asset and report_asset_id is not None and report_asset_id != int(asset.get("id")):
+        raise HTTPException(status_code=409, detail="Video e report non appartengono alla stessa sessione")
+
     result = save_video_frame_feedback(
         user_id=user["id"],
         video_asset_id=data.video_asset_id,
@@ -1829,4 +1890,9 @@ def create_frame_feedback(data: FrameFeedbackRequest, user=Depends(require_user)
     )
 
     sync_module_safely(int(user["id"]),"video_ai")
-    return {"ok": True, "id": result.get("id"), "created_at": result.get("created_at")}
+    return {
+        "ok": True,
+        "id": result.get("id"),
+        "created_at": result.get("created_at"),
+        "deduplicated": bool(result.get("deduplicated")),
+    }

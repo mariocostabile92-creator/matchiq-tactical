@@ -24,9 +24,9 @@ Principi: MatchIQ non inventa, MatchIQ motiva. L'allenatore decide sempre, l'AI 
 | Tabelle SQLite inizializzate | 57 |
 | Indici SQLite | 69 |
 | Pagine HTML frontend | 27 |
-| JavaScript frontend | 106 |
+| JavaScript frontend | 107 |
 | CSS frontend | 24 |
-| Test automatici dopo hardening | 75 |
+| Test automatici dopo Hardening 2 | 89 |
 
 Moduli mappati: Home, Auth, Account, Admin, Coach, Match Day, Voice Coach, Video AI/Hub, Scout, Live/Match, Weekly Briefing, Pattern Intelligence, Training Planner, Knowledge Foundation/Intelligence, Tactical Assistant, Tactical Identity, Decision Engine, Club Intelligence, pagamenti, PDF/export e PWA.
 
@@ -37,14 +37,14 @@ Moduli mappati: Home, Auth, Account, Admin, Coach, Match Day, Voice Coach, Video
 | Python 3.11 | verificato |
 | Compilazione Python | passata |
 | Import `main.app` | passato |
-| Generazione OpenAPI | passata con un warning noto |
+| Generazione OpenAPI | passata; 179 operation ID univoci |
 | Avvio Uvicorn locale | passato |
 | Health check | HTTP 200 |
 | 23 route/asset core | 23/23 HTTP 200 |
 | Tempo HTTP massimo nel controllo locale | 1833 ms |
 | Start command Railway | `uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}` |
 
-Warning OpenAPI: `GET /api/scout-live` e registrata due volte e produce un operation ID duplicato. L'applicazione parte e il contratto resta raggiungibile; classificato P2 e lasciato nel backlog per evitare un refactoring fuori scope.
+La duplicazione di `GET /api/scout-live` e stata rimossa in Hardening 2. Il contratto OpenAPI mantiene 161 path e 179 operazioni, tutte con operation ID univoco.
 
 Variabili sensibili attese: database, OpenAI, Stripe, email, admin e JWT. I nomi sono stati verificati senza leggere o pubblicare valori. Per Railway e obbligatorio configurare un `JWT_SECRET_KEY` stabile di almeno 32 caratteri.
 
@@ -60,7 +60,7 @@ Tabelle principali: `users`, `subscriptions`, `saved_matches`, `saved_players`, 
 
 ## 5. Autenticazione e sicurezza
 
-Classificazione route registrate: 45 pubbliche, 110 utente autenticato, 9 opzionali/guest-limited, 16 admin. La differenza rispetto alle 179 operazioni OpenAPI deriva dalla route Live duplicata.
+Contratto OpenAPI finale: 161 path, 179 operazioni e 179 operation ID univoci. La route Live duplicata e stata rimossa, lasciando un solo endpoint canonico.
 
 Correzioni applicate:
 
@@ -73,7 +73,7 @@ Correzioni applicate:
 
 Secret scan sui file tracciati: nessun `sk_live_`, `sk_test_`, `whsec_`, chiave OpenAI assegnata o vecchio secret JWT trovato. `.env`, database e secret locali non sono tracciati.
 
-CORS: lista esplicita di origini, non wildcard. CSRF non applicabile ai flussi principali basati su Bearer token. Mancano rate limiting/brute-force protection dedicati su login e reset: P2 aperto.
+CORS: lista esplicita di origini, non wildcard. CSRF non applicabile ai flussi principali basati su Bearer token. Hardening 2 aggiunge rate limit IP+identita ad auth/reset/verifica, Video AI, Tactical Assistant, Decision Engine e azioni Admin sensibili. Il limiter e locale al processo: per piu repliche Railway e raccomandato un backend condiviso.
 
 ## 6. Permessi e tenant isolation
 
@@ -88,10 +88,10 @@ CORS: lista esplicita di origini, non wildcard. CSRF non applicabile ai flussi p
 | Tactical Identity | profilo/versioni isolate | si |
 | Decision Engine | casi persistenti e owned | si |
 | Club Intelligence | membership, ruolo, team visibility | si |
-| Video Hub | directory, asset e report user-scoped | statico + test esistenti parziali |
+| Video Hub | directory, asset, report e feedback user-scoped | test cross-user, parent e cancellazione |
 | Admin | dependency admin/backend | statico + HTTP negativo |
 
-Non sono emerse letture cross-tenant P0 nelle suite. Rimane un controllo P2: validare esplicitamente l'ownership di `video_asset_id` anche in scrittura feedback/report, oltre al filtro gia presente in lettura.
+Non sono emerse letture cross-tenant P0 nelle suite. Le scritture report/feedback Video validano ora asset e report owner-scoped e rifiutano parent incoerenti.
 
 ## 7. Audit moduli prodotto
 
@@ -102,7 +102,7 @@ Non sono emerse letture cross-tenant P0 nelle suite. Rimane un controllo P2: val
 | Voice Coach | `/api/coach-voice/*` | osservazioni/temi | 7 test | operativo |
 | Video AI/Hub | `/video.html`, `/api/video-*` | asset/frame/report | HTTP + security statico | operativo, upload reale manuale |
 | Scout | `/scout.html`, Scout APIs | saved players/report | HTTP + statico | operativo |
-| Live/Match | `/match.html`, `/api/live*`, `/api/match*` | cache/provider | HTTP + statico | operativo, duplicazione Live P2 |
+| Live/Match | `/match.html`, `/api/live*`, `/api/match*` | cache/provider | route/OpenAPI + statico | operativo |
 | Weekly | `/weekly-briefing.html` | briefing/fingerprint | 4 test | operativo |
 | Pattern | `/pattern-intelligence.html` | pattern/evidence/run | 7 test | operativo |
 | Training | `/training-planner.html` | piano/storia/libreria | 6 test | operativo |
@@ -121,12 +121,15 @@ Le suite confermano: Weekly non rigenera senza cambi, Pattern deduplica, Trainin
 - Percorsi asset sono user-scoped e protetti da traversal.
 - Import URL blocca localhost, reti private, redirect non sicuri, contenuti non video e download oltre limite.
 - Stream, dettaglio e cancellazione filtrano per proprietario.
+- Report e feedback verificano ownership prima della scrittura; un asset e un report collegati devono appartenere alla stessa sessione.
+- Retry dello stesso report usa una chiave idempotente persistita; feedback identici vengono deduplicati.
+- La cancellazione di report/asset rimuove i feedback figli e scollega in modo esplicito i report dall'asset eliminato.
 - Mancano test E2E locali con file video grande, rete interrotta e provider storage remoto; checklist manuale allegata.
 
 ## 9. PWA
 
-- Manifest valido, scope `/`, display standalone e start URL aggiornato a `10513`.
-- Cache aggiornata a `matchiq-pwa-v113`.
+- Manifest valido, scope `/`, display standalone e start URL aggiornato a `10514`.
+- Cache aggiornata a `matchiq-pwa-v114`.
 - API non vengono salvate nell'app shell.
 - Il service worker elimina cache storiche e usa network-first per navigazioni/asset same-origin.
 - Logout/cambio utente puliscono cache applicativa sensibile lato storage browser.
@@ -135,12 +138,12 @@ Le suite confermano: Weekly non rigenera senza cambi, Pattern deduplica, Trainin
 
 ## 10. Frontend globale
 
-- Tutti i 106 file JavaScript hanno superato `node --check`.
+- Tutti i 107 file JavaScript hanno superato `node --check`.
 - Nessun riferimento locale statico letterale mancante nella scansione. Quattro riferimenti `${...}` sono template JavaScript dinamici e non asset filesystem.
 - Dieci chiamate API letterali frontend verificate senza endpoint orfani; le URL dinamiche non sono completamente dimostrabili con sola analisi statica.
-- `match.html` contiene ID duplicati `liveUpdateText` e `refreshTimerText`: P3, non bloccante.
+- `match.html` non contiene piu ID duplicati; il controllo e coperto da test.
 - `frontend/auth.js` top-level appare legacy e non referenziato; non eliminato in questo hardening.
-- Le aree con `innerHTML` sono state mappate. I moduli principali usano funzioni di escaping, ma e consigliato un audit XSS dedicato P2.
+- Hardening 2 introduce `frontend/js/safe-render.js`, URL allowlist e rendering DOM/testuale nei flussi dinamici Tactical Assistant, API error e Coach report. Resta consigliato continuare la migrazione dei sink legacy non inclusi nel perimetro ad alto rischio.
 
 ## 11. PDF, export e performance
 
@@ -156,8 +159,8 @@ Misure locali:
 
 ## 12. Test eseguiti
 
-- `python -m unittest discover -s tests -v`: 75 test, tutti passati.
-- Test nuovi Hardening: 12, tutti passati.
+- `python -m unittest discover -s tests -v`: 89 test, tutti passati.
+- Test nuovi Hardening 2: 14, tutti passati.
 - `python -m compileall`: passato.
 - Import FastAPI e OpenAPI: passati.
 - Uvicorn + health + 23 pagine/asset core: passati.
@@ -171,4 +174,4 @@ Non verificati come E2E reali in questo runtime: PostgreSQL Railway, deploy Rail
 
 ## 14. Esito
 
-P0 trovati e corretti: 2. P1 trovati e corretti: 3. Nessun P0/P1 noto resta aperto nel perimetro verificabile locale. I rischi P2/P3 sono registrati in `docs/hardening-1-bug-backlog.md`; la matrice contratti e in `docs/hardening-1-api-contract-matrix.md`.
+P0 trovati e corretti: 2. P1 trovati e corretti: 3. Hardening 2 chiude inoltre route duplicate, ownership Video in scrittura, rate limiting applicativo, errori pubblici grezzi, ID Match duplicati e i sink XSS ad alto rischio inclusi nel perimetro. I residui P2/P3 e i limiti di staging/dispositivo restano registrati nel backlog.

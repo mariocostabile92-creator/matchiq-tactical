@@ -1,10 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter,Depends,HTTPException,Query,Response
+from fastapi import APIRouter,Depends,HTTPException,Query,Request,Response
 
 from app.models.tactical_assistant import ConversationCreate,ConversationUpdate,FeedbackCreate,MessageCreate,TacticalEnvelope
 from app.services import tactical_assistant_service as service
 from usage_guard import require_user
+from app.security.rate_limit import enforce_rate_limit
 
 
 router=APIRouter(prefix="/api/tactical-assistant",tags=["tactical-assistant"])
@@ -43,7 +44,8 @@ def delete(conversation_id: int,user=Depends(require_user)):
 
 
 @router.post("/conversations/{conversation_id}/messages",response_model=TacticalEnvelope)
-def message(conversation_id: int,payload: MessageCreate,user=Depends(require_user)):
+def message(conversation_id: int,payload: MessageCreate,request:Request,user=Depends(require_user)):
+    enforce_rate_limit(request,"tactical_assistant.message",20,60,str(user["id"]))
     data=service.ask(user,conversation_id,payload.content,payload.context)
     if not data: raise HTTPException(status_code=404,detail="Conversazione non trovata")
     return TacticalEnvelope(data=data)

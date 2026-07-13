@@ -491,25 +491,25 @@ def create_checkout_session(
             "price_id": price_id
         }
 
-    except stripe.error.AuthenticationError as e:
+    except stripe.error.AuthenticationError:
         logger.exception("[STRIPE] Authentication error")
         raise HTTPException(
             status_code=500,
-            detail=f"Stripe authentication error: {str(e)}"
+            detail="Servizio pagamenti temporaneamente non disponibile"
         )
 
-    except stripe.error.StripeError as e:
+    except stripe.error.StripeError:
         logger.exception("[STRIPE] Stripe error")
         raise HTTPException(
             status_code=500,
-            detail=f"Stripe error: {str(e)}"
+            detail="Impossibile avviare il pagamento in questo momento"
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("[STRIPE] Checkout session error")
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail="Impossibile avviare il pagamento in questo momento"
         )
 
 
@@ -590,18 +590,18 @@ def create_portal_session(current_user=Depends(get_current_user)):
             "customer_id": customer_id
         }
 
-    except stripe.error.StripeError as e:
+    except stripe.error.StripeError:
         logger.exception("[STRIPE] Customer portal error")
         raise HTTPException(
             status_code=500,
-            detail=f"Stripe portal error: {str(e)}"
+            detail="Portale pagamenti temporaneamente non disponibile"
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("[STRIPE] Customer portal generic error")
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail="Portale pagamenti temporaneamente non disponibile"
         )
 
 

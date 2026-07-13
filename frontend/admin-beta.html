@@ -4,7 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MatchIQ Admin Beta V9</title>
-<script src="js/auth.js?v=10513"></script>
+<script src="js/safe-render.js?v=10514"></script>
+<script src="js/auth.js?v=10514"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -195,7 +196,10 @@ function hasAdminAccess(){
 function showMessage(message,type="empty"){
   const box=document.getElementById("messageBox");
   if(!box)return;
-  box.innerHTML=`<div class="${type}">${message}</div>`;
+  const messageNode=document.createElement("div");
+  messageNode.className=["empty","ok","error"].includes(type)?type:"empty";
+  messageNode.textContent=String(message||"");
+  box.replaceChildren(messageNode);
 }
 
 function clearMessage(){
