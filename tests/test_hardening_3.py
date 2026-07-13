@@ -83,9 +83,9 @@ class HardeningThreeTests(unittest.TestCase):
             if path.suffix.lower() in {".html", ".js", ".json"}:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10515"})
+        self.assertEqual(query_versions, {"10516"})
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v115"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v116"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -121,6 +121,16 @@ class HardeningThreeTests(unittest.TestCase):
         for extension in ("pdf", "mp4", "webm", "mp3", "wav", "csv"):
             self.assertIn(extension, worker)
         self.assertIn("staticExtension", worker)
+
+    def test_coach_training_planner_uses_responsive_in_page_mount(self):
+        coach = (FRONTEND / "coach.html").read_text(encoding="utf-8")
+        script = (FRONTEND / "js" / "coach-training-planner.js").read_text(encoding="utf-8")
+        styles = (FRONTEND / "css" / "coach.css").read_text(encoding="utf-8")
+        self.assertEqual(coach.count('id="coachAiTrainingPlannerMount"'), 1)
+        self.assertIn('getElementById("coachAiTrainingPlannerMount")', script)
+        self.assertIn("#coachAiTrainingPlanner", styles)
+        self.assertIn(".coach-training-plan-actions .btn", styles)
+        self.assertIn("width:100%", styles)
 
     def test_existing_pdf_download_contracts_remain_real_downloads(self):
         match_router = (ROOT / "app" / "routers" / "match.py").read_text(encoding="utf-8")

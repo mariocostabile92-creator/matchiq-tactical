@@ -59,7 +59,7 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Causa: logout cancellava solo cinque chiavi auth.
 - File: `frontend/js/auth.js`, pagine login/register/account e PWA.
 - Fix: pulizia centralizzata localStorage/sessionStorage per chiavi MatchIQ e auth generiche.
-- Test: source contract + test login/sessione + cache release corrente 10515.
+- Test: source contract + test login/sessione + cache release corrente 10516.
 - Stato: `fixed_in_hardening_1`
 
 ## H1-006 - Route Live e operation ID duplicati
@@ -211,7 +211,7 @@ Ordinamento: P0, P1, P2, P3. Gli elementi non critici non sono stati corretti ne
 - Modulo: Frontend globale/PWA
 - Severita: P1
 - Impatto: orientamento incoerente e cache di release diverse.
-- Fix: riconoscimento moduli centralizzato, release `10515`, cache `v115`.
+- Fix: riconoscimento moduli centralizzato, release `10516`, cache `v115`.
 - Test: versione unica, asset esistenti e configurazione moduli.
 - Stato: `fixed_in_hardening_3`
 
