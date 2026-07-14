@@ -4,8 +4,10 @@ from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from database import create_video_asset, get_saved_matches, get_video_asset, utc_now
-from app.models.video_intelligence import AnalysisMode, ProjectStateRequest, VideoProjectCreate
+from app.models.video_intelligence import AnalysisMode, EvidenceCreateRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate
 from app.repositories.video_intelligence_repository import load_project, save_project
+from app.services.video_evidence_service import build_evidence
+from app.services.video_segmentation_service import phase_title, segment_frames
 
 
 ENGINE_VERSION = "1.0"
@@ -138,3 +140,81 @@ def retry_project(user_id: int, asset_id: int) -> Dict[str, Any]:
     if status not in {"failed", "cancelled"}:
         raise ValueError("Il progetto non richiede un nuovo tentativo")
     return update_project_state(user_id, asset_id, ProjectStateRequest(status="queued", stage="queued", progress=0))
+
+
+def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dict[str, Any]:
+    project = load_project(user_id, asset_id)
+    if not project:
+        raise LookupError("Progetto Video Intelligence non trovato")
+    if not data.frame_times_ms:
+        raise ValueError("Servono timestamp reali estratti dal video")
+
+    pipeline = project.get("pipeline") if isinstance(project.get("pipeline"), dict) else {}
+    request_key = _clean(data.idempotency_key, 160)
+    if request_key and pipeline.get("last_completed_key") == request_key:
+        return project
+    if pipeline.get("status") == "processing" and request_key and pipeline.get("active_key") == request_key:
+        return project
+
+    pipeline.update({"status": "processing", "stage": "validation", "progress": 5, "active_key": request_key, "error": None})
+    pipeline["stages"] = {
+        "validation": {"status": "completed", "progress": 100},
+        "metadata": {"status": "completed", "progress": 100},
+        "segmentation": {"status": "processing", "progress": 0},
+    }
+    project["pipeline"] = pipeline
+    save_project(user_id, asset_id, project, status="processing", stage="segmentation", progress=20)
+
+    duration_ms = max(0, int(float(data.duration_seconds or 0) * 1000))
+    segments = segment_frames(data.frame_times_ms, data.frame_meta, duration_ms)
+    if not segments:
+        raise ValueError("Nessun segmento affidabile ricavato dai timestamp forniti")
+
+    evidences = []
+    for segment in segments:
+        signals = segment.get("signals") or []
+        observed = "Fotogramma reale disponibile al timestamp indicato."
+        if signals:
+            observed += " Segnali dichiarati dal selettore: " + ", ".join(signals[:5]) + "."
+        interpretation = None if segment["phase_type"] == "unclassified" else phase_title(segment["phase_type"])
+        evidence_data = EvidenceCreateRequest(
+            phase_type=segment["phase_type"],
+            start_timestamp_ms=segment["start_timestamp_ms"],
+            end_timestamp_ms=segment["end_timestamp_ms"],
+            representative_timestamp_ms=segment["representative_timestamp_ms"],
+            representative_frame={
+                "frame_index": segment["frame_index"],
+                "timestamp_ms": segment["representative_timestamp_ms"],
+                "selection_status": "suggested",
+            },
+            title=phase_title(segment["phase_type"]),
+            observation=observed,
+            interpretation=interpretation,
+            motivation=segment["motivation"],
+            confidence_score=segment["confidence_score"],
+            source_type=segment["source_type"],
+        )
+        evidences.append(build_evidence(project, asset_id, evidence_data))
+
+    pipeline["stages"].update({
+        "segmentation": {"status": "completed", "progress": 100, "segments": len(segments)},
+        "candidate_detection": {"status": "completed", "progress": 100, "candidates": len(segments)},
+        "classification": {"status": "completed", "progress": 100},
+        "evidence_generation": {"status": "completed", "progress": 100, "evidences": len(evidences)},
+        "human_review": {"status": "pending", "progress": 0},
+    })
+    pipeline.update({
+        "status": "review_ready",
+        "stage": "human_review",
+        "progress": 85,
+        "last_completed_key": request_key,
+        "active_key": None,
+        "duration_ms": duration_ms,
+    })
+    project["segments"] = segments
+    project["evidences"] = evidences
+    project["pipeline"] = pipeline
+    saved = save_project(user_id, asset_id, project, status="review_ready", stage="human_review", progress=85)
+    if not saved:
+        raise RuntimeError("Impossibile salvare i risultati dell'analisi")
+    return saved

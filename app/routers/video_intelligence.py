@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.models.video_intelligence import EvidenceCreateRequest, EvidenceReviewRequest, ProjectStateRequest, VideoProjectCreate
+from app.models.video_intelligence import EvidenceCreateRequest, EvidenceReviewRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate
 from app.services.video_evidence_service import add_evidence, list_evidences, review_evidence
 from app.services.video_intelligence_engine import (
     create_project,
     get_project,
     list_coach_matches,
     retry_project,
+    run_pipeline,
     update_project_state,
 )
 from usage_guard import require_user
@@ -60,6 +61,17 @@ def retry_video_intelligence_project(asset_id: int, user=Depends(require_user)):
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"ok": True, "project": project}
+
+
+@router.post("/projects/{asset_id}/pipeline")
+def run_video_intelligence_pipeline(asset_id: int, data: VideoPipelineRequest, user=Depends(require_user)):
+    try:
+        project = run_pipeline(int(user["id"]), asset_id, data)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {"ok": True, "project": project}
 
 
