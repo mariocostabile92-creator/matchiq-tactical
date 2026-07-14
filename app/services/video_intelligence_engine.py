@@ -4,11 +4,15 @@ from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from database import create_video_asset, get_saved_matches, get_video_asset, utc_now
-from app.models.video_intelligence import AnalysisMode, VideoProjectCreate
+from app.models.video_intelligence import AnalysisMode, ProjectStateRequest, VideoProjectCreate
 from app.repositories.video_intelligence_repository import load_project, save_project
 
 
 ENGINE_VERSION = "1.0"
+PROJECT_STATES = {
+    "draft", "uploading", "queued", "processing", "review_ready",
+    "completed", "failed", "cancelled",
+}
 
 
 def _clean(value: Any, limit: int = 500) -> str:
@@ -88,3 +92,49 @@ def create_project(user_id: int, data: VideoProjectCreate) -> Dict[str, Any]:
 
 def get_project(user_id: int, asset_id: int) -> Optional[Dict[str, Any]]:
     return load_project(user_id, asset_id)
+
+
+def update_project_state(user_id: int, asset_id: int, data: ProjectStateRequest) -> Dict[str, Any]:
+    project = load_project(user_id, asset_id)
+    if not project:
+        raise LookupError("Progetto Video Intelligence non trovato")
+    status = _clean(data.status, 40).lower()
+    if status not in PROJECT_STATES:
+        raise ValueError("Stato elaborazione non valido")
+    progress = data.progress
+    if progress is None:
+        progress = int((project.get("pipeline") or {}).get("progress") or 0)
+    progress = max(0, min(100, int(progress)))
+    stage = _clean(data.stage, 60) or status
+    pipeline = project.get("pipeline") if isinstance(project.get("pipeline"), dict) else {}
+    pipeline.update({"status": status, "stage": stage, "progress": progress, "updated_at": utc_now()})
+    if status == "failed":
+        pipeline["error"] = {
+            "code": _clean(data.error_code, 80) or "processing_failed",
+            "message": _clean(data.error_message, 300) or "Elaborazione non completata. Il progetto resta salvato.",
+        }
+    elif status not in {"failed"}:
+        pipeline.pop("error", None)
+    project["pipeline"] = pipeline
+    saved = save_project(
+        user_id,
+        asset_id,
+        project,
+        status=status,
+        stage=stage,
+        progress=progress,
+        error=(pipeline.get("error") or {}).get("message", ""),
+    )
+    if not saved:
+        raise RuntimeError("Impossibile aggiornare lo stato del progetto")
+    return saved
+
+
+def retry_project(user_id: int, asset_id: int) -> Dict[str, Any]:
+    project = load_project(user_id, asset_id)
+    if not project:
+        raise LookupError("Progetto Video Intelligence non trovato")
+    status = str((project.get("pipeline") or {}).get("status") or "")
+    if status not in {"failed", "cancelled"}:
+        raise ValueError("Il progetto non richiede un nuovo tentativo")
+    return update_project_state(user_id, asset_id, ProjectStateRequest(status="queued", stage="queued", progress=0))

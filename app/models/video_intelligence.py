@@ -59,6 +59,14 @@ class VideoPipelineRequest(BaseModel):
     staff_events: List[Dict[str, Any]] = Field(default_factory=list)
 
 
+class ProjectStateRequest(BaseModel):
+    status: str
+    stage: str = ""
+    progress: Optional[int] = None
+    error_code: str = ""
+    error_message: str = ""
+
+
 class EvidenceReviewRequest(BaseModel):
     status: ReviewStatus
     title: Optional[str] = None
@@ -83,4 +91,3 @@ class EvidenceLinkRequest(BaseModel):
     linked_match_event_id: Optional[str] = None
     linked_note_id: Optional[str] = None
     link_type: str = "manual"
-
