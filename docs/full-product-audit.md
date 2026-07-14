@@ -128,8 +128,8 @@ Le suite confermano: Weekly non rigenera senza cambi, Pattern deduplica, Trainin
 
 ## 9. PWA
 
-- Manifest valido, scope `/`, display standalone e start URL aggiornato a `10523`.
-- Cache aggiornata a `matchiq-pwa-v123`.
+- Manifest valido, scope `/`, display standalone e start URL aggiornato a `10524`.
+- Cache aggiornata a `matchiq-pwa-v124`.
 - API non vengono salvate nell'app shell.
 - Il service worker elimina cache storiche e usa network-first per navigazioni/asset same-origin.
 - Logout/cambio utente puliscono cache applicativa sensibile lato storage browser.
@@ -179,7 +179,7 @@ P0 trovati e corretti: 2. P1 trovati e corretti: 3. Hardening 2 chiude inoltre r
 
 ## 15. Hardening 3 - UX, PWA, PDF e demo readiness
 
-- Release frontend unica portata a `10523`; cache PWA portata a `matchiq-pwa-v123`.
+- Release frontend unica portata a `10524`; cache PWA portata a `matchiq-pwa-v124`.
 - Navigazione condivisa estesa al riconoscimento di tutti i moduli operativi.
 - Stati offline, errore recuperabile e retry centralizzati senza cambiare API o logica prodotto.
 - Focus, touch target, tabelle, dialog, safe-area, tastiera virtuale e reduced motion consolidati nel layer CSS condiviso.

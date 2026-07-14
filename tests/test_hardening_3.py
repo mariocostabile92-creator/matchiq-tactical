@@ -83,9 +83,9 @@ class HardeningThreeTests(unittest.TestCase):
             if path.suffix.lower() in {".html", ".js", ".json"}:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10523"})
+        self.assertEqual(query_versions, {"10524"})
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v123"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v124"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -151,6 +151,30 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertNotIn("Segui questi 5 step", coach)
         self.assertNotIn("coach-guide-card", coach)
         self.assertIn('id="coachPlanCard"', coach)
+
+    def test_match_day_groups_team_events_without_changing_event_contracts(self):
+        coach = (FRONTEND / "coach.html").read_text(encoding="utf-8")
+        actions = (FRONTEND / "js" / "coach-actions.js").read_text(encoding="utf-8")
+        render = (FRONTEND / "js" / "coach-render.js").read_text(encoding="utf-8")
+        styles = (FRONTEND / "css" / "coach.css").read_text(encoding="utf-8")
+
+        for element_id in ("coachLivePeriod", "coachLiveToggle", "coachVoiceBtn", "eventTeamInput"):
+            self.assertEqual(coach.count(f'id="{element_id}"'), 1)
+        self.assertEqual(coach.count("data-live-team-action"), 14)
+        self.assertEqual(coach.count('data-team="home"'), 7)
+        self.assertEqual(coach.count('data-team="away"'), 7)
+        self.assertEqual(coach.count("data-tactical-event-label"), 8)
+        self.assertEqual(coach.count("onclick=\"addLiveEvent("), 14)
+        self.assertIn("NOTE E STRUMENTI STAFF", coach)
+        self.assertIn("SQUADRA DI CASA", coach)
+        self.assertIn("SQUADRA OSPITE", coach)
+
+        self.assertIn('side:side || getInputValue("eventTeamInput", "home")', actions)
+        self.assertIn('data-live-team-name', coach)
+        self.assertIn('getTeamName(side)', render)
+        self.assertIn('data-live-team-action', render)
+        self.assertIn(".coach-team-events-grid", styles)
+        self.assertIn("@media(max-width:760px)", styles)
 
     def test_tactical_assistant_footer_follows_conversation_content(self):
         page = (FRONTEND / "tactical-assistant.html").read_text(encoding="utf-8")

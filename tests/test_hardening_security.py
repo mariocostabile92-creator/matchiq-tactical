@@ -134,12 +134,12 @@ class HardeningSecurityTests(unittest.TestCase):
         manifest = (ROOT / "frontend" / "manifest.json").read_text(encoding="utf-8")
         worker = (ROOT / "frontend" / "service-worker.js").read_text(encoding="utf-8")
         app_meta = (ROOT / "frontend" / "js" / "app-meta.js").read_text(encoding="utf-8")
-        self.assertIn('"/index.html?v=10523"', worker)
-        self.assertIn('"start_url": "/index.html?v=10523"', manifest)
-        self.assertIn('version: "10523"', app_meta)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v123"', worker)
-        self.assertIn('"/js/auth.js?v=10523"', worker)
-        self.assertIn('"/js/safe-render.js?v=10523"', worker)
+        self.assertIn('"/index.html?v=10524"', worker)
+        self.assertIn('"start_url": "/index.html?v=10524"', manifest)
+        self.assertIn('version: "10524"', app_meta)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v124"', worker)
+        self.assertIn('"/js/auth.js?v=10524"', worker)
+        self.assertIn('"/js/safe-render.js?v=10524"', worker)
 
 
 class AuthenticationFlowTests(unittest.TestCase):

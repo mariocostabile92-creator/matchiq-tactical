@@ -610,6 +610,30 @@ function renderLiveAssistant(){
     const minute = document.getElementById("coachLiveMinute");
     const last = document.getElementById("coachLiveLast");
     const insights = document.getElementById("coachLiveInsights");
+    const teamSelect = document.getElementById("eventTeamInput");
+    const selectedSide = teamSelect?.value === "away" ? "away" : "home";
+
+    ["home", "away"].forEach(side => {
+        const teamName = getTeamName(side) || (side === "home" ? "Squadra di casa" : "Squadra ospite");
+        document.querySelectorAll(`[data-live-team-name="${side}"]`).forEach(node => {
+            node.textContent = teamName;
+        });
+        document.querySelectorAll(`[data-live-team-option="${side}"]`).forEach(option => {
+            option.textContent = teamName;
+        });
+        document.querySelectorAll(`[data-live-team-action][data-team="${side}"]`).forEach(button => {
+            const eventLabel = button.dataset.eventLabel || "Evento";
+            button.setAttribute("aria-label", `Registra ${eventLabel.toLowerCase()} per ${teamName}`);
+        });
+    });
+
+    const tacticalTeamName = getTeamName(selectedSide) || (selectedSide === "home" ? "Squadra di casa" : "Squadra ospite");
+    const tacticalHint = document.getElementById("coachTacticalTeamHint");
+    if(tacticalHint) tacticalHint.textContent = `Le osservazioni qui sotto saranno associate a ${tacticalTeamName}.`;
+    document.querySelectorAll("[data-tactical-event-label]").forEach(button => {
+        const eventLabel = button.dataset.tacticalEventLabel || "Osservazione tattica";
+        button.setAttribute("aria-label", `Registra ${eventLabel.toLowerCase()} per ${tacticalTeamName}`);
+    });
 
     if(clock) clock.textContent = formatCoachClock(getCoachLiveElapsedSeconds());
     if(period) period.value = coachState.live?.period || "1T";
@@ -1004,6 +1028,7 @@ document.addEventListener("DOMContentLoaded", () => {
             setInputValue("eventPlayerSelectInput","");
             setInputValue("eventPlayerInput","");
             renderEventPlayerSelect();
+            renderLiveAssistant();
         });
     }
 });

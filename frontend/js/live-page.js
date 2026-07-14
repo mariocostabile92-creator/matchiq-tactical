@@ -48,7 +48,7 @@
       country:clean(match?.country),
       score:typeof match?.score === "string" ? match.score : `${Number(homeGoals)||0}-${Number(awayGoals)||0}`,
       status,
-      url:id ? `/match.html?id=${encodeURIComponent(id)}&v=${window.MATCHIQ_APP_VERSION || "10523"}` : ""
+      url:id ? `/match.html?id=${encodeURIComponent(id)}&v=${window.MATCHIQ_APP_VERSION || "10524"}` : ""
     };
   }
 

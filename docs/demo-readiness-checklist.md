@@ -1,6 +1,6 @@
 # MatchIQ - Demo readiness checklist
 
-Release demo: `10523`
+Release demo: `10524`
 
 ## Preparazione prima della chiamata
 

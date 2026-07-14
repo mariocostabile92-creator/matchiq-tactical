@@ -1,8 +1,8 @@
 # Hardening 3 - Inventario pagine e sistema UI
 
 Data audit: 13 luglio 2026
-Release frontend: `10523`
-Cache PWA: `matchiq-pwa-v123`
+Release frontend: `10524`
+Cache PWA: `matchiq-pwa-v124`
 
 ## Regole condivise applicate
 
@@ -10,7 +10,7 @@ Cache PWA: `matchiq-pwa-v123`
 - `frontend/js/global-nav-config.js` riconosce tutti i moduli operativi senza sovraccaricare la navigazione primaria.
 - `frontend/js/ux-hardening.js` gestisce stato offline, errore recuperabile, retry, tabelle responsive, dialog, immagini lazy e semantica live.
 - `frontend/css/components.css` contiene focus, touch target, safe-area PWA, dialog, tabelle, responsive dei moduli e reduced motion.
-- Tutte le pagine attive usano la stessa release `10523`; la PWA usa una sola cache `v120`.
+- Tutte le pagine attive usano la stessa release `10524`; la PWA usa una sola cache `v120`.
 
 ## Inventario completo
 

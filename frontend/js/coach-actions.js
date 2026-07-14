@@ -123,15 +123,21 @@ function addQuickEvent(type, label, icon, options={}){
     showNotice(`${label} registrato per ${event.team}${event.player ? " - " + event.player : ""}.`, "ok", 2500);
 }
 
-function addLiveEvent(type, label, icon, note=""){
-    addQuickEvent(type, label, icon, {minute:"live", live:true, note, source:"live"});
-}
-
-function addTacticalLiveEvent(type, label, icon, note, side="home"){
+function addLiveEvent(type, label, icon, note="", side=""){
     addQuickEvent(type, label, icon, {
         minute:"live",
         live:true,
-        side,
+        side:side || getInputValue("eventTeamInput", "home"),
+        note,
+        source:"live"
+    });
+}
+
+function addTacticalLiveEvent(type, label, icon, note, side=""){
+    addQuickEvent(type, label, icon, {
+        minute:"live",
+        live:true,
+        side:side || getInputValue("eventTeamInput", "home"),
         note,
         source:"smart-tap"
     });
