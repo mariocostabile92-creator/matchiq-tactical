@@ -37,6 +37,36 @@ class PipelineStage(str, Enum):
     REPORT = "report_generation"
 
 
+class VideoEvidence(BaseModel):
+    evidence_id: str
+    project_id: str
+    video_id: int
+    analysis_mode: AnalysisMode
+    phase_type: str = "unclassified"
+    event_type: Optional[str] = None
+    team_context: Optional[str] = None
+    start_timestamp_ms: int
+    end_timestamp_ms: int
+    representative_timestamp_ms: int
+    representative_frame: Dict[str, Any] = Field(default_factory=dict)
+    clip_reference: Optional[Dict[str, Any]] = None
+    title: str
+    observation: str
+    interpretation: Optional[str] = None
+    motivation: str
+    confidence_score: float
+    confidence_label: ConfidenceLabel
+    source_type: str
+    linked_match_event_id: Optional[str] = None
+    linked_note_id: Optional[str] = None
+    link_type: Optional[str] = None
+    review_status: ReviewStatus = ReviewStatus.PENDING
+    reviewed_by: Optional[int] = None
+    reviewed_at: Optional[str] = None
+    user_correction: Optional[str] = None
+    created_at: str
+
+
 class VideoProjectCreate(BaseModel):
     video_asset_id: Optional[int] = None
     analysis_mode: AnalysisMode = AnalysisMode.ANALYSIS
@@ -91,3 +121,19 @@ class EvidenceLinkRequest(BaseModel):
     linked_match_event_id: Optional[str] = None
     linked_note_id: Optional[str] = None
     link_type: str = "manual"
+
+
+class EvidenceCreateRequest(BaseModel):
+    phase_type: str = "unclassified"
+    event_type: Optional[str] = None
+    team_context: Optional[str] = None
+    start_timestamp_ms: int
+    end_timestamp_ms: int
+    representative_timestamp_ms: int
+    representative_frame: Dict[str, Any] = Field(default_factory=dict)
+    title: str
+    observation: str
+    interpretation: Optional[str] = None
+    motivation: str
+    confidence_score: float = 0
+    source_type: str = "staff_manual"

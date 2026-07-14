@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.models.video_intelligence import ProjectStateRequest, VideoProjectCreate
+from app.models.video_intelligence import EvidenceCreateRequest, EvidenceReviewRequest, ProjectStateRequest, VideoProjectCreate
+from app.services.video_evidence_service import add_evidence, list_evidences, review_evidence
 from app.services.video_intelligence_engine import (
     create_project,
     get_project,
@@ -70,3 +71,35 @@ def cancel_video_intelligence_project(asset_id: int, user=Depends(require_user))
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return {"ok": True, "project": project}
+
+
+@router.get("/projects/{asset_id}/evidences")
+def get_video_evidences(asset_id: int, include_rejected: bool = True, user=Depends(require_user)):
+    try:
+        items = list_evidences(int(user["id"]), asset_id, include_rejected=include_rejected)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return {"ok": True, "items": items, "count": len(items)}
+
+
+@router.post("/projects/{asset_id}/evidences")
+def create_video_evidence(asset_id: int, data: EvidenceCreateRequest, user=Depends(require_user)):
+    try:
+        evidence = add_evidence(int(user["id"]), asset_id, data)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return {"ok": True, "evidence": evidence}
+
+
+@router.patch("/projects/{asset_id}/evidences/{evidence_id}/review")
+def update_video_evidence_review(
+    asset_id: int,
+    evidence_id: str,
+    data: EvidenceReviewRequest,
+    user=Depends(require_user),
+):
+    try:
+        evidence = review_evidence(int(user["id"]), asset_id, evidence_id, int(user["id"]), data)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return {"ok": True, "evidence": evidence}
