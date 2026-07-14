@@ -34,13 +34,11 @@
   H.renderAccount = function(){
     const plan = H.plan();
     const owner = H.isOwner();
-    const name = H.userName();
     const headerPlan = $("headerPlan");
     if(headerPlan){
       headerPlan.textContent = owner ? "Owner" : (H.state.account?.label || plan || "Guest");
       headerPlan.classList.toggle("owner", owner);
     }
-    $("heroGreeting").textContent = name ? `Bentornato, ${name}` : "Bentornato in MatchIQ";
     const adminNav = $("adminNav");
     if(adminNav) adminNav.hidden = !owner;
     const auth = $("authAction");
@@ -148,10 +146,6 @@
 
   H.renderHome = function(){
     H.renderAccount(); H.renderModules(); H.renderStats(); H.renderLiveMatches?.(); H.renderContinue(); H.renderAi(); H.renderActivity(); H.renderNotice();
-    const brief=H.state.view?.brief || {};
-    if(brief.eyebrow) $("heroGreeting").textContent=brief.eyebrow;
-    if(brief.title) $("heroTitle").textContent=brief.title;
-    if(brief.lead) $("heroLead").textContent=brief.lead;
     const latest=(H.state.view?.activities || []).find(item => item.kind === "video_report");
     if(latest) $("latestReportAction").href=latest.url;
   };

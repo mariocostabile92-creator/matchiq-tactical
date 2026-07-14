@@ -128,22 +128,6 @@
     });
   };
 
-  H.deriveHomeBrief = function(current, priorities){
-    if(H.state.loading) return {eyebrow:"Aggiornamento", title:"Sto sincronizzando il tuo lavoro.", lead:"Recupero attività, Sessioni Video e partite disponibili senza bloccare i moduli."};
-    if(current){
-      const live = H.state.local.coachCurrent?.live || {};
-      const report = String(H.state.local.coachCurrent?.report || "").trim();
-      if(live.running) return {eyebrow:"Match Day live", title:"La partita è in corso.", lead:`Continua ${current.title} dal Coach e registra soltanto ciò che serve allo staff.`};
-      if(H.state.local.coachCurrent?.phase === "post" && !report) return {eyebrow:"Post-partita", title:"Completa il lavoro dopo la gara.", lead:`${current.title} è pronta per pagelle, report e indicazioni per il prossimo allenamento.`};
-      return {eyebrow:"Prossima priorità", title:"Riprendi la partita in preparazione.", lead:`Continua ${current.title} senza perdere eventi, formazione e note già inserite.`};
-    }
-    const first = priorities[0];
-    if(first) return {eyebrow:"Prossima priorità", title:first.title, lead:first.text || "Apri l'attività e continua da dove eri rimasto."};
-    return H.isAuthenticated()
-      ? {eyebrow:"Tutto pronto", title:"Scegli da dove iniziare.", lead:"Crea una partita, carica un video oppure consulta le partite disponibili."}
-      : {eyebrow:"Benvenuto", title:"Il tuo lavoro tecnico, in un solo posto.", lead:"Accedi per ritrovare attività, report e Sessioni Video del tuo account."};
-  };
-
   H.mergeData = function(){
     const remote = H.state.remote || {};
     const local = H.state.local || {};
@@ -179,13 +163,6 @@
     }
 
     const priorities = [...(remote.ai_priorities || [])];
-    if(H.state.live.matches.length){
-      priorities.push({
-        type:"system", title:"Partite live disponibili",
-        text:`${H.state.live.matches.length} ${H.state.live.matches.length === 1 ? "partita è disponibile" : "partite sono disponibili"} nel modulo Match.`,
-        url:"#liveMatchesSection", action:"Vedi Partite Live"
-      });
-    }
     if(current){
       const ratings = Array.isArray(local.coachCurrent?.ratings) ? local.coachCurrent.ratings.length : 0;
       const report = String(local.coachCurrent?.report || "").trim();
@@ -202,8 +179,7 @@
       statsAvailable:available,
       activities:activities.slice(0,8),
       continueItems,
-      priorities:uniquePriorities,
-      brief:H.deriveHomeBrief(current, uniquePriorities)
+      priorities:uniquePriorities
     };
     return H.state.view;
   };

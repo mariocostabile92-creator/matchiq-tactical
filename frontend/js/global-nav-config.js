@@ -1,7 +1,7 @@
 (function(){
   "use strict";
 
-  const VERSION = "10521";
+  const VERSION = "10522";
   const withVersion = (path) => `${path}${path.includes("?") ? "&" : "?"}v=${VERSION}`;
 
   const modules = {

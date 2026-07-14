@@ -121,14 +121,14 @@ cd C:\Users\Mario\Desktop\matchiq-tactical\matchiq-tactical\backend
 .\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8793
 ```
 
-Aprire poi `http://127.0.0.1:8793/index.html?v=10521`, DevTools Console/Application e completare le checklist dispositivo/provider sopra.
+Aprire poi `http://127.0.0.1:8793/index.html?v=10522`, DevTools Console/Application e completare le checklist dispositivo/provider sopra.
 
 ## Contratti frontend Hardening 3
 
 | Contratto | Evidenza | Stato |
 |---|---|---|
-| Release unica | tutte le query asset `10521` | `fixed_in_hardening_3` |
-| Cache PWA unica | `matchiq-pwa-v121` | `fixed_in_hardening_3` |
+| Release unica | tutte le query asset `10522` | `fixed_in_hardening_3` |
+| Cache PWA unica | `matchiq-pwa-v122` | `fixed_in_hardening_3` |
 | Risorse condivise | `app-meta.js` carica componenti, UX e nav | `fixed_in_hardening_3` |
 | Navigazione moduli | config riconosce 8 moduli intelligence | `fixed_in_hardening_3` |
 | Stati rete | offline, online, ultimo aggiornamento e retry | `fixed_in_hardening_3` |
