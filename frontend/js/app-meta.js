@@ -1,7 +1,7 @@
 const MATCHIQ_APP_META = {
     version: "10524",
     year: "2026",
-    product: "MatchIQ"
+    product: "MatchIQ Coach AI"
 };
 
 window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
@@ -143,11 +143,17 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
 
     function injectFooter(){
         if(document.querySelector(".matchiq-footer")) return;
+        const path = currentPath();
+        const product = path.endsWith("/live.html") || path.endsWith("/match.html")
+            ? "MatchIQ Live"
+            : path.endsWith("/scout.html")
+                ? "MatchIQ Scout"
+                : MATCHIQ_APP_META.product;
         const footer = document.createElement("footer");
         footer.className = "matchiq-footer";
         footer.innerHTML = `
             <div>
-                <strong>&copy; ${MATCHIQ_APP_META.year} MatchIQ</strong>
+                <strong>&copy; ${MATCHIQ_APP_META.year} ${product}</strong>
                 <small>All rights reserved. Versione ${MATCHIQ_APP_META.version}</small>
             </div>
             <nav aria-label="Link legali MatchIQ">

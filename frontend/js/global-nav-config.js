@@ -5,14 +5,14 @@
   const withVersion = (path) => `${path}${path.includes("?") ? "&" : "?"}v=${VERSION}`;
 
   const modules = {
-    home: { title: "MatchIQ", subtitle: "AI Football Technology", href: withVersion("/index.html") },
+    home: { title: "MatchIQ Coach AI", subtitle: "L'assistente AI dello staff tecnico", href: withVersion("/index.html") },
     coach: { title: "MatchIQ Coach", subtitle: "L'assistente AI dello staff tecnico", href: withVersion("/coach.html") },
     video: { title: "MatchIQ Video AI", subtitle: "Video analysis intelligente per staff e match analyst", href: withVersion("/video.html") },
     live: { title: "MatchIQ Live", subtitle: "Partite, eventi e analisi in tempo reale", href: withVersion("/live.html") },
     scout: { title: "MatchIQ Scout", subtitle: "Player intelligence e scouting", href: withVersion("/scout.html") },
     account: { title: "MatchIQ Account", subtitle: "Profilo, piano e accesso", href: withVersion("/account.html") },
     admin: { title: "MatchIQ Admin", subtitle: "Controllo operativo e analytics", href: withVersion("/admin-beta.html") },
-    auth: { title: "MatchIQ", subtitle: "Accedi al tuo ecosistema", href: withVersion("/index.html") },
+    auth: { title: "MatchIQ Coach AI", subtitle: "Accedi al workspace dello staff", href: withVersion("/index.html") },
     weekly: { title: "MatchIQ Weekly", subtitle: "Briefing tecnico settimanale", href: withVersion("/weekly-briefing.html") },
     pattern: { title: "MatchIQ Pattern", subtitle: "Ricorrenze tattiche verificate", href: withVersion("/pattern-intelligence.html") },
     training: { title: "MatchIQ Training", subtitle: "Pianificazione dello staff", href: withVersion("/training-planner.html") },
