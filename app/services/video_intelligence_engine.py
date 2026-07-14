@@ -7,6 +7,7 @@ from database import create_video_asset, get_saved_matches, get_video_asset, utc
 from app.models.video_intelligence import AnalysisMode, EvidenceCreateRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate
 from app.repositories.video_intelligence_repository import load_project, save_project
 from app.services.video_evidence_service import build_evidence
+from app.services.video_frame_ranking_service import rank_segments
 from app.services.video_segmentation_service import phase_title, segment_frames
 
 
@@ -166,7 +167,7 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
     save_project(user_id, asset_id, project, status="processing", stage="segmentation", progress=20)
 
     duration_ms = max(0, int(float(data.duration_seconds or 0) * 1000))
-    segments = segment_frames(data.frame_times_ms, data.frame_meta, duration_ms)
+    segments = rank_segments(segment_frames(data.frame_times_ms, data.frame_meta, duration_ms))
     if not segments:
         raise ValueError("Nessun segmento affidabile ricavato dai timestamp forniti")
 
@@ -186,6 +187,10 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
                 "frame_index": segment["frame_index"],
                 "timestamp_ms": segment["representative_timestamp_ms"],
                 "selection_status": "suggested",
+                "score": segment["frame_score"],
+                "tier": segment["frame_tier"],
+                "rank": segment["frame_rank"],
+                "motivation": segment["frame_ranking_motivation"],
             },
             title=phase_title(segment["phase_type"]),
             observation=observed,
@@ -200,6 +205,7 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
         "segmentation": {"status": "completed", "progress": 100, "segments": len(segments)},
         "candidate_detection": {"status": "completed", "progress": 100, "candidates": len(segments)},
         "classification": {"status": "completed", "progress": 100},
+        "frame_ranking": {"status": "completed", "progress": 100, "ranked": len(segments)},
         "evidence_generation": {"status": "completed", "progress": 100, "evidences": len(evidences)},
         "human_review": {"status": "pending", "progress": 0},
     })

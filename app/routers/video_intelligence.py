@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.models.video_intelligence import EvidenceCreateRequest, EvidenceReviewRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate
+from app.models.video_intelligence import EvidenceCreateRequest, EvidenceFrameRequest, EvidenceReviewRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate
 from app.services.video_evidence_service import add_evidence, list_evidences, review_evidence
+from app.services.video_frame_ranking_service import replace_evidence_frame
 from app.services.video_intelligence_engine import (
     create_project,
     get_project,
@@ -100,6 +101,22 @@ def create_video_evidence(asset_id: int, data: EvidenceCreateRequest, user=Depen
         evidence = add_evidence(int(user["id"]), asset_id, data)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return {"ok": True, "evidence": evidence}
+
+
+@router.post("/projects/{asset_id}/evidences/{evidence_id}/frame")
+def set_video_evidence_frame(
+    asset_id: int,
+    evidence_id: str,
+    data: EvidenceFrameRequest,
+    user=Depends(require_user),
+):
+    try:
+        evidence = replace_evidence_frame(int(user["id"]), asset_id, evidence_id, data)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {"ok": True, "evidence": evidence}
 
 
