@@ -83,9 +83,9 @@ class HardeningThreeTests(unittest.TestCase):
             if path.suffix.lower() in {".html", ".js", ".json"}:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10522"})
+        self.assertEqual(query_versions, {"10523"})
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v122"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v123"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -201,12 +201,12 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertIn("@media(max-width:760px)", styles)
         self.assertIn(".intelligence-grid{grid-template-columns:1fr}", styles)
 
-    def test_home_hero_represents_workspace_and_live_rendering_stays_unique(self):
+    def test_home_hero_represents_workspace_and_live_matches_stay_on_dedicated_page(self):
         home = (FRONTEND / "index.html").read_text(encoding="utf-8")
         state = (FRONTEND / "js" / "home-state.js").read_text(encoding="utf-8")
         render = (FRONTEND / "js" / "home-render.js").read_text(encoding="utf-8")
-        live = (FRONTEND / "js" / "home-live.js").read_text(encoding="utf-8")
         api = (FRONTEND / "js" / "home-api.js").read_text(encoding="utf-8")
+        actions = (FRONTEND / "js" / "home-actions.js").read_text(encoding="utf-8")
 
         self.assertIn("MATCHIQ WORKSPACE", home)
         self.assertIn(
@@ -222,13 +222,20 @@ class HardeningThreeTests(unittest.TestCase):
         for target in ("heroGreeting", "heroTitle", "heroLead"):
             self.assertNotIn(f'$("{target}").textContent', render)
 
-        self.assertEqual(home.count('id="liveMatchesSection"'), 1)
-        self.assertEqual(home.count('id="liveMatchesList"'), 1)
-        self.assertEqual(live.count('$("liveMatchesList")'), 1)
-        self.assertIn("H.renderLiveMatches", live)
-        self.assertEqual(api.count("H.loadLiveMatches()"), 1)
-        for route in ('href="/coach.html"', 'href="/video.html"', 'href="#liveMatchesSection"', 'href="/scout.html"'):
+        self.assertNotIn('id="liveMatchesSection"', home)
+        self.assertNotIn('id="liveMatchesList"', home)
+        self.assertNotIn("/api/live-matches", api)
+        self.assertNotIn("loadLiveMatches", api)
+        self.assertNotIn("data-live-", home)
+        self.assertNotIn("data-live-", actions)
+        self.assertGreaterEqual(home.count('href="/live.html"'), 3)
+        for route in ('href="/coach.html"', 'href="/video.html"', 'href="/live.html"', 'href="/scout.html"'):
             self.assertIn(route, home)
+        live_page = (FRONTEND / "live.html").read_text(encoding="utf-8")
+        live_script = (FRONTEND / "js" / "live-page.js").read_text(encoding="utf-8")
+        self.assertIn('id="liveMatchesList"', live_page)
+        self.assertIn("/api/live-matches", live_script)
+        self.assertIn("/match.html?id=", live_script)
 
     def test_existing_pdf_download_contracts_remain_real_downloads(self):
         match_router = (ROOT / "app" / "routers" / "match.py").read_text(encoding="utf-8")

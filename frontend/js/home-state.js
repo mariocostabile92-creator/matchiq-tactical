@@ -9,7 +9,6 @@
     remote: {stats:{}, stats_available:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:[]},
     local: {coachHistory:[], coachCurrent:null, scoutWatchlist:[]},
     localOwnershipMismatch: false,
-    live: {loading:true, matches:[], error:"", expanded:false, source:""},
     error: ""
   };
 
@@ -154,14 +153,6 @@
         available.players_observed = true;
       }
     }
-    if(!H.state.live.loading && !H.state.live.error){
-      stats.live_matches = H.state.live.matches.length;
-      available.live_matches = true;
-    }else{
-      stats.live_matches = null;
-      available.live_matches = false;
-    }
-
     const priorities = [...(remote.ai_priorities || [])];
     if(current){
       const ratings = Array.isArray(local.coachCurrent?.ratings) ? local.coachCurrent.ratings.length : 0;

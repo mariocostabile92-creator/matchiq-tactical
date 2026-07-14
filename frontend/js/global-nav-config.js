@@ -1,14 +1,14 @@
 (function(){
   "use strict";
 
-  const VERSION = "10522";
+  const VERSION = "10523";
   const withVersion = (path) => `${path}${path.includes("?") ? "&" : "?"}v=${VERSION}`;
 
   const modules = {
     home: { title: "MatchIQ", subtitle: "AI Football Technology", href: withVersion("/index.html") },
     coach: { title: "MatchIQ Coach", subtitle: "L'assistente AI dello staff tecnico", href: withVersion("/coach.html") },
     video: { title: "MatchIQ Video AI", subtitle: "Video analysis intelligente per staff e match analyst", href: withVersion("/video.html") },
-    live: { title: "MatchIQ Live", subtitle: "Partite, eventi e analisi in tempo reale", href: withVersion("/index.html") + "#liveMatchesSection" },
+    live: { title: "MatchIQ Live", subtitle: "Partite, eventi e analisi in tempo reale", href: withVersion("/live.html") },
     scout: { title: "MatchIQ Scout", subtitle: "Player intelligence e scouting", href: withVersion("/scout.html") },
     account: { title: "MatchIQ Account", subtitle: "Profilo, piano e accesso", href: withVersion("/account.html") },
     admin: { title: "MatchIQ Admin", subtitle: "Controllo operativo e analytics", href: withVersion("/admin-beta.html") },
@@ -27,7 +27,7 @@
     { key: "home", label: "Home", href: withVersion("/index.html") },
     { key: "coach", label: "Coach", href: withVersion("/coach.html") },
     { key: "video", label: "Video AI", href: withVersion("/video.html") },
-    { key: "live", label: "Partite Live", href: withVersion("/index.html") + "#liveMatchesSection" },
+    { key: "live", label: "Partite Live", href: withVersion("/live.html") },
     { key: "scout", label: "Scout", href: withVersion("/scout.html") }
   ];
 
@@ -47,7 +47,7 @@
     if(path.includes("coach")) return "coach";
     if(path.includes("video")) return "video";
     if(path.includes("scout")) return "scout";
-    if(path.includes("match")) return "live";
+    if(path.includes("match") || path.includes("live.html")) return "live";
     return "home";
   }
 

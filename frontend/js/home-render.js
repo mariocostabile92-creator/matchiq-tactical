@@ -59,7 +59,7 @@
     const modules = [
       {id:"coach", icon:"▣", title:"Coach", description:"Prepara la partita, gestisci il Match Day e trasforma eventi, note e pagelle in indicazioni per il post-gara.", url:"/coach.html", action:"Apri Coach", meta:`${H.metric("coach_matches",stats.coach_matches)} partite locali`},
       {id:"video", icon:"▶", title:"Video AI", description:"Carica o riapri una Sessione Video, analizza partite e allenamenti, trova frame rilevanti e organizza tutto nel Video Hub.", url:"/video.html", action:"Apri Video AI", secondaryUrl:H.isAuthenticated()?"/video.html#hubArchivePane":"/login.html?next=/video.html%23hubArchivePane", secondaryAction:"Vai all'archivio", meta:`${H.metric("video_sessions",stats.video_sessions)} sessioni · ${H.metric("video_reports",stats.video_reports)} report`},
-      {id:"live", icon:"●", title:"Partite Live", description:"Consulta le partite disponibili, apri quelle in corso e accedi all'analisi live del modulo Match.", url:"#liveMatchesSection", action:"Apri Partite Live", meta:`${H.metric("live_matches",stats.live_matches)} disponibili`},
+      {id:"live", icon:"●", title:"Partite Live", description:"Consulta le partite disponibili, apri quelle in corso e accedi all'analisi live del modulo Match.", url:"/live.html", action:"Apri Partite Live", meta:`${H.metric("live_matches",stats.live_matches)} disponibili`},
       {id:"scout", icon:"⌕", title:"Scout", description:"Analizza profili, salva giocatori e individua opportunità utili per la squadra.", url:"/scout.html", action:"Apri Scout", meta:`${H.metric("players_observed",stats.players_observed)} profili salvati`}
     ];
     const grid = $("moduleGrid"); grid.replaceChildren();
@@ -145,7 +145,7 @@
   };
 
   H.renderHome = function(){
-    H.renderAccount(); H.renderModules(); H.renderStats(); H.renderLiveMatches?.(); H.renderContinue(); H.renderAi(); H.renderActivity(); H.renderNotice();
+    H.renderAccount(); H.renderModules(); H.renderStats(); H.renderContinue(); H.renderAi(); H.renderActivity(); H.renderNotice();
     const latest=(H.state.view?.activities || []).find(item => item.kind === "video_report");
     if(latest) $("latestReportAction").href=latest.url;
   };

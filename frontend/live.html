@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07101f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MatchIQ">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>MatchIQ Partite Live</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
+  <link rel="stylesheet" href="/css/home.css?v=10523">
+  <link rel="stylesheet" href="/css/global-nav.css?v=10523">
+</head>
+<body data-miq-module="live">
+  <a class="skip-link" href="#liveMain">Vai al contenuto</a>
+  <main id="liveMain" class="home-shell">
+    <section class="live-section" aria-labelledby="liveTitle">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">MATCHIQ LIVE</span>
+          <h1 id="liveTitle">Partite Live</h1>
+        </div>
+        <p>Consulta le partite disponibili e apri l'analisi live del match.</p>
+      </div>
+      <div class="live-toolbar">
+        <span id="liveSummary" class="live-summary" role="status" aria-live="polite">Caricamento partite...</span>
+        <button class="button button-muted" id="liveRetry" type="button">Aggiorna</button>
+      </div>
+      <div id="liveMatchesList" class="live-matches-grid" aria-live="polite" aria-busy="true">
+        <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+      </div>
+    </section>
+  </main>
+  <script src="/js/auth.js?v=10523"></script>
+  <script src="/js/global-nav-config.js?v=10523"></script>
+  <script src="/js/global-nav-state.js?v=10523"></script>
+  <script src="/js/global-nav-render.js?v=10523"></script>
+  <script src="/js/global-nav-menu.js?v=10523"></script>
+  <script src="/js/app-meta.js?v=10523"></script>
+  <script src="/js/live-page.js?v=10523"></script>
+</body>
+</html>

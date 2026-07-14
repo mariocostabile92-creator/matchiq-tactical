@@ -24,26 +24,13 @@
     }
   };
 
-  H.loadLiveMatches = async function(){
-    H.state.live.loading = true;
-    H.state.live.error = "";
-    try{
-      const payload = await H.fetchJson(`/api/live-matches?top_only=false&ts=${Date.now()}`, 10000);
-      H.applyLivePayload(payload);
-    }catch(error){
-      H.state.live = {...H.state.live, loading:false, matches:[], error:error?.message || "Partite live non disponibili"};
-    }
-    return H.state.live;
-  };
-
   H.loadHomeData = async function(){
     H.state.loading = true;
     H.state.error = "";
     H.loadLocalContext();
-    const [accountResult, summaryResult, liveResult] = await Promise.allSettled([
+    const [accountResult, summaryResult] = await Promise.allSettled([
       H.fetchJson(`/api/account/limits?ts=${Date.now()}`),
-      H.fetchJson(`/api/home/summary?ts=${Date.now()}`),
-      H.loadLiveMatches()
+      H.fetchJson(`/api/home/summary?ts=${Date.now()}`)
     ]);
 
     if(accountResult.status === "fulfilled"){
@@ -69,9 +56,6 @@
     }else{
       H.state.error = "Alcuni dati personali non sono disponibili. I collegamenti ai moduli restano attivi.";
       H.state.remote = {stats:{}, stats_available:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:["home_summary"]};
-    }
-    if(liveResult.status === "rejected"){
-      H.state.live = {...H.state.live, loading:false, matches:[], error:"Le partite live non sono disponibili in questo momento."};
     }
     H.state.loading = false;
     return H.mergeData();
