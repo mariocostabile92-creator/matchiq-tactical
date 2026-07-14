@@ -21,6 +21,7 @@
     const activeKey = config.activeFromLocation(location);
     const module = config.modules[moduleKey] || config.modules.home;
     const state = stateApi.snapshot();
+    const accessLabel = state.canAdmin ? "Owner" : "Private Beta";
     if(moduleKey === "admin" && !state.canAdmin) return;
     const adminLink = state.canAdmin
       ? `<a class="miq-nav-account" href="${config.withVersion("/admin-beta.html")}">Admin</a>`
@@ -37,7 +38,7 @@
         ${config.navigation.map((item) => linkMarkup(item, activeKey, "miq-nav-link")).join("")}
       </nav>
       <div class="miq-nav-user">
-        <a class="miq-nav-plan" href="${config.withVersion("/account.html")}" aria-label="Piano ${escapeHtml(state.plan)}">${escapeHtml(state.plan)}</a>
+        <a class="miq-nav-plan" href="${config.withVersion("/account.html")}" aria-label="Accesso ${escapeHtml(accessLabel)}">${escapeHtml(accessLabel)}</a>
         <a class="miq-nav-account" href="${config.withVersion("/account.html")}">Account</a>
         ${adminLink}
         <button class="miq-nav-menu-button" type="button" aria-label="Apri menu" aria-expanded="false" aria-controls="miqMobileMenu">
@@ -48,7 +49,7 @@
         <div class="miq-nav-drawer-head"><strong>${escapeHtml(module.title)}</strong><button type="button" data-miq-menu-close aria-label="Chiudi menu">&times;</button></div>
         <nav aria-label="Navigazione mobile">
           ${config.navigation.map((item) => linkMarkup(item, activeKey, "miq-nav-drawer-link")).join("")}
-          <a class="miq-nav-drawer-link" href="${config.withVersion("/account.html")}">Account <span>${escapeHtml(state.plan)}</span></a>
+          <a class="miq-nav-drawer-link" href="${config.withVersion("/account.html")}">Account <span>${escapeHtml(accessLabel)}</span></a>
           ${state.canAdmin ? `<a class="miq-nav-drawer-link" href="${config.withVersion("/admin-beta.html")}">Admin</a>` : ""}
         </nav>
       </div>`;

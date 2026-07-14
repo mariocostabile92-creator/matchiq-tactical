@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MatchIQ Tactical - Account Pro V1.8 Pro Lock</title>
+<title>Account Private Beta - MatchIQ Coach AI</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
@@ -902,6 +902,17 @@ body.account-active .unlock-grid{
         font-size:32px;
     }
 }
+/* Billing and plan rules remain available internally, but are not marketed during Private Beta. */
+#ctaPanel,
+#proOnlyPanel,
+#valuePanel,
+#founderPanel,
+#comparePanel,
+#portalBtn,
+#upgradeMonthlyBtn,
+#upgradeYearlyBtn{
+    display:none !important;
+}
 </style>
 <link rel="stylesheet" href="/css/global-nav.css?v=10524">
 </head>
@@ -911,8 +922,8 @@ body.account-active .unlock-grid{
     <div class="brand">
         <img src="/assets/matchiq-logo.png" alt="MatchIQ logo" onerror="this.style.display='none'">
         <div>
-            <div class="logo">MatchIQ</div>
-            <div class="subtitle">Account e Pro</div>
+            <div class="logo">MatchIQ Coach AI</div>
+            <div class="subtitle">Account Private Beta</div>
         </div>
     </div>
 
@@ -933,37 +944,36 @@ body.account-active .unlock-grid{
         <div class="card hero-main">
             <span class="badge guest" id="planBadge">CARICAMENTO</span>
 
-            <h1 id="accountTitle">Sblocca MatchIQ Pro</h1>
+            <h1 id="accountTitle">MatchIQ Coach AI Private Beta</h1>
 
             <p id="accountIntro" class="hero-lead">
-                Usa MatchIQ come assistente tattico per mister, staff, scout e società:
-                Coach report, PDF, WhatsApp, pagelle, storico, Scout Mode completa, watchlist ed export.
+                Il workspace dello staff tecnico per preparare, vivere e analizzare ogni partita.
             </p>
 
             <div class="micro-trust">
-                <span>⚡ Live analysis</span>
-                <span>🧠 Coach report</span>
-                <span>🔍 Scout Mode</span>
-                <span>📄 PDF / WhatsApp</span>
+                <span>Preparazione partita</span>
+                <span>Match Day</span>
+                <span>Video AI</span>
+                <span>Post Match</span>
             </div>
 
 
             <div class="pro-lock-summary">
                 <div class="pro-lock-item">
-                    <strong>Free</strong>
-                    <span>Prova reale con limiti chiari.</span>
+                    <strong>Prepara</strong>
+                    <span>Formazione, obiettivi e piano gara.</span>
                 </div>
                 <div class="pro-lock-item">
-                    <strong>Coach Pro</strong>
-                    <span>PDF, WhatsApp e storico esteso.</span>
+                    <strong>Vivi il match</strong>
+                    <span>Eventi, note e Voice Coach.</span>
                 </div>
                 <div class="pro-lock-item">
-                    <strong>Scout Pro</strong>
-                    <span>Preview Free, completo in Pro.</span>
+                    <strong>Analizza</strong>
+                    <span>Video AI, report e pattern.</span>
                 </div>
                 <div class="pro-lock-item">
-                    <strong>Owner</strong>
-                    <span>Accesso completo senza limiti.</span>
+                    <strong>Pianifica</strong>
+                    <span>Training Planner e Tactical Identity.</span>
                 </div>
             </div>
 
@@ -974,8 +984,8 @@ body.account-active .unlock-grid{
                 </div>
 
                 <div class="info-box">
-                    <div class="info-label">Piano</div>
-                    <div class="info-value plan-value" id="planValue">GUEST</div>
+                    <div class="info-label">Accesso</div>
+                    <div class="info-value plan-value" id="planValue">PRIVATE BETA</div>
                 </div>
 
                 <div class="info-box">
@@ -1007,7 +1017,7 @@ body.account-active .unlock-grid{
             </div>
 
             <div class="small" id="smallNote">
-                I pagamenti e la gestione dell’abbonamento sono gestiti in sicurezza tramite Stripe.
+                Durante la Private Beta l'accesso commerciale non viene mostrato pubblicamente.
             </div>
         </div>
 
@@ -1063,18 +1073,18 @@ body.account-active .unlock-grid{
     </div>
 
     <div class="owner-panel" id="ownerPanel">
-        <span class="badge owner">OWNER CONTROL</span>
+        <span class="badge owner">OWNER WORKSPACE</span>
 
-        <h2>Accesso owner attivo</h2>
+        <h2>Workspace Coach AI completo</h2>
 
         <p>
-            Hai accesso completo a MatchIQ: Coach, Scout, live, admin users,
-            analytics e funzioni Pro senza limiti.
+            Hai accesso al workflow dello staff tecnico e agli strumenti amministrativi riservati.
         </p>
 
         <div class="footer-actions">
             <button class="btn green" onclick="window.location.href='/coach.html?v='+APP_VERSION">Apri Coach</button>
-            <button class="btn green" onclick="goScout()">Apri Scout</button>
+            <button class="btn green" onclick="window.location.href='/video.html?v='+APP_VERSION">Apri Video AI</button>
+            <button class="btn dark" onclick="window.location.href='/video.html?v='+APP_VERSION+'#hubArchivePane'">Apri Video Hub</button>
             <button class="btn dark" onclick="goDashboard()">Home</button>
             <button class="btn dark" onclick="window.location.href='/admin-users.html?v='+APP_VERSION">Admin Users</button>
             <button class="btn dark" onclick="window.location.href='/admin-analytics.html?v='+APP_VERSION">Analytics</button>
@@ -1429,7 +1439,7 @@ function getDisplayEmail(){
 
 function setCommercialSectionsVisible(visible){
     document.querySelectorAll(".hidden-for-pro").forEach(el => {
-        el.classList.toggle("hide", !visible);
+        el.classList.add("hide");
     });
 }
 
@@ -1468,42 +1478,34 @@ function renderAccount(){
     const proOnlyPanel = document.getElementById("proOnlyPanel");
     const smallNote = document.getElementById("smallNote");
 
-    setCommercialSectionsVisible(!isPro);
+    setCommercialSectionsVisible(false);
 
     if(emailValue) emailValue.textContent = logged ? (email || "Utente") : "Guest";
-    if(planValue) planValue.textContent = isOwner ? "OWNER PRO" : logged ? plan.toUpperCase() : "GUEST";
+    if(planValue) planValue.textContent = logged ? "PRIVATE BETA" : "ACCESSO RICHIESTO";
 
     if(statusValue){
-        statusValue.textContent = isOwner ? "COMPLETO" : isPro ? "ATTIVO" : logged ? "FREE" : "PREVIEW";
+        statusValue.textContent = logged ? "ATTIVO" : "NON CONNESSO";
     }
 
     if(planBadge){
-        planBadge.className = isOwner ? "badge owner" : isPro ? "badge pro" : logged ? "badge free" : "badge guest";
-        planBadge.textContent = isOwner ? "OWNER PRO" : isPro ? "PIANO PRO ATTIVO" : logged ? "PIANO FREE" : "GUEST PREVIEW";
+        planBadge.className = isOwner ? "badge owner" : logged ? "badge pro" : "badge guest";
+        planBadge.textContent = isOwner ? "OWNER · PRIVATE BETA" : logged ? "PRIVATE BETA" : "MATCHIQ COACH AI";
     }
 
     if(accountTitle){
-        accountTitle.textContent = isOwner
-            ? "Owner Pro attivo"
-            : isPro
-                ? "MatchIQ Pro è attivo"
-                : logged
-                    ? "Passa a MatchIQ Pro"
-                    : "Accedi e sblocca MatchIQ Pro";
+        accountTitle.textContent = logged
+            ? "Il tuo workspace MatchIQ Coach AI"
+            : "Accedi a MatchIQ Coach AI";
     }
 
     if(accountIntro){
-        accountIntro.textContent = isOwner
-            ? "Hai accesso completo a MatchIQ: Coach, Scout, live, admin users, analytics e funzioni Pro senza limiti."
-            : isPro
-                ? "Il tuo piano Pro è attivo. Puoi usare Coach report, Video Analyst, PDF, WhatsApp, pagelle, storico esteso, Scout Mode completa, watchlist, export e analisi live con limiti estesi."
-                : logged
-                    ? "Il tuo account è Free. Passa a Pro per sbloccare più report Video Analyst, PDF Coach, WhatsApp, storico esteso, Scout completo, watchlist, export e uso continuativo da campo."
-                    : "Stai usando MatchIQ come Guest. Accedi o registrati per salvare il piano, attivare Pro e usare tutte le funzioni avanzate.";
+        accountIntro.textContent = logged
+            ? "Prepara la partita, lavora durante il match e trasforma note, eventi e video in conoscenza utile per lo staff."
+            : "Accedi per ritrovare il lavoro dello staff su desktop, telefono e PWA.";
     }
 
     if(portalBtn){
-        portalBtn.style.display = isPro && !isOwner && logged ? "inline-flex" : "none";
+        portalBtn.style.display = "none";
     }
 
     if(loginBtn){
@@ -1523,11 +1525,11 @@ function renderAccount(){
     }
 
     if(upgradeMonthlyBtn){
-        upgradeMonthlyBtn.style.display = isPro ? "none" : "inline-flex";
+        upgradeMonthlyBtn.style.display = "none";
     }
 
     if(upgradeYearlyBtn){
-        upgradeYearlyBtn.style.display = isPro ? "none" : "inline-flex";
+        upgradeYearlyBtn.style.display = "none";
     }
 
     if(ownerPanel){
@@ -1535,17 +1537,13 @@ function renderAccount(){
     }
 
     if(proOnlyPanel){
-        proOnlyPanel.className = isPro ? "pro-only-panel show" : "pro-only-panel";
+        proOnlyPanel.className = "pro-only-panel";
     }
 
     if(smallNote){
-        smallNote.textContent = isOwner
-            ? "Account owner: nessun abbonamento Stripe da gestire."
-            : isPro
-                ? "Il tuo piano è attivo. Puoi gestire abbonamento, carta e fatture dal portale Stripe se disponibile."
-                : logged
-                    ? "I pagamenti e la gestione dell’abbonamento sono gestiti in sicurezza tramite Stripe."
-                    : "Per attivare Pro devi prima accedere o registrarti.";
+        smallNote.textContent = logged
+            ? "Accesso Private Beta attivo. Il tuo lavoro resta collegato all'account."
+            : "Accedi o registrati per entrare nella Private Beta.";
     }
 
     renderSubscription();
@@ -1562,6 +1560,26 @@ function renderSubscription(){
     const isOwner = accountState.is_owner || isOwnerEmail(email);
     const isPro = isOwner || isProLike(plan);
     const subscription = accountState.subscription;
+
+    box.innerHTML = `
+        <div class="row">
+            <span>Prodotto</span>
+            <span>MatchIQ Coach AI</span>
+        </div>
+        <div class="row">
+            <span>Accesso</span>
+            <span>${logged ? "Private Beta attiva" : "Accedi o registrati"}</span>
+        </div>
+        <div class="row">
+            <span>Workspace</span>
+            <span>${isOwner ? "Owner / Admin" : logged ? "Staff tecnico" : "Non connesso"}</span>
+        </div>
+        <div class="row">
+            <span>Dispositivi</span>
+            <span>Desktop · Tablet · Smartphone · PWA</span>
+        </div>
+    `;
+    return;
 
     if(!logged){
         box.innerHTML = `
