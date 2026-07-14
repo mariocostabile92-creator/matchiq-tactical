@@ -120,4 +120,3 @@ def review_evidence(
     if not saved:
         raise RuntimeError("Impossibile salvare la revisione")
     return deepcopy(found)
-

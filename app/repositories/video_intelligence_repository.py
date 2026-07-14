@@ -55,4 +55,3 @@ def save_project(
         metadata_patch={INTELLIGENCE_KEY: payload},
     )
     return load_project(user_id, asset_id) if updated else None
-

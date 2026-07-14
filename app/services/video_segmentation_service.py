@@ -162,4 +162,3 @@ def phase_title(phase: str) -> str:
         "rest_defense": "Possibile rest defense",
     }
     return labels.get(phase, "Momento video da classificare")
-

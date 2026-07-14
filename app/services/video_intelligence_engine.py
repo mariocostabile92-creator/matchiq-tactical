@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from typing import Any, Dict, Optional
 from uuid import uuid4
 
@@ -154,6 +156,14 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
 
     pipeline = project.get("pipeline") if isinstance(project.get("pipeline"), dict) else {}
     request_key = _clean(data.idempotency_key, 160)
+    if not request_key:
+        raw_request = json.dumps({
+            "duration_seconds": data.duration_seconds,
+            "frame_times_ms": data.frame_times_ms,
+            "frame_meta": data.frame_meta,
+            "staff_events": data.staff_events,
+        }, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
+        request_key = f"auto_{hashlib.sha256(raw_request).hexdigest()}"
     if request_key and pipeline.get("last_completed_key") == request_key:
         return project
     if pipeline.get("status") == "processing" and request_key and pipeline.get("active_key") == request_key:
@@ -171,6 +181,17 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
     duration_ms = max(0, int(float(data.duration_seconds or 0) * 1000))
     segments = rank_segments(segment_frames(data.frame_times_ms, data.frame_meta, duration_ms))
     if not segments:
+        update_project_state(
+            user_id,
+            asset_id,
+            ProjectStateRequest(
+                status="failed",
+                stage="segmentation",
+                progress=20,
+                error_code="no_reliable_segments",
+                error_message="Nessun segmento affidabile ricavato dai timestamp forniti.",
+            ),
+        )
         raise ValueError("Nessun segmento affidabile ricavato dai timestamp forniti")
 
     evidences = []

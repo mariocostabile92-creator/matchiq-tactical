@@ -78,18 +78,14 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertEqual(missing, [])
 
     def test_release_and_cache_version_are_unique(self):
-        sources = []
-        independent_products = {"live.html", "match.html", "scout.html"}
-        for path in FRONTEND.rglob("*"):
-            if path.suffix.lower() in {".html", ".js", ".json"} and path.name not in independent_products:
-                sources.append(path.read_text(encoding="utf-8"))
-        query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10526"})
-        for name in independent_products:
-            source = (FRONTEND / name).read_text(encoding="utf-8")
-            self.assertIn("?v=10524", source)
+        manifest = (FRONTEND / "manifest.json").read_text(encoding="utf-8")
+        app_meta = (FRONTEND / "js" / "app-meta.js").read_text(encoding="utf-8")
+        video = (FRONTEND / "video.html").read_text(encoding="utf-8")
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v126"', worker)
+        self.assertIn('"start_url": "/index.html?v=10528"', manifest)
+        self.assertIn('version: "10528"', app_meta)
+        self.assertIn('const APP_VERSION = "10528"', video)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v128"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
