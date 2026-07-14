@@ -30,6 +30,32 @@
     padding:16px;
 }
 
+.coach-match-state-card{
+    display:grid;
+    grid-template-columns:minmax(0,2fr) repeat(2,minmax(110px,1fr));
+    gap:8px;
+    margin-top:14px;
+}
+
+.coach-match-state-card > div{
+    min-width:0;
+    padding:11px 12px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:12px;
+    background:rgba(255,255,255,.04);
+    display:grid;
+    gap:4px;
+}
+
+.coach-match-state-card span{color:#8fa3d7;font-size:10px;font-weight:900;text-transform:uppercase}
+.coach-match-state-card strong{color:#fff;font-size:13px;overflow-wrap:anywhere}
+.coach-match-state-card strong.is-running{color:#18f08b}
+.coach-match-command-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin-top:10px}
+.coach-match-command{min-height:44px;border:1px solid rgba(255,255,255,.14);border-radius:11px;background:rgba(255,255,255,.06);color:#fff;font-weight:900;cursor:pointer}
+.coach-match-command.primary,.coach-match-command.active{border-color:rgba(24,240,139,.55);background:rgba(24,240,139,.16);color:#baffdc}
+.coach-match-command.danger{border-color:rgba(255,65,108,.42);color:#ffb5c5}
+.coach-match-command:focus-visible{outline:3px solid #55a4ff;outline-offset:2px}
+
 .coach-live-section-head,
 .coach-team-panel-head{
     display:flex;
@@ -159,6 +185,8 @@
 }
 
 @media(max-width:760px){
+    .coach-match-state-card{grid-template-columns:1fr 1fr}.coach-match-state-card > div:first-child{grid-column:1/-1}
+    .coach-match-command-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
     .coach-team-events-grid{
         grid-template-columns:1fr;
     }
@@ -186,6 +214,7 @@
 }
 
 @media(max-width:420px){
+    .coach-match-command-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.coach-match-command{min-height:48px}
     .coach-match-controls-panel,
     .coach-staff-tools-panel{
         padding:12px;

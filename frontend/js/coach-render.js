@@ -658,6 +658,7 @@ function renderLiveAssistant(){
     }
 
     renderCoachAutopilot();
+    if(typeof renderCoachMatchDayStatus === "function") renderCoachMatchDayStatus();
 }
 
 function findCoachBlockByText(selector, text){
@@ -748,7 +749,7 @@ function getCoachPhaseCopy(phase){
     const m = coachState.match;
     const title = phase === "match" ? "Match Day" : phase === "post" ? "Post-partita" : "Pre-partita";
     if(phase === "match"){
-        const periodMap = { "1T":"Primo tempo", "INT":"Intervallo", "2T":"Secondo tempo", "ET1":"Supplementare 1", "ET2":"Supplementare 2" };
+        const periodMap = { "1T":"Primo tempo", "INT":"Intervallo", "2T":"Secondo tempo", "REC":"Recupero", "ET1":"Supplementare 1", "ET2":"Supplementare 2" };
         const periodLabel = periodMap[coachState.live?.period || "1T"] || "Live";
         return {
             title,

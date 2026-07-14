@@ -1028,11 +1028,22 @@
                         <h3 id="coachMatchControlsTitle">Tempo e gestione gara</h3>
                     </div>
                 </div>
+                <div class="coach-match-state-card" id="coachMatchStateCard" aria-live="polite"></div>
+                <div class="coach-match-command-grid" aria-label="Comandi rapidi partita">
+                    <button type="button" class="coach-match-command primary" id="coachMatchStartCommand" onclick="setCoachMatchCommand(coachState.live?.running ? 'pause' : 'resume')">Avvia</button>
+                    <button type="button" class="coach-match-command" onclick="setCoachMatchCommand('pause')">Pausa</button>
+                    <button type="button" class="coach-match-command" data-match-period="1T" onclick="setCoachMatchCommand('1T')">1T</button>
+                    <button type="button" class="coach-match-command" data-match-period="INT" onclick="setCoachMatchCommand('INT')">Intervallo</button>
+                    <button type="button" class="coach-match-command" data-match-period="2T" onclick="setCoachMatchCommand('2T')">2T</button>
+                    <button type="button" class="coach-match-command" data-match-period="REC" onclick="setCoachMatchCommand('REC')">Recupero</button>
+                    <button type="button" class="coach-match-command danger" onclick="setCoachMatchCommand('finish')">Termina</button>
+                </div>
                 <div class="coach-live-controls">
                     <select id="coachLivePeriod" class="coach-live-period" aria-label="Periodo di gioco" onchange="setCoachLivePeriod(this.value)">
                         <option value="1T">1T</option>
                         <option value="INT">Intervallo</option>
                         <option value="2T">2T</option>
+                        <option value="REC">Recupero</option>
                         <option value="ET1">Supplementare 1</option>
                         <option value="ET2">Supplementare 2</option>
                     </select>
@@ -1560,6 +1571,7 @@
 <script src="/js/coach-voice-actions.js?v=10525"></script>
 <script src="/js/coach-report.js?v=10525"></script>
 <script src="/js/coach-render.js?v=10525"></script>
+<script src="/js/coach-match-day.js?v=10525"></script>
 <script src="/js/coach-lineup-interactions.js?v=10525"></script>
 <script src="/js/coach-lineup-player-menu.js?v=10525"></script>
 <script src="/js/coach-voice-render.js?v=10525"></script>

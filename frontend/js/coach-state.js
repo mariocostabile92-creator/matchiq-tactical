@@ -95,7 +95,7 @@ function formatCoachClock(totalSeconds){
 function getCoachLiveMinute(){
     const elapsedMinutes = Math.max(0, Math.floor(getCoachLiveElapsedSeconds() / 60));
     const period = coachState.live?.period || "1T";
-    const offset = period === "2T" ? 45 : period === "ET1" ? 90 : period === "ET2" ? 105 : 0;
+    const offset = period === "2T" ? 45 : period === "REC" ? 90 : period === "ET1" ? 90 : period === "ET2" ? 105 : 0;
     return Math.min(130, offset + elapsedMinutes);
 }
 function getLiveMinuteLabel(){
