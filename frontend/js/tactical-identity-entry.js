@@ -20,8 +20,11 @@
     if(path==="/coach.html"){
       const post=document.getElementById("coachPhasePost");if(!post)return false;post.prepend(section);return true;
     }
-    const host=path==="/index.html"||path==="/"?document.getElementById("homeMain"):path==="/weekly-briefing.html"?document.querySelector(".weekly-shell"):path==="/training-planner.html"?document.getElementById("trainingMain"):path==="/pattern-intelligence.html"?document.getElementById("patternMain"):document.querySelector("main,.wrap,.video-container");if(!host)return false;
-    const anchor=path==="/index.html"||path==="/"?host.children[1]:host.children[2];host.insertBefore(section,anchor||null);return true;
+    if(path==="/index.html"||path==="/"){
+      const grid=document.getElementById("homeIntelligenceGrid");if(!grid)return false;grid.appendChild(section);return true;
+    }
+    const host=path==="/weekly-briefing.html"?document.querySelector(".weekly-shell"):path==="/training-planner.html"?document.getElementById("trainingMain"):path==="/pattern-intelligence.html"?document.getElementById("patternMain"):document.querySelector("main,.wrap,.video-container");if(!host)return false;
+    const anchor=host.children[2];host.insertBefore(section,anchor||null);return true;
   };
   fetch("/api/tactical-identity",{cache:"no-store",headers:{Authorization:`Bearer ${token}`,Accept:"application/json"}}).then(response=>response.ok?response.json():Promise.reject()).then(payload=>{const section=create(payload.data);if(!mount(section)&&path==="/coach.html"){const observer=new MutationObserver(()=>{if(mount(section))observer.disconnect()});observer.observe(document.body,{childList:true,subtree:true})}}).catch(()=>{});
 })();

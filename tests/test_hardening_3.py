@@ -83,9 +83,9 @@ class HardeningThreeTests(unittest.TestCase):
             if path.suffix.lower() in {".html", ".js", ".json"}:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10520"})
+        self.assertEqual(query_versions, {"10521"})
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v120"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v121"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -169,6 +169,37 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertIn("const button=event.currentTarget;button.disabled=true", script)
         self.assertIn("finally{button.disabled=false}", script)
         self.assertNotIn("finally{event.currentTarget.disabled=false}", script)
+
+    def test_home_groups_intelligence_modules_without_changing_routes(self):
+        home = (FRONTEND / "index.html").read_text(encoding="utf-8")
+        coordinator = (FRONTEND / "js" / "home-intelligence.js").read_text(encoding="utf-8")
+        styles = (FRONTEND / "css" / "home-intelligence.css").read_text(encoding="utf-8")
+
+        self.assertEqual(home.count('id="homeIntelligence"'), 1)
+        self.assertEqual(home.count('id="homeIntelligenceGrid"'), 1)
+        for selector in (
+            "#weeklyHomeBanner",
+            "#patternHome",
+            "#tacticalIdentityEntry",
+            "#decisionEngineEntry",
+            ".club-intelligence-entry",
+        ):
+            self.assertIn(selector, coordinator)
+        for route in (
+            "/weekly-briefing.html",
+            "/pattern-intelligence.html",
+            "/tactical-identity.html",
+            "/decision-engine.html",
+            "/club-intelligence.html",
+        ):
+            sources = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (FRONTEND / "js").glob("*.js")
+            )
+            self.assertIn(route, sources)
+        self.assertIn("grid-template-columns:repeat(2,minmax(0,1fr))", styles)
+        self.assertIn("@media(max-width:760px)", styles)
+        self.assertIn(".intelligence-grid{grid-template-columns:1fr}", styles)
 
     def test_existing_pdf_download_contracts_remain_real_downloads(self):
         match_router = (ROOT / "app" / "routers" / "match.py").read_text(encoding="utf-8")
