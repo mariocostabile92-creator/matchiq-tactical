@@ -137,3 +137,8 @@ class EvidenceCreateRequest(BaseModel):
     motivation: str
     confidence_score: float = 0
     source_type: str = "staff_manual"
+
+
+class VideoReportRequest(BaseModel):
+    title: str = ""
+    include_pending_appendix: bool = True

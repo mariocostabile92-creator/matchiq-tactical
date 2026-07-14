@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.models.video_intelligence import EvidenceClipRequest, EvidenceCreateRequest, EvidenceFrameRequest, EvidenceLinkRequest, EvidenceReviewRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate
+from app.models.video_intelligence import EvidenceClipRequest, EvidenceCreateRequest, EvidenceFrameRequest, EvidenceLinkRequest, EvidenceReviewRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate, VideoReportRequest
 from app.services.video_clip_service import update_evidence_clip
 from app.services.video_coach_link_service import clear_evidence_link, set_evidence_link
 from app.services.video_evidence_service import add_evidence, list_evidences, review_evidence
@@ -15,6 +15,7 @@ from app.services.video_intelligence_engine import (
     run_pipeline,
     update_project_state,
 )
+from app.services.video_report_service import generate_evidence_report
 from usage_guard import require_user
 
 
@@ -175,3 +176,14 @@ def update_video_evidence_review(
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return {"ok": True, "evidence": evidence}
+
+
+@router.post("/projects/{asset_id}/reports")
+def generate_video_intelligence_report(asset_id: int, data: VideoReportRequest, user=Depends(require_user)):
+    try:
+        report = generate_evidence_report(int(user["id"]), asset_id, data)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"ok": True, "report": report}
