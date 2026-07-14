@@ -3,6 +3,8 @@
 
   let gesture = null;
   let suppressClickUntil = 0;
+  let moveFrame = 0;
+  let latestPoint = null;
   const DRAG_THRESHOLD = 7;
 
   function playerById(playerId){
@@ -63,6 +65,9 @@
   }
 
   function clearDragState(){
+    if(moveFrame) cancelAnimationFrame(moveFrame);
+    moveFrame = 0;
+    latestPoint = null;
     document.querySelectorAll(".is-drag-target,.is-dragging").forEach(node => node.classList.remove("is-drag-target","is-dragging"));
     document.body.classList.remove("is-lineup-dragging");
     gesture = null;
@@ -98,15 +103,21 @@
       document.body.classList.add("is-lineup-dragging");
     }
     event.preventDefault();
-    gesture.target?.classList.remove("is-drag-target");
-    gesture.target = dragTargetAt(event.clientX, event.clientY);
-    gesture.target?.classList.add("is-drag-target");
+    latestPoint = {x:event.clientX, y:event.clientY};
+    if(moveFrame) return;
+    moveFrame = requestAnimationFrame(() => {
+      moveFrame = 0;
+      if(!gesture || !latestPoint) return;
+      gesture.target?.classList.remove("is-drag-target");
+      gesture.target = dragTargetAt(latestPoint.x, latestPoint.y);
+      gesture.target?.classList.add("is-drag-target");
+    });
   }
 
   function onPointerUp(event){
     if(!gesture || gesture.pointerId !== event.pointerId) return;
     const current = gesture;
-    const target = current.dragging ? (current.target || dragTargetAt(event.clientX, event.clientY)) : null;
+    const target = current.dragging ? (dragTargetAt(event.clientX, event.clientY) || current.target) : null;
     if(target?.hasAttribute("data-lineup-slot")){
       moveLineupPlayerToSlot(current.playerId, target.dataset.lineupSlot, target.dataset.lineupSide);
     }else if(target?.hasAttribute("data-lineup-bench")){

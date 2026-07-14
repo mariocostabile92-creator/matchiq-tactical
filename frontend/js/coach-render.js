@@ -601,13 +601,28 @@ function renderCoachAutopilot(){
     }
 }
 
-function renderLiveAssistant(){
+function renderLiveClockOnly(){
     ensureCoachStateShape();
 
     const clock = document.getElementById("coachLiveClock");
     const period = document.getElementById("coachLivePeriod");
     const toggle = document.getElementById("coachLiveToggle");
     const minute = document.getElementById("coachLiveMinute");
+    if(clock) clock.textContent = formatCoachClock(getCoachLiveElapsedSeconds());
+    if(period && period.value !== (coachState.live?.period || "1T")){
+        period.value = coachState.live?.period || "1T";
+    }
+    if(toggle){
+        const elapsed = getCoachLiveElapsedSeconds();
+        toggle.textContent = coachState.live?.running ? "Pausa timer" : elapsed > 0 ? "Riprendi timer" : "Avvia timer";
+    }
+    if(minute) minute.textContent = `${getLiveMinuteLabel()}'`;
+    if(typeof renderCoachMatchDayStatus === "function") renderCoachMatchDayStatus();
+}
+
+function renderLiveAssistant(){
+    ensureCoachStateShape();
+
     const last = document.getElementById("coachLiveLast");
     const insights = document.getElementById("coachLiveInsights");
     const teamSelect = document.getElementById("eventTeamInput");
@@ -635,13 +650,7 @@ function renderLiveAssistant(){
         button.setAttribute("aria-label", `Registra ${eventLabel.toLowerCase()} per ${tacticalTeamName}`);
     });
 
-    if(clock) clock.textContent = formatCoachClock(getCoachLiveElapsedSeconds());
-    if(period) period.value = coachState.live?.period || "1T";
-    if(toggle){
-        const elapsed = getCoachLiveElapsedSeconds();
-        toggle.textContent = coachState.live?.running ? "Pausa timer" : elapsed > 0 ? "Riprendi timer" : "Avvia timer";
-    }
-    if(minute) minute.textContent = `${getLiveMinuteLabel()}'`;
+    renderLiveClockOnly();
 
     if(last){
         const event = coachState.events[0];
@@ -658,7 +667,15 @@ function renderLiveAssistant(){
     }
 
     renderCoachAutopilot();
-    if(typeof renderCoachMatchDayStatus === "function") renderCoachMatchDayStatus();
+}
+
+function renderMatchDayEventUpdate(){
+    renderStatus();
+    renderTimeline();
+    renderLiveAssistant();
+    renderTeamMemory();
+    renderTrainingPlan();
+    renderCoachPostSummary();
 }
 
 function findCoachBlockByText(selector, text){

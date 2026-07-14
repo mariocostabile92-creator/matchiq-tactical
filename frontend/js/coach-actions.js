@@ -127,7 +127,8 @@ function addQuickEvent(type, label, icon, options={}){
     setInputValue("eventPlayerInput", "");
     setInputValue("eventPlayerSelectInput", "");
     saveState();
-    renderAll();
+    if(typeof renderMatchDayEventUpdate === "function") renderMatchDayEventUpdate();
+    else renderAll();
     window.MatchIQMatchDayGuard?.confirmEvent(event);
     showNotice(`${label} registrato per ${event.team}${event.player ? " - " + event.player : ""}.`, "ok", 2500);
 }
@@ -255,7 +256,8 @@ function addSmartCoachNote(text, source="smart"){
     event.aiPrompt = buildCoachPromptFromEvent(event);
     coachState.events.unshift(event);
     saveState();
-    renderAll();
+    if(typeof renderMatchDayEventUpdate === "function") renderMatchDayEventUpdate();
+    else renderAll();
     showNotice(`MatchIQ ha capito: ${event.label} per ${event.team}.`, "ok", 2800);
     return event;
 }
@@ -468,7 +470,8 @@ function ensureCoachLiveTicker(){
             coachLiveTimer = null;
             return;
         }
-        renderLiveAssistant();
+        if(typeof renderLiveClockOnly === "function") renderLiveClockOnly();
+        else renderLiveAssistant();
     }, 1000);
 }
 
