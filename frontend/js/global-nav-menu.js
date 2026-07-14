@@ -31,6 +31,10 @@
     trigger.addEventListener("click", () => drawer.hidden ? open() : close());
     closeButton.addEventListener("click", close);
     drawer.querySelectorAll("a").forEach((link) => link.addEventListener("click", close));
+    document.addEventListener("pointerdown", (event) => {
+      if(drawer.hidden || drawer.contains(event.target) || trigger.contains(event.target)) return;
+      close();
+    });
     document.addEventListener("keydown", (event) => {
       if(drawer.hidden) return;
       if(event.key === "Escape") return close();

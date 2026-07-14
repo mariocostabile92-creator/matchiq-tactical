@@ -28,3 +28,16 @@ section{margin-bottom:34px}.section-heading{display:flex;justify-content:space-b
 @media(max-width:460px){.hero-copy h1{font-size:35px}.primary-actions,.module-grid,.quick-grid{grid-template-columns:1fr}.module-card{min-height:190px}.stats-grid{grid-template-columns:1fr 1fr}.stat-card strong{font-size:23px}.live-team img{width:28px;height:28px}.live-team strong{font-size:11px}.live-score{font-size:21px}}
 @media(display-mode:standalone){.home-header{padding-top:calc(12px + env(safe-area-inset-top))}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* Field-first actions are visible only where a staff member needs one-hand access. */
+.field-action-strip{display:none}
+@media(max-width:760px){
+  .home-shell{padding-top:12px}
+  .field-action-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+  .field-action{display:grid;gap:2px;min-height:62px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:#fff;text-decoration:none}
+  .field-action.primary{border-color:rgba(0,245,160,.52);background:rgba(0,245,160,.10)}
+  .field-action strong{font-size:13px}.field-action span{color:var(--muted);font-size:10px}
+}
+@media(display-mode:standalone) and (max-width:760px){
+  .field-action-strip{position:sticky;top:calc(62px + env(safe-area-inset-top));z-index:20;padding:6px 0;background:rgba(5,8,17,.94);backdrop-filter:blur(14px)}
+}
