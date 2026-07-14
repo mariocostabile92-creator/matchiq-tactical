@@ -83,9 +83,9 @@ class HardeningThreeTests(unittest.TestCase):
             if path.suffix.lower() in {".html", ".js", ".json"}:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10519"})
+        self.assertEqual(query_versions, {"10520"})
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v119"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v120"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -162,6 +162,13 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertIn("overflow: visible", layout)
         self.assertIn("display-mode: standalone", layout)
         self.assertIn("/css/tactical-assistant-layout.css", worker)
+
+    def test_pattern_refresh_keeps_a_stable_button_reference(self):
+        script = (FRONTEND / "js" / "pattern-intelligence.js").read_text(encoding="utf-8")
+
+        self.assertIn("const button=event.currentTarget;button.disabled=true", script)
+        self.assertIn("finally{button.disabled=false}", script)
+        self.assertNotIn("finally{event.currentTarget.disabled=false}", script)
 
     def test_existing_pdf_download_contracts_remain_real_downloads(self):
         match_router = (ROOT / "app" / "routers" / "match.py").read_text(encoding="utf-8")
