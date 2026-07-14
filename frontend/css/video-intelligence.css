@@ -1,0 +1,250 @@
+.vi-setup,
+.vi-workspace{
+    margin-top:18px;
+    padding:16px;
+    border:1px solid rgba(0,245,160,.28);
+    border-radius:18px;
+    background:rgba(2,19,28,.72);
+}
+.vi-section-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:14px;
+}
+.vi-section-head h2,
+.vi-section-head h3{margin:4px 0 5px}
+.vi-section-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.vi-kicker{
+    display:inline-flex;
+    color:var(--green);
+    font-size:10px;
+    font-weight:950;
+    text-transform:uppercase;
+}
+.vi-mode{
+    display:inline-grid;
+    grid-template-columns:repeat(2,minmax(110px,1fr));
+    gap:4px;
+    padding:4px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#07101f;
+}
+.vi-mode button{
+    min-height:38px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:var(--muted);
+    font:inherit;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+}
+.vi-mode button.active{
+    color:#03111c;
+    background:linear-gradient(90deg,var(--green),var(--blue));
+}
+.vi-setup-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+}
+.vi-field label{
+    display:block;
+    margin-bottom:5px;
+    color:#9db8ff;
+    font-size:10px;
+    font-weight:900;
+}
+.vi-field input,
+.vi-field select{
+    width:100%;
+    min-height:40px;
+    border:1px solid var(--border);
+    border-radius:11px;
+    background:#07101f;
+    color:#fff;
+    padding:9px 10px;
+    font:inherit;
+    font-size:12px;
+    font-weight:800;
+}
+.vi-field[hidden]{display:none}
+.vi-setup-actions,
+.vi-toolbar-actions,
+.vi-card-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+}
+.vi-setup-actions{margin-top:12px}
+.vi-state{
+    display:flex;
+    flex:1;
+    min-width:220px;
+    align-items:center;
+    gap:9px;
+    padding:9px 11px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:11px;
+    color:var(--muted);
+    font-size:11px;
+}
+.vi-state b{color:#fff}
+.vi-progress{
+    overflow:hidden;
+    width:86px;
+    height:6px;
+    border-radius:999px;
+    background:rgba(255,255,255,.12);
+}
+.vi-progress span{
+    display:block;
+    height:100%;
+    width:0;
+    border-radius:inherit;
+    background:linear-gradient(90deg,var(--green),var(--blue));
+}
+.vi-workspace[hidden]{display:none}
+.vi-stats{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+    margin-bottom:12px;
+}
+.vi-stat{
+    padding:10px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:12px;
+    background:rgba(255,255,255,.045);
+}
+.vi-stat span{display:block;color:var(--muted);font-size:10px;font-weight:850}
+.vi-stat strong{display:block;margin-top:4px;font-size:18px}
+.vi-toolbar{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,220px)) 1fr;
+    gap:9px;
+    align-items:end;
+    margin-bottom:12px;
+}
+.vi-evidence-list{display:grid;gap:10px}
+.vi-evidence{
+    padding:13px;
+    border:1px solid rgba(255,255,255,.11);
+    border-radius:15px;
+    background:rgba(255,255,255,.045);
+}
+.vi-evidence.confirmed,
+.vi-evidence.corrected{border-color:rgba(0,245,160,.38)}
+.vi-evidence.rejected{border-color:rgba(255,72,116,.30);opacity:.72}
+.vi-evidence-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+}
+.vi-evidence-top h4{margin:6px 0 3px;font-size:15px}
+.vi-evidence-top p{margin:0;color:var(--muted);font-size:11px}
+.vi-chip-row{display:flex;gap:5px;flex-wrap:wrap}
+.vi-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:23px;
+    padding:4px 7px;
+    border:1px solid rgba(0,245,160,.25);
+    border-radius:999px;
+    color:var(--green);
+    background:rgba(0,245,160,.08);
+    font-size:9px;
+    font-weight:950;
+    text-transform:uppercase;
+}
+.vi-chip.pending{color:var(--gold);border-color:rgba(255,226,138,.30);background:rgba(255,226,138,.08)}
+.vi-chip.rejected{color:#ff8ea8;border-color:rgba(255,72,116,.34);background:rgba(255,72,116,.08)}
+.vi-evidence-copy{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    margin:11px 0;
+}
+.vi-evidence-copy label{color:#9db8ff;font-size:10px;font-weight:900}
+.vi-evidence-copy .full{grid-column:1/-1}
+.vi-evidence-copy input,
+.vi-evidence-copy textarea,
+.vi-clip-editor input,
+.vi-frame-editor select{
+    width:100%;
+    margin-top:4px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:#07101f;
+    color:#fff;
+    padding:8px 9px;
+    font:inherit;
+    font-size:11px;
+}
+.vi-evidence-copy textarea{min-height:64px;resize:vertical}
+.vi-evidence-meta{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+    margin-bottom:10px;
+}
+.vi-evidence-meta div{
+    padding:8px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:10px;
+    color:var(--muted);
+    font-size:10px;
+}
+.vi-evidence-meta strong{display:block;color:#fff;margin-top:3px;font-size:11px}
+.vi-editors{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.vi-clip-editor,
+.vi-frame-editor{
+    display:grid;
+    grid-template-columns:1fr 1fr auto;
+    gap:7px;
+    align-items:end;
+    padding:9px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:11px;
+}
+.vi-frame-editor{grid-template-columns:1fr auto}
+.vi-clip-editor label,
+.vi-frame-editor label{color:var(--muted);font-size:9px;font-weight:850}
+.vi-empty{
+    padding:22px;
+    border:1px dashed rgba(255,255,255,.16);
+    border-radius:13px;
+    color:var(--muted);
+    text-align:center;
+    font-size:12px;
+}
+@media(max-width:900px){
+    .vi-section-head{display:grid}
+    .vi-mode{width:100%}
+    .vi-setup-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .vi-toolbar{grid-template-columns:1fr 1fr}
+    .vi-toolbar-actions{grid-column:1/-1}
+    .vi-editors{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+    .vi-setup,
+    .vi-workspace{padding:12px;border-radius:15px}
+    .vi-setup-grid,
+    .vi-stats,
+    .vi-toolbar,
+    .vi-evidence-copy,
+    .vi-evidence-meta{grid-template-columns:1fr}
+    .vi-evidence-copy .full{grid-column:auto}
+    .vi-toolbar-actions{grid-column:auto}
+    .vi-evidence-top{display:grid}
+    .vi-clip-editor{grid-template-columns:1fr 1fr}
+    .vi-clip-editor button{grid-column:1/-1}
+    .vi-frame-editor{grid-template-columns:1fr}
+    .vi-card-actions .btn{flex:1;min-width:118px}
+}

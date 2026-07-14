@@ -1393,7 +1393,8 @@ video{
     .panel:first-child{min-height:calc(100vh - 150px)}
 }
 </style>
-<link rel="stylesheet" href="/css/global-nav.css?v=10526">
+<link rel="stylesheet" href="/css/global-nav.css?v=10527">
+<link rel="stylesheet" href="/css/video-intelligence.css?v=10527">
 </head>
 <body data-miq-module="video">
 <main class="wrap">
@@ -1474,6 +1475,62 @@ video{
                     <span>Carica, analizza, verifica e archivia il lavoro video dello staff in un unico flusso.</span>
                 </div>
             </div>
+
+            <section class="vi-setup" id="videoIntelligenceSetup" aria-labelledby="videoIntelligenceTitle">
+                <div class="vi-section-head">
+                    <div>
+                        <span class="vi-kicker">Video Intelligence Engine</span>
+                        <h2 id="videoIntelligenceTitle">Configura il contesto dell'analisi</h2>
+                        <p>La stessa analisi può lavorare nel contesto di una partita Coach oppure come sessione indipendente.</p>
+                    </div>
+                    <div class="vi-mode" role="group" aria-label="Modalità analisi">
+                        <button type="button" class="active" data-vi-mode="analysis" aria-pressed="true">Analisi</button>
+                        <button type="button" data-vi-mode="coach" aria-pressed="false">Coach</button>
+                    </div>
+                </div>
+                <div class="vi-setup-grid">
+                    <div class="vi-field" id="viCoachMatchField" hidden>
+                        <label for="viCoachMatch">Partita Coach</label>
+                        <select id="viCoachMatch"><option value="">Seleziona partita</option></select>
+                    </div>
+                    <div class="vi-field">
+                        <label for="viVideoType">Tipo video</label>
+                        <select id="viVideoType">
+                            <option value="full_analysis">Partita completa</option>
+                            <option value="match_clip">Clip partita</option>
+                            <option value="training">Allenamento</option>
+                            <option value="set_piece">Palla inattiva</option>
+                        </select>
+                    </div>
+                    <div class="vi-field">
+                        <label for="viPeriod">Periodo</label>
+                        <select id="viPeriod">
+                            <option value="full_match">Partita completa</option>
+                            <option value="first_half">Primo tempo</option>
+                            <option value="second_half">Secondo tempo</option>
+                            <option value="extra_time">Tempi supplementari</option>
+                        </select>
+                    </div>
+                    <div class="vi-field">
+                        <label for="viPerspective">Prospettiva</label>
+                        <select id="viPerspective">
+                            <option value="own_team">La mia squadra</option>
+                            <option value="opponent">Avversario</option>
+                            <option value="both">Entrambe</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="vi-setup-actions">
+                    <button class="btn dark small" id="viPrepareBtn" type="button">Prepara progetto</button>
+                    <button class="btn small" id="viRunBtn" type="button">Avvia Video Intelligence</button>
+                    <button class="btn dark small" id="viRefreshBtn" type="button">Aggiorna evidenze</button>
+                    <div class="vi-state" id="viProjectState" aria-live="polite">
+                        <b>Non avviato</b>
+                        <span>Prepara il progetto dopo aver scelto il contesto.</span>
+                        <div class="vi-progress" aria-hidden="true"><span></span></div>
+                    </div>
+                </div>
+            </section>
 
             <div class="form-grid">
                 <div class="field">
@@ -1868,6 +1925,41 @@ video{
                 <button class="btn dark" id="downloadPdfBtn" onclick="downloadPdf()" disabled>Scarica PDF</button>
             </div>
 
+            <section class="vi-workspace" id="videoEvidenceWorkspace" aria-labelledby="videoEvidenceTitle" hidden>
+                <div class="vi-section-head">
+                    <div>
+                        <span class="vi-kicker">Revisione umana</span>
+                        <h3 id="videoEvidenceTitle">Evidenze tattiche verificabili</h3>
+                        <p>Ogni proposta resta modificabile. Il report tecnico usa soltanto evidenze confermate o corrette dallo staff.</p>
+                    </div>
+                    <div class="vi-toolbar-actions">
+                        <button class="btn dark small" id="viConfirmVisibleBtn" type="button">Conferma visibili</button>
+                        <button class="btn small" id="viReportBtn" type="button">Genera report evidenze</button>
+                    </div>
+                </div>
+                <div class="vi-stats" id="viEvidenceStats"></div>
+                <div class="vi-toolbar">
+                    <div class="vi-field">
+                        <label for="viStatusFilter">Stato revisione</label>
+                        <select id="viStatusFilter">
+                            <option value="all">Tutti</option>
+                            <option value="pending">Da revisionare</option>
+                            <option value="confirmed">Confermate</option>
+                            <option value="corrected">Corrette</option>
+                            <option value="rejected">Scartate</option>
+                        </select>
+                    </div>
+                    <div class="vi-field">
+                        <label for="viPhaseFilter">Fase</label>
+                        <select id="viPhaseFilter"><option value="all">Tutte le fasi</option></select>
+                    </div>
+                    <div class="vi-toolbar-actions">
+                        <button class="btn dark small" id="viPendingBtn" type="button">Mostra da revisionare</button>
+                    </div>
+                </div>
+                <div class="vi-evidence-list" id="viEvidenceList"></div>
+            </section>
+
             <div id="aiSlideDeck" class="slide-deck">
                 <div class="slide-deck-head">
                     <div>
@@ -2028,7 +2120,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10488";
+const APP_VERSION = "10527";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -5193,16 +5285,17 @@ if("serviceWorker" in navigator){
     });
 }
 </script>
+<script src="/js/video-intelligence.js?v=10527"></script>
 <script src="/js/app-meta.js"></script>
-<link rel="stylesheet" href="/css/knowledge-entry.css?v=10526">
-<link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10526">
-<link rel="stylesheet" href="/css/tactical-identity-entry.css?v=10526">
-<script src="/js/knowledge-entry.js?v=10526"></script>
-<script src="/js/tactical-assistant-entry.js?v=10526"></script>
-<script src="/js/tactical-identity-entry.js?v=10526"></script>
-<script src="/js/global-nav-config.js?v=10526"></script>
-<script src="/js/global-nav-state.js?v=10526"></script>
-<script src="/js/global-nav-render.js?v=10526"></script>
-<script src="/js/global-nav-menu.js?v=10526"></script>
+<link rel="stylesheet" href="/css/knowledge-entry.css?v=10527">
+<link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10527">
+<link rel="stylesheet" href="/css/tactical-identity-entry.css?v=10527">
+<script src="/js/knowledge-entry.js?v=10527"></script>
+<script src="/js/tactical-assistant-entry.js?v=10527"></script>
+<script src="/js/tactical-identity-entry.js?v=10527"></script>
+<script src="/js/global-nav-config.js?v=10527"></script>
+<script src="/js/global-nav-state.js?v=10527"></script>
+<script src="/js/global-nav-render.js?v=10527"></script>
+<script src="/js/global-nav-menu.js?v=10527"></script>
 </body>
 </html>
