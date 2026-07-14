@@ -10,6 +10,7 @@ from app.routers.admin_analytics import router as admin_analytics_router
 from app.routers.coach_tracking import router as coach_tracking_router
 from app.routers.coach_voice import router as coach_voice_router
 from app.routers.video import router as video_router
+from app.routers.video_intelligence import router as video_intelligence_router
 from app.routers.home import router as home_router
 from app.routers.knowledge import router as knowledge_router
 from app.routers.weekly_briefing import router as weekly_briefing_router
@@ -169,6 +170,7 @@ app.include_router(payments_router)
 app.include_router(coach_tracking_router)
 app.include_router(coach_voice_router)
 app.include_router(video_router)
+app.include_router(video_intelligence_router)
 app.include_router(home_router)
 app.include_router(knowledge_router)
 app.include_router(weekly_briefing_router)
