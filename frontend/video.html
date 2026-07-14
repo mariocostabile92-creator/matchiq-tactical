@@ -3396,7 +3396,10 @@ function getAssetStatusLabel(item){
         uploading: "Caricamento",
         importing: "Importazione",
         processing: "Elaborazione",
+        review_ready: "Revisione staff",
         ready: "Pronta",
+        completed: "Completata",
+        cancelled: "Interrotta",
         error: "Errore",
         failed: "Errore",
         archived: "Archiviata"
@@ -3411,7 +3414,7 @@ function getWorkflowState(item){
     const status = String(item.status || "ready").toLowerCase();
     if(status === "draft" || status === "uploading" || status === "importing") return "to_analyze";
     if(status === "processing" || status === "queued") return "in_analysis";
-    if(status === "failed" || status === "error") return "needs_review";
+    if(status === "failed" || status === "error" || status === "cancelled" || status === "review_ready") return "needs_review";
     return "report_ready";
 }
 
@@ -3552,7 +3555,7 @@ function videoHubMatchesSearch(item){
 
 function getAssetStatusClass(item){
     const status = String(item.status || "ready").toLowerCase();
-    if(status === "error") return "error";
+    if(status === "error" || status === "failed" || status === "cancelled") return "error";
     if(status === "processing" || status === "uploading" || status === "queued") return "processing";
     return "";
 }
@@ -3575,7 +3578,12 @@ function renderVideoLibrary(){
         const progress = getAssetProgress(item);
         const statusClass = getAssetStatusClass(item);
         const workflowClass = getWorkflowClass(item);
-        const disabled = String(item.status || "ready").toLowerCase() === "error" ? "disabled" : "";
+        const intelligence = item.intelligence && typeof item.intelligence === "object" ? item.intelligence : {};
+        const intelligenceBadges = intelligence.enabled ? `
+            <b>${Number(intelligence.evidences || 0)} evidenze</b>
+            <b>${Number(intelligence.reviewed || 0)} revisionate</b>
+            <b>${Number(intelligence.reports || 0)} report</b>
+        ` : "";
         const tags = getLibraryTags(item);
         const duration = formatDurationLabel(item.duration_seconds);
         const lastUsed = formatDateLabel(item.last_used_at);
@@ -3601,21 +3609,23 @@ function renderVideoLibrary(){
                     ${duration ? `<b>${escapeHtml(duration)}</b>` : ""}
                     ${lastUsed ? `<b>Usato ${escapeHtml(lastUsed)}</b>` : ""}
                     ${reportBadge}
+                    ${intelligenceBadges}
                     ${tags.map(tag => `<b>#${escapeHtml(tag)}</b>`).join("")}
                 </div>
                 <div class="library-state">
                     <b class="library-chip ${workflowClass}">${escapeHtml(getWorkflowLabel(item))}</b>
                     <b class="library-chip ${statusClass}">${escapeHtml(getAssetStatusLabel(item))}</b>
                     <div class="library-progress"><span style="width:${progress}%"></span></div>
-                    ${item.job_error ? `<span>${escapeHtml(item.job_error)}</span>` : ""}
+                    ${item.error || intelligence.error ? `<span>${escapeHtml(item.error || intelligence.error)}</span>` : ""}
                 </div>
             </div>
             <div class="library-actions">
-                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})" ${disabled}>Apri nel Video AI</button>
+                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})">Apri nel Video AI</button>
+                ${intelligence.can_retry ? `<button class="btn dark small" type="button" onclick="retryVideoIntelligence(${Number(item.id)})">Riprova analisi</button>` : ""}
                 <div class="library-menu-wrap">
                     <button class="btn dark small" type="button" aria-expanded="false" onclick="toggleLibraryMenu(event, ${Number(item.id)})">Azioni</button>
                     <div id="libraryMenu${Number(item.id)}" class="library-menu">
-                        <button class="btn dark small" type="button" onclick="prepareSessionAnalysis(${Number(item.id)})" ${disabled}>Analizza</button>
+                        <button class="btn dark small" type="button" onclick="prepareSessionAnalysis(${Number(item.id)})">Analizza</button>
                         <button class="btn dark small" type="button" onclick="openSessionModal(${Number(item.id)})">Modifica dettagli</button>
                         <button class="btn dark small" type="button" onclick="saveSessionMetadata(${Number(item.id)})">Salva dati correnti</button>
                         <button class="btn dark small" type="button" onclick="archiveVideoSession(${Number(item.id)}, ${isArchived ? "false" : "true"})">${isArchived ? "Ripristina" : "Archivia"}</button>
@@ -4221,6 +4231,23 @@ async function touchVideoHubSession(assetId){
             renderVideoLibrary();
         }
     }catch(err){}
+}
+
+async function retryVideoIntelligence(assetId){
+    if(!getAuthToken()) return;
+    try{
+        setLibraryJob("Riavvio analisi Video Intelligence...", "warn", 0);
+        const res = await fetch(`${API_BASE}/video/intelligence/projects/${encodeURIComponent(assetId)}/retry`, {
+            method:"POST",
+            headers:apiAuthHeaders()
+        });
+        const data = await res.json();
+        if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Analisi non riavviata"));
+        await loadVideoLibrary();
+        setLibraryJob("Analisi rimessa in coda. Il progetto e' rimasto salvato.", "ok", 0);
+    }catch(err){
+        setLibraryJob(err.message || "Analisi non riavviata.", "err", 100);
+    }
 }
 
 async function prepareSessionAnalysis(assetId){

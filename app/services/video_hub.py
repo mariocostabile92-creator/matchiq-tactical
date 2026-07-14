@@ -25,7 +25,10 @@ SESSION_TYPES = {
     "other": "Altro",
 }
 
-SESSION_STATES = {"draft", "uploading", "importing", "processing", "ready", "failed", "archived"}
+SESSION_STATES = {
+    "draft", "uploading", "importing", "queued", "processing", "review_ready",
+    "ready", "completed", "failed", "cancelled", "archived",
+}
 ARCHIVE_STATES = {"active", "archived"}
 WORKFLOW_STATES = {
     "to_analyze": "Da analizzare",
@@ -102,8 +105,6 @@ def _pick_status(value: Any) -> str:
     value = _clean_text(value, 40).lower()
     if value == "error":
         return "failed"
-    if value == "queued":
-        return "processing"
     return value if value in SESSION_STATES else "ready"
 
 
@@ -119,11 +120,13 @@ def _pick_workflow_state(value: Any, fallback_status: str = "") -> str:
     fallback_status = _pick_status(fallback_status)
     if fallback_status in {"draft", "uploading", "importing"}:
         return "to_analyze"
-    if fallback_status == "processing":
+    if fallback_status in {"queued", "processing"}:
         return "in_analysis"
-    if fallback_status == "failed":
+    if fallback_status in {"failed", "cancelled"}:
         return "needs_review"
-    return "report_ready" if fallback_status == "ready" else "to_analyze"
+    if fallback_status == "review_ready":
+        return "needs_review"
+    return "report_ready" if fallback_status in {"ready", "completed"} else "to_analyze"
 
 
 def normalize_session_payload(data: dict) -> Dict[str, Any]:
@@ -162,6 +165,10 @@ def normalize_session_payload(data: dict) -> Dict[str, Any]:
 def public_video_session(row: dict) -> Dict[str, Any]:
     metadata = _metadata(row)
     job = metadata.get("job") if isinstance(metadata.get("job"), dict) else {}
+    intelligence = metadata.get("video_intelligence") if isinstance(metadata.get("video_intelligence"), dict) else {}
+    intelligence_pipeline = intelligence.get("pipeline") if isinstance(intelligence.get("pipeline"), dict) else {}
+    evidences = intelligence.get("evidences") if isinstance(intelligence.get("evidences"), list) else []
+    reports = intelligence.get("reports") if isinstance(intelligence.get("reports"), list) else []
     status = _pick_status(row.get("status") or job.get("status") or metadata.get("status"))
     archive_state = _pick_archive_state(metadata.get("archive_state"))
     workflow_state = _pick_workflow_state(metadata.get("workflow_state") or metadata.get("work_state"), status)
@@ -208,6 +215,20 @@ def public_video_session(row: dict) -> Dict[str, Any]:
         "archive_state": archive_state,
         "is_archived": archive_state == "archived" or status == "archived",
         "error": job.get("error") or metadata.get("error") or "",
+        "intelligence": {
+            "enabled": bool(intelligence),
+            "mode": intelligence.get("analysis_mode") or "",
+            "status": intelligence_pipeline.get("status") or status,
+            "stage": intelligence_pipeline.get("stage") or job.get("stage") or status,
+            "progress": max(0, min(100, int(intelligence_pipeline.get("progress") or 0))),
+            "evidences": len(evidences),
+            "pending": sum(1 for item in evidences if isinstance(item, dict) and item.get("review_status") == "pending"),
+            "reviewed": sum(1 for item in evidences if isinstance(item, dict) and item.get("review_status") in {"confirmed", "corrected"}),
+            "rejected": sum(1 for item in evidences if isinstance(item, dict) and item.get("review_status") == "rejected"),
+            "reports": len(reports),
+            "can_retry": (intelligence_pipeline.get("status") or status) in {"failed", "cancelled"},
+            "error": (intelligence_pipeline.get("error") or {}).get("message") if isinstance(intelligence_pipeline.get("error"), dict) else "",
+        },
         "metadata": metadata,
     }
 
