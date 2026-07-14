@@ -1,8 +1,8 @@
 {
-  "name": "MatchIQ Tactical",
-  "short_name": "MatchIQ",
-  "description": "AI Football Intelligence Platform per analisi live, scouting e player insights.",
-  "start_url": "/index.html?v=10524",
+  "name": "MatchIQ Coach AI",
+  "short_name": "Coach AI",
+  "description": "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
+  "start_url": "/index.html?v=10525",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

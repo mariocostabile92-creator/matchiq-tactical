@@ -1,5 +1,5 @@
 const MATCHIQ_APP_META = {
-    version: "10524",
+    version: "10525",
     year: "2026",
     product: "MatchIQ Coach AI"
 };
@@ -167,14 +167,14 @@ window.MATCHIQ_APP_VERSION = MATCHIQ_APP_META.version;
 
     function injectDecisionEntryAssets(){
         if(currentPath().endsWith("/decision-engine.html") || document.querySelector('script[src*="decision-engine-entry.js"]')) return;
-        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/decision-engine-entry.css?v=10524"; document.head.appendChild(style);
-        const script=document.createElement("script"); script.src="/js/decision-engine-entry.js?v=10524"; script.defer=true; document.body.appendChild(script);
+        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/decision-engine-entry.css?v=10525"; document.head.appendChild(style);
+        const script=document.createElement("script"); script.src="/js/decision-engine-entry.js?v=10525"; script.defer=true; document.body.appendChild(script);
     }
 
     function injectClubEntryAssets(){
         if(currentPath().endsWith("/club-intelligence.html") || document.querySelector('script[src*="club-intelligence-entry.js"]')) return;
-        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/club-intelligence-entry.css?v=10524"; document.head.appendChild(style);
-        const script=document.createElement("script"); script.src="/js/club-intelligence-entry.js?v=10524"; script.defer=true; document.body.appendChild(script);
+        const style=document.createElement("link"); style.rel="stylesheet"; style.href="/css/club-intelligence-entry.css?v=10525"; document.head.appendChild(style);
+        const script=document.createElement("script"); script.src="/js/club-intelligence-entry.js?v=10525"; script.defer=true; document.body.appendChild(script);
     }
 
     function boot(){
