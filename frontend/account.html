@@ -918,7 +918,7 @@ body.account-active .unlock-grid{
 
     <div class="actions">
         <button class="btn dark" onclick="goDashboard()">Home</button>
-        <button class="btn green" onclick="goScout()">Scout</button>
+        <button class="btn green" onclick="window.location.href='/video.html?v='+APP_VERSION">Video AI</button>
         <button class="btn soft" onclick="window.location.href='/coach.html?v='+APP_VERSION">Coach</button>
         <button class="btn soft" id="loginTopBtn" onclick="goLogin()">Login</button>
         <button class="btn red" id="logoutBtn" onclick="logout()" style="display:none">Logout</button>
@@ -1286,8 +1286,9 @@ body.account-active .unlock-grid{
 
 <template><nav class="bottom-nav">
     <a href="/index.html">Home</a>
-    <a href="/scout.html">Scout</a>
     <a href="/coach.html">Coach</a>
+    <a href="/video.html">Video AI</a>
+    <a href="/video.html#hubArchivePane">Video Hub</a>
     <a class="active" href="/account.html">Account</a>
 </nav></template>
 

@@ -27,8 +27,7 @@
     { key: "home", label: "Home", href: withVersion("/index.html") },
     { key: "coach", label: "Coach", href: withVersion("/coach.html") },
     { key: "video", label: "Video AI", href: withVersion("/video.html") },
-    { key: "live", label: "Partite Live", href: withVersion("/live.html") },
-    { key: "scout", label: "Scout", href: withVersion("/scout.html") }
+    { key: "videoHub", label: "Video Hub", href: withVersion("/video.html#hubArchivePane") }
   ];
 
   function moduleFromPath(pathname){
@@ -53,7 +52,7 @@
 
   function activeFromLocation(locationLike){
     const active = moduleFromPath(locationLike?.pathname || "/");
-    if(active === "home" && String(locationLike?.hash || "").toLowerCase() === "#livematchessection") return "live";
+    if(active === "video" && String(locationLike?.hash || "").toLowerCase() === "#hubarchivepane") return "videoHub";
     return active;
   }
 
