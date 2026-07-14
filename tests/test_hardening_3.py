@@ -84,12 +84,12 @@ class HardeningThreeTests(unittest.TestCase):
             if path.suffix.lower() in {".html", ".js", ".json"} and path.name not in independent_products:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10525"})
+        self.assertEqual(query_versions, {"10526"})
         for name in independent_products:
             source = (FRONTEND / name).read_text(encoding="utf-8")
             self.assertIn("?v=10524", source)
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v125"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v126"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")

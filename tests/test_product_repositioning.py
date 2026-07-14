@@ -103,10 +103,10 @@ class ProductRepositioningTests(unittest.TestCase):
             manifest["description"],
             "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
         )
-        self.assertEqual(manifest["start_url"], "/index.html?v=10525")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v125"', worker)
-        self.assertIn('version: "10525"', app_meta)
-        self.assertIn('const VERSION = "10525"', config)
+        self.assertEqual(manifest["start_url"], "/index.html?v=10526")
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v126"', worker)
+        self.assertIn('version: "10526"', app_meta)
+        self.assertIn('const VERSION = "10526"', config)
 
     def test_live_and_scout_remain_available_as_direct_products(self):
         worker = read_frontend("service-worker.js")
@@ -114,7 +114,7 @@ class ProductRepositioningTests(unittest.TestCase):
 
         for relative_path in ("live.html", "match.html", "scout.html", "js/live-page.js"):
             self.assertTrue((FRONTEND / relative_path).is_file(), relative_path)
-        self.assertIn('"/live.html?v=10525"', worker)
+        self.assertIn('"/live.html?v=10526"', worker)
         self.assertIn("/match.html", sitemap)
         self.assertIn("/scout.html", sitemap)
 
