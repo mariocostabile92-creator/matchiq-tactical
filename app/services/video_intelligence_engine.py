@@ -7,6 +7,7 @@ from database import create_video_asset, get_saved_matches, get_video_asset, utc
 from app.models.video_intelligence import AnalysisMode, EvidenceCreateRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate
 from app.repositories.video_intelligence_repository import load_project, save_project
 from app.services.video_clip_service import build_clip_reference
+from app.services.video_coach_link_service import suggest_coach_links
 from app.services.video_evidence_service import build_evidence
 from app.services.video_frame_ranking_service import rank_segments
 from app.services.video_segmentation_service import phase_title, segment_frames
@@ -208,6 +209,14 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
             duration_ms,
         )
         evidences.append(evidence)
+
+    linked = suggest_coach_links(user_id, project, evidences, data.staff_events)
+    evidences = linked["evidences"]
+    project["coach_context"] = {
+        "match_id": project.get("match_id"),
+        "events": linked["events"],
+        "link_policy": "probable_until_staff_confirmation",
+    }
 
     pipeline["stages"].update({
         "segmentation": {"status": "completed", "progress": 100, "segments": len(segments)},
