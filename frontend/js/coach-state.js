@@ -155,11 +155,11 @@ function normalizeLineupSide(value, player=null){
 function normalizeLineupPlayer(player){
     const p=player && typeof player==="object" ? player : {};
     const side=normalizeLineupSide(p.side,p);
-    return { id:p.id || Date.now()+Math.random(), number:p.number || "", name:p.name || p.player || "", side, team:side==="home"?getTeamName("home"):getTeamName("away"), role:p.role || "Jolly", status:p.status==="Panchina"?"Panchina":"Titolare", createdAt:p.createdAt || new Date().toISOString() };
+    return { id:p.id || Date.now()+Math.random(), number:p.number || "", name:p.name || p.player || "", side, team:side==="home"?getTeamName("home"):getTeamName("away"), role:p.role || "Jolly", status:p.status==="Panchina"?"Panchina":"Titolare", slot:String(p.slot || ""), createdAt:p.createdAt || new Date().toISOString() };
 }
 function getLineup(){ ensureCoachStateShape(); coachState.lineup=coachState.lineup.filter(p=>p && typeof p==="object").map(normalizeLineupPlayer); return coachState.lineup; }
 function getLineupBySide(side){ const normalizedSide=side==="away"?"away":"home"; return getLineup().filter(p=>normalizeLineupSide(p.side,p)===normalizedSide); }
 function getLineupPlayerById(playerId){ return getLineup().find(p=>String(p.id)===String(playerId)) || null; }
 function formatLineupPlayer(p){ if(!p)return ""; const number=p.number?`#${p.number} `:""; return `${number}${p.name}`; }
 window.activePitchSide=window.activePitchSide || "home";
-function setPitchSide(side){ window.activePitchSide=side==="away"?"away":"home"; if(typeof renderLineupPitch==="function") renderLineupPitch(); }
+function setPitchSide(side){ window.activePitchSide=side==="away"?"away":"home"; if(typeof syncLineupFormationControl==="function") syncLineupFormationControl(); if(typeof renderLineupPitch==="function") renderLineupPitch(); }

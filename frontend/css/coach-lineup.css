@@ -1,0 +1,6 @@
+.lineup-formation-toolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,240px);gap:12px;align-items:end;margin-bottom:12px;padding:12px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.04)}
+.lineup-formation-team{display:grid;gap:3px}.lineup-formation-team strong{font-size:14px}.lineup-formation-team span{color:#9fb2d8;font-size:11px}
+.pitch-player{transform:translate(-50%,-50%)}
+.pitch-tab{min-height:44px}
+@media(max-width:680px){.lineup-formation-toolbar{grid-template-columns:1fr}.lineup-formation-toolbar select{min-height:48px}.pitch-tabs{display:grid;grid-template-columns:1fr 1fr}.pitch-board{width:100%;min-height:520px;aspect-ratio:2/3}.pitch-player{width:72px;min-height:56px}}
+@media(max-width:390px){.pitch-board{min-height:470px}.pitch-player{width:66px;padding:6px 4px}.pitch-role{max-width:58px;overflow:hidden;text-overflow:ellipsis}}

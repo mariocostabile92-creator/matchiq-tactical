@@ -14,6 +14,7 @@
 <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
 <link rel="stylesheet" href="/css/coach.css?v=10525">
+<link rel="stylesheet" href="/css/coach-lineup.css?v=10525">
 
 <style>
 .coach-onboarding{
@@ -1318,6 +1319,17 @@
                         <button id="pitchTabAway" class="pitch-tab" type="button" onclick="setPitchSide('away')">Campo trasferta</button>
                     </div>
 
+                    <div class="lineup-formation-toolbar">
+                        <div class="lineup-formation-team">
+                            <span>MODULO SUL CAMPO</span>
+                            <strong id="lineupFormationTeam">Squadra di casa</strong>
+                        </div>
+                        <div class="field">
+                            <label for="lineupFormationSelect">Modulo</label>
+                            <select id="lineupFormationSelect" onchange="setLineupFormation(this.value)" aria-label="Modulo della squadra selezionata"></select>
+                        </div>
+                    </div>
+
                     <div class="pitch-board" id="lineupPitch">
                         <div class="pitch-half-line"></div>
                         <div class="pitch-box-top"></div>
@@ -1513,6 +1525,7 @@
 
 <script src="/js/safe-render.js?v=10525"></script>
 <script src="/js/coach-state.js?v=10525"></script>
+<script src="/js/coach-lineup-layouts.js?v=10525"></script>
 <script src="/js/coach-voice-state.js?v=10525"></script>
 <script src="/js/coach-storage.js?v=10525"></script>
 <script src="/js/coach-actions.js?v=10525"></script>

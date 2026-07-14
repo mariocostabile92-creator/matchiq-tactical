@@ -709,6 +709,7 @@ function addLineupPlayer(){
     });
     coachState.lineup.push(player);
     window.activePitchSide = side;
+    if(player.status !== "Panchina" && typeof ensureLineupSlots === "function") ensureLineupSlots(side);
     saveState();
     clearLineupForm();
     renderAll();

@@ -918,6 +918,7 @@ function renderRatingLineupHint(){
 }
 
 function renderLineup(){
+    if(typeof syncLineupFormationControl === "function") syncLineupFormationControl();
     renderLineupList("home");
     renderLineupList("away");
     renderEventPlayerSelect();
@@ -927,40 +928,11 @@ function renderLineup(){
 
 /* Coach Lineup Pitch V1.7.7 */
 function getPitchPosition(player, index, total){
-    const role = String(player.role || "Jolly").toLowerCase();
-    const rowMap = {
-        "portiere": 88,
-        "difensore": 70,
-        "centrocampista": 52,
-        "esterno": 38,
-        "attaccante": 20,
-        "jolly": 50
-    };
-
-    let y = rowMap[role] || 50;
-
-    const sameRole = getLineupBySide(player.side)
-        .filter(p => p.status === "Titolare" && String(p.role || "Jolly").toLowerCase() === role);
-
-    const roleIndex = sameRole.findIndex(p => String(p.id) === String(player.id));
-    const roleTotal = Math.max(1, sameRole.length);
-
-    let x = 50;
-    if(roleTotal === 1) x = 50;
-    else{
-        const spread = Math.min(68, 18 + roleTotal * 13);
-        x = 50 - (spread / 2) + (spread / (roleTotal - 1)) * roleIndex;
-    }
-
-    if(role === "esterno" && roleTotal === 1){
-        x = 28;
-    }
-
     const side = normalizeLineupSide(player.side, player);
-    return {
-        x,
-        y: side === "away" ? 100 - y : y
-    };
+    const formation = typeof getLineupFormation === "function" ? getLineupFormation(side) : "4-3-3";
+    const layout = window.MatchIQLineupLayouts?.slots(formation) || [];
+    const position = layout.find(item => item.id === player.slot) || layout[index] || {x:50,y:50};
+    return { x:position.x, y:position.y };
 }
 
 function renderLineupPitch(){
@@ -969,12 +941,13 @@ function renderLineupPitch(){
     const homeTab = document.getElementById("pitchTabHome");
     const awayTab = document.getElementById("pitchTabAway");
 
-    if(homeTab) homeTab.classList.add("active");
-    if(awayTab) awayTab.classList.add("active");
+    const activeSide = window.activePitchSide === "away" ? "away" : "home";
+    if(homeTab) homeTab.classList.toggle("active", activeSide === "home");
+    if(awayTab) awayTab.classList.toggle("active", activeSide === "away");
 
     if(!pitch) return;
 
-    const players = typeof getLineup === "function" ? getLineup() : [];
+    const players = typeof getLineupBySide === "function" ? getLineupBySide(activeSide) : [];
     const starters = players.filter(p => p.status !== "Panchina");
     const benchPlayers = players.filter(p => p.status === "Panchina");
 
@@ -991,11 +964,11 @@ function renderLineupPitch(){
     `;
 
     if(!starters.length){
-        pitch.innerHTML = base + `<div class="pitch-empty-state">Aggiungi titolari casa e trasferta per vedere la formazione sul campo.</div>`;
+        pitch.innerHTML = base + `<div class="pitch-empty-state">Aggiungi i titolari della squadra ${activeSide === "away" ? "ospite" : "di casa"} per vedere la formazione sul campo.</div>`;
     }else{
         pitch.innerHTML = base + starters.map((p, index) => {
             const pos = getPitchPosition(p, index, starters.length);
-            const side = normalizeLineupSide(p.side, p);
+            const side = activeSide;
             return `
                 <div class="pitch-player ${esc(side)}" style="left:${pos.x}%;top:${pos.y}%;">
                     <div class="pitch-shirt">${esc(p.number || "-")}</div>
@@ -1008,16 +981,8 @@ function renderLineupPitch(){
 
     if(bench){
         bench.innerHTML = benchPlayers.length
-            ? benchPlayers.map(p => `<span class="bench-chip">${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</span>`).join("")
-            : `<span class="bench-chip">Nessun panchinaro</span>`;
-
-        if(benchPlayers.length){
-            bench.innerHTML = benchPlayers.map(p => {
-                const side = normalizeLineupSide(p.side, p);
-                const team = side === "home" ? "Casa" : "Trasferta";
-                return `<span class="bench-chip ${esc(side)}">${esc(team)} · ${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</span>`;
-            }).join("");
-        }
+            ? benchPlayers.map(p => `<span class="bench-chip ${esc(activeSide)}">${activeSide === "away" ? "Ospite" : "Casa"} · ${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</span>`).join("")
+            : `<span class="bench-chip">Nessun panchinaro ${activeSide === "away" ? "ospite" : "di casa"}</span>`;
     }
 }
 
