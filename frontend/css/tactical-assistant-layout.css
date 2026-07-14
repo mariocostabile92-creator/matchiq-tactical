@@ -1,0 +1,59 @@
+/* Keep the assistant, disclaimers, and legal footer in one document flow. */
+body {
+  min-height: 100dvh;
+}
+
+.assistant-shell {
+  height: auto;
+  min-height: calc(100dvh - 68px);
+  align-items: stretch;
+}
+
+.conversation-panel {
+  min-height: calc(100dvh - 68px);
+  grid-template-rows: auto auto auto auto auto;
+}
+
+.message-list {
+  min-height: 260px;
+  overflow: visible;
+}
+
+.matchiq-disclaimer,
+.matchiq-footer {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 901px) {
+  .assistant-shell > aside {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 900px) {
+  .assistant-shell {
+    min-height: calc(100dvh - 68px);
+  }
+
+  .assistant-shell > aside {
+    overflow: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .assistant-shell,
+  .conversation-panel {
+    min-height: calc(100dvh - 62px);
+  }
+
+  .message-list {
+    min-height: 180px;
+  }
+}
+
+@media (display-mode: standalone) {
+  .matchiq-footer {
+    margin-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+}

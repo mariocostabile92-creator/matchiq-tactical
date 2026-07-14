@@ -83,9 +83,9 @@ class HardeningThreeTests(unittest.TestCase):
             if path.suffix.lower() in {".html", ".js", ".json"}:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10518"})
+        self.assertEqual(query_versions, {"10519"})
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v118"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v119"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -151,6 +151,17 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertNotIn("Segui questi 5 step", coach)
         self.assertNotIn("coach-guide-card", coach)
         self.assertIn('id="coachPlanCard"', coach)
+
+    def test_tactical_assistant_footer_follows_conversation_content(self):
+        page = (FRONTEND / "tactical-assistant.html").read_text(encoding="utf-8")
+        layout = (FRONTEND / "css" / "tactical-assistant-layout.css").read_text(encoding="utf-8")
+        worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
+
+        self.assertIn("tactical-assistant-layout.css", page)
+        self.assertIn("height: auto", layout)
+        self.assertIn("overflow: visible", layout)
+        self.assertIn("display-mode: standalone", layout)
+        self.assertIn("/css/tactical-assistant-layout.css", worker)
 
     def test_existing_pdf_download_contracts_remain_real_downloads(self):
         match_router = (ROOT / "app" / "routers" / "match.py").read_text(encoding="utf-8")
