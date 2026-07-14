@@ -79,13 +79,17 @@ class HardeningThreeTests(unittest.TestCase):
 
     def test_release_and_cache_version_are_unique(self):
         sources = []
+        independent_products = {"live.html", "match.html", "scout.html"}
         for path in FRONTEND.rglob("*"):
-            if path.suffix.lower() in {".html", ".js", ".json"}:
+            if path.suffix.lower() in {".html", ".js", ".json"} and path.name not in independent_products:
                 sources.append(path.read_text(encoding="utf-8"))
         query_versions = set(re.findall(r"\?v=(\d+)", "\n".join(sources)))
-        self.assertEqual(query_versions, {"10524"})
+        self.assertEqual(query_versions, {"10525"})
+        for name in independent_products:
+            source = (FRONTEND / name).read_text(encoding="utf-8")
+            self.assertIn("?v=10524", source)
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v124"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v125"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -232,13 +236,13 @@ class HardeningThreeTests(unittest.TestCase):
         api = (FRONTEND / "js" / "home-api.js").read_text(encoding="utf-8")
         actions = (FRONTEND / "js" / "home-actions.js").read_text(encoding="utf-8")
 
-        self.assertIn("MATCHIQ WORKSPACE", home)
+        self.assertIn("MATCHIQ COACH AI", home)
         self.assertIn(
             "Il tuo assistente AI per preparare, vivere e analizzare ogni partita.",
             home,
         )
         self.assertIn(
-            "Organizza il lavoro dello staff, accedi ai moduli e continua da dove avevi lasciato.",
+            "Un unico workspace per organizzare il lavoro dello staff, raccogliere informazioni sul campo e trasformarle in analisi utili per la settimana successiva.",
             home,
         )
         self.assertNotIn("Partite live disponibili", home)
@@ -252,14 +256,17 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertNotIn("loadLiveMatches", api)
         self.assertNotIn("data-live-", home)
         self.assertNotIn("data-live-", actions)
-        self.assertGreaterEqual(home.count('href="/live.html"'), 3)
-        for route in ('href="/coach.html"', 'href="/video.html"', 'href="/live.html"', 'href="/scout.html"'):
+        self.assertNotIn('href="/live.html"', home)
+        self.assertNotIn('href="/scout.html"', home)
+        for route in ('href="/coach.html"', 'href="/video.html"', 'href="/video.html#hubArchivePane"'):
             self.assertIn(route, home)
         live_page = (FRONTEND / "live.html").read_text(encoding="utf-8")
         live_script = (FRONTEND / "js" / "live-page.js").read_text(encoding="utf-8")
+        scout_page = (FRONTEND / "scout.html").read_text(encoding="utf-8")
         self.assertIn('id="liveMatchesList"', live_page)
         self.assertIn("/api/live-matches", live_script)
         self.assertIn("/match.html?id=", live_script)
+        self.assertIn("MatchIQ Scout", scout_page)
 
     def test_existing_pdf_download_contracts_remain_real_downloads(self):
         match_router = (ROOT / "app" / "routers" / "match.py").read_text(encoding="utf-8")
