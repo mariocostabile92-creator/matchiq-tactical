@@ -142,3 +142,7 @@ class EvidenceCreateRequest(BaseModel):
 class VideoReportRequest(BaseModel):
     title: str = ""
     include_pending_appendix: bool = True
+
+
+class HalftimeAnalysisRequest(BaseModel):
+    max_evidences: int = Field(default=5, ge=3, le=5)

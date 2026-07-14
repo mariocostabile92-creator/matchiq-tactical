@@ -1393,8 +1393,8 @@ video{
     .panel:first-child{min-height:calc(100vh - 150px)}
 }
 </style>
-<link rel="stylesheet" href="/css/global-nav.css?v=10527">
-<link rel="stylesheet" href="/css/video-intelligence.css?v=10527">
+<link rel="stylesheet" href="/css/global-nav.css?v=10528">
+<link rel="stylesheet" href="/css/video-intelligence.css?v=10528">
 </head>
 <body data-miq-module="video">
 <main class="wrap">
@@ -1523,6 +1523,7 @@ video{
                 <div class="vi-setup-actions">
                     <button class="btn dark small" id="viPrepareBtn" type="button">Prepara progetto</button>
                     <button class="btn small" id="viRunBtn" type="button">Avvia Video Intelligence</button>
+                    <button class="btn dark small" id="viHalftimeBtn" type="button" hidden>Analisi intervallo beta</button>
                     <button class="btn dark small" id="viRefreshBtn" type="button">Aggiorna evidenze</button>
                     <div class="vi-state" id="viProjectState" aria-live="polite">
                         <b>Non avviato</b>
@@ -1938,6 +1939,18 @@ video{
                     </div>
                 </div>
                 <div class="vi-stats" id="viEvidenceStats"></div>
+                <section class="vi-halftime" id="viHalftimePanel" aria-labelledby="viHalftimeTitle" hidden>
+                    <div class="vi-halftime-head">
+                        <div>
+                            <span class="vi-kicker">Sperimentale</span>
+                            <h4 id="viHalftimeTitle">Analisi intervallo</h4>
+                            <p id="viHalftimeSummary">I momenti prioritari del primo tempo compariranno qui.</p>
+                        </div>
+                        <span class="vi-chip pending">Verifica staff richiesta</span>
+                    </div>
+                    <div class="vi-halftime-list" id="viHalftimeList"></div>
+                    <div class="vi-halftime-verify" id="viHalftimeVerify"></div>
+                </section>
                 <div class="vi-toolbar">
                     <div class="vi-field">
                         <label for="viStatusFilter">Stato revisione</label>
@@ -2120,7 +2133,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10527";
+const APP_VERSION = "10528";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -5285,17 +5298,17 @@ if("serviceWorker" in navigator){
     });
 }
 </script>
-<script src="/js/video-intelligence.js?v=10527"></script>
+<script src="/js/video-intelligence.js?v=10528"></script>
 <script src="/js/app-meta.js"></script>
-<link rel="stylesheet" href="/css/knowledge-entry.css?v=10527">
-<link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10527">
-<link rel="stylesheet" href="/css/tactical-identity-entry.css?v=10527">
-<script src="/js/knowledge-entry.js?v=10527"></script>
-<script src="/js/tactical-assistant-entry.js?v=10527"></script>
-<script src="/js/tactical-identity-entry.js?v=10527"></script>
-<script src="/js/global-nav-config.js?v=10527"></script>
-<script src="/js/global-nav-state.js?v=10527"></script>
-<script src="/js/global-nav-render.js?v=10527"></script>
-<script src="/js/global-nav-menu.js?v=10527"></script>
+<link rel="stylesheet" href="/css/knowledge-entry.css?v=10528">
+<link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10528">
+<link rel="stylesheet" href="/css/tactical-identity-entry.css?v=10528">
+<script src="/js/knowledge-entry.js?v=10528"></script>
+<script src="/js/tactical-assistant-entry.js?v=10528"></script>
+<script src="/js/tactical-identity-entry.js?v=10528"></script>
+<script src="/js/global-nav-config.js?v=10528"></script>
+<script src="/js/global-nav-state.js?v=10528"></script>
+<script src="/js/global-nav-render.js?v=10528"></script>
+<script src="/js/global-nav-menu.js?v=10528"></script>
 </body>
 </html>

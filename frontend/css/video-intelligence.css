@@ -110,6 +110,45 @@
     background:linear-gradient(90deg,var(--green),var(--blue));
 }
 .vi-workspace[hidden]{display:none}
+.vi-halftime[hidden]{display:none}
+.vi-halftime{
+    margin:0 0 12px;
+    padding:13px;
+    border:1px solid rgba(49,178,255,.34);
+    border-radius:14px;
+    background:rgba(12,42,68,.72);
+}
+.vi-halftime-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+}
+.vi-halftime-head h4{margin:4px 0 3px;font-size:16px}
+.vi-halftime-head p{margin:0;color:var(--muted);font-size:11px}
+.vi-halftime-list{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+}
+.vi-halftime-item{
+    padding:11px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:11px;
+    background:rgba(3,17,28,.72);
+}
+.vi-halftime-item h5{margin:7px 0 4px;font-size:13px}
+.vi-halftime-item p{margin:0 0 9px;color:var(--muted);font-size:10px;line-height:1.5}
+.vi-halftime-verify{
+    margin-top:9px;
+    padding:9px 10px;
+    border-radius:10px;
+    background:rgba(255,226,138,.07);
+    color:#dfe7ff;
+    font-size:10px;
+}
+.vi-halftime-verify ul{margin:6px 0 0;padding-left:18px}
 .vi-stats{
     display:grid;
     grid-template-columns:repeat(4,minmax(0,1fr));
@@ -243,6 +282,8 @@
     .vi-evidence-copy .full{grid-column:auto}
     .vi-toolbar-actions{grid-column:auto}
     .vi-evidence-top{display:grid}
+    .vi-halftime-head{display:grid}
+    .vi-halftime-list{grid-template-columns:1fr}
     .vi-clip-editor{grid-template-columns:1fr 1fr}
     .vi-clip-editor button{grid-column:1/-1}
     .vi-frame-editor{grid-template-columns:1fr}

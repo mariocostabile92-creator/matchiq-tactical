@@ -8,6 +8,8 @@
     project: null,
     evidences: [],
     matches: [],
+    halftimeAvailable: false,
+    halftimeAnalysis: null,
     busy: false,
     clipStopHandler: null
   };
@@ -21,6 +23,7 @@
     perspective: document.getElementById("viPerspective"),
     prepare: document.getElementById("viPrepareBtn"),
     run: document.getElementById("viRunBtn"),
+    halftime: document.getElementById("viHalftimeBtn"),
     refresh: document.getElementById("viRefreshBtn"),
     projectState: document.getElementById("viProjectState"),
     stats: document.getElementById("viEvidenceStats"),
@@ -29,7 +32,11 @@
     pending: document.getElementById("viPendingBtn"),
     confirmVisible: document.getElementById("viConfirmVisibleBtn"),
     report: document.getElementById("viReportBtn"),
-    list: document.getElementById("viEvidenceList")
+    list: document.getElementById("viEvidenceList"),
+    halftimePanel: document.getElementById("viHalftimePanel"),
+    halftimeSummary: document.getElementById("viHalftimeSummary"),
+    halftimeList: document.getElementById("viHalftimeList"),
+    halftimeVerify: document.getElementById("viHalftimeVerify")
   };
 
   function html(value){
@@ -107,9 +114,10 @@
 
   function setBusy(busy){
     state.busy = busy;
-    [elements.prepare,elements.run,elements.refresh,elements.confirmVisible,elements.report].forEach(button => {
+    [elements.prepare,elements.run,elements.halftime,elements.refresh,elements.confirmVisible,elements.report].forEach(button => {
       if(button) button.disabled = busy;
     });
+    updateHalftimeAvailability();
   }
 
   function renderProjectState(){
@@ -149,6 +157,24 @@
       state.matches = [];
       elements.coachMatch.innerHTML = `<option value="">Nessuna partita disponibile</option>`;
     }
+  }
+
+  async function loadHalftimeConfig(){
+    try{
+      const payload = await request("/halftime/config");
+      state.halftimeAvailable = payload.available === true;
+    }catch(err){
+      state.halftimeAvailable = false;
+    }
+    updateHalftimeAvailability();
+  }
+
+  function updateHalftimeAvailability(){
+    if(!elements.halftime) return;
+    const firstHalf = elements.period.value === "first_half";
+    elements.halftime.hidden = !state.halftimeAvailable;
+    elements.halftime.disabled = state.busy || !firstHalf;
+    elements.halftime.title = firstHalf ? "" : "Seleziona Primo tempo per usare il beta intervallo";
   }
 
   function setMode(mode){
@@ -193,6 +219,19 @@
       throw new Error("Seleziona la partita Coach da collegare all'analisi");
     }
     if(state.project && Number(state.project.video_asset_id) === assetId() && !force) return state.project;
+    if(assetId() && !force){
+      try{
+        const existing = await request(`/projects/${assetId()}`);
+        state.project = existing.project;
+        state.evidences = Array.isArray(state.project.evidences) ? state.project.evidences : [];
+        renderProjectState();
+        renderWorkspace();
+        workspace.hidden = false;
+        return state.project;
+      }catch(err){
+        if(!/non trovato/i.test(err.message)) throw err;
+      }
+    }
     const payload = await request("/projects", {method:"POST", body:JSON.stringify(projectPayload())});
     state.project = payload.project;
     if(typeof currentVideoAssetId !== "undefined") currentVideoAssetId = Number(state.project.video_asset_id) || currentVideoAssetId;
@@ -224,8 +263,10 @@
     const response = await request(`/projects/${assetId()}/pipeline`, {method:"POST", body:JSON.stringify(payload)});
     state.project = response.project;
     state.evidences = Array.isArray(state.project.evidences) ? state.project.evidences : [];
+    state.halftimeAnalysis = null;
     renderProjectState();
     renderWorkspace();
+    renderHalftimeAnalysis();
     workspace.hidden = false;
     workspace.scrollIntoView({behavior:"smooth",block:"start"});
   }
@@ -243,13 +284,18 @@
       setMode(state.mode);
       if(state.project.match_id) elements.coachMatch.value = String(state.project.match_id);
       state.evidences = Array.isArray(state.project.evidences) ? state.project.evidences : [];
+      const halftimeRuns = Array.isArray(state.project.halftime_runs) ? state.project.halftime_runs : [];
+      state.halftimeAnalysis = halftimeRuns.length ? halftimeRuns[halftimeRuns.length - 1] : null;
       renderProjectState();
       renderWorkspace();
+      renderHalftimeAnalysis();
       workspace.hidden = false;
     }catch(err){
       state.project = null;
       state.evidences = [];
+      state.halftimeAnalysis = null;
       renderProjectState();
+      renderHalftimeAnalysis();
       workspace.hidden = true;
       if(!options.quiet && !/non trovato/i.test(err.message)) notify(err.message,"warn");
     }
@@ -352,6 +398,44 @@
         </article>
       `;
     }).join("");
+  }
+
+  function renderHalftimeAnalysis(){
+    const analysis = state.halftimeAnalysis;
+    if(!analysis){
+      elements.halftimePanel.hidden = true;
+      return;
+    }
+    const facts = Array.isArray(analysis.facts) ? analysis.facts : [];
+    elements.halftimePanel.hidden = false;
+    elements.halftimeSummary.textContent = analysis.summary || "Momenti prioritari del primo tempo.";
+    elements.halftimeList.innerHTML = facts.map(item => `
+      <article class="vi-halftime-item">
+        <div class="vi-chip-row">
+          <span class="vi-chip">${html(item.timecode || "00:00")}</span>
+          <span class="vi-chip ${item.requires_staff_verification ? "pending" : ""}">${item.requires_staff_verification ? "Da verificare" : "Verificata"}</span>
+        </div>
+        <h5>${html(item.title || "Evidenza video")}</h5>
+        <p>${html(item.observation || "")}</p>
+        <button class="btn dark small" type="button" data-halftime-evidence="${html(item.evidence_id)}">Apri momento</button>
+      </article>
+    `).join("") || `<div class="vi-empty">Nessuna evidenza disponibile per l'intervallo.</div>`;
+    const verify = Array.isArray(analysis.points_to_verify) ? analysis.points_to_verify : [];
+    elements.halftimeVerify.innerHTML = verify.length
+      ? `<strong>Punti da verificare</strong><ul>${verify.map(item => `<li>${html(item)}</li>`).join("")}</ul>`
+      : `<strong>Tutte le evidenze selezionate sono già state verificate dallo staff.</strong>`;
+  }
+
+  async function generateHalftimeAnalysis(){
+    if(elements.period.value !== "first_half") throw new Error("Seleziona Primo tempo prima di avviare l'analisi intervallo");
+    await prepareProject();
+    const payload = await request(`/projects/${assetId()}/halftime`, {
+      method:"POST",
+      body:JSON.stringify({max_evidences:5})
+    });
+    state.halftimeAnalysis = payload.analysis || null;
+    renderHalftimeAnalysis();
+    elements.halftimePanel.scrollIntoView({behavior:"smooth",block:"start"});
   }
 
   function evidenceCard(id){
@@ -472,11 +556,13 @@
 
   elements.modeButtons.forEach(button => button.addEventListener("click",() => setMode(button.dataset.viMode)));
   elements.prepare.addEventListener("click",() => guarded(async() => {
-    await prepareProject(true);
+    await prepareProject(false);
     await loadProject();
   },"Progetto Video Intelligence pronto."));
   elements.run.addEventListener("click",() => guarded(runPipeline,"Analisi completata. Revisiona le evidenze proposte."));
+  elements.halftime?.addEventListener("click",() => guarded(generateHalftimeAnalysis,"Analisi intervallo pronta per la verifica dello staff."));
   elements.refresh.addEventListener("click",() => guarded(() => loadProject(),"Evidenze aggiornate."));
+  elements.period.addEventListener("change",updateHalftimeAvailability);
   elements.statusFilter.addEventListener("change",renderWorkspace);
   elements.phaseFilter.addEventListener("change",renderWorkspace);
   elements.pending.addEventListener("click",() => {elements.statusFilter.value="pending";renderWorkspace();});
@@ -498,6 +584,13 @@
     if(action === "reject") guarded(() => reviewEvidence(id,"rejected"),"Evidenza esclusa dal report.");
     if(action === "save-clip") guarded(() => saveClip(id),"Intervallo clip aggiornato.");
     if(action === "save-frame") guarded(() => saveFrame(id),"Frame rappresentativo aggiornato.");
+  });
+
+  elements.halftimeList?.addEventListener("click",event => {
+    const button = event.target.closest("[data-halftime-evidence]");
+    if(!button) return;
+    const item = state.evidences.find(entry => entry.evidence_id === button.dataset.halftimeEvidence);
+    if(item) guarded(() => openMoment(item,false));
   });
 
   const legacyExtractFrames = window.extractFrames;
@@ -523,11 +616,14 @@
   document.getElementById("videoInput")?.addEventListener("change",() => {
     state.project = null;
     state.evidences = [];
+    state.halftimeAnalysis = null;
     workspace.hidden = true;
+    renderHalftimeAnalysis();
     renderProjectState();
   });
 
   setMode("analysis");
   renderProjectState();
+  loadHalftimeConfig();
   window.MatchIQVideoIntelligence = {loadProject,runPipeline,prepareProject};
 })();

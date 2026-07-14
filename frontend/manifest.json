@@ -2,7 +2,7 @@
   "name": "MatchIQ Coach AI",
   "short_name": "Coach AI",
   "description": "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
-  "start_url": "/index.html?v=10527",
+  "start_url": "/index.html?v=10528",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

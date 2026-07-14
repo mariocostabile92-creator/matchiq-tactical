@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.models.video_intelligence import EvidenceClipRequest, EvidenceCreateRequest, EvidenceFrameRequest, EvidenceLinkRequest, EvidenceReviewRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate, VideoReportRequest
+from app.models.video_intelligence import EvidenceClipRequest, EvidenceCreateRequest, EvidenceFrameRequest, EvidenceLinkRequest, EvidenceReviewRequest, HalftimeAnalysisRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate, VideoReportRequest
 from app.services.video_clip_service import update_evidence_clip
 from app.services.video_coach_link_service import clear_evidence_link, set_evidence_link
 from app.services.video_evidence_service import add_evidence, list_evidences, review_evidence
 from app.services.video_frame_ranking_service import replace_evidence_frame
+from app.services.video_halftime_service import generate_halftime_analysis, halftime_access
 from app.services.video_intelligence_engine import (
     create_project,
     get_project,
@@ -20,6 +21,11 @@ from usage_guard import require_user
 
 
 router = APIRouter(prefix="/api/video/intelligence", tags=["video-intelligence"])
+
+
+@router.get("/halftime/config")
+def get_halftime_analysis_config(user=Depends(require_user)):
+    return {"ok": True, **halftime_access(user)}
 
 
 @router.post("/projects")
@@ -187,3 +193,20 @@ def generate_video_intelligence_report(asset_id: int, data: VideoReportRequest, 
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return {"ok": True, "report": report}
+
+
+@router.post("/projects/{asset_id}/halftime")
+def generate_video_halftime_analysis(
+    asset_id: int,
+    data: HalftimeAnalysisRequest,
+    user=Depends(require_user),
+):
+    try:
+        analysis = generate_halftime_analysis(user, asset_id, data)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"ok": True, "analysis": analysis}
