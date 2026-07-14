@@ -47,7 +47,7 @@
       else{ auth.textContent = "Accedi"; auth.href = "/login.html"; }
     }
     const badges = $("heroBadges"); badges.replaceChildren();
-    const planBadge = text("span", owner ? "Owner Pro" : `${H.state.account?.label || plan} plan`, `badge ${owner ? "gold" : ""}`);
+    const planBadge = text("span", owner ? "Owner" : "Private Beta", `badge ${owner ? "gold" : ""}`);
     badges.append(planBadge);
     const mode = window.matchMedia?.("(display-mode: standalone)")?.matches ? "PWA installata" : "Web app";
     badges.append(text("span", mode, "badge"));
@@ -57,10 +57,12 @@
   H.renderModules = function(){
     const stats = H.state.view?.stats || {};
     const modules = [
-      {id:"coach", icon:"▣", title:"Coach", description:"Prepara la partita, gestisci il Match Day e trasforma eventi, note e pagelle in indicazioni per il post-gara.", url:"/coach.html", action:"Apri Coach", meta:`${H.metric("coach_matches",stats.coach_matches)} partite locali`},
-      {id:"video", icon:"▶", title:"Video AI", description:"Carica o riapri una Sessione Video, analizza partite e allenamenti, trova frame rilevanti e organizza tutto nel Video Hub.", url:"/video.html", action:"Apri Video AI", secondaryUrl:H.isAuthenticated()?"/video.html#hubArchivePane":"/login.html?next=/video.html%23hubArchivePane", secondaryAction:"Vai all'archivio", meta:`${H.metric("video_sessions",stats.video_sessions)} sessioni · ${H.metric("video_reports",stats.video_reports)} report`},
-      {id:"live", icon:"●", title:"Partite Live", description:"Consulta le partite disponibili, apri quelle in corso e accedi all'analisi live del modulo Match.", url:"/live.html", action:"Apri Partite Live", meta:`${H.metric("live_matches",stats.live_matches)} disponibili`},
-      {id:"scout", icon:"⌕", title:"Scout", description:"Analizza profili, salva giocatori e individua opportunità utili per la squadra.", url:"/scout.html", action:"Apri Scout", meta:`${H.metric("players_observed",stats.players_observed)} profili salvati`}
+      {id:"coach", icon:"▣", title:"Coach Workspace", description:"Prepara partita, piano gara, formazione e obiettivi dello staff.", url:"/coach.html", action:"Apri Coach", meta:`${H.metric("coach_matches",stats.coach_matches)} partite dello staff`},
+      {id:"match-day", icon:"◉", title:"Match Day", description:"Registra eventi e note dalla panchina con Voice Coach e Match Day Assistant.", url:"/coach.html", action:"Vivi il match", meta:"PWA pronta per il campo"},
+      {id:"video", icon:"▶", title:"Video AI", description:"Analizza partite e allenamenti, individua frame rilevanti e prepara il report.", url:"/video.html", action:"Apri Video AI", meta:`${H.metric("video_reports",stats.video_reports)} report disponibili`},
+      {id:"hub", icon:"▤", title:"Video Hub", description:"Riapri sessioni, analisi e materiali video organizzati per lo staff.", url:H.isAuthenticated()?"/video.html#hubArchivePane":"/login.html?next=/video.html%23hubArchivePane", action:"Apri archivio", meta:`${H.metric("video_sessions",stats.video_sessions)} sessioni`},
+      {id:"training", icon:"✓", title:"Training Planner", description:"Trasforma priorità ed evidenze in un piano di lavoro settimanale.", url:"/training-planner.html", action:"Apri Planner", meta:"Priorità e prossima seduta"},
+      {id:"reports", icon:"▥", title:"Storico e report", description:"Recupera partite dello staff, PDF, report ed esportazioni già prodotti.", url:"/coach.html", action:"Apri storico", meta:`${H.metric("saved_matches",stats.saved_matches)} partite archiviate`}
     ];
     const grid = $("moduleGrid"); grid.replaceChildren();
     modules.forEach(item => {
@@ -81,9 +83,9 @@
       ["Partite Coach", H.metric("coach_matches",stats.coach_matches), "salvate su questo dispositivo"],
       ["Sessioni Video", H.metric("video_sessions",stats.video_sessions), "nel tuo Video Hub"],
       ["Report Video", H.metric("video_reports",stats.video_reports), "nel tuo archivio"],
-      ["Partite Live", H.metric("live_matches",stats.live_matches), "disponibili nel modulo Match"],
-      ["Giocatori", H.metric("players_observed",stats.players_observed), "osservati o salvati"],
-      ["Piano", H.isOwner()?"Owner":(H.state.account?.label || H.plan()), "accesso attuale"]
+      ["Frame analizzati", H.metric("frames_saved",stats.frames_saved), "nei report Video AI"],
+      ["Partite archiviate", H.metric("saved_matches",stats.saved_matches), "nello storico dello staff"],
+      ["Accesso", H.isOwner()?"Owner":"Beta", "Private Beta attiva"]
     ];
     const grid = $("statsGrid"); grid.replaceChildren();
     entries.forEach(([label,value,caption]) => {
@@ -123,7 +125,7 @@
   H.renderActivity = function(){
     const box=$("recentActivity"); box.replaceChildren();
     const items=H.state.view?.activities || [];
-    if(!items.length){ box.append(H.emptyState("Nessuna attività registrata.","Le attività reali compariranno qui quando utilizzi Coach, Video Hub o Scout.")); return; }
+    if(!items.length){ box.append(H.emptyState("Nessuna attività registrata.","Le attività reali compariranno qui quando utilizzi Coach o Video Hub.")); return; }
     items.slice(0,6).forEach(item => {
       const row=document.createElement("article"); row.className="timeline-item";
       const content=document.createElement("div"); content.append(text("strong",item.title || item.module),text("small",`${item.module} · ${item.status || "Aggiornato"}`));

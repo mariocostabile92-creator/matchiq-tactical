@@ -7,7 +7,7 @@
     account: {plan:"guest", label:"Guest", is_owner:false, limits:{}},
     user: null,
     remote: {stats:{}, stats_available:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:[]},
-    local: {coachHistory:[], coachCurrent:null, scoutWatchlist:[]},
+    local: {coachHistory:[], coachCurrent:null},
     localOwnershipMismatch: false,
     error: ""
   };
@@ -39,16 +39,14 @@
     H.state.localOwnershipMismatch = false;
     const scope = H.userScope();
     if(!scope || !H.hasAuthSession()){
-      H.state.local = {coachHistory:[], coachCurrent:null, scoutWatchlist:[]};
+      H.state.local = {coachHistory:[], coachCurrent:null};
       return;
     }
 
     const coachHistory = H.readJson("matchiq_coach_history_v14", []);
     const coachCurrent = H.readJson("matchiq_coach_v13", null);
-    const scoutWatchlist = H.readJson("matchiq_scout_watchlist_v803_hotfix3", []);
     const hasLocalData = (Array.isArray(coachHistory) && coachHistory.length)
-      || Boolean(coachCurrent?.match)
-      || (Array.isArray(scoutWatchlist) && scoutWatchlist.length);
+      || Boolean(coachCurrent?.match);
     let storedOwner = "";
     try{
       storedOwner = String(localStorage.getItem(LOCAL_OWNER_KEY) || "").toLowerCase();
@@ -59,9 +57,8 @@
 
     H.state.local = canReadLocal ? {
       coachHistory: Array.isArray(coachHistory) ? coachHistory : [],
-      coachCurrent: coachCurrent && typeof coachCurrent === "object" ? coachCurrent : null,
-      scoutWatchlist: Array.isArray(scoutWatchlist) ? scoutWatchlist : []
-    } : {coachHistory:[], coachCurrent:null, scoutWatchlist:[]};
+      coachCurrent: coachCurrent && typeof coachCurrent === "object" ? coachCurrent : null
+    } : {coachHistory:[], coachCurrent:null};
   };
 
   H.userName = function(){
@@ -137,7 +134,8 @@
       .slice(0,5)
       .map(item => H.coachItem(item));
 
-    const activities = H.dedupeItems([...(remote.activities || []), ...(current ? [current] : []), ...coachHistory])
+    const coachActivities = (remote.activities || []).filter(item => item?.kind !== "scout_report" && String(item?.module || "").toLowerCase() !== "scout");
+    const activities = H.dedupeItems([...coachActivities, ...(current ? [current] : []), ...coachHistory])
       .sort((a,b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
     const continueItems = H.dedupeItems([...(current ? [current] : []), ...(remote.continue_items || [])]).slice(0,3);
 
@@ -146,12 +144,6 @@
     if(H.isAuthenticated()){
       stats.coach_matches = local.coachHistory.length + (current ? 1 : 0);
       available.coach_matches = true;
-      if(local.scoutWatchlist.length){
-        stats.players_observed = available.players_observed
-          ? Math.max(Number(stats.players_observed || 0), local.scoutWatchlist.length)
-          : local.scoutWatchlist.length;
-        available.players_observed = true;
-      }
     }
     const priorities = [...(remote.ai_priorities || [])];
     if(current){
