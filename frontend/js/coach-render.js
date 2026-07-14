@@ -919,6 +919,8 @@ function renderRatingLineupHint(){
 
 function renderLineup(){
     if(typeof syncLineupFormationControl === "function") syncLineupFormationControl();
+    const pitchSide = window.activePitchSide === "away" ? "away" : "home";
+    if(typeof ensureLineupSlots === "function" && ensureLineupSlots(pitchSide) && typeof saveState === "function") saveState();
     renderLineupList("home");
     renderLineupList("away");
     renderEventPlayerSelect();
@@ -950,6 +952,8 @@ function renderLineupPitch(){
     const players = typeof getLineupBySide === "function" ? getLineupBySide(activeSide) : [];
     const starters = players.filter(p => p.status !== "Panchina");
     const benchPlayers = players.filter(p => p.status === "Panchina");
+    const formation = typeof getLineupFormation === "function" ? getLineupFormation(activeSide) : "4-3-3";
+    const slots = window.MatchIQLineupLayouts?.slots(formation) || [];
 
     const teamLabel = "";
     const fieldLabel = "";
@@ -963,26 +967,27 @@ function renderLineupPitch(){
         </div>
     `;
 
-    if(!starters.length){
-        pitch.innerHTML = base + `<div class="pitch-empty-state">Aggiungi i titolari della squadra ${activeSide === "away" ? "ospite" : "di casa"} per vedere la formazione sul campo.</div>`;
-    }else{
-        pitch.innerHTML = base + starters.map((p, index) => {
-            const pos = getPitchPosition(p, index, starters.length);
-            const side = activeSide;
-            return `
-                <div class="pitch-player ${esc(side)}" style="left:${pos.x}%;top:${pos.y}%;">
-                    <div class="pitch-shirt">${esc(p.number || "-")}</div>
-                    <div class="pitch-name">${esc(p.name)}</div>
-                    <div class="pitch-role">${esc(p.role || "Jolly")}</div>
-                </div>
-            `;
-        }).join("");
-    }
+    pitch.innerHTML = base + slots.map((slot, index) => {
+        const player = starters.find(item => item.slot === slot.id);
+        const position = player ? getPitchPosition(player, index, starters.length) : slot;
+        return `
+            <div class="pitch-slot" data-lineup-slot="${esc(slot.id)}" data-lineup-side="${esc(activeSide)}" style="left:${position.x}%;top:${position.y}%;" aria-label="Posizione ${esc(slot.role)}">
+                ${player ? `
+                    <button type="button" class="pitch-player ${esc(activeSide)}" data-lineup-player="${esc(player.id)}" aria-label="${esc(player.name)}, ${esc(player.role || "Jolly")}. Trascina per cambiare posizione.">
+                        <span class="pitch-shirt">${esc(player.number || "-")}</span>
+                        <span class="pitch-name">${esc(player.name)}</span>
+                        <span class="pitch-role">${esc(player.role || "Jolly")}</span>
+                    </button>
+                ` : `<span class="pitch-slot-target" aria-hidden="true">${esc(slot.role.slice(0,1))}</span>`}
+            </div>
+        `;
+    }).join("") + (!starters.length ? `<div class="pitch-empty-state">Aggiungi i titolari della squadra ${activeSide === "away" ? "ospite" : "di casa"} per vedere la formazione sul campo.</div>` : "");
 
     if(bench){
+        bench.setAttribute("data-lineup-bench", activeSide);
         bench.innerHTML = benchPlayers.length
-            ? benchPlayers.map(p => `<span class="bench-chip ${esc(activeSide)}">${activeSide === "away" ? "Ospite" : "Casa"} · ${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</span>`).join("")
-            : `<span class="bench-chip">Nessun panchinaro ${activeSide === "away" ? "ospite" : "di casa"}</span>`;
+            ? benchPlayers.map(p => `<button type="button" class="bench-chip ${esc(activeSide)}" data-lineup-player="${esc(p.id)}" aria-label="${esc(p.name)} in panchina. Trascina sul campo per schierarlo.">${activeSide === "away" ? "Ospite" : "Casa"} · ${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</button>`).join("")
+            : `<span class="bench-chip">Trascina qui un giocatore per spostarlo in panchina</span>`;
     }
 }
 

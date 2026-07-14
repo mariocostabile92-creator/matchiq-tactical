@@ -1,6 +1,15 @@
 .lineup-formation-toolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,240px);gap:12px;align-items:end;margin-bottom:12px;padding:12px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.04)}
 .lineup-formation-team{display:grid;gap:3px}.lineup-formation-team strong{font-size:14px}.lineup-formation-team span{color:#9fb2d8;font-size:11px}
-.pitch-player{transform:translate(-50%,-50%)}
+.pitch-slot{position:absolute;transform:translate(-50%,-50%);width:96px;min-height:66px;display:grid;place-items:center;z-index:2;border-radius:20px}
+.pitch-player{position:relative;inset:auto;transform:none;width:96px;min-height:66px;color:inherit;font:inherit;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.pitch-player:active,.bench-chip:active{cursor:grabbing}
+.pitch-slot-target{width:34px;height:34px;display:grid;place-items:center;border:1px dashed rgba(255,255,255,.18);border-radius:50%;color:rgba(255,255,255,.25);background:rgba(2,12,20,.2);opacity:.48;transition:.16s ease}
+.pitch-slot.is-drag-target .pitch-slot-target,.pitch-slot.is-drag-target .pitch-player{outline:3px solid #00f5a0;outline-offset:4px;box-shadow:0 0 0 8px rgba(0,245,160,.16)}
+.pitch-player.is-dragging,.bench-chip.is-dragging{opacity:.38;pointer-events:none}
+.bench-chip{font:inherit;cursor:grab;touch-action:none}
+.bench-list{min-height:48px;border:1px dashed transparent;border-radius:12px;padding:4px;transition:.16s ease}
+.bench-list.is-drag-target{border-color:#ffd978;background:rgba(255,217,120,.12)}
+body.is-lineup-dragging{cursor:grabbing}
 .pitch-tab{min-height:44px}
-@media(max-width:680px){.lineup-formation-toolbar{grid-template-columns:1fr}.lineup-formation-toolbar select{min-height:48px}.pitch-tabs{display:grid;grid-template-columns:1fr 1fr}.pitch-board{width:100%;min-height:520px;aspect-ratio:2/3}.pitch-player{width:72px;min-height:56px}}
-@media(max-width:390px){.pitch-board{min-height:470px}.pitch-player{width:66px;padding:6px 4px}.pitch-role{max-width:58px;overflow:hidden;text-overflow:ellipsis}}
+@media(max-width:680px){.lineup-formation-toolbar{grid-template-columns:1fr}.lineup-formation-toolbar select{min-height:48px}.pitch-tabs{display:grid;grid-template-columns:1fr 1fr}.pitch-board{width:100%;min-height:520px;aspect-ratio:2/3}.pitch-slot,.pitch-player{width:72px;min-height:56px}}
+@media(max-width:390px){.pitch-board{min-height:470px}.pitch-slot,.pitch-player{width:66px}.pitch-player{padding:6px 4px}.pitch-role{max-width:58px;overflow:hidden;text-overflow:ellipsis}}

@@ -62,13 +62,18 @@
   }
 
   function ensureSlots(side){
-    if(typeof coachState === "undefined" || !Array.isArray(coachState.lineup)) return;
+    if(typeof coachState === "undefined" || !Array.isArray(coachState.lineup)) return false;
     const normalizedSide = side === "away" ? "away" : "home";
     const starters = coachState.lineup.filter(player =>
       (player.side === "away" ? "away" : "home") === normalizedSide && player.status !== "Panchina"
     );
     const assignments = assign(starters, getFormation(normalizedSide));
-    starters.forEach(player => { player.slot = assignments.get(String(player.id)) || ""; });
+    let changed = false;
+    starters.forEach(player => {
+      const nextSlot = assignments.get(String(player.id)) || "";
+      if(player.slot !== nextSlot){ player.slot = nextSlot; changed = true; }
+    });
+    return changed;
   }
 
   function setFormation(formation){
