@@ -10,6 +10,12 @@
 .bench-list{min-height:48px;border:1px dashed transparent;border-radius:12px;padding:4px;transition:.16s ease}
 .bench-list.is-drag-target{border-color:#ffd978;background:rgba(255,217,120,.12)}
 body.is-lineup-dragging{cursor:grabbing}
+.lineup-player-main{min-width:0;display:block;text-align:left;border:0;background:transparent;color:inherit;padding:0;cursor:pointer}
+.lineup-menu-button{width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:24px;line-height:1;cursor:pointer}
+.lineup-player-dialog{width:min(520px,calc(100vw - 24px));max-height:min(760px,calc(100dvh - 24px));padding:0;border:1px solid rgba(0,245,160,.28);border-radius:18px;background:#101827;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.65)}
+.lineup-player-dialog::backdrop{background:rgba(1,7,14,.78);backdrop-filter:blur(5px)}
+.lineup-dialog-body{padding:20px;display:grid;gap:16px}.lineup-dialog-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.lineup-dialog-header h3{margin:2px 0 0}.lineup-dialog-close{width:42px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:22px;cursor:pointer}.lineup-dialog-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.lineup-dialog-actions{display:flex;gap:8px;flex-wrap:wrap}.lineup-dialog-actions .btn{flex:1 1 130px;min-height:46px}
 .pitch-tab{min-height:44px}
 @media(max-width:680px){.lineup-formation-toolbar{grid-template-columns:1fr}.lineup-formation-toolbar select{min-height:48px}.pitch-tabs{display:grid;grid-template-columns:1fr 1fr}.pitch-board{width:100%;min-height:520px;aspect-ratio:2/3}.pitch-slot,.pitch-player{width:72px;min-height:56px}}
 @media(max-width:390px){.pitch-board{min-height:470px}.pitch-slot,.pitch-player{width:66px}.pitch-player{padding:6px 4px}.pitch-role{max-width:58px;overflow:hidden;text-overflow:ellipsis}}
+@media(max-width:520px){.lineup-player-dialog{width:100%;max-width:none;margin:auto 0 0;border-radius:20px 20px 0 0;max-height:88dvh}.lineup-dialog-grid{grid-template-columns:1fr}.lineup-dialog-body{padding:18px 16px calc(18px + env(safe-area-inset-bottom))}}

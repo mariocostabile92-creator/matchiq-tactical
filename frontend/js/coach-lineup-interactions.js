@@ -2,6 +2,7 @@
   "use strict";
 
   let gesture = null;
+  let suppressClickUntil = 0;
   const DRAG_THRESHOLD = 7;
 
   function playerById(playerId){
@@ -111,6 +112,7 @@
     }else if(target?.hasAttribute("data-lineup-bench")){
       moveLineupPlayerToBench(current.playerId);
     }
+    if(current.dragging) suppressClickUntil = Date.now() + 350;
     clearDragState();
   }
 
@@ -122,6 +124,9 @@
     workspace.addEventListener("pointermove", onPointerMove, {passive:false});
     workspace.addEventListener("pointerup", onPointerUp);
     workspace.addEventListener("pointercancel", clearDragState);
+    workspace.addEventListener("click", event => {
+      if(Date.now() < suppressClickUntil){ event.preventDefault(); event.stopPropagation(); }
+    }, true);
   }
 
   window.moveLineupPlayerToSlot = moveLineupPlayerToSlot;

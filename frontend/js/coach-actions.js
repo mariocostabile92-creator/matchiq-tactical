@@ -697,6 +697,8 @@ function addLineupPlayer(){
         return;
     }
     const side = getInputValue("lineupTeamInput", "home") === "away" ? "away" : "home";
+    const requestedStatus = getInputValue("lineupStatusInput", "Titolare");
+    const starterCount = getLineupBySide(side).filter(item => item.status !== "Panchina").length;
     const player = normalizeLineupPlayer({
         id:Date.now()+Math.random(),
         number:getInputValue("lineupNumberInput", ""),
@@ -704,7 +706,7 @@ function addLineupPlayer(){
         side,
         team:getTeamName(side),
         role:getInputValue("lineupRoleInput", "Jolly"),
-        status:getInputValue("lineupStatusInput", "Titolare"),
+        status:requestedStatus !== "Panchina" && starterCount >= 11 ? "Panchina" : requestedStatus,
         createdAt:new Date().toISOString()
     });
     coachState.lineup.push(player);
@@ -713,7 +715,8 @@ function addLineupPlayer(){
     saveState();
     clearLineupForm();
     renderAll();
-    showNotice(`Giocatore aggiunto: ${formatLineupPlayer(player)}.`, "ok", 2500);
+    const benchNotice = requestedStatus !== "Panchina" && player.status === "Panchina" ? " Undici titolari gia presenti: inserito in panchina." : "";
+    showNotice(`Giocatore aggiunto: ${formatLineupPlayer(player)}.${benchNotice}`, "ok", 3200);
 }
 
 function deleteLineupPlayer(playerId){

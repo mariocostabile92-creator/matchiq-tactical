@@ -1348,6 +1348,32 @@
         </div>
     </div>
 
+    <dialog id="lineupPlayerDialog" class="lineup-player-dialog" aria-labelledby="lineupPlayerDialogTitle">
+        <div class="lineup-dialog-body">
+            <div class="lineup-dialog-header">
+                <div>
+                    <span class="badge green" id="lineupDialogTeam">Squadra di casa</span>
+                    <h3 id="lineupPlayerDialogTitle">Gestisci giocatore</h3>
+                </div>
+                <button type="button" class="lineup-dialog-close" onclick="closeLineupPlayerMenu()" aria-label="Chiudi">×</button>
+            </div>
+            <input id="lineupEditId" type="hidden">
+            <div class="lineup-dialog-grid">
+                <div class="field"><label for="lineupEditNumber">Numero</label><input id="lineupEditNumber" inputmode="numeric"></div>
+                <div class="field"><label for="lineupEditName">Nome</label><input id="lineupEditName" autocomplete="off"></div>
+                <div class="field"><label for="lineupEditRole">Ruolo</label><select id="lineupEditRole"><option>Portiere</option><option>Difensore</option><option>Centrocampista</option><option>Esterno</option><option>Attaccante</option><option>Jolly</option></select></div>
+                <div class="field"><label for="lineupEditStatus">Stato</label><select id="lineupEditStatus" onchange="setLineupPlayerDialogStatus(this.value)"><option>Titolare</option><option>Panchina</option></select></div>
+                <div class="field"><label for="lineupEditSlot">Posizione</label><select id="lineupEditSlot"></select></div>
+            </div>
+            <div class="lineup-dialog-actions">
+                <button type="button" class="btn green" onclick="setLineupPlayerDialogStatus('Titolare')">Metti titolare</button>
+                <button type="button" class="btn gold" onclick="setLineupPlayerDialogStatus('Panchina')">Sposta in panchina</button>
+                <button type="button" class="btn red" onclick="removeLineupPlayerFromDialog()">Rimuovi</button>
+                <button type="button" class="btn blue" onclick="saveLineupPlayerChanges()">Salva modifiche</button>
+            </div>
+        </div>
+    </dialog>
+
     <div class="grid section">
         <div class="panel">
             <span class="badge gold">4. PAGELLE</span>
@@ -1535,6 +1561,7 @@
 <script src="/js/coach-report.js?v=10525"></script>
 <script src="/js/coach-render.js?v=10525"></script>
 <script src="/js/coach-lineup-interactions.js?v=10525"></script>
+<script src="/js/coach-lineup-player-menu.js?v=10525"></script>
 <script src="/js/coach-voice-render.js?v=10525"></script>
 <script src="/js/coach-core.js?v=10525"></script>
 <script src="/js/coach-pattern-impact.js?v=10525"></script>

@@ -873,13 +873,13 @@ function renderLineupList(side){
     });
 
     box.innerHTML = sorted.map(p => `
-        <div class="lineup-player-card">
+        <div class="lineup-player-card ${esc(p.side)}">
             <div class="lineup-number">${esc(p.number || "-")}</div>
-            <div>
+            <button type="button" class="lineup-player-main" onclick="openLineupPlayerMenu('${esc(p.id)}')" aria-label="Modifica ${esc(p.name)}">
                 <div class="lineup-name">${esc(p.name)}</div>
                 <div class="lineup-meta">${esc(p.role || "Jolly")} · ${esc(p.status || "Titolare")}</div>
-            </div>
-            <button class="lineup-remove" onclick="deleteLineupPlayer('${esc(p.id)}')">×</button>
+            </button>
+            <button type="button" class="lineup-menu-button" onclick="openLineupPlayerMenu('${esc(p.id)}')" aria-label="Azioni per ${esc(p.name)}" title="Azioni giocatore">⋮</button>
         </div>
     `).join("");
 }
@@ -973,7 +973,7 @@ function renderLineupPitch(){
         return `
             <div class="pitch-slot" data-lineup-slot="${esc(slot.id)}" data-lineup-side="${esc(activeSide)}" style="left:${position.x}%;top:${position.y}%;" aria-label="Posizione ${esc(slot.role)}">
                 ${player ? `
-                    <button type="button" class="pitch-player ${esc(activeSide)}" data-lineup-player="${esc(player.id)}" aria-label="${esc(player.name)}, ${esc(player.role || "Jolly")}. Trascina per cambiare posizione.">
+                    <button type="button" class="pitch-player ${esc(activeSide)}" data-lineup-player="${esc(player.id)}" onclick="openLineupPlayerMenu('${esc(player.id)}')" aria-label="${esc(player.name)}, ${esc(player.role || "Jolly")}. Tocca per modificare o trascina per cambiare posizione.">
                         <span class="pitch-shirt">${esc(player.number || "-")}</span>
                         <span class="pitch-name">${esc(player.name)}</span>
                         <span class="pitch-role">${esc(player.role || "Jolly")}</span>
@@ -986,7 +986,7 @@ function renderLineupPitch(){
     if(bench){
         bench.setAttribute("data-lineup-bench", activeSide);
         bench.innerHTML = benchPlayers.length
-            ? benchPlayers.map(p => `<button type="button" class="bench-chip ${esc(activeSide)}" data-lineup-player="${esc(p.id)}" aria-label="${esc(p.name)} in panchina. Trascina sul campo per schierarlo.">${activeSide === "away" ? "Ospite" : "Casa"} · ${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</button>`).join("")
+            ? benchPlayers.map(p => `<button type="button" class="bench-chip ${esc(activeSide)}" data-lineup-player="${esc(p.id)}" onclick="openLineupPlayerMenu('${esc(p.id)}')" aria-label="${esc(p.name)} in panchina. Tocca per modificare o trascina sul campo per schierarlo.">${activeSide === "away" ? "Ospite" : "Casa"} · ${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</button>`).join("")
             : `<span class="bench-chip">Trascina qui un giocatore per spostarlo in panchina</span>`;
     }
 }
