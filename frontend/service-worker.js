@@ -50,6 +50,7 @@ const APP_SHELL = [
   "/js/coach-lineup-interactions.js?v=10525",
   "/js/coach-lineup-player-menu.js?v=10525",
   "/js/coach-match-day.js?v=10525",
+  "/js/coach-match-feedback.js?v=10525",
   "/js/home-api.js?v=10525",
   "/js/home-render.js?v=10525",
   "/js/home-actions.js?v=10525",

@@ -55,6 +55,11 @@
 .coach-match-command.primary,.coach-match-command.active{border-color:rgba(24,240,139,.55);background:rgba(24,240,139,.16);color:#baffdc}
 .coach-match-command.danger{border-color:rgba(255,65,108,.42);color:#ffb5c5}
 .coach-match-command:focus-visible{outline:3px solid #55a4ff;outline-offset:2px}
+.coach-match-feedback-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(190px,1fr);gap:8px;margin-top:10px}
+.coach-event-feedback,.coach-network-state{min-height:38px;display:flex;align-items:center;padding:8px 11px;border:1px solid rgba(255,255,255,.10);border-radius:10px;background:rgba(255,255,255,.035);color:#c7d7f2;font-size:11px;font-weight:800;line-height:1.35}
+.coach-event-feedback.ok{border-color:rgba(24,240,139,.35);color:#baffdc}.coach-event-feedback.warn{border-color:rgba(255,209,102,.38);color:#ffe7a8}
+.coach-network-state.online{color:#9ff7c9}.coach-network-state.offline{border-color:rgba(255,138,24,.42);color:#ffd0a0}
+.coach-live-btn[aria-busy="true"]{opacity:.68;transform:scale(.985);cursor:wait}
 
 .coach-live-section-head,
 .coach-team-panel-head{
@@ -185,6 +190,7 @@
 }
 
 @media(max-width:760px){
+    .coach-match-feedback-row{grid-template-columns:1fr}
     .coach-match-state-card{grid-template-columns:1fr 1fr}.coach-match-state-card > div:first-child{grid-column:1/-1}
     .coach-match-command-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
     .coach-team-events-grid{

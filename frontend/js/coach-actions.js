@@ -113,13 +113,22 @@ function addQuickEvent(type, label, icon, options={}){
         showNotice("Prima crea una partita manuale.", "warn");
         return;
     }
+    const side = options.side || getInputValue("eventTeamInput", "home");
+    const fingerprint = [type, side, options.source || "quick", options.playerId || ""].join(":");
+    if(window.MatchIQMatchDayGuard && !window.MatchIQMatchDayGuard.allow(fingerprint)) return;
     const event = buildCoachEvent(type, label, icon, options);
+    event.clientActionId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    if(window.MatchIQMatchDayGuard?.isDuplicate(event, coachState.events[0])){
+        showNotice("Evento gia registrato: duplicato ignorato.", "warn", 2200);
+        return;
+    }
     coachState.events.unshift(event);
     setInputValue("eventNoteInput", "");
     setInputValue("eventPlayerInput", "");
     setInputValue("eventPlayerSelectInput", "");
     saveState();
     renderAll();
+    window.MatchIQMatchDayGuard?.confirmEvent(event);
     showNotice(`${label} registrato per ${event.team}${event.player ? " - " + event.player : ""}.`, "ok", 2500);
 }
 
