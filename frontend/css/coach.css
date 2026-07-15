@@ -337,11 +337,20 @@
 .coach-voice-session[data-voice-state="RECORDING"]{
     border-color:rgba(255,65,108,.56);
     background:rgba(255,65,108,.08);
+    box-shadow:inset 0 0 0 2px rgba(255,65,108,.08);
+}
+
+.coach-voice-session[data-voice-state="PROCESSING"]{
+    border-color:rgba(56,169,255,.52);
+    background:rgba(56,169,255,.08);
 }
 
 .coach-voice-session[data-voice-state="REVIEW"]{
     border-color:rgba(255,209,102,.48);
 }
+
+.coach-voice-session[data-voice-state="SUCCESS"]{border-color:rgba(24,240,139,.52)}
+.coach-voice-session[data-voice-state="ERROR"]{border-color:rgba(255,65,108,.58)}
 
 .coach-voice-session-state{
     min-width:0;
@@ -350,11 +359,18 @@
     gap:10px;
 }
 
-.coach-voice-session-state span{
+.coach-voice-session-state > span{
     color:#c7d7f2;
     font-size:12px;
     font-weight:900;
 }
+
+.coach-voice-session-label{display:inline-flex;align-items:center;gap:8px}
+.coach-voice-mic-indicator{width:12px;height:12px;border-radius:999px;background:#7184a9;box-shadow:0 0 0 4px rgba(113,132,169,.12);flex:0 0 auto}
+.coach-voice-session[data-voice-state="RECORDING"] .coach-voice-mic-indicator{background:#ff416c;box-shadow:0 0 0 6px rgba(255,65,108,.16);animation:coachVoicePulse 1.25s ease-in-out infinite}
+.coach-voice-session[data-voice-state="PROCESSING"] .coach-voice-mic-indicator{background:#38a9ff;box-shadow:0 0 0 6px rgba(56,169,255,.14)}
+.coach-voice-session[data-voice-state="REVIEW"] .coach-voice-mic-indicator{background:#ffd166;box-shadow:0 0 0 5px rgba(255,209,102,.14)}
+@keyframes coachVoicePulse{0%,100%{transform:scale(.9);opacity:.75}50%{transform:scale(1.12);opacity:1}}
 
 .coach-voice-session-state strong{
     color:#fff;
@@ -371,6 +387,13 @@
 
 .coach-voice-session-actions .btn{
     min-height:44px;
+}
+
+.coach-voice-session-actions .btn:focus-visible,
+.coach-voice-actions-row .btn:focus-visible,
+.coach-voice-transcript-review textarea:focus-visible{
+    outline:3px solid #55a4ff;
+    outline-offset:2px;
 }
 
 .coach-voice-transcript-review{

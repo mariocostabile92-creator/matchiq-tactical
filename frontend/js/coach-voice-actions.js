@@ -33,7 +33,7 @@ function renderCoachVoiceSession(){
     const labels = {
         IDLE:"Pronto",
         RECORDING:"Registrazione in corso",
-        PROCESSING:"Analisi in corso",
+        PROCESSING:"Elaborazione...",
         REVIEW:"Controlla prima di salvare",
         SUCCESS:"Salvato nella timeline",
         ERROR:"Registrazione non disponibile"
@@ -56,7 +56,7 @@ function renderCoachVoiceSession(){
     if(start){ start.hidden = recording || busy; start.disabled = busy; }
     if(headStart){ headStart.hidden = recording || busy; headStart.disabled = busy; }
     if(stop){ stop.hidden = !recording; stop.disabled = !recording; }
-    if(cancel){ cancel.hidden = !(recording || busy); cancel.disabled = false; }
+    if(cancel){ cancel.hidden = !recording; cancel.disabled = !recording; }
 }
 
 function setCoachVoiceSessionState(state){
@@ -69,6 +69,14 @@ function setCoachVoiceSessionState(state){
         coachVoiceSession.durationTimer = setInterval(renderCoachVoiceSession, 500);
     }
     renderCoachVoiceSession();
+    if(coachVoiceSession.state === COACH_VOICE_SESSION_STATES.REVIEW){
+        requestAnimationFrame(() => {
+            const transcript = document.getElementById("coachVoiceTranscriptEditor");
+            if(!transcript) return;
+            try{ transcript.focus({preventScroll:true}); }
+            catch{ transcript.focus(); }
+        });
+    }
 }
 
 function clearCoachVoiceRuntime(){

@@ -90,7 +90,7 @@ function renderCoachVoiceProposalCard(proposal){
                     <strong>${esc(proposal.clarification_question)}</strong>
                     <div>${(proposal.clarification_options || []).map(option => `<button type="button" onclick="applyCoachVoiceClarification('${esc(proposal.id)}','${esc(option)}')">${esc(option)}</button>`).join("")}</div>
                 </div>` : ""}
-            <div class="coach-voice-actions-row">
+            <div class="coach-voice-actions-row" aria-label="Azioni revisione Voice Coach">
                 <button class="btn green" type="button" onclick="applyCoachVoiceProposal('${esc(proposal.id)}')">Conferma</button>
                 <button class="btn dark" type="button" onclick="editCoachVoiceProposal()">Modifica</button>
                 <button class="btn danger" type="button" onclick="cancelCoachVoiceProposal()">Scarta</button>
