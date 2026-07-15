@@ -75,9 +75,10 @@
     input.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
-  function addReviewBookmark(){
+  function addReviewBookmark(feedbackButton=null){
     if(!coachState.match){
       if(typeof showNotice === "function") showNotice("Prima crea la partita nel Pre-partita.", "warn");
+      window.MatchIQMatchDayGuard?.failAction(feedbackButton, "Crea prima la partita");
       return;
     }
     const noteInput = document.getElementById("coachReviewNoteInput");
@@ -89,12 +90,13 @@
       side,
       note,
       source:"match-day-bookmark",
-      tags:["Da rivedere", "Match Day", coachState.live?.period || "1T"]
+      tags:["Da rivedere", "Match Day", coachState.live?.period || "1T"],
+      feedbackButton
     });
     if(!event) return;
     if(noteInput) noteInput.value = "";
     if(typeof showNotice === "function"){
-      showNotice(`Bookmark salvato al ${event.minute}' per ${event.team}.`, "ok", 2800);
+      showNotice(`Momento segnato al minuto ${event.minute}.`, "ok", 2800);
     }
   }
 

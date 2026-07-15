@@ -1137,7 +1137,7 @@
                     <section class="coach-observation-group" aria-labelledby="coachMatchSituationsTitle">
                         <div class="coach-observation-group-head">
                             <span>2</span>
-                            <div><strong id="coachMatchSituationsTitle">Fasi e situazioni</strong><small>Momenti chiave da ritrovare nel post-partita</small></div>
+                            <div><strong id="coachMatchSituationsTitle">Fasi di gioco</strong><small>Momenti chiave da ritrovare nel post-partita</small></div>
                         </div>
                         <div class="coach-live-actions coach-tactical-actions">
                             <button class="coach-live-btn warn" data-tactical-event-label="Seconda palla" type="button" onclick="addTacticalLiveEvent('seconda_palla','Seconda palla','2BALL','Seconda palla persa: accorciare dopo il duello e aggredire la respinta.','',this)"><strong>2a palla</strong><span>Duelli e rimbalzi</span></button>
@@ -1157,12 +1157,12 @@
                         <button class="coach-live-btn warn" data-tactical-event-label="Comunicazione" type="button" aria-label="Registra osservazione sulla comunicazione" onclick="addTacticalLiveEvent('comunicazione','Comunicazione','VOICE','Manca comunicazione tra reparti: richiamare guida e marcature.','',this)"><strong>Comunica</strong><span>Staff alert</span></button>
                     </div>
                     <div class="coach-review-bookmark">
-                        <label for="coachReviewNoteInput">Da rivedere nel post-partita</label>
+                        <label for="coachReviewNoteInput">Da rivedere</label>
                         <div>
                             <input id="coachReviewNoteInput" type="text" maxlength="180" placeholder="Nota facoltativa: es. uscita lato destro" />
-                            <button class="btn gold" type="button" aria-label="Salva questo momento tra quelli da rivedere" onclick="addCoachReviewBookmark()">Segna da rivedere</button>
+                            <button class="btn gold" type="button" aria-label="Segna questo momento per rivederlo dopo la partita." onclick="addCoachReviewBookmark(this)">Da rivedere</button>
                         </div>
-                        <small>Salva minuto, fase e squadra osservata senza interrompere la partita.</small>
+                        <small>Segna questo momento per rivederlo dopo la partita.</small>
                     </div>
                 </section>
 
