@@ -68,7 +68,10 @@
     if(moveFrame) cancelAnimationFrame(moveFrame);
     moveFrame = 0;
     latestPoint = null;
-    document.querySelectorAll(".is-drag-target,.is-dragging").forEach(node => node.classList.remove("is-drag-target","is-dragging"));
+    document.querySelectorAll(".is-drag-target,.is-dragging,.is-selected").forEach(node => {
+      node.classList.remove("is-drag-target","is-dragging","is-selected");
+      if(node.hasAttribute("aria-grabbed")) node.setAttribute("aria-grabbed", "false");
+    });
     document.body.classList.remove("is-lineup-dragging");
     gesture = null;
   }
@@ -90,6 +93,8 @@
       dragging:false,
       target:null
     };
+    player.classList.add("is-selected");
+    player.setAttribute("aria-grabbed", "false");
     player.setPointerCapture?.(event.pointerId);
   }
 
@@ -100,6 +105,7 @@
     if(!gesture.dragging){
       gesture.dragging = true;
       gesture.node.classList.add("is-dragging");
+      gesture.node.setAttribute("aria-grabbed", "true");
       document.body.classList.add("is-lineup-dragging");
     }
     event.preventDefault();

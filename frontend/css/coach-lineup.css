@@ -1,6 +1,6 @@
 .lineup-formation-toolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,240px);gap:12px;align-items:end;margin-bottom:12px;padding:12px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.04)}
 .lineup-formation-team{display:grid;gap:3px}.lineup-formation-team strong{font-size:14px}.lineup-formation-team span{color:#9fb2d8;font-size:11px}
-.pitch-board{--lineup-card-width:84px;--lineup-card-height:66px;--lineup-safe-x:50px;--lineup-safe-y:43px}
+.lineup-pitch-layout>*{min-width:0}.pitch-board{--lineup-card-width:84px;--lineup-card-height:66px;--lineup-safe-x:50px;--lineup-safe-y:43px;isolation:isolate;overscroll-behavior:contain}
 .pitch-slot{position:absolute;left:clamp(var(--lineup-safe-x),var(--slot-left),calc(100% - var(--lineup-safe-x)));top:clamp(var(--lineup-safe-y),var(--slot-top),calc(100% - var(--lineup-safe-y)));transform:translate(-50%,-50%);width:var(--lineup-card-width);min-height:var(--lineup-card-height);display:grid;place-items:center;z-index:2;border-radius:18px}
 .pitch-slot>.pitch-player{position:relative;inset:auto;transform:none;width:var(--lineup-card-width);height:var(--lineup-card-height);min-height:var(--lineup-card-height);max-height:var(--lineup-card-height);padding:7px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:inherit;font:inherit;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
 .pitch-slot>.pitch-player .pitch-shirt{flex:0 0 auto;margin-bottom:4px}
@@ -10,19 +10,23 @@
 .lineup-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lineup-player-card{min-width:0}.lineup-player-main{min-width:0;overflow:hidden}
 .pitch-player:active,.bench-chip:active{cursor:grabbing}
+.pitch-player:focus-visible,.bench-chip:focus-visible,.pitch-tab:focus-visible,.lineup-menu-button:focus-visible{outline:3px solid #00f5a0;outline-offset:3px}
+.pitch-player.is-selected,.bench-chip.is-selected{outline:2px solid #35d6ff;outline-offset:3px;filter:brightness(1.08)}
 .pitch-slot-target{width:34px;height:34px;display:grid;place-items:center;border:1px dashed rgba(255,255,255,.18);border-radius:50%;color:rgba(255,255,255,.25);background:rgba(2,12,20,.2);opacity:.48;transition:.16s ease}
 .pitch-slot.is-drag-target .pitch-slot-target,.pitch-slot.is-drag-target .pitch-player{outline:3px solid #00f5a0;outline-offset:4px;box-shadow:0 0 0 8px rgba(0,245,160,.16)}
+.pitch-slot.is-occupied.is-drag-target .pitch-player{outline-color:#ffd978;box-shadow:0 0 0 8px rgba(255,217,120,.18)}
 .pitch-player.is-dragging,.bench-chip.is-dragging{opacity:.38;pointer-events:none}
 .bench-chip{max-width:100%;font:inherit;cursor:grab;touch-action:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bench-list{min-height:48px;border:1px dashed transparent;border-radius:12px;padding:4px;transition:.16s ease}
 .bench-list.is-drag-target{border-color:#ffd978;background:rgba(255,217,120,.12)}
-body.is-lineup-dragging{cursor:grabbing}
+body.is-lineup-dragging{cursor:grabbing;overscroll-behavior:none}body.is-lineup-dragging #lineupWorkspace{touch-action:none}
 .lineup-player-main{min-width:0;display:block;text-align:left;border:0;background:transparent;color:inherit;padding:0;cursor:pointer}
 .lineup-menu-button{width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:24px;line-height:1;cursor:pointer}
 .lineup-player-dialog{width:min(520px,calc(100vw - 24px));max-height:min(760px,calc(100dvh - 24px));padding:0;border:1px solid rgba(0,245,160,.28);border-radius:18px;background:#101827;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.65)}
 .lineup-player-dialog::backdrop{background:rgba(1,7,14,.78);backdrop-filter:blur(5px)}
 .lineup-dialog-body{padding:20px;display:grid;gap:16px}.lineup-dialog-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.lineup-dialog-header h3{margin:2px 0 0}.lineup-dialog-close{width:42px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:22px;cursor:pointer}.lineup-dialog-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.lineup-dialog-actions{display:flex;gap:8px;flex-wrap:wrap}.lineup-dialog-actions .btn{flex:1 1 130px;min-height:46px}
 .pitch-tab{min-height:44px}
+@media(pointer:coarse){.pitch-tab,.lineup-menu-button{min-width:46px;min-height:46px}.pitch-slot-target{width:38px;height:38px}.bench-chip{min-height:44px}}
 @media(max-width:680px){.lineup-formation-toolbar{grid-template-columns:1fr}.lineup-formation-toolbar select{min-height:48px}.pitch-tabs{display:grid;grid-template-columns:1fr 1fr}.pitch-board{--lineup-card-width:68px;--lineup-card-height:64px;--lineup-safe-x:42px;--lineup-safe-y:40px;width:100%;min-height:520px;aspect-ratio:2/3}.pitch-slot>.pitch-player .pitch-name{font-size:10px}.pitch-slot>.pitch-player .pitch-role{font-size:8px}}
 @media(max-width:520px){.pitch-board{--lineup-card-width:58px;--lineup-safe-x:37px}.pitch-slot>.pitch-player{padding-inline:4px}.pitch-slot>.pitch-player .pitch-shirt{width:22px;height:22px;font-size:10px}}
 @media(max-width:390px){.pitch-board{--lineup-card-width:54px;--lineup-card-height:54px;--lineup-safe-x:35px;--lineup-safe-y:35px;min-height:470px}.pitch-slot>.pitch-player{padding:5px 3px}.pitch-slot>.pitch-player .pitch-role{display:none}}
