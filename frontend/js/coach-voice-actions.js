@@ -1,6 +1,96 @@
 let coachVoiceRecognition = null;
 let coachVoiceStopTimer = null;
 
+const COACH_VOICE_SESSION_STATES = Object.freeze({
+    IDLE:"IDLE",
+    RECORDING:"RECORDING",
+    PROCESSING:"PROCESSING",
+    REVIEW:"REVIEW",
+    SUCCESS:"SUCCESS",
+    ERROR:"ERROR"
+});
+
+const coachVoiceSession = {
+    state:COACH_VOICE_SESSION_STATES.IDLE,
+    segments:[],
+    startedAt:0,
+    durationTimer:null,
+    restartTimer:null,
+    manualStop:false,
+    finalizing:false,
+    generation:0
+};
+
+function formatCoachVoiceDuration(ms){
+    const totalSeconds = Math.max(0, Math.floor(Number(ms || 0) / 1000));
+    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+    const seconds = String(totalSeconds % 60).padStart(2, "0");
+    return `${minutes}:${seconds}`;
+}
+
+function renderCoachVoiceSession(){
+    const state = coachVoiceSession.state;
+    const labels = {
+        IDLE:"Pronto",
+        RECORDING:"Registrazione in corso",
+        PROCESSING:"Analisi in corso",
+        REVIEW:"Controlla prima di salvare",
+        SUCCESS:"Salvato nella timeline",
+        ERROR:"Registrazione non disponibile"
+    };
+    const panel = document.getElementById("coachVoiceSession");
+    const label = document.getElementById("coachVoiceSessionState");
+    const duration = document.getElementById("coachVoiceDuration");
+    const start = document.getElementById("coachVoiceSessionStart");
+    const headStart = document.getElementById("coachVoiceStartButton");
+    const stop = document.getElementById("coachVoiceSessionStop");
+    const cancel = document.getElementById("coachVoiceSessionCancel");
+    if(panel) panel.dataset.voiceState = state;
+    if(label) label.textContent = labels[state] || state;
+    if(duration){
+        const elapsed = coachVoiceSession.startedAt ? Date.now() - coachVoiceSession.startedAt : 0;
+        duration.textContent = formatCoachVoiceDuration(elapsed);
+    }
+    const recording = state === COACH_VOICE_SESSION_STATES.RECORDING;
+    const busy = state === COACH_VOICE_SESSION_STATES.PROCESSING;
+    if(start){ start.hidden = recording || busy; start.disabled = busy; }
+    if(headStart){ headStart.hidden = recording || busy; headStart.disabled = busy; }
+    if(stop){ stop.hidden = !recording; stop.disabled = !recording; }
+    if(cancel){ cancel.hidden = !(recording || busy); cancel.disabled = false; }
+}
+
+function setCoachVoiceSessionState(state){
+    coachVoiceSession.state = COACH_VOICE_SESSION_STATES[state] || state;
+    if(coachVoiceSession.durationTimer){
+        clearInterval(coachVoiceSession.durationTimer);
+        coachVoiceSession.durationTimer = null;
+    }
+    if(coachVoiceSession.state === COACH_VOICE_SESSION_STATES.RECORDING){
+        coachVoiceSession.durationTimer = setInterval(renderCoachVoiceSession, 500);
+    }
+    renderCoachVoiceSession();
+}
+
+function clearCoachVoiceRuntime(){
+    clearTimeout(coachVoiceStopTimer);
+    clearTimeout(coachVoiceSession.restartTimer);
+    coachVoiceStopTimer = null;
+    coachVoiceSession.restartTimer = null;
+    if(coachVoiceSession.durationTimer){
+        clearInterval(coachVoiceSession.durationTimer);
+        coachVoiceSession.durationTimer = null;
+    }
+}
+
+function addCoachVoiceSegment(text){
+    const clean = String(text || "").replace(/\s+/g, " ").trim();
+    if(!clean) return;
+    const key = clean.toLocaleLowerCase("it-IT");
+    if(coachVoiceSession.segments.some(item => item.key === key)) return;
+    coachVoiceSession.segments.push({key, text:clean});
+    setInputValue("coachVoiceInput", coachVoiceSession.segments.map(item => item.text).join(" "));
+}
+
 function setCoachVoiceUiStatus(message, mode="idle"){
     const vc = ensureCoachVoiceMemory();
     vc.lastStatus = String(message || "");
@@ -17,58 +107,134 @@ function setCoachVoiceUiStatus(message, mode="idle"){
     }
 }
 
-function beginCoachVoiceListening(){
+function failCoachVoiceSession(message){
+    coachVoiceSession.manualStop = true;
+    coachVoiceSession.finalizing = false;
+    clearCoachVoiceRuntime();
     if(coachVoiceRecognition){
-        coachVoiceRecognition.stop();
+        try{ coachVoiceRecognition.abort(); }catch{}
         coachVoiceRecognition = null;
-        setCoachVoiceUiStatus("Ascolto interrotto. Puoi scrivere il comando nel campo.", "idle");
-        return;
     }
+    setCoachVoiceSessionState("ERROR");
+    setCoachVoiceUiStatus(message, "blocked");
+}
+
+function createCoachVoiceRecognition(generation){
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SpeechRecognition){
-        setCoachVoiceUiStatus("Microfono non disponibile in questo browser. Scrivi il comando e premi Interpreta.", "blocked");
+        failCoachVoiceSession("Microfono non disponibile in questo browser. Scrivi il comando e premi Interpreta.");
         const input = document.getElementById("coachVoiceInput");
         if(input) input.focus();
-        return;
+        return null;
     }
     const recognition = new SpeechRecognition();
     coachVoiceRecognition = recognition;
     recognition.lang = "it-IT";
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
-    recognition.onstart = () => setCoachVoiceUiStatus("Sto ascoltando... parla in modo naturale e breve.", "listening");
+    recognition.onstart = () => {
+        if(generation !== coachVoiceSession.generation) return;
+        setCoachVoiceUiStatus("Sto ascoltando. Quando hai finito premi Termina e analizza.", "listening");
+    };
     recognition.onresult = event => {
-        clearTimeout(coachVoiceStopTimer);
-        const text = event.results?.[0]?.[0]?.transcript || "";
-        setInputValue("coachVoiceInput", text);
-        coachVoiceRecognition = null;
-        if(text.trim()) processCoachVoiceCommand(text, "speech");
-        else setCoachVoiceUiStatus("Audio ricevuto ma senza testo. Riprova o scrivi il comando.", "blocked");
-    };
-    recognition.onerror = event => {
-        clearTimeout(coachVoiceStopTimer);
-        coachVoiceRecognition = null;
-        const denied = event?.error === "not-allowed" || event?.error === "service-not-allowed";
-        setCoachVoiceUiStatus(denied
-            ? "Microfono bloccato. Abilitalo dal browser oppure usa Scrivi il comando."
-            : "Non ho capito l'audio. Prova una frase piu breve o usa il testo.", "blocked");
-    };
-    recognition.onend = () => {
-        clearTimeout(coachVoiceStopTimer);
-        if(coachVoiceRecognition === recognition){
-            coachVoiceRecognition = null;
-            setCoachVoiceUiStatus("Ascolto chiuso. Se non vedi una proposta, scrivi il comando.", "idle");
+        if(generation !== coachVoiceSession.generation) return;
+        for(let index=event.resultIndex || 0; index<event.results.length; index += 1){
+            const result = event.results[index];
+            if(result?.isFinal) addCoachVoiceSegment(result?.[0]?.transcript || "");
         }
     };
+    recognition.onerror = event => {
+        if(generation !== coachVoiceSession.generation) return;
+        const code = String(event?.error || "");
+        if(code === "aborted" && coachVoiceSession.manualStop) return;
+        if(code === "no-speech") return;
+        const denied = event?.error === "not-allowed" || event?.error === "service-not-allowed";
+        failCoachVoiceSession(denied
+            ? "Microfono bloccato. Abilitalo dal browser oppure usa Scrivi il comando."
+            : "Registrazione interrotta dal browser. Riprova o usa il testo.");
+    };
+    recognition.onend = () => {
+        if(coachVoiceRecognition === recognition) coachVoiceRecognition = null;
+        if(generation !== coachVoiceSession.generation) return;
+        if(coachVoiceSession.state !== COACH_VOICE_SESSION_STATES.RECORDING || coachVoiceSession.manualStop) return;
+        clearTimeout(coachVoiceSession.restartTimer);
+        coachVoiceSession.restartTimer = setTimeout(() => {
+            if(coachVoiceSession.state === COACH_VOICE_SESSION_STATES.RECORDING && !coachVoiceSession.manualStop){
+                startCoachVoiceRecognitionCycle(generation);
+            }
+        }, 300);
+    };
+    return recognition;
+}
+
+function startCoachVoiceRecognitionCycle(generation){
+    const recognition = createCoachVoiceRecognition(generation);
+    if(!recognition) return;
     try{
         recognition.start();
-        coachVoiceStopTimer = setTimeout(() => {
-            if(coachVoiceRecognition === recognition) recognition.stop();
-        }, 15000);
     }catch{
-        coachVoiceRecognition = null;
-        setCoachVoiceUiStatus("Il browser non ha avviato il microfono. Usa Scrivi il comando.", "blocked");
+        failCoachVoiceSession("Il browser non ha avviato il microfono. Usa Scrivi il comando.");
     }
+}
+
+function beginCoachVoiceListening(){
+    if(coachVoiceSession.state === COACH_VOICE_SESSION_STATES.RECORDING) return;
+    coachVoiceSession.generation += 1;
+    coachVoiceSession.segments = [];
+    coachVoiceSession.startedAt = Date.now();
+    coachVoiceSession.manualStop = false;
+    coachVoiceSession.finalizing = false;
+    setInputValue("coachVoiceInput", "");
+    setCoachVoiceSessionState("RECORDING");
+    startCoachVoiceRecognitionCycle(coachVoiceSession.generation);
+    coachVoiceStopTimer = setTimeout(() => {
+        if(coachVoiceSession.state === COACH_VOICE_SESSION_STATES.RECORDING){
+            setCoachVoiceUiStatus("Durata massima raggiunta. Analizzo quanto registrato.", "idle");
+            stopCoachVoiceRecording();
+        }
+    }, 120000);
+}
+
+async function finishCoachVoiceRecording(){
+    if(coachVoiceSession.finalizing) return;
+    coachVoiceSession.finalizing = true;
+    clearCoachVoiceRuntime();
+    const text = coachVoiceSession.segments.map(item => item.text).join(" ").trim() || getInputValue("coachVoiceInput", "").trim();
+    if(!text){
+        coachVoiceSession.finalizing = false;
+        failCoachVoiceSession("Non ho rilevato parole complete. Riprova o scrivi il comando.");
+        return;
+    }
+    setCoachVoiceSessionState("PROCESSING");
+    await processCoachVoiceCommand(text, "speech");
+    coachVoiceSession.finalizing = false;
+}
+
+function stopCoachVoiceRecording(){
+    if(coachVoiceSession.state !== COACH_VOICE_SESSION_STATES.RECORDING) return;
+    coachVoiceSession.manualStop = true;
+    setCoachVoiceSessionState("PROCESSING");
+    if(coachVoiceRecognition){
+        try{ coachVoiceRecognition.stop(); }catch{}
+    }
+    setTimeout(finishCoachVoiceRecording, 220);
+}
+
+function cancelCoachVoiceRecording(){
+    coachVoiceSession.generation += 1;
+    coachVoiceSession.manualStop = true;
+    coachVoiceSession.finalizing = false;
+    clearCoachVoiceRuntime();
+    if(coachVoiceRecognition){
+        try{ coachVoiceRecognition.abort(); }catch{}
+        coachVoiceRecognition = null;
+    }
+    coachVoiceSession.segments = [];
+    coachVoiceSession.startedAt = 0;
+    setInputValue("coachVoiceInput", "");
+    setCoachVoiceSessionState("IDLE");
+    setCoachVoiceUiStatus("Registrazione annullata. Nessun evento e stato salvato.", "idle");
 }
 
 function startCoachVoiceNote(){
@@ -90,6 +256,7 @@ function addLiveNote(){
         showNotice("Scrivi il comando o usa AI Voice Coach.", "warn");
         return;
     }
+    setCoachVoiceSessionState("PROCESSING");
     processCoachVoiceCommand(value, "text");
 }
 
@@ -122,15 +289,13 @@ async function processCoachVoiceCommand(text, source="text"){
         saveState();
         renderCoachVoiceCoach();
         setCoachVoiceUiStatus("Comando annullato.", "idle");
+        setCoachVoiceSessionState("IDLE");
         return proposal;
     }
 
-    if(!proposal.requires_confirmation && proposal.confidence >= 0.78){
-        applyCoachVoiceProposal(proposal.id, true);
-    }else{
-        setCoachVoiceUiStatus("Ho preparato una proposta. Controllala e conferma.", "idle");
-        showNotice("AI Voice Coach ha bisogno di conferma prima di salvare.", "warn", 3500);
-    }
+    setCoachVoiceSessionState("REVIEW");
+    setCoachVoiceUiStatus("Ho preparato una proposta. Controllala e conferma prima del salvataggio.", "idle");
+    showNotice("Controlla la trascrizione: nulla viene salvato senza conferma.", "warn", 3500);
     return proposal;
 }
 
@@ -226,12 +391,15 @@ function applyCoachVoiceProposal(id, silent=false){
         showNotice("Proposta AI Voice Coach non trovata.", "warn");
         return;
     }
+    if(proposal.applying) return;
+    proposal.applying = true;
     if(proposal.intent === "substitution"){
         applyCoachVoiceSubstitution(proposal);
     }else if(proposal.intent === "player_event"){
         const e = proposal.entities || {};
         if(isCoachVoiceDuplicateEvent(e.event_type || "nota", proposal)){
             showNotice("Evento gia registrato con AI Voice Coach: evito il doppione.", "warn");
+            proposal.applying = false;
             return;
         }
         addQuickEvent(e.event_type || "nota", e.event_label || "Evento", e.event_icon || "NOTE", coachVoiceEventOptionsFromProposal(proposal));
@@ -249,9 +417,11 @@ function applyCoachVoiceProposal(id, silent=false){
         addQuickEvent(type, proposal.entities?.topic_label || "Nota tattica", "VOICE", coachVoiceEventOptionsFromProposal(proposal));
     }else if(proposal.intent === "match_control"){
         setCoachVoiceUiStatus("Comando partita non applicato automaticamente: usa i pulsanti timer/fase per sicurezza.", "blocked");
+        proposal.applying = false;
         return;
     }else{
         showNotice("Comando non supportato. Salvo come nota staff se confermi con una frase piu chiara.", "warn");
+        proposal.applying = false;
         return;
     }
     const observation = recordCoachVoiceObservation(proposal, getCoachVoiceThemeRule(proposal.entities?.topic));
@@ -271,6 +441,13 @@ function applyCoachVoiceProposal(id, silent=false){
     saveState();
     renderAll();
     setCoachVoiceUiStatus("Evento salvato da AI Voice Coach.", "idle");
+    setCoachVoiceSessionState("SUCCESS");
+    setTimeout(() => {
+        if(coachVoiceSession.state === COACH_VOICE_SESSION_STATES.SUCCESS){
+            coachVoiceSession.startedAt = 0;
+            setCoachVoiceSessionState("IDLE");
+        }
+    }, 1800);
     if(!silent) showNotice("AI Voice Coach ha salvato l'azione nella timeline. Puoi annullare dal pannello.", "ok", 4200);
 }
 
@@ -433,7 +610,9 @@ function cancelCoachVoiceProposal(){
     vc.lastProposal = null;
     saveState();
     renderCoachVoiceCoach();
-    setCoachVoiceUiStatus("Proposta annullata. Puoi dettare o scrivere un nuovo comando.", "idle");
+    coachVoiceSession.startedAt = 0;
+    setCoachVoiceSessionState("IDLE");
+    setCoachVoiceUiStatus("Proposta scartata. Nessun evento e stato salvato.", "idle");
 }
 
 function editCoachVoiceProposal(){
@@ -458,12 +637,13 @@ function bindCoachVoiceInput(){
     if(document.body.dataset.voiceVisibilityBound !== "1"){
         document.body.dataset.voiceVisibilityBound = "1";
         document.addEventListener("visibilitychange", () => {
-            if(document.hidden && coachVoiceRecognition){
-                coachVoiceRecognition.stop();
-                coachVoiceRecognition = null;
-                clearTimeout(coachVoiceStopTimer);
-                setCoachVoiceUiStatus("Registrazione interrotta quando l'app e passata in background. Puoi riprovare o scrivere.", "blocked");
+            if(document.hidden && coachVoiceSession.state === COACH_VOICE_SESSION_STATES.RECORDING){
+                failCoachVoiceSession("Registrazione interrotta quando l'app e passata in background. Nessun dato e stato salvato.");
             }
         });
     }
+    renderCoachVoiceSession();
 }
+
+window.stopCoachVoiceRecording = stopCoachVoiceRecording;
+window.cancelCoachVoiceRecording = cancelCoachVoiceRecording;

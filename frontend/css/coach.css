@@ -274,6 +274,57 @@
     margin-top:16px;
 }
 
+.coach-voice-session{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:12px;
+    padding:11px;
+    border:1px solid rgba(255,255,255,.11);
+    border-radius:13px;
+    background:rgba(2,9,20,.52);
+}
+
+.coach-voice-session[data-voice-state="RECORDING"]{
+    border-color:rgba(255,65,108,.56);
+    background:rgba(255,65,108,.08);
+}
+
+.coach-voice-session[data-voice-state="REVIEW"]{
+    border-color:rgba(255,209,102,.48);
+}
+
+.coach-voice-session-state{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.coach-voice-session-state span{
+    color:#c7d7f2;
+    font-size:12px;
+    font-weight:900;
+}
+
+.coach-voice-session-state strong{
+    color:#fff;
+    font-variant-numeric:tabular-nums;
+    font-size:17px;
+}
+
+.coach-voice-session-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:7px;
+}
+
+.coach-voice-session-actions .btn{
+    min-height:44px;
+}
+
 @media(max-width:760px){
     .coach-match-feedback-row{grid-template-columns:1fr}
     .coach-match-state-card{grid-template-columns:1fr 1fr}.coach-match-state-card > div:first-child{grid-column:1/-1}
@@ -310,6 +361,21 @@
     .coach-staff-actions{
         grid-template-columns:repeat(3,minmax(0,1fr));
     }
+
+    .coach-voice-session{
+        align-items:stretch;
+        flex-direction:column;
+    }
+
+    .coach-voice-session-actions{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .coach-voice-session-actions .btn:first-child:last-child,
+    .coach-voice-session-actions .btn:not([hidden]):only-child{
+        grid-column:1/-1;
+    }
 }
 
 @media(max-width:420px){
@@ -334,6 +400,16 @@
 
     .coach-staff-actions .coach-live-btn{
         min-height:54px;
+    }
+
+    .coach-voice-session-actions{
+        position:sticky;
+        bottom:calc(8px + env(safe-area-inset-bottom));
+        z-index:4;
+    }
+
+    .coach-voice-session-actions .btn{
+        min-height:50px;
     }
 }
 

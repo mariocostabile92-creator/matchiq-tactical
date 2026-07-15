@@ -1154,7 +1154,18 @@
                         <h3>Parla in modo naturale</h3>
                         <p>MatchIQ prova a riconoscere eventi, cambi, giocatori, zone e osservazioni. Se il comando e ambiguo ti chiede conferma.</p>
                     </div>
-                    <button class="btn green" type="button" onclick="startCoachVoiceNote()">Parla con Coach</button>
+                    <button class="btn green" id="coachVoiceStartButton" type="button" onclick="startCoachVoiceNote()">Parla con Coach</button>
+                </div>
+                <div class="coach-voice-session" id="coachVoiceSession" data-voice-state="IDLE">
+                    <div class="coach-voice-session-state" aria-live="polite" aria-atomic="true">
+                        <span id="coachVoiceSessionState">Pronto</span>
+                        <strong id="coachVoiceDuration">00:00</strong>
+                    </div>
+                    <div class="coach-voice-session-actions">
+                        <button class="btn green" id="coachVoiceSessionStart" type="button" onclick="startCoachVoiceNote()">Avvia registrazione</button>
+                        <button class="btn gold" id="coachVoiceSessionStop" type="button" onclick="stopCoachVoiceRecording()" hidden>Termina e analizza</button>
+                        <button class="btn dark" id="coachVoiceSessionCancel" type="button" onclick="cancelCoachVoiceRecording()" hidden>Annulla</button>
+                    </div>
                 </div>
                 <div class="coach-live-note">
                     <input id="coachVoiceInput" type="text" aria-label="Scrivi il comando" placeholder="Scrivi il comando: es. Cambio Rossi per Bianchi" />
