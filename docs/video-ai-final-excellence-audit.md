@@ -59,4 +59,3 @@ Data audit: 2026-07-15
 ## Baseline test
 
 `python -m unittest tests.test_video_intelligence -v`: 23 test superati prima delle modifiche.
-
