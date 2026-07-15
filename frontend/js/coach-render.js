@@ -894,7 +894,7 @@ function renderLineupList(side){
         <div class="lineup-player-card ${esc(p.side)}">
             <div class="lineup-number">${esc(p.number || "-")}</div>
             <button type="button" class="lineup-player-main" onclick="openLineupPlayerMenu('${esc(p.id)}')" aria-label="Modifica ${esc(p.name)}">
-                <div class="lineup-name">${esc(p.name)}</div>
+                <div class="lineup-name" title="${esc(p.name)}">${esc(p.name)}</div>
                 <div class="lineup-meta">${esc(p.role || "Jolly")} · ${esc(p.status || "Titolare")}</div>
             </button>
             <button type="button" class="lineup-menu-button" onclick="openLineupPlayerMenu('${esc(p.id)}')" aria-label="Azioni per ${esc(p.name)}" title="Azioni giocatore">⋮</button>
@@ -991,10 +991,10 @@ function renderLineupPitch(){
         return `
             <div class="pitch-slot" data-lineup-slot="${esc(slot.id)}" data-lineup-side="${esc(activeSide)}" style="--slot-left:${position.x}%;--slot-top:${position.y}%;" aria-label="Posizione ${esc(slot.role)}">
                 ${player ? `
-                    <button type="button" class="pitch-player ${esc(activeSide)}" data-lineup-player="${esc(player.id)}" onclick="openLineupPlayerMenu('${esc(player.id)}')" aria-label="${esc(player.name)}, ${esc(player.role || "Jolly")}. Tocca per modificare o trascina per cambiare posizione.">
-                        <span class="pitch-shirt">${esc(player.number || "-")}</span>
-                        <span class="pitch-name">${esc(player.name)}</span>
-                        <span class="pitch-role">${esc(player.role || "Jolly")}</span>
+                    <button type="button" class="pitch-player ${esc(activeSide)}" data-lineup-player="${esc(player.id)}" onclick="openLineupPlayerMenu('${esc(player.id)}')" title="${esc(player.name)}" aria-label="${esc(player.name)}, numero ${esc(player.number || "non indicato")}, ${esc(player.role || "Jolly")}, titolare della squadra ${activeSide === "away" ? "ospite" : "di casa"}. Tocca per modificare o trascina per cambiare posizione.">
+                        <span class="pitch-shirt" aria-hidden="true">${esc(player.number || "-")}</span>
+                        <span class="pitch-name" title="${esc(player.name)}">${esc(player.name)}</span>
+                        <span class="pitch-role" title="${esc(player.role || "Jolly")}">${esc(player.role || "Jolly")}</span>
                     </button>
                 ` : `<span class="pitch-slot-target" aria-hidden="true">${esc(slot.role.slice(0,1))}</span>`}
             </div>
@@ -1004,7 +1004,7 @@ function renderLineupPitch(){
     if(bench){
         bench.setAttribute("data-lineup-bench", activeSide);
         bench.innerHTML = benchPlayers.length
-            ? benchPlayers.map(p => `<button type="button" class="bench-chip ${esc(activeSide)}" data-lineup-player="${esc(p.id)}" onclick="openLineupPlayerMenu('${esc(p.id)}')" aria-label="${esc(p.name)} in panchina. Tocca per modificare o trascina sul campo per schierarlo.">${activeSide === "away" ? "Ospite" : "Casa"} · ${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</button>`).join("")
+            ? benchPlayers.map(p => `<button type="button" class="bench-chip ${esc(activeSide)}" data-lineup-player="${esc(p.id)}" onclick="openLineupPlayerMenu('${esc(p.id)}')" title="${esc(p.name)}" aria-label="${esc(p.name)}, numero ${esc(p.number || "non indicato")}, ${esc(p.role || "Jolly")}, panchina della squadra ${activeSide === "away" ? "ospite" : "di casa"}. Tocca per modificare o trascina sul campo per schierarlo.">${activeSide === "away" ? "Ospite" : "Casa"} · ${esc(formatLineupPlayer(p))} · ${esc(p.role || "Jolly")}</button>`).join("")
             : `<span class="bench-chip">Trascina qui un giocatore per spostarlo in panchina</span>`;
     }
 }
