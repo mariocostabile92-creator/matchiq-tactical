@@ -39,7 +39,14 @@ function renderCoachVoiceProposalEditor(proposal){
         cells.push(`<label><span>Tema</span>${renderCoachVoiceSelect(proposal.entities?.topic || "general_note", themes, "topic", proposal.id)}</label>`);
         cells.push(`<label><span>Giocatore</span>${renderCoachVoiceSelect(proposal.entities?.player_id || "", players, "player_id", proposal.id)}</label>`);
     }
-    return `<div class="coach-voice-editor">${cells.join("")}</div>`;
+    return `
+        <div class="coach-voice-transcript-review">
+            <label for="coachVoiceTranscriptEditor">Trascrizione da verificare</label>
+            <textarea id="coachVoiceTranscriptEditor" rows="3" onchange="updateCoachVoiceProposalField('${esc(proposal.id)}','transcript',this.value)">${esc(proposal.transcript || "")}</textarea>
+            <small>Correggi eventuali parole, nomi o dettagli prima di confermare.</small>
+        </div>
+        <div class="coach-voice-editor">${cells.join("")}</div>
+    `;
 }
 
 function renderCoachVoiceProposalCard(proposal){
@@ -86,7 +93,7 @@ function renderCoachVoiceProposalCard(proposal){
             <div class="coach-voice-actions-row">
                 <button class="btn green" type="button" onclick="applyCoachVoiceProposal('${esc(proposal.id)}')">Conferma</button>
                 <button class="btn dark" type="button" onclick="editCoachVoiceProposal()">Modifica</button>
-                <button class="btn danger" type="button" onclick="cancelCoachVoiceProposal()">Annulla</button>
+                <button class="btn danger" type="button" onclick="cancelCoachVoiceProposal()">Scarta</button>
             </div>
         </div>
     `;

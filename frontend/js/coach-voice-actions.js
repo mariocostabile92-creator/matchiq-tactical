@@ -329,7 +329,10 @@ function updateCoachVoiceProposalField(id, field, value){
     const proposal = getCoachVoiceProposalById(id);
     if(!proposal) return;
     proposal.entities = proposal.entities || {};
-    if(field === "minute"){
+    if(field === "transcript"){
+        proposal.transcript = String(value || "").trim();
+        proposal.entities.note_original = proposal.transcript;
+    }else if(field === "minute"){
         proposal.minute = clampCoachVoiceNumber(value, 0, 130);
     }else if(field === "team"){
         proposal.team = value === "away" ? "away" : "home";
@@ -618,10 +621,9 @@ function cancelCoachVoiceProposal(){
 function editCoachVoiceProposal(){
     const proposal = ensureCoachVoiceMemory().lastProposal;
     if(!proposal) return;
-    setInputValue("coachVoiceInput", proposal.transcript || "");
-    const input = document.getElementById("coachVoiceInput");
+    const input = document.getElementById("coachVoiceTranscriptEditor") || document.getElementById("coachVoiceInput");
     if(input) input.focus();
-    setCoachVoiceUiStatus("Modifica il testo e premi Interpreta.", "idle");
+    setCoachVoiceUiStatus("Correggi trascrizione e dettagli, poi premi Conferma.", "idle");
 }
 
 function bindCoachVoiceInput(){
