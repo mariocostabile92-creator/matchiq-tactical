@@ -137,6 +137,63 @@ class SegmentationAndRankingTests(unittest.TestCase):
         self.assertEqual(sorted(item["frame_rank"] for item in ranked), [1, 2])
         self.assertEqual(ranked[1]["frame_rank"], 1)
 
+    def test_candidate_ranking_is_deterministic_and_keeps_real_timestamps(self):
+        segment = {
+            "start_timestamp_ms": 10_000,
+            "end_timestamp_ms": 30_000,
+            "representative_timestamp_ms": 20_000,
+            "frame_index": 3,
+            "frame_meta": {"phase": "linea difensiva"},
+            "phase_type": "defensive_line",
+        }
+        times = [11_000, 13_500, 16_000, 19_000, 22_000, 25_000, 28_000]
+        metadata = [
+            {
+                "quality": 65 + index,
+                "sharpness": 70,
+                "contrast": 65,
+                "brightness": 128,
+                "camera": "wide tactical",
+                "visible_players": 9,
+                "visual_hash": f"frame-{index}",
+            }
+            for index in range(len(times))
+        ]
+        pool = video_frame_ranking_service.build_candidate_pool(times, metadata)
+        first = video_frame_ranking_service.build_ranked_candidates(segment, pool, 40_000)
+        second = video_frame_ranking_service.build_ranked_candidates(segment, pool, 40_000)
+        self.assertEqual(first, second)
+        self.assertGreaterEqual(len(first), 5)
+        self.assertLessEqual(len(first), 9)
+        self.assertTrue(all(item["timestamp_ms"] in times for item in first))
+        self.assertEqual([item["rank"] for item in first], list(range(1, len(first) + 1)))
+        self.assertEqual(first[0]["selection_status"], "suggested")
+        self.assertTrue(all(item["selection_status"] == "alternative" for item in first[1:]))
+
+    def test_visual_quality_penalties_force_manual_review_for_bad_frames(self):
+        good = video_frame_ranking_service.score_frame({
+            "quality": 85,
+            "sharpness": 88,
+            "contrast": 72,
+            "brightness": 128,
+            "camera": "wide tactical",
+            "visible_players": 10,
+        }, "defensive_line")
+        black = video_frame_ranking_service.score_frame({
+            "quality": 85,
+            "sharpness": 10,
+            "black_ratio": 96,
+            "blur": 90,
+            "boundary_penalty": 100,
+            "duplicate_similarity": 99,
+        }, "defensive_line")
+        self.assertGreater(good["score"], black["score"])
+        self.assertTrue(good["reliable"])
+        self.assertFalse(black["reliable"])
+        self.assertEqual(black["tier"], "discard")
+        for penalty in ("frame_nero", "mosso", "bordo_segmento", "duplicazione"):
+            self.assertIn(penalty, black["penalties"])
+
 
 class EvidenceLifecycleTests(unittest.TestCase):
     def test_evidence_clamps_timestamps_and_confidence(self):
