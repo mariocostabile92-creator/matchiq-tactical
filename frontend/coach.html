@@ -1145,6 +1145,14 @@
                         <button class="coach-live-btn" type="button" onclick="focusCoachManualNote()"><strong>Nota manuale</strong><span>Scrivi un comando</span></button>
                         <button class="coach-live-btn warn" data-tactical-event-label="Comunicazione" type="button" onclick="addTacticalLiveEvent('comunicazione','Comunicazione','VOICE','Manca comunicazione tra reparti: richiamare guida e marcature.')"><strong>Comunica</strong><span>Staff alert</span></button>
                     </div>
+                    <div class="coach-review-bookmark">
+                        <label for="coachReviewNoteInput">Da rivedere nel post-partita</label>
+                        <div>
+                            <input id="coachReviewNoteInput" type="text" maxlength="180" placeholder="Nota facoltativa: es. uscita lato destro" />
+                            <button class="btn gold" type="button" onclick="addCoachReviewBookmark()">Segna da rivedere</button>
+                        </div>
+                        <small>Salva minuto, fase e squadra osservata senza interrompere la partita.</small>
+                    </div>
                 </section>
 
             <div class="coach-voice-panel" id="coachVoicePanel">

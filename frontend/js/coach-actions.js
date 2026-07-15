@@ -111,16 +111,16 @@ function buildCoachEvent(type, label, icon, options={}){
 function addQuickEvent(type, label, icon, options={}){
     if(!coachState.match){
         showNotice("Prima crea una partita manuale.", "warn");
-        return;
+        return null;
     }
     const side = options.side || getInputValue("eventTeamInput", "home");
     const fingerprint = [type, side, options.source || "quick", options.playerId || ""].join(":");
-    if(window.MatchIQMatchDayGuard && !window.MatchIQMatchDayGuard.allow(fingerprint)) return;
+    if(window.MatchIQMatchDayGuard && !window.MatchIQMatchDayGuard.allow(fingerprint)) return null;
     const event = buildCoachEvent(type, label, icon, options);
     event.clientActionId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     if(window.MatchIQMatchDayGuard?.isDuplicate(event, coachState.events[0])){
         showNotice("Evento gia registrato: duplicato ignorato.", "warn", 2200);
-        return;
+        return null;
     }
     coachState.events.unshift(event);
     setInputValue("eventNoteInput", "");
@@ -131,6 +131,7 @@ function addQuickEvent(type, label, icon, options={}){
     else renderAll();
     window.MatchIQMatchDayGuard?.confirmEvent(event);
     showNotice(`${label} registrato per ${event.team}${event.player ? " - " + event.player : ""}.`, "ok", 2500);
+    return event;
 }
 
 function addLiveEvent(type, label, icon, note="", side=""){

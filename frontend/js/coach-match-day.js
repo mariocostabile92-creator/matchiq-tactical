@@ -70,7 +70,31 @@
     input.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
+  function addReviewBookmark(){
+    if(!coachState.match){
+      if(typeof showNotice === "function") showNotice("Prima crea la partita nel Pre-partita.", "warn");
+      return;
+    }
+    const noteInput = document.getElementById("coachReviewNoteInput");
+    const note = String(noteInput?.value || "").trim();
+    const side = document.getElementById("eventTeamInput")?.value === "away" ? "away" : "home";
+    const event = addQuickEvent("da_rivedere", "Da rivedere", "REVIEW", {
+      minute:"live",
+      live:true,
+      side,
+      note,
+      source:"match-day-bookmark",
+      tags:["Da rivedere", "Match Day", coachState.live?.period || "1T"]
+    });
+    if(!event) return;
+    if(noteInput) noteInput.value = "";
+    if(typeof showNotice === "function"){
+      showNotice(`Bookmark salvato al ${event.minute}' per ${event.team}.`, "ok", 2800);
+    }
+  }
+
   window.setCoachMatchCommand = command;
   window.renderCoachMatchDayStatus = renderStatus;
   window.focusCoachManualNote = focusManualNote;
+  window.addCoachReviewBookmark = addReviewBookmark;
 })();
