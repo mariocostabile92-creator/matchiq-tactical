@@ -24,10 +24,10 @@
   };
 
   const navigation = [
-    { key: "home", label: "Home", href: withVersion("/index.html") },
+    { key: "home", label: "Oggi", href: withVersion("/index.html") },
     { key: "coach", label: "Coach", href: withVersion("/coach.html") },
     { key: "video", label: "Video AI", href: withVersion("/video.html") },
-    { key: "videoHub", label: "Video Hub", href: withVersion("/video.html#hubArchivePane") }
+    { key: "account", label: "Account", href: withVersion("/account.html") }
   ];
 
   function moduleFromPath(pathname){
