@@ -12,7 +12,7 @@
     const formation = typeof getLineupFormation === "function" ? getLineupFormation(player.side) : "4-3-3";
     const slots = window.MatchIQLineupLayouts?.slots(formation) || [];
     select.innerHTML = `<option value="">Posizione automatica</option>` + slots.map(slot =>
-      `<option value="${slot.id}">${slot.role} · ${slot.id.toUpperCase()}</option>`
+      `<option value="${slot.id}">${slot.tacticalLabel} - ${slot.tacticalShort}</option>`
     ).join("");
     select.value = player.slot || "";
     select.disabled = player.status === "Panchina";

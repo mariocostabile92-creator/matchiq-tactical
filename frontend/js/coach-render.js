@@ -989,14 +989,14 @@ function renderLineupPitch(){
         const player = starters.find(item => item.slot === slot.id);
         const position = player ? getPitchPosition(player, index, starters.length) : slot;
         return `
-            <div class="pitch-slot" data-lineup-slot="${esc(slot.id)}" data-lineup-side="${esc(activeSide)}" style="--slot-left:${position.x}%;--slot-top:${position.y}%;" aria-label="Posizione ${esc(slot.role)}">
+            <div class="pitch-slot ${player ? "is-occupied" : ""}" data-lineup-slot="${esc(slot.id)}" data-lineup-side="${esc(activeSide)}" data-lineup-tactical="${esc(slot.tacticalShort)}" style="--slot-left:${position.x}%;--slot-top:${position.y}%;" aria-label="Posizione ${esc(slot.tacticalLabel)}">
                 ${player ? `
-                    <button type="button" class="pitch-player ${esc(activeSide)}" data-lineup-player="${esc(player.id)}" onclick="openLineupPlayerMenu('${esc(player.id)}')" title="${esc(player.name)}" aria-label="${esc(player.name)}, numero ${esc(player.number || "non indicato")}, ${esc(player.role || "Jolly")}, titolare della squadra ${activeSide === "away" ? "ospite" : "di casa"}. Tocca per modificare o trascina per cambiare posizione.">
+                    <button type="button" class="pitch-player ${esc(activeSide)}" data-lineup-player="${esc(player.id)}" onclick="openLineupPlayerMenu('${esc(player.id)}')" title="${esc(player.name)} - ${esc(slot.tacticalLabel)}" aria-label="${esc(player.name)}, numero ${esc(player.number || "non indicato")}, ${esc(slot.tacticalLabel)}, titolare della squadra ${activeSide === "away" ? "ospite" : "di casa"}. Tocca per modificare o trascina per cambiare posizione.">
                         <span class="pitch-shirt" aria-hidden="true">${esc(player.number || "-")}</span>
                         <span class="pitch-name" title="${esc(player.name)}">${esc(player.name)}</span>
-                        <span class="pitch-role" title="${esc(player.role || "Jolly")}">${esc(player.role || "Jolly")}</span>
+                        <span class="pitch-role" title="${esc(slot.tacticalLabel)}">${esc(slot.tacticalShort)}</span>
                     </button>
-                ` : `<span class="pitch-slot-target" aria-hidden="true">${esc(slot.role.slice(0,1))}</span>`}
+                ` : `<span class="pitch-slot-target" title="${esc(slot.tacticalLabel)}" aria-hidden="true">${esc(slot.tacticalShort)}</span>`}
             </div>
         `;
     }).join("") + (!starters.length ? `<div class="pitch-empty-state">Aggiungi i titolari della squadra ${activeSide === "away" ? "ospite" : "di casa"} per vedere la formazione sul campo.</div>` : "");

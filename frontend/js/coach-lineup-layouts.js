@@ -12,6 +12,44 @@
     "3-4-3": [slot("gk","Portiere",50,90),slot("d1","Difensore",24,72),slot("d2","Difensore",50,75),slot("d3","Difensore",76,72),slot("m1","Esterno",14,50),slot("m2","Centrocampista",39,53),slot("m3","Centrocampista",61,53),slot("m4","Esterno",86,50),slot("a1","Attaccante",19,23),slot("a2","Attaccante",50,18),slot("a3","Attaccante",81,23)],
     "5-3-2": [slot("gk","Portiere",50,90),slot("d1","Difensore",12,68),slot("d2","Difensore",30,73),slot("d3","Difensore",50,76),slot("d4","Difensore",70,73),slot("d5","Difensore",88,68),slot("m1","Centrocampista",27,49),slot("m2","Centrocampista",50,53),slot("m3","Centrocampista",73,49),slot("a1","Attaccante",35,21),slot("a2","Attaccante",65,21)]
   });
+  const tactical = (label, short) => Object.freeze({ tacticalLabel:label, tacticalShort:short });
+  const tacticalLayouts = Object.freeze({
+    "4-3-3": {
+      gk:tactical("Portiere","POR"), d1:tactical("Terzino sinistro","TS"), d2:tactical("Difensore centrale sinistro","DC"), d3:tactical("Difensore centrale destro","DC"), d4:tactical("Terzino destro","TD"),
+      m1:tactical("Mezzala sinistra","MS"), m2:tactical("Mediano","MED"), m3:tactical("Mezzala destra","MD"),
+      a1:tactical("Ala sinistra","AS"), a2:tactical("Punta centrale","PC"), a3:tactical("Ala destra","AD")
+    },
+    "4-4-2": {
+      gk:tactical("Portiere","POR"), d1:tactical("Terzino sinistro","TS"), d2:tactical("Difensore centrale sinistro","DC"), d3:tactical("Difensore centrale destro","DC"), d4:tactical("Terzino destro","TD"),
+      m1:tactical("Esterno sinistro","ES"), m2:tactical("Centrocampista centrale sinistro","CC"), m3:tactical("Centrocampista centrale destro","CC"), m4:tactical("Esterno destro","ED"),
+      a1:tactical("Seconda punta","SP"), a2:tactical("Punta centrale","PC")
+    },
+    "4-2-3-1": {
+      gk:tactical("Portiere","POR"), d1:tactical("Terzino sinistro","TS"), d2:tactical("Difensore centrale sinistro","DC"), d3:tactical("Difensore centrale destro","DC"), d4:tactical("Terzino destro","TD"),
+      m1:tactical("Mediano sinistro","MED"), m2:tactical("Mediano destro","MED"), t1:tactical("Esterno sinistro","ES"), t2:tactical("Trequartista","TRQ"), t3:tactical("Esterno destro","ED"),
+      a1:tactical("Punta centrale","PC")
+    },
+    "4-3-1-2": {
+      gk:tactical("Portiere","POR"), d1:tactical("Terzino sinistro","TS"), d2:tactical("Difensore centrale sinistro","DC"), d3:tactical("Difensore centrale destro","DC"), d4:tactical("Terzino destro","TD"),
+      m1:tactical("Mezzala sinistra","MS"), m2:tactical("Mediano","MED"), m3:tactical("Mezzala destra","MD"), t1:tactical("Trequartista","TRQ"),
+      a1:tactical("Seconda punta","SP"), a2:tactical("Punta centrale","PC")
+    },
+    "3-5-2": {
+      gk:tactical("Portiere","POR"), d1:tactical("Braccetto sinistro","BSX"), d2:tactical("Difensore centrale","DC"), d3:tactical("Braccetto destro","BDX"),
+      m1:tactical("Quinto sinistro","QS"), m2:tactical("Mezzala sinistra","MS"), m3:tactical("Mediano","MED"), m4:tactical("Mezzala destra","MD"), m5:tactical("Quinto destro","QD"),
+      a1:tactical("Seconda punta","SP"), a2:tactical("Punta centrale","PC")
+    },
+    "3-4-3": {
+      gk:tactical("Portiere","POR"), d1:tactical("Braccetto sinistro","BSX"), d2:tactical("Difensore centrale","DC"), d3:tactical("Braccetto destro","BDX"),
+      m1:tactical("Quinto sinistro","QS"), m2:tactical("Mezzala sinistra","MS"), m3:tactical("Mezzala destra","MD"), m4:tactical("Quinto destro","QD"),
+      a1:tactical("Ala sinistra","AS"), a2:tactical("Punta centrale","PC"), a3:tactical("Ala destra","AD")
+    },
+    "5-3-2": {
+      gk:tactical("Portiere","POR"), d1:tactical("Quinto sinistro","QS"), d2:tactical("Difensore centrale sinistro","DC"), d3:tactical("Difensore centrale","DC"), d4:tactical("Difensore centrale destro","DC"), d5:tactical("Quinto destro","QD"),
+      m1:tactical("Mezzala sinistra","MS"), m2:tactical("Mediano","MED"), m3:tactical("Mezzala destra","MD"),
+      a1:tactical("Seconda punta","SP"), a2:tactical("Punta centrale","PC")
+    }
+  });
   const aliases = { Esterno:"Centrocampista", Jolly:"Centrocampista" };
   const SETTINGS_KEY = "matchiq_coach_lineup_formations_v1";
 
@@ -31,7 +69,14 @@
 
   function names(){ return Object.keys(layouts); }
   function normalize(name){ return layouts[name] ? name : "4-3-3"; }
-  function slots(name){ return layouts[normalize(name)].map(item => safePosition(item)); }
+  function tacticalSlot(name, slotId){
+    const formation = normalize(name);
+    return tacticalLayouts[formation]?.[slotId] || tactical("Posizione tattica","POS");
+  }
+  function slots(name){
+    const formation = normalize(name);
+    return layouts[formation].map(item => ({...safePosition(item), ...tacticalSlot(formation, item.id)}));
+  }
   function preferredRole(role){ return aliases[role] || role || "Centrocampista"; }
   function assign(players, formation){
     const available = slots(formation);
@@ -132,6 +177,7 @@
     assign,
     getFormation,
     ensureSlots,
+    tacticalSlot,
     safePosition,
     safeArea:{...PITCH_SAFE_AREA}
   };
