@@ -1,0 +1,10 @@
+vision_output/
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.onnx
+*.pt
+*.pth
+*.engine
+__pycache__/
