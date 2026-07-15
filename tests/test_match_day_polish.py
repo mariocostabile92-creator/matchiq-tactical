@@ -46,7 +46,7 @@ class MatchDayPolishTests(unittest.TestCase):
             # Information architecture: 10
             ("observation groups", 'class="coach-observation-groups"' in page),
             ("team structure group", "Struttura della squadra" in page),
-            ("situations group", "Fasi e situazioni" in page),
+            ("situations group", "Fasi di gioco" in page),
             ("staff tools group", "Strumenti staff" in page),
             ("four structure actions", all(x in page for x in ("Linea bassa", "Squadra lunga", "Ampiezza", "Profondita"))),
             ("three situation actions", all(x in page for x in ("Seconda palla", "Transizione", "Uscita lato"))),
@@ -77,7 +77,7 @@ class MatchDayPolishTests(unittest.TestCase):
             ("background safety", "document.hidden" in voice and "Nessun dato e stato salvato" in voice),
 
             # Review bookmarks: 6
-            ("bookmark control", "Segna da rivedere" in page),
+            ("bookmark control", "Da rivedere" in page and "Segna questo momento per rivederlo dopo la partita." in page),
             ("bookmark optional note", "coachReviewNoteInput" in page),
             ("bookmark event type", 'addQuickEvent("da_rivedere"' in match_day),
             ("bookmark live minute", 'minute:"live"' in match_day),
@@ -94,8 +94,8 @@ class MatchDayPolishTests(unittest.TestCase):
             # PWA, touch and release: 4
             ("touch targets", "@media(pointer:coarse)" in styles and "min-height:48px" in styles),
             ("standalone safe area", "@media(display-mode:standalone)" in styles and "safe-area-inset-bottom" in styles),
-            ("pwa cache release", 'const CACHE_NAME = "matchiq-pwa-v133"' in worker),
-            ("pwa coach assets", all(x in worker for x in ("/coach.html?v=10533", "/css/coach.css?v=10533", "/js/coach-voice-actions.js?v=10533"))),
+            ("pwa cache release", 'const CACHE_NAME = "matchiq-pwa-v134"' in worker),
+            ("pwa coach assets", all(x in worker for x in ("/coach.html?v=10534", "/css/coach.css?v=10534", "/js/coach-voice-actions.js?v=10534"))),
         ]
 
         self.assertEqual(len(checks), 54)

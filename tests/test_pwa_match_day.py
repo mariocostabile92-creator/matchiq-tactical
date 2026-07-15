@@ -117,14 +117,14 @@ class PwaMatchDaySprintTests(unittest.TestCase):
         worker = read_frontend("service-worker.js")
         self.assertEqual(manifest["start_url"], "/index.html?v=10530")
         self.assertEqual(manifest["display"], "standalone")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v133"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v134"', worker)
         for asset in (
             "/css/coach-lineup.css?v=10532",
             "/js/coach-lineup-layouts.js?v=10531",
             "/js/coach-lineup-interactions.js?v=10531",
             "/js/coach-lineup-player-menu.js?v=10531",
-            "/js/coach-match-day.js?v=10533",
-            "/js/coach-match-feedback.js?v=10526",
+            "/js/coach-match-day.js?v=10534",
+            "/js/coach-match-feedback.js?v=10534",
         ):
             self.assertIn(f'"{asset}"', worker)
 
@@ -133,8 +133,8 @@ class PwaMatchDaySprintTests(unittest.TestCase):
         core = page.index("/js/coach-core.js?v=10526")
         for asset in (
             "/js/coach-lineup-layouts.js?v=10531",
-            "/js/coach-match-feedback.js?v=10526",
-            "/js/coach-match-day.js?v=10533",
+            "/js/coach-match-feedback.js?v=10534",
+            "/js/coach-match-day.js?v=10534",
             "/js/coach-lineup-interactions.js?v=10531",
             "/js/coach-lineup-player-menu.js?v=10531",
         ):
