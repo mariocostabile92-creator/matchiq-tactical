@@ -148,6 +148,22 @@
     return {id:briefing.id,isRead:briefing.is_read===true,title:content.title||"Weekly AI Briefing",subtitle:content.subtitle||"Sintesi tecnica della settimana.",sources:sources.slice(0,3)};
   };
 
+  H.videoAttention = function(){
+    const activities=H.state.remote?.activities||[];
+    const sessions=activities.filter(item=>item?.kind==="video_session");
+    const reports=activities.filter(item=>item?.kind==="video_report");
+    const sort=(items)=>[...items].sort((a,b)=>new Date(b.updated_at||b.created_at||0)-new Date(a.updated_at||a.created_at||0));
+    const failed=sort(sessions.filter(item=>item.workflow_state==="failed"))[0];
+    if(failed)return{key:failed.record_key,state:"failed",label:"DA RECUPERARE",title:failed.title,copy:"L'elaborazione non è riuscita. Apri la sessione per controllare e riprovare.",action:"Controlla sessione",url:failed.url};
+    const readyPriority=(H.state.remote?.ai_priorities||[]).find(item=>String(item.title||"").toLowerCase().includes("manca il report"));
+    if(readyPriority)return{key:`priority:${readyPriority.url||readyPriority.title}`,state:"evidence",label:"EVIDENZA DA COMPLETARE",title:readyPriority.text||"Sessione Video pronta",copy:"I materiali sono disponibili, ma il report tecnico non è ancora stato generato.",action:readyPriority.action||"Genera report",url:readyPriority.url||"/video.html"};
+    const processing=sort(sessions.filter(item=>item.workflow_state==="processing"))[0];
+    if(processing)return{key:processing.record_key,state:"processing",label:"IN ELABORAZIONE",title:processing.title,copy:"MatchIQ sta preparando i materiali della sessione.",action:"Controlla stato",url:processing.url};
+    const completed=sort(reports)[0];
+    if(completed)return{key:completed.record_key,state:"completed",label:"ULTIMO REPORT COMPLETATO",title:completed.title,copy:"Il report Video AI più recente è disponibile nell'archivio.",action:"Apri report",url:completed.url};
+    return null;
+  };
+
   H.contextForToday = function(){
     const current=H.state.local?.coachCurrent;
     const currentItem=current?.match?H.coachItem(current,true):null;
@@ -165,9 +181,9 @@
     }else if(H.weeklyContext()&&!H.weeklyContext().isRead){
       const weekly=H.weeklyContext();
       hero={key:`weekly:${weekly.id}`,kind:"weekly",eyebrow:"WEEKLY AI BRIEFING",title:weekly.title,lead:weekly.subtitle,statusTitle:"Briefing da leggere",statusText:"Inizia la settimana dalle evidenze già raccolte dallo staff.",action:"Inizia la settimana",url:"/weekly-briefing.html"};
-    }else if(remotePriorities.length){
-      const item=remotePriorities[0];
-      hero={key:`priority:${item.url||item.title}`,kind:"video",eyebrow:"VIDEO AI · ATTENZIONE",title:item.title,lead:item.text||"Una sessione Video AI richiede un controllo.",statusTitle:item.action||"Apri Video AI",statusText:"Controlla il progetto prima di passare al prossimo lavoro.",action:item.action||"Apri",url:item.url||"/video.html"};
+    }else if(H.videoAttention()&&H.videoAttention().state!=="completed"){
+      const item=H.videoAttention();
+      hero={key:item.key,kind:"video",eyebrow:`VIDEO AI · ${item.label}`,title:item.title,lead:item.copy,statusTitle:item.action,statusText:"Controlla il progetto prima di passare al prossimo lavoro.",action:item.action,url:item.url};
     }
     return {hero,currentItem};
   };
@@ -218,6 +234,10 @@
       available.coach_matches = true;
     }
     const priorities = [...(remote.ai_priorities || [])];
+    const videoAttention=H.videoAttention();
+    if(videoAttention&&videoAttention.state==="failed"&&String(today.hero.key)!==String(videoAttention.key)){
+      priorities.unshift({type:"operational",title:"Sessione Video da recuperare",text:videoAttention.title,url:videoAttention.url,action:videoAttention.action});
+    }
     const weekly=H.weeklyContext();
     if(weekly&&!weekly.isRead&&String(today.hero.key)!==`weekly:${weekly.id}`){
       priorities.unshift({type:"operational",title:"Weekly AI Briefing da leggere",text:weekly.subtitle,url:"/weekly-briefing.html",action:"Inizia la settimana"});
@@ -232,7 +252,7 @@
       });
     }
     const uniquePriorities = H.dedupeItems(priorities.map((item,index) => ({...item, kind:"priority", id:item.url || `${item.title}:${index}`, record_key:`priority:${item.url || item.title}`})))
-      .filter(item=>String(item.record_key)!==String(today.hero.key||""))
+      .filter(item=>String(item.record_key)!==String(today.hero.key||"")&&String(item.url||"")!==String(today.hero.url||""))
       .slice(0,4);
 
     H.state.view = {
@@ -243,7 +263,8 @@
       priorities:uniquePriorities,
       hero:today.hero,
       nextMatch:H.nextMatchContext(),
-      weekly
+      weekly,
+      videoAttention
     };
     return H.state.view;
   };

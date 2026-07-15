@@ -66,6 +66,14 @@
     card.append(copy,link(weekly.isRead?"Rileggi":"Inizia la settimana","/weekly-briefing.html","card-action primary"));root.append(card);
   };
 
+  H.renderVideoFocus=function(){
+    const root=$("videoFocusContent");if(!root)return;root.replaceChildren();const item=H.state.view?.videoAttention;
+    if(!item){root.append(H.emptyState("Nessun progetto Video AI richiede attenzione.","Quando carichi una sessione, qui comparirà lo stato operativo più importante.",[{label:"Apri Video AI",url:"/video.html",primary:true}]));return}
+    const card=node("article",undefined,"video-summary"),copy=node("div");
+    copy.append(node("span",item.label,"summary-kicker"),node("strong",item.title,"summary-title"),node("p",item.copy,"summary-copy"));
+    const actionClass=item.state==="failed"?"card-action":"card-action primary";card.append(copy,link(item.action,item.url,actionClass));root.append(card);
+  };
+
   H.renderWeeklyFlow=function(){
     const list=$("weeklyFlowList");if(!list)return;list.replaceChildren();
     [
@@ -95,6 +103,6 @@
   };
 
   H.renderHome=function(){
-    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderNextMatch();H.renderWeekly();H.renderWeeklyFlow();H.renderIntelligence();H.renderNotice();
+    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderNextMatch();H.renderWeekly();H.renderVideoFocus();H.renderWeeklyFlow();H.renderIntelligence();H.renderNotice();
   };
 })();
