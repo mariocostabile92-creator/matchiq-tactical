@@ -1,5 +1,5 @@
 const MATCHIQ_APP_META = {
-    version: "10528",
+    version: "10529",
     year: "2026",
     product: "MatchIQ Coach AI"
 };

@@ -14,6 +14,8 @@
     const badges=$("heroBadges");if(!badges)return;badges.replaceChildren();
     badges.append(node("span",H.isOwner()?"Owner":"Private Beta",`badge ${H.isOwner()?"gold":""}`));
     badges.append(node("span",window.matchMedia?.("(display-mode: standalone)")?.matches?"PWA":"Web app","badge"));
+    const next=H.state.view?.nextMatch;
+    if(next)badges.append(node("span",`Prossima: ${next.home} - ${next.away}`,"badge"));
   };
 
   H.itemIcon=function(kind){return({coach_match:"C",video_session:"V",video_report:"AI"})[kind]||"•"};
