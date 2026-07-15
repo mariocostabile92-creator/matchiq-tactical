@@ -16,6 +16,38 @@
     badges.append(node("span",window.matchMedia?.("(display-mode: standalone)")?.matches?"PWA":"Web app","badge"));
   };
 
+  H.itemIcon=function(kind){return({coach_match:"C",video_session:"V",video_report:"AI"})[kind]||"•"};
+
+  H.renderHero=function(){
+    const hero=H.state.view?.hero||H.contextForToday().hero;
+    const greeting=$("heroGreeting"),title=$("heroTitle"),lead=$("heroLead"),actions=$("heroActions");
+    if(greeting)greeting.textContent=hero.eyebrow;if(title)title.textContent=hero.title;if(lead)lead.textContent=hero.lead;
+    if(actions){actions.replaceChildren();actions.append(link(hero.action,hero.url,"button button-primary"))}
+    const statusTitle=$("heroStatusTitle"),statusText=$("heroStatusText");
+    if(statusTitle)statusTitle.textContent=hero.statusTitle;if(statusText)statusText.textContent=hero.statusText;
+  };
+
+  H.renderPriorities=function(){
+    const grid=$("priorityGrid");if(!grid)return;grid.replaceChildren();
+    const items=H.state.view?.priorities||[];
+    if(!items.length){grid.append(H.emptyState("Nessuna urgenza aperta.","Il lavoro disponibile è aggiornato. Puoi concentrarti sulla prossima attività dello staff."));return}
+    items.slice(0,4).forEach(item=>{
+      const card=node("article",undefined,"priority-card"),copy=node("div");
+      copy.append(node("span",item.type==="system"?"Sistema":"Azione richiesta","priority-kind"),node("h3",item.title),node("p",item.text||""));
+      card.append(copy,link(item.action||"Apri",item.url||"/index.html"));grid.append(card);
+    });
+  };
+
+  H.renderContinue=function(){
+    const list=$("continueList");if(!list)return;list.replaceChildren();const items=H.state.view?.continueItems||[];
+    if(!items.length){list.append(H.emptyState("Tutto aggiornato.","Non ci sono attività interrotte da riprendere in questo momento."));return}
+    items.forEach(item=>{
+      const card=node("article",undefined,"continue-card"),copy=node("div");
+      copy.append(node("h3",item.title||item.module),node("p",item.status||"In lavorazione"),node("span",H.formatDate(item.updated_at||item.created_at),"item-meta"));
+      card.append(node("span",H.itemIcon(item.kind),"item-icon"),copy,link(item.action||"Continua",item.url||"/index.html"));list.append(card);
+    });
+  };
+
   H.renderWeeklyFlow=function(){
     const list=$("weeklyFlowList");if(!list)return;list.replaceChildren();
     [
@@ -45,6 +77,6 @@
   };
 
   H.renderHome=function(){
-    H.renderAccount();H.renderWeeklyFlow();H.renderIntelligence();H.renderNotice();
+    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderWeeklyFlow();H.renderIntelligence();H.renderNotice();
   };
 })();

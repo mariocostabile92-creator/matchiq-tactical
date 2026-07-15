@@ -8,6 +8,8 @@
     user: null,
     remote: {stats:{}, stats_available:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:[]},
     local: {coachHistory:[], coachCurrent:null},
+    weekly: null,
+    training: null,
     localOwnershipMismatch: false,
     error: ""
   };
@@ -124,6 +126,40 @@
     });
   };
 
+  H.isMatchDayActive = function(current=H.state.local?.coachCurrent){
+    if(!current?.match) return false;
+    const live=current.live||{};
+    return live.running===true || (Number(live.elapsed||0)>0 && live.completed!==true && live.finished!==true);
+  };
+
+  H.isCoachWorkIncomplete = function(current=H.state.local?.coachCurrent){
+    if(!current?.match || H.isMatchDayActive(current)) return false;
+    const hasWork=Boolean((current.events||[]).length || (current.lineup||[]).length || String(current.preNotes||current.match?.preNotes||"").trim());
+    const hasFinalReport=Boolean(String(current.report||"").trim());
+    return hasWork && !hasFinalReport;
+  };
+
+  H.contextForToday = function(){
+    const current=H.state.local?.coachCurrent;
+    const currentItem=current?.match?H.coachItem(current,true):null;
+    const remotePriorities=H.state.remote?.ai_priorities||[];
+    let hero={
+      key:"prepare-match",kind:"preparation",eyebrow:"OGGI · PREPARAZIONE",title:"Prepara la prossima partita.",
+      lead:"Imposta avversario, obiettivi e formazione per dare allo staff un punto di partenza condiviso.",
+      statusTitle:"Nessuna urgenza aperta",statusText:"Puoi iniziare dalla preparazione della prossima gara.",
+      action:"Prepara partita",url:"/coach.html#matchSetup"
+    };
+    if(H.isMatchDayActive(current)){
+      hero={key:currentItem.record_key,kind:"match-day",eyebrow:"MATCH DAY ATTIVO",title:currentItem.title,lead:"La partita è in corso. Eventi, Voice Coach e note devono restare a portata di mano.",statusTitle:"Torna alla plancia",statusText:"Riprendi timer e raccolta eventi senza perdere il contesto.",action:"Apri Match Day",url:"/coach.html#matchDayWorkspace"};
+    }else if(H.isCoachWorkIncomplete(current)){
+      hero={key:currentItem.record_key,kind:"coach-work",eyebrow:"LAVORO DA RIPRENDERE",title:currentItem.title,lead:"La preparazione è iniziata ma non è ancora completa.",statusTitle:"Continua da dove eri rimasto",statusText:"Completa formazione, obiettivi o note prima della gara.",action:"Continua in Coach",url:"/coach.html"};
+    }else if(remotePriorities.length){
+      const item=remotePriorities[0];
+      hero={key:`priority:${item.url||item.title}`,kind:"video",eyebrow:"VIDEO AI · ATTENZIONE",title:item.title,lead:item.text||"Una sessione Video AI richiede un controllo.",statusTitle:item.action||"Apri Video AI",statusText:"Controlla il progetto prima di passare al prossimo lavoro.",action:item.action||"Apri",url:item.url||"/video.html"};
+    }
+    return {hero,currentItem};
+  };
+
   H.mergeData = function(){
     const remote = H.state.remote || {};
     const local = H.state.local || {};
@@ -137,7 +173,10 @@
     const coachActivities = (remote.activities || []).filter(item => item?.kind !== "scout_report" && String(item?.module || "").toLowerCase() !== "scout");
     const activities = H.dedupeItems([...coachActivities, ...(current ? [current] : []), ...coachHistory])
       .sort((a,b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
-    const continueItems = H.dedupeItems([...(current ? [current] : []), ...(remote.continue_items || [])]).slice(0,3);
+    const today=H.contextForToday();
+    const continueItems = H.dedupeItems([...(current ? [current] : []), ...(remote.continue_items || [])])
+      .filter(item=>String(item.record_key||"")!==String(today.hero.key||""))
+      .slice(0,3);
 
     const stats = {...(remote.stats || {})};
     const available = {...(remote.stats_available || {})};
@@ -146,7 +185,7 @@
       available.coach_matches = true;
     }
     const priorities = [...(remote.ai_priorities || [])];
-    if(current){
+    if(current && String(today.hero.key)!==String(current.record_key)){
       const ratings = Array.isArray(local.coachCurrent?.ratings) ? local.coachCurrent.ratings.length : 0;
       const report = String(local.coachCurrent?.report || "").trim();
       priorities.unshift({
@@ -155,14 +194,17 @@
         url:"/coach.html", action:report ? "Riapri partita" : "Continua in Coach"
       });
     }
-    const uniquePriorities = H.dedupeItems(priorities.map((item,index) => ({...item, kind:"priority", id:item.url || `${item.title}:${index}`, record_key:`priority:${item.url || item.title}`}))).slice(0,3);
+    const uniquePriorities = H.dedupeItems(priorities.map((item,index) => ({...item, kind:"priority", id:item.url || `${item.title}:${index}`, record_key:`priority:${item.url || item.title}`})))
+      .filter(item=>String(item.record_key)!==String(today.hero.key||""))
+      .slice(0,4);
 
     H.state.view = {
       stats,
       statsAvailable:available,
       activities:activities.slice(0,8),
       continueItems,
-      priorities:uniquePriorities
+      priorities:uniquePriorities,
+      hero:today.hero
     };
     return H.state.view;
   };
