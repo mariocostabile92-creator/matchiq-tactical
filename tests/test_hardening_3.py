@@ -82,10 +82,10 @@ class HardeningThreeTests(unittest.TestCase):
         app_meta = (FRONTEND / "js" / "app-meta.js").read_text(encoding="utf-8")
         video = (FRONTEND / "video.html").read_text(encoding="utf-8")
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('"start_url": "/index.html?v=10528"', manifest)
-        self.assertIn('version: "10528"', app_meta)
+        self.assertIn('"start_url": "/index.html?v=10529"', manifest)
+        self.assertIn('version: "10529"', app_meta)
         self.assertIn('const APP_VERSION = "10528"', video)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v128"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v129"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -232,15 +232,9 @@ class HardeningThreeTests(unittest.TestCase):
         api = (FRONTEND / "js" / "home-api.js").read_text(encoding="utf-8")
         actions = (FRONTEND / "js" / "home-actions.js").read_text(encoding="utf-8")
 
-        self.assertIn("MATCHIQ COACH AI", home)
-        self.assertIn(
-            "Il tuo assistente AI per preparare, vivere e analizzare ogni partita.",
-            home,
-        )
-        self.assertIn(
-            "Un unico workspace per organizzare il lavoro dello staff, raccogliere informazioni sul campo e trasformarle in analisi utili per la settimana successiva.",
-            home,
-        )
+        self.assertIn("Oggi | MatchIQ Coach AI", home)
+        self.assertIn("La scrivania digitale dell'allenatore.", home)
+        self.assertIn("PRIORITÀ DI OGGI", home)
         self.assertNotIn("Partite live disponibili", home)
         self.assertNotIn("Partite live disponibili", state)
         for target in ("heroGreeting", "heroTitle", "heroLead"):
@@ -254,8 +248,7 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertNotIn("data-live-", actions)
         self.assertNotIn('href="/live.html"', home)
         self.assertNotIn('href="/scout.html"', home)
-        for route in ('href="/coach.html"', 'href="/video.html"', 'href="/video.html#hubArchivePane"'):
-            self.assertIn(route, home)
+        self.assertNotIn('href="/video.html#hubArchivePane"', home)
         live_page = (FRONTEND / "live.html").read_text(encoding="utf-8")
         live_script = (FRONTEND / "js" / "live-page.js").read_text(encoding="utf-8")
         scout_page = (FRONTEND / "scout.html").read_text(encoding="utf-8")

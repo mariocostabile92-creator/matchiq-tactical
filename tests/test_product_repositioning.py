@@ -26,17 +26,18 @@ class ProductRepositioningTests(unittest.TestCase):
         self.assertIn("MatchIQ Coach AI", home)
         self.assertIn("MatchIQ Coach AI", landing)
         self.assertIn('product: "MatchIQ Coach AI"', app_meta)
-        for source in (home, landing):
-            self.assertIn(
-                "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
-                source,
-            )
+        self.assertIn("La scrivania digitale dell'allenatore.", home)
+        self.assertIn(
+            "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
+            landing,
+        )
 
     def test_primary_navigation_contains_only_coach_ai_workspace(self):
         config = read_frontend("js/global-nav-config.js")
         navigation = config.split("const navigation = [", 1)[1].split("];", 1)[0]
 
-        self.assertEqual(re.findall(r'key: "([^"]+)"', navigation), ["home", "coach", "video", "videoHub"])
+        self.assertEqual(re.findall(r'key: "([^"]+)"', navigation), ["home", "coach", "video", "account"])
+        self.assertIn('key: "home", label: "Oggi"', navigation)
         self.assertNotIn('key: "live"', navigation)
         self.assertNotIn('key: "scout"', navigation)
         self.assertIn('live: { title: "MatchIQ Live"', config)
@@ -45,12 +46,13 @@ class ProductRepositioningTests(unittest.TestCase):
     def test_home_exposes_staff_workflow_without_live_or_scout(self):
         home = body_of("index.html")
 
-        self.assertIn("MATCHIQ COACH AI", home)
-        for phase in ("Prepara", "Vivi", "Analizza", "Pianifica", "Riparti"):
-            self.assertIn(f"<strong>{phase}</strong>", home)
-        self.assertIn('href="/coach.html"', home)
-        self.assertIn('href="/video.html"', home)
-        self.assertIn('href="/video.html#hubArchivePane"', home)
+        for section_id in (
+            "todayHero", "todayPriorities", "todayContinue", "nextMatch",
+            "weeklyBriefing", "videoFocus", "weeklyFlow",
+            "homeIntelligence", "recentWork",
+        ):
+            self.assertIn(f'id="{section_id}"', home)
+        self.assertNotIn('href="/video.html#hubArchivePane"', home)
         self.assertNotIn('href="/live.html"', home)
         self.assertNotIn('href="/scout.html"', home)
 
@@ -103,10 +105,10 @@ class ProductRepositioningTests(unittest.TestCase):
             manifest["description"],
             "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
         )
-        self.assertEqual(manifest["start_url"], "/index.html?v=10528")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v128"', worker)
-        self.assertIn('version: "10528"', app_meta)
-        self.assertIn('const VERSION = "10528"', config)
+        self.assertEqual(manifest["start_url"], "/index.html?v=10529")
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v129"', worker)
+        self.assertIn('version: "10529"', app_meta)
+        self.assertIn('const VERSION = "10529"', config)
 
     def test_live_and_scout_remain_available_as_direct_products(self):
         worker = read_frontend("service-worker.js")
