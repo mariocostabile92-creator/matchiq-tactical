@@ -117,12 +117,12 @@ class PwaMatchDaySprintTests(unittest.TestCase):
         worker = read_frontend("service-worker.js")
         self.assertEqual(manifest["start_url"], "/index.html?v=10530")
         self.assertEqual(manifest["display"], "standalone")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v130"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v131"', worker)
         for asset in (
-            "/css/coach-lineup.css?v=10526",
-            "/js/coach-lineup-layouts.js?v=10526",
-            "/js/coach-lineup-interactions.js?v=10526",
-            "/js/coach-lineup-player-menu.js?v=10526",
+            "/css/coach-lineup.css?v=10531",
+            "/js/coach-lineup-layouts.js?v=10531",
+            "/js/coach-lineup-interactions.js?v=10531",
+            "/js/coach-lineup-player-menu.js?v=10531",
             "/js/coach-match-day.js?v=10526",
             "/js/coach-match-feedback.js?v=10526",
         ):
@@ -132,11 +132,11 @@ class PwaMatchDaySprintTests(unittest.TestCase):
         page = read_frontend("coach.html")
         core = page.index("/js/coach-core.js?v=10526")
         for asset in (
-            "/js/coach-lineup-layouts.js?v=10526",
+            "/js/coach-lineup-layouts.js?v=10531",
             "/js/coach-match-feedback.js?v=10526",
             "/js/coach-match-day.js?v=10526",
-            "/js/coach-lineup-interactions.js?v=10526",
-            "/js/coach-lineup-player-menu.js?v=10526",
+            "/js/coach-lineup-interactions.js?v=10531",
+            "/js/coach-lineup-player-menu.js?v=10531",
         ):
             self.assertLess(page.index(asset), core)
 
