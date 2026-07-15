@@ -73,6 +73,10 @@
 .coach-event-feedback.ok{border-color:rgba(24,240,139,.35);color:#baffdc}.coach-event-feedback.warn{border-color:rgba(255,209,102,.38);color:#ffe7a8}
 .coach-network-state.online{color:#9ff7c9}.coach-network-state.offline{border-color:rgba(255,138,24,.42);color:#ffd0a0}
 .coach-live-btn[aria-busy="true"]{opacity:.68;transform:scale(.985);cursor:wait}
+.coach-live-btn[data-feedback-state="saving"]{border-style:dashed;box-shadow:inset 0 0 0 2px rgba(56,169,255,.10)}
+.coach-live-btn[data-feedback-state="success"]{border-color:rgba(24,240,139,.72);background:rgba(24,240,139,.18);color:#d9ffec;box-shadow:inset 0 0 0 2px rgba(24,240,139,.12)}
+.coach-live-btn[data-feedback-state="error"]{border-color:rgba(255,65,108,.72);background:rgba(255,65,108,.16);color:#ffe0e7}
+.coach-live-btn[data-feedback-state] strong,.coach-live-btn[data-feedback-state] span{color:inherit}
 .coach-live-btn.card-yellow{
     border-color:rgba(255,209,102,.58);
     background:rgba(255,209,102,.12);

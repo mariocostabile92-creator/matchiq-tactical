@@ -109,17 +109,20 @@ function buildCoachEvent(type, label, icon, options={}){
 }
 
 function addQuickEvent(type, label, icon, options={}){
+    const feedbackButton = options.feedbackButton || null;
     if(!coachState.match){
         showNotice("Prima crea una partita manuale.", "warn");
+        window.MatchIQMatchDayGuard?.failAction(feedbackButton, "Crea prima la partita");
         return null;
     }
     const side = options.side || getInputValue("eventTeamInput", "home");
     const fingerprint = [type, side, options.source || "quick", options.playerId || ""].join(":");
-    if(window.MatchIQMatchDayGuard && !window.MatchIQMatchDayGuard.allow(fingerprint)) return null;
+    if(window.MatchIQMatchDayGuard && !window.MatchIQMatchDayGuard.allow(fingerprint, feedbackButton)) return null;
     const event = buildCoachEvent(type, label, icon, options);
     event.clientActionId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     if(window.MatchIQMatchDayGuard?.isDuplicate(event, coachState.events[0])){
         showNotice("Evento gia registrato: duplicato ignorato.", "warn", 2200);
+        window.MatchIQMatchDayGuard?.failAction(feedbackButton, "Gia registrato");
         return null;
     }
     coachState.events.unshift(event);
@@ -129,28 +132,30 @@ function addQuickEvent(type, label, icon, options={}){
     saveState();
     if(typeof renderMatchDayEventUpdate === "function") renderMatchDayEventUpdate();
     else renderAll();
-    window.MatchIQMatchDayGuard?.confirmEvent(event);
+    window.MatchIQMatchDayGuard?.confirmEvent(event, feedbackButton);
     showNotice(`${label} registrato per ${event.team}${event.player ? " - " + event.player : ""}.`, "ok", 2500);
     return event;
 }
 
-function addLiveEvent(type, label, icon, note="", side=""){
-    addQuickEvent(type, label, icon, {
+function addLiveEvent(type, label, icon, note="", side="", feedbackButton=null){
+    return addQuickEvent(type, label, icon, {
         minute:"live",
         live:true,
         side:side || getInputValue("eventTeamInput", "home"),
         note,
-        source:"live"
+        source:"live",
+        feedbackButton
     });
 }
 
-function addTacticalLiveEvent(type, label, icon, note, side=""){
-    addQuickEvent(type, label, icon, {
+function addTacticalLiveEvent(type, label, icon, note, side="", feedbackButton=null){
+    return addQuickEvent(type, label, icon, {
         minute:"live",
         live:true,
         side:side || getInputValue("eventTeamInput", "home"),
         note,
-        source:"smart-tap"
+        source:"smart-tap",
+        feedbackButton
     });
 }
 
