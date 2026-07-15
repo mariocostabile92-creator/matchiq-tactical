@@ -1016,7 +1016,7 @@
                 <div>
                     <h2>Plancia da panchina</h2>
                     <p>Usa timer, pulsanti grandi e nota vocale mentre la partita e in corso. Gli eventi finiscono subito nella timeline e nel report.</p>
-                    <div class="coach-live-clock" id="coachLiveClock">00:00</div>
+                    <div class="coach-live-clock" id="coachLiveClock" role="timer" aria-label="Tempo partita" aria-live="off">00:00</div>
                 </div>
                 <div class="coach-live-minute" id="coachLiveMinute">0'</div>
             </div>
@@ -1029,30 +1029,41 @@
                     </div>
                 </div>
                 <div class="coach-match-state-card" id="coachMatchStateCard" aria-live="polite"></div>
-                <div class="coach-match-command-grid" aria-label="Comandi rapidi partita">
-                    <button type="button" class="coach-match-command primary" id="coachMatchStartCommand" onclick="setCoachMatchCommand(coachState.live?.running ? 'pause' : 'resume')">Avvia</button>
-                    <button type="button" class="coach-match-command" onclick="setCoachMatchCommand('pause')">Pausa</button>
-                    <button type="button" class="coach-match-command" data-match-period="1T" onclick="setCoachMatchCommand('1T')">1T</button>
-                    <button type="button" class="coach-match-command" data-match-period="INT" onclick="setCoachMatchCommand('INT')">Intervallo</button>
-                    <button type="button" class="coach-match-command" data-match-period="2T" onclick="setCoachMatchCommand('2T')">2T</button>
-                    <button type="button" class="coach-match-command" data-match-period="REC" onclick="setCoachMatchCommand('REC')">Recupero</button>
-                    <button type="button" class="coach-match-command danger" onclick="setCoachMatchCommand('finish')">Termina</button>
+                <div class="coach-match-command-grid" aria-label="Comandi partita">
+                    <div class="coach-match-command-group coach-match-command-primary">
+                        <span class="coach-match-command-label">AZIONE PRINCIPALE</span>
+                        <button type="button" class="coach-match-command primary" id="coachLiveToggle" aria-pressed="false" onclick="coachState.live?.running ? setCoachMatchCommand('pause') : setCoachMatchCommand('resume')">Avvia timer</button>
+                    </div>
+                    <div class="coach-match-command-group coach-match-command-phases">
+                        <span class="coach-match-command-label">CAMBIO FASE</span>
+                        <div class="coach-match-phase-controls">
+                            <button type="button" class="coach-match-command" data-match-period="1T" onclick="setCoachMatchCommand('1T')">1T</button>
+                            <button type="button" class="coach-match-command" data-match-period="INT" onclick="setCoachMatchCommand('INT')">Intervallo</button>
+                            <button type="button" class="coach-match-command" data-match-period="2T" onclick="setCoachMatchCommand('2T')">2T</button>
+                            <button type="button" class="coach-match-command" data-match-period="REC" onclick="setCoachMatchCommand('REC')">Recupero</button>
+                            <select id="coachLivePeriod" class="coach-live-period" aria-label="Altri periodi di gioco" onchange="setCoachLivePeriod(this.value)">
+                                <option value="1T">1T</option>
+                                <option value="INT">Intervallo</option>
+                                <option value="2T">2T</option>
+                                <option value="REC">Recupero</option>
+                                <option value="ET1">Supplementare 1</option>
+                                <option value="ET2">Supplementare 2</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="coach-match-command-group coach-match-command-critical">
+                        <span class="coach-match-command-label">AZIONI CRITICHE</span>
+                        <div class="coach-match-critical-controls">
+                            <button type="button" class="coach-match-command reset" onclick="resetCoachLiveClock()">Azzera timer</button>
+                            <button type="button" class="coach-match-command danger" onclick="setCoachMatchCommand('finish')">Termina partita</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="coach-match-feedback-row">
                     <div id="coachEventFeedback" class="coach-event-feedback" role="status" aria-live="polite">Pronto a registrare il primo evento.</div>
                     <div id="coachNetworkState" class="coach-network-state" role="status">Verifica rete...</div>
                 </div>
-                <div class="coach-live-controls">
-                    <select id="coachLivePeriod" class="coach-live-period" aria-label="Periodo di gioco" onchange="setCoachLivePeriod(this.value)">
-                        <option value="1T">1T</option>
-                        <option value="INT">Intervallo</option>
-                        <option value="2T">2T</option>
-                        <option value="REC">Recupero</option>
-                        <option value="ET1">Supplementare 1</option>
-                        <option value="ET2">Supplementare 2</option>
-                    </select>
-                    <button class="btn green" id="coachLiveToggle" type="button" onclick="toggleCoachLiveClock()">Avvia timer</button>
-                    <button class="btn dark" type="button" onclick="resetCoachLiveClock()">Azzera timer</button>
+                <div class="coach-live-controls coach-halftime-control">
                     <button class="btn gold" type="button" onclick="prepareCoachHalftimeSummary()">Prepara sintesi intervallo</button>
                 </div>
             </section>

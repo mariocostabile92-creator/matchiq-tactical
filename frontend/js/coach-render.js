@@ -620,6 +620,7 @@ function renderLiveClockOnly(){
     if(toggle){
         const elapsed = getCoachLiveElapsedSeconds();
         toggle.textContent = coachState.live?.running ? "Pausa timer" : elapsed > 0 ? "Riprendi timer" : "Avvia timer";
+        toggle.setAttribute("aria-pressed", coachState.live?.running ? "true" : "false");
     }
     if(minute) minute.textContent = `${getLiveMinuteLabel()}'`;
     if(typeof renderCoachMatchDayStatus === "function") renderCoachMatchDayStatus();

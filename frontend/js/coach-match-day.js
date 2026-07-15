@@ -58,8 +58,13 @@
     document.querySelectorAll("[data-match-period]").forEach(button => {
       button.classList.toggle("active", button.dataset.matchPeriod === period);
     });
-    const startButton = document.getElementById("coachMatchStartCommand");
-    if(startButton) startButton.textContent = getCoachLiveElapsedSeconds() > 0 ? "Riprendi" : "Avvia";
+    const startButton = document.getElementById("coachLiveToggle");
+    if(startButton){
+      startButton.textContent = running
+        ? "Pausa timer"
+        : (getCoachLiveElapsedSeconds() > 0 ? "Riprendi timer" : "Avvia timer");
+      startButton.setAttribute("aria-pressed", running ? "true" : "false");
+    }
   }
 
   function focusManualNote(){

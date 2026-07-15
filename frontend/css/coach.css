@@ -50,11 +50,24 @@
 .coach-match-state-card span{color:#8fa3d7;font-size:10px;font-weight:900;text-transform:uppercase}
 .coach-match-state-card strong{color:#fff;font-size:13px;overflow-wrap:anywhere}
 .coach-match-state-card strong.is-running{color:#18f08b}
-.coach-match-command-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin-top:10px}
-.coach-match-command{min-height:44px;border:1px solid rgba(255,255,255,.14);border-radius:11px;background:rgba(255,255,255,.06);color:#fff;font-weight:900;cursor:pointer}
+.coach-match-command-grid{display:grid;grid-template-columns:minmax(150px,.85fr) minmax(330px,2fr) minmax(190px,1fr);gap:10px;margin-top:10px;align-items:stretch}
+.coach-match-command-group{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid rgba(255,255,255,.10);background:rgba(4,12,25,.48);border-radius:12px;min-width:0}
+.coach-match-command-label{font-size:10px;font-weight:900;color:#9fb2d8;text-transform:uppercase}
+.coach-match-phase-controls,.coach-match-critical-controls{display:grid;gap:7px;min-width:0}
+.coach-match-phase-controls{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(105px,1.25fr)}
+.coach-match-critical-controls{grid-template-columns:1fr;flex:1}
+.coach-match-command{min-height:44px;border:1px solid rgba(255,255,255,.14);border-radius:11px;background:rgba(255,255,255,.06);color:#fff;font-weight:900;cursor:pointer;padding:9px 8px}
 .coach-match-command.primary,.coach-match-command.active{border-color:rgba(24,240,139,.55);background:rgba(24,240,139,.16);color:#baffdc}
-.coach-match-command.danger{border-color:rgba(255,65,108,.42);color:#ffb5c5}
-.coach-match-command:focus-visible{outline:3px solid #55a4ff;outline-offset:2px}
+.coach-match-command.primary{min-height:56px;font-size:15px;flex:1;background:linear-gradient(135deg,rgba(24,240,139,.92),rgba(56,169,255,.94));color:#04141b;border-color:transparent}
+.coach-match-command.danger{border-color:rgba(255,65,108,.52);background:rgba(127,29,29,.22);color:#ffd1da}
+.coach-match-command.reset{border-style:dashed;background:rgba(255,255,255,.035);color:#d8e5fa}
+.coach-match-command:disabled,.coach-live-period:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.45)}
+.coach-match-command:focus-visible,.coach-live-period:focus-visible{outline:3px solid #55a4ff;outline-offset:2px}
+.coach-match-command-phases .coach-live-period{width:100%;min-height:44px;margin:0}
+.coach-match-command-critical{border-color:rgba(255,65,108,.20)}
+.coach-halftime-control{margin-top:8px;justify-content:flex-start}
+.coach-halftime-control .btn{min-height:44px}
+.coach-live-clock{display:block;width:5.25ch;min-height:1em;font-size:clamp(54px,8vw,92px);font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1;white-space:nowrap;text-shadow:0 2px 16px rgba(0,0,0,.36);letter-spacing:0}
 .coach-match-feedback-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(190px,1fr);gap:8px;margin-top:10px}
 .coach-event-feedback,.coach-network-state{min-height:38px;display:flex;align-items:center;padding:8px 11px;border:1px solid rgba(255,255,255,.10);border-radius:10px;background:rgba(255,255,255,.035);color:#c7d7f2;font-size:11px;font-weight:800;line-height:1.35}
 .coach-event-feedback.ok{border-color:rgba(24,240,139,.35);color:#baffdc}.coach-event-feedback.warn{border-color:rgba(255,209,102,.38);color:#ffe7a8}
@@ -387,7 +400,9 @@
 @media(max-width:760px){
     .coach-match-feedback-row{grid-template-columns:1fr}
     .coach-match-state-card{grid-template-columns:1fr 1fr}.coach-match-state-card > div:first-child{grid-column:1/-1}
-    .coach-match-command-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .coach-match-command-grid{grid-template-columns:1fr 2fr}
+    .coach-match-command-critical{grid-column:1/-1}
+    .coach-match-critical-controls{grid-template-columns:repeat(2,minmax(0,1fr))}
     .coach-team-events-grid{
         grid-template-columns:1fr;
     }
@@ -446,7 +461,12 @@
 }
 
 @media(max-width:420px){
-    .coach-match-command-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.coach-match-command{min-height:48px}
+    .coach-match-command-grid{grid-template-columns:1fr}.coach-match-command{min-height:48px}
+    .coach-match-command-critical{grid-column:auto}
+    .coach-match-phase-controls{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .coach-match-phase-controls .coach-live-period{grid-column:1/-1}
+    .coach-match-critical-controls{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .coach-live-clock{font-size:clamp(52px,18vw,68px)}
     .coach-match-controls-panel,
     .coach-staff-tools-panel{
         padding:12px;
