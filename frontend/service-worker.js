@@ -1,10 +1,10 @@
-const CACHE_NAME = "matchiq-pwa-v134";
+const CACHE_NAME = "matchiq-pwa-v135";
 const APP_SHELL = [
   "/index.html?v=10530",
   "/coach.html?v=10534",
   "/mobile.html?v=10526",
   "/live.html?v=10526",
-  "/video.html?v=10528",
+  "/video.html?v=10535",
   "/weekly-briefing.html",
   "/pattern-intelligence.html",
   "/training-planner.html",
@@ -18,7 +18,7 @@ const APP_SHELL = [
   "/cookies.html",
   "/js/app-meta.js?v=10530",
   "/css/components.css?v=10526",
-  "/css/video-intelligence.css?v=10528",
+  "/css/video-intelligence.css?v=10535",
   "/js/ux-hardening.js?v=10526",
   "/css/home.css?v=10530",
   "/css/coach-lineup.css?v=10532",
@@ -44,7 +44,7 @@ const APP_SHELL = [
   "/css/club-intelligence-entry.css?v=10530",
   "/css/global-nav.css?v=10530",
   "/js/auth.js?v=10530",
-  "/js/video-intelligence.js?v=10528",
+  "/js/video-intelligence.js?v=10535",
   "/js/safe-render.js?v=10526",
   "/js/global-nav-config.js?v=10530",
   "/js/global-nav-state.js?v=10530",

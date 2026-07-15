@@ -357,4 +357,27 @@
     .vi-clip-editor button{grid-column:1/-1}
     .vi-frame-editor{grid-template-columns:1fr}
     .vi-card-actions .btn{flex:1;min-width:118px}
+    .vi-workspace{
+        max-width:100%;
+        overflow:hidden;
+        padding-bottom:max(16px,env(safe-area-inset-bottom));
+    }
+    .vi-evidence-queue{
+        max-width:100%;
+        scroll-snap-type:x proximity;
+        overscroll-behavior-inline:contain;
+    }
+    .vi-queue-item{scroll-snap-align:start}
+    .vi-toolbar select,
+    .vi-toolbar button,
+    .vi-card-actions .btn,
+    .vi-state .btn{min-height:44px}
+    .vi-clip-editor input,
+    .vi-frame-editor select{min-height:44px}
+}
+
+@media(pointer:coarse){
+    .vi-queue-item,
+    .vi-card-actions .btn,
+    .vi-state .btn{min-height:44px}
 }

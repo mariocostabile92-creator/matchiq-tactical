@@ -1394,7 +1394,7 @@ video{
 }
 </style>
 <link rel="stylesheet" href="/css/global-nav.css?v=10528">
-<link rel="stylesheet" href="/css/video-intelligence.css?v=10528">
+<link rel="stylesheet" href="/css/video-intelligence.css?v=10535">
 </head>
 <body data-miq-module="video">
 <main class="wrap">
@@ -2149,7 +2149,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10528";
+const APP_VERSION = "10535";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -2329,7 +2329,7 @@ function renderFramesGrid(){
         const correctionId = `frameCorrection_verified_${i}`;
         return `
         <article class="frame-card ${i === selectedFrameIndex ? "active" : ""}" onclick="selectTacticalFrame(${i})">
-            <img src="${frame}" alt="Frame ${i+1}">
+            <img src="${frame}" alt="Frame ${i+1}" loading="lazy" decoding="async">
             <span>Frame ${i+1} - ${formatTime(extractedFrameTimes[i])}${meta.label ? ` - ${escapeHtml(meta.label)}` : ""}${meta.selector === "AI" ? " - AI" : ""}</span>
             <small class="frame-confidence">${escapeHtml(meta.validation_status === "verified" ? "Frame verificato" : "Frame selezionato")}${meta.confidence ? ` - ${meta.confidence}%` : ""}${feedback ? ` - ${escapeHtml(feedback)}` : ""}</small>
             <span class="frame-actions" onclick="event.stopPropagation()">
@@ -2350,7 +2350,7 @@ function renderFramesGrid(){
         </div>
         ${candidateFrameResults.map((item,i) => `
             <article class="frame-card candidate" onclick="previewCandidateFrame(${i})">
-                <img src="${item.frame}" alt="Candidato ${i+1}">
+                <img src="${item.frame}" alt="Candidato ${i+1}" loading="lazy" decoding="async">
                 <span>Candidato ${i+1} - ${formatTime(item.time)}${item.meta?.label ? ` - ${escapeHtml(item.meta.label)}` : ""}</span>
                 <small class="frame-confidence">${escapeHtml(item.meta?.validation_reasons?.[0] || "Da controllare")}${item.meta?.confidence ? ` - ${item.meta.confidence}%` : ""}</small>
                 <span class="frame-actions" onclick="event.stopPropagation()">
@@ -2716,7 +2716,7 @@ function renderAiSlides(slides=[], summary="", nextClick=""){
         const setPiece = slide.set_piece_type || "";
         return `
             <article class="ai-slide ${cardClass}">
-                ${frame ? `<img src="${frame}" alt="Slide ${escapeHtml(slide.index || "")}">` : `<div></div>`}
+                ${frame ? `<img src="${frame}" alt="Slide ${escapeHtml(slide.index || "")}" loading="lazy" decoding="async">` : `<div></div>`}
                 <div>
                     <div class="ai-slide-kicker">
                         <span class="${slideGradeClass(grade)}">${escapeHtml(grade)}</span>
@@ -3716,7 +3716,7 @@ function renderVideoLibrary(){
         const reportBadge = latestReport.id ? `<b>Report #${Number(latestReport.id)}</b>` : "";
         return `
         <div class="library-item">
-            ${item.thumbnail ? `<img class="library-thumb" src="${escapeHtml(item.thumbnail)}" alt="Anteprima ${escapeHtml(item.title || "video")}">` : `<div class="library-thumb placeholder">Video</div>`}
+            ${item.thumbnail ? `<img class="library-thumb" src="${escapeHtml(item.thumbnail)}" alt="Anteprima ${escapeHtml(item.title || "video")}" loading="lazy" decoding="async">` : `<div class="library-thumb placeholder">Video</div>`}
             <div>
                 <strong>${escapeHtml(item.title || "Partita MatchIQ")}</strong>
                 <span>${escapeHtml(teamLine)} - ${escapeHtml(getSessionTypeLabel(item))} - ${escapeHtml(sourceProvider)} ${item.size_bytes ? `- ${escapeHtml(formatBytes(item.size_bytes))}` : ""}</span>
@@ -5333,7 +5333,7 @@ if("serviceWorker" in navigator){
     });
 }
 </script>
-<script src="/js/video-intelligence.js?v=10528"></script>
+<script src="/js/video-intelligence.js?v=10535"></script>
 <script src="/js/app-meta.js"></script>
 <link rel="stylesheet" href="/css/knowledge-entry.css?v=10528">
 <link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10528">

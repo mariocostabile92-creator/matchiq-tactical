@@ -403,15 +403,21 @@ class HalftimeAndPwaTests(unittest.TestCase):
         self.assertIn('url.pathname.startsWith("/api/")', worker)
         for extension in ("pdf", "mp4", "webm", "mov", "avi"):
             self.assertIn(extension, worker)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v134"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v135"', worker)
+        self.assertIn('"/video.html?v=10535"', worker)
 
     def test_video_workspace_exposes_review_and_halftime_controls(self):
         page = (ROOT / "frontend" / "video.html").read_text(encoding="utf-8")
         script = (ROOT / "frontend" / "js" / "video-intelligence.js").read_text(encoding="utf-8")
-        for token in ("viHalftimeBtn", "viHalftimePanel", "viConfirmVisibleBtn", "viReportBtn"):
+        for token in (
+            "viHalftimeBtn", "viHalftimePanel", "viConfirmVisibleBtn", "viReportBtn",
+            "viEvidenceQueue", "viReviewProgress", "viSourceFilter", "viMediaFilter",
+        ):
             self.assertIn(token, page)
         self.assertIn("requires_staff_verification", script)
         self.assertIn("prepareProject(false)", script)
+        self.assertIn('data-project-action="retry"', script)
+        self.assertIn('data-project-action="cancel"', script)
 
 
 if __name__ == "__main__":
