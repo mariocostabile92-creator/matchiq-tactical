@@ -147,7 +147,7 @@ function buildTrainingPlanReportText(){
 
 function buildHalftimeReportText(){
     const talk = typeof buildCoachHalftimeTalk === "function" ? buildCoachHalftimeTalk() : [];
-    if(!talk.length) return "- Nessun messaggio intervallo generato.";
+    if(!talk.length) return "- Nessun dato del primo tempo disponibile.";
     return talk.map((line,index) => `${index + 1}. ${line}`).join("\n");
 }
 
@@ -364,7 +364,7 @@ ${buildPrecheckReportText()}
 <strong>Tag tattici automatici</strong>
 ${buildTagMemoryReportText()}
 
-<strong>Cosa dire all'intervallo</strong>
+<strong>Riepilogo primo tempo</strong>
 ${buildHalftimeReportText()}
 
 <strong>Osservazioni registrate con AI Voice Coach</strong>
@@ -485,7 +485,7 @@ function splitReportSections(reportHtml){
         "Pagelle giocatori",
         "Consigli per il mister",
         "Assistente live MatchIQ",
-        "Cosa dire all'intervallo",
+        "Riepilogo primo tempo",
         "Promemoria automatici",
         "Criticità tattiche",
         "Allenamento consigliato",

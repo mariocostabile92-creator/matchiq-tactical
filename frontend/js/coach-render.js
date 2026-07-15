@@ -343,39 +343,40 @@ function getCoachEventSummary(){
 
 function buildCoachHalftimeTalk(){
     ensureCoachStateShape();
-    const s = getCoachEventSummary();
-    const talk = [];
+    const events = Array.isArray(coachState.events) ? coachState.events : [];
     const home = getTeamName("home");
     const away = getTeamName("away");
-    const voice = typeof ensureCoachVoiceMemory === "function" ? ensureCoachVoiceMemory() : {themes:{}};
-    const voiceThemes = Object.values(voice.themes || {})
-        .filter(item => Number(item.count || 0) > 0 && item.status !== "ignored")
-        .sort((a,b) => Number(b.count || 0) - Number(a.count || 0))
-        .slice(0,2);
-
-    voiceThemes.forEach(item => {
-        talk.push(`Osservazione dello staff: ${String(item.label || "tema tattico").toLowerCase()} segnalata ${item.count} volte${Array.isArray(item.minutes) && item.minutes.length ? ` tra il ${item.minutes[0]}' e il ${item.minutes[item.minutes.length - 1]}'` : ""}.`);
-    });
-
-    if(s.lostHome >= 2) talk.push(`${home}: uscita palla da semplificare, serve piu sostegno vicino e meno forzature centrali.`);
-    if(s.lostAway >= 2) talk.push(`${away}: perdita palla ricorrente, possibile tema da attaccare con pressione orientata.`);
-    if(s.defHome >= 1) talk.push(`${home}: controllare linea difensiva, marcature preventive e distanza tra difesa e centrocampo.`);
-    if(s.defAway >= 1) talk.push(`${away}: spazio alle spalle o coperture fragili, insistiamo sulle corse in profondita.`);
-    if(s.chancesHome + s.chancesAway <= 1 && coachState.events.length >= 4) talk.push("Poche occasioni: chiedere piu ampiezza, attacco area e ultimo passaggio piu pulito.");
-    if(s.recoveriesHome >= 3) talk.push(`${home}: pressing utile, dopo recupero serve prima giocata in avanti.`);
-    if(s.recoveriesAway >= 3) talk.push(`${away}: recupera molti palloni, serve uscire dalla pressione con appoggio e cambio lato.`);
-    if(s.width >= 1) talk.push("Tema ampiezza presente: verificare se il vantaggio nasce su lato forte o cambio gioco.");
-    if(s.secondBalls >= 1) talk.push("Seconde palle decisive: alzare aggressivita e accorciare subito dopo il duello.");
-    if(s.longTeam >= 1) talk.push("Squadra lunga: accorciare reparti e proteggere meglio la zona centrale.");
-    if(s.sideBuild >= 1) talk.push("Uscita laterale da pulire: dare sostegno vicino e terzo uomo.");
-    if(s.depth >= 1) talk.push("Profondita efficace: continuare a minacciare lo spazio alle spalle.");
-    if(s.communication >= 1) talk.push("Comunicazione da alzare: guida della linea e chiamate preventive.");
-
-    if(!talk.length){
-        talk.push("Primo messaggio: restare ordinati, comunicare di piu e registrare 3-4 episodi chiave per far leggere meglio la gara a MatchIQ.");
+    const count = (type, side="") => events.filter(event => event.type === type && (!side || event.side === side)).length;
+    const lines = [
+        `Punteggio registrato: ${home} ${getGoals("home")} - ${getGoals("away")} ${away}. Eventi totali: ${events.length}.`,
+        `Occasioni: ${home} ${count("occasione", "home") + count("tiro", "home")}, ${away} ${count("occasione", "away") + count("tiro", "away")}. Recuperi: ${home} ${count("recupero", "home")}, ${away} ${count("recupero", "away")}.`,
+        `Palle perse: ${home} ${count("palla_persa", "home")}, ${away} ${count("palla_persa", "away")}. Errori difensivi: ${home} ${count("errore_difensivo", "home")}, ${away} ${count("errore_difensivo", "away")}.`
+    ];
+    const cardsHome = count("cartellino", "home");
+    const cardsAway = count("cartellino", "away");
+    const changesHome = count("cambio", "home");
+    const changesAway = count("cambio", "away");
+    if(cardsHome || cardsAway || changesHome || changesAway){
+        lines.push(`Disciplina e cambi: cartellini ${home} ${cardsHome}, ${away} ${cardsAway}; cambi ${home} ${changesHome}, ${away} ${changesAway}.`);
     }
-
-    return talk.slice(0,5);
+    const tacticalTypes = ["pressing", "seconda_palla", "transizione", "ampiezza", "profondita", "squadra_lunga", "uscita_lato", "comunicazione"];
+    const tactical = tacticalTypes
+        .map(type => ({type, count:count(type)}))
+        .filter(item => item.count > 0)
+        .sort((a,b) => b.count - a.count)
+        .slice(0,4);
+    if(tactical.length){
+        lines.push(`Osservazioni tattiche registrate: ${tactical.map(item => `${item.type.replaceAll("_", " ")} ${item.count}`).join(", ")}.`);
+    }
+    const reviewCount = count("da_rivedere");
+    const staffNotes = events.filter(event => event.source === "ai-voice" || event.source === "voice" || event.type === "nota").length;
+    if(reviewCount || staffNotes){
+        lines.push(`Materiale staff: ${reviewCount} momenti da rivedere e ${staffNotes} note manuali o vocali.`);
+    }
+    if(!events.length){
+        return ["Nessun evento registrato nel primo tempo."];
+    }
+    return lines.slice(0,6);
 }
 
 function buildCoachAssistantQuestions(){
@@ -572,12 +573,16 @@ function renderCoachAutopilot(){
     const voiceHint = document.getElementById("coachVoiceAutopilotHint");
 
     if(talkBox){
-        talkBox.innerHTML = buildCoachHalftimeTalk().map((line,index) => `
-            <div class="coach-ai-tip ok">
-                <strong>${index + 1}. Messaggio intervallo</strong>
-                <span>${esc(line)}</span>
-            </div>
-        `).join("");
+        if((coachState.live?.period || "1T") !== "INT"){
+            talkBox.innerHTML = `<div class="empty">Disponibile quando imposti la fase Intervallo.</div>`;
+        }else{
+            talkBox.innerHTML = buildCoachHalftimeTalk().map((line,index) => `
+                <div class="coach-ai-tip ok">
+                    <strong>${index + 1}. Dato primo tempo</strong>
+                    <span>${esc(line)}</span>
+                </div>
+            `).join("");
+        }
     }
 
     if(questionsBox){
