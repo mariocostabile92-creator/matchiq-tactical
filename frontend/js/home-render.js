@@ -95,6 +95,17 @@
     ].forEach(([title,copy,url])=>{const card=node("article",undefined,"intelligence-card");card.append(node("span","INTELLIGENCE","intelligence-tag"),node("h3",title),node("p",copy),link("Apri",url));grid.append(card)});
   };
 
+  H.renderActivity=function(){
+    const root=$("recentActivity");if(!root)return;root.replaceChildren();const items=H.state.view?.activities||[];
+    if(!items.length){root.append(H.emptyState("Nessuna attività recente.","Le attività reali di Coach e Video AI compariranno qui dopo il primo utilizzo."));return}
+    items.slice(0,6).forEach(item=>{
+      const row=node("article",undefined,"timeline-item"),copy=node("div");
+      copy.append(node("strong",item.title||item.module),node("small",`${item.module} · ${item.status||"Aggiornato"}`));
+      row.append(node("span",H.itemIcon(item.kind),"item-icon"),copy,node("time",H.formatDate(item.updated_at||item.created_at),"timeline-time"));
+      if(item.url&&item.action)row.append(link(item.action,item.url));root.append(row);
+    });
+  };
+
   H.renderNotice=function(){
     const notice=$("homeNotice");if(!notice)return;const messages=[];
     if(H.state.error)messages.push(H.state.error);
@@ -103,6 +114,6 @@
   };
 
   H.renderHome=function(){
-    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderNextMatch();H.renderWeekly();H.renderVideoFocus();H.renderWeeklyFlow();H.renderIntelligence();H.renderNotice();
+    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderNextMatch();H.renderWeekly();H.renderVideoFocus();H.renderWeeklyFlow();H.renderIntelligence();H.renderActivity();H.renderNotice();
   };
 })();

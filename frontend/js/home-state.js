@@ -228,7 +228,10 @@
       .slice(0,5)
       .map(item => H.coachItem(item));
 
-    const coachActivities = (remote.activities || []).filter(item => item?.kind !== "scout_report" && String(item?.module || "").toLowerCase() !== "scout");
+    const coachActivities = (remote.activities || []).filter(item => {
+      const module=String(item?.module||"").toLowerCase();
+      return item?.kind!=="scout_report"&&!module.includes("scout")&&!module.includes("live");
+    });
     const activities = H.dedupeItems([...coachActivities, ...(current ? [current] : []), ...coachHistory])
       .sort((a,b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
     const today=H.contextForToday();
