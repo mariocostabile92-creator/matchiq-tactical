@@ -1951,6 +1951,7 @@ video{
                     <div class="vi-halftime-list" id="viHalftimeList"></div>
                     <div class="vi-halftime-verify" id="viHalftimeVerify"></div>
                 </section>
+                <div class="vi-review-progress" id="viReviewProgress" aria-live="polite"></div>
                 <div class="vi-toolbar">
                     <div class="vi-field">
                         <label for="viStatusFilter">Stato revisione</label>
@@ -1966,11 +1967,26 @@ video{
                         <label for="viPhaseFilter">Fase</label>
                         <select id="viPhaseFilter"><option value="all">Tutte le fasi</option></select>
                     </div>
+                    <div class="vi-field">
+                        <label for="viSourceFilter">Fonte</label>
+                        <select id="viSourceFilter"><option value="all">Tutte le fonti</option></select>
+                    </div>
+                    <div class="vi-field">
+                        <label for="viMediaFilter">Contenuto</label>
+                        <select id="viMediaFilter">
+                            <option value="all">Frame e clip</option>
+                            <option value="frame">Con frame</option>
+                            <option value="clip">Con clip</option>
+                        </select>
+                    </div>
                     <div class="vi-toolbar-actions">
                         <button class="btn dark small" id="viPendingBtn" type="button">Mostra da revisionare</button>
                     </div>
                 </div>
-                <div class="vi-evidence-list" id="viEvidenceList"></div>
+                <div class="vi-review-layout">
+                    <nav class="vi-evidence-queue" id="viEvidenceQueue" aria-label="Coda evidenze da revisionare"></nav>
+                    <div class="vi-evidence-list" id="viEvidenceList"></div>
+                </div>
             </section>
 
             <div id="aiSlideDeck" class="slide-deck">

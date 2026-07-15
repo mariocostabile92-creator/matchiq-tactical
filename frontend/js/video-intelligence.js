@@ -10,6 +10,7 @@
     matches: [],
     halftimeAvailable: false,
     halftimeAnalysis: null,
+    selectedEvidenceId: null,
     busy: false,
     clipStopHandler: null
   };
@@ -29,6 +30,10 @@
     stats: document.getElementById("viEvidenceStats"),
     statusFilter: document.getElementById("viStatusFilter"),
     phaseFilter: document.getElementById("viPhaseFilter"),
+    sourceFilter: document.getElementById("viSourceFilter"),
+    mediaFilter: document.getElementById("viMediaFilter"),
+    progress: document.getElementById("viReviewProgress"),
+    queue: document.getElementById("viEvidenceQueue"),
     pending: document.getElementById("viPendingBtn"),
     confirmVisible: document.getElementById("viConfirmVisibleBtn"),
     report: document.getElementById("viReportBtn"),
@@ -337,12 +342,31 @@
   function filteredEvidences(){
     const status = elements.statusFilter.value;
     const phase = elements.phaseFilter.value;
+    const source = elements.sourceFilter?.value || "all";
+    const media = elements.mediaFilter?.value || "all";
     return state.evidences.filter(item => {
-      return (status === "all" || item.review_status === status) && (phase === "all" || item.phase_type === phase);
+      const statusMatch = status === "all" || item.review_status === status;
+      const phaseMatch = phase === "all" || item.phase_type === phase;
+      const sourceMatch = source === "all" || item.source_type === source;
+      const mediaMatch = media === "all"
+        || (media === "frame" && Number.isFinite(Number(item.representative_timestamp_ms)))
+        || (media === "clip" && item.clip_reference);
+      return statusMatch && phaseMatch && sourceMatch && mediaMatch;
     });
   }
 
-  function frameOptions(selectedMs){
+  function frameOptions(item){
+    const selectedMs = Number(item?.representative_timestamp_ms || 0);
+    const ranked = Array.isArray(item?.frame_candidates) ? item.frame_candidates : [];
+    if(ranked.length){
+      return ranked.map(candidate => {
+        const value = Number(candidate.timestamp_ms || 0);
+        const score = Math.round(Number(candidate.score || 0) * 100);
+        const prefix = candidate.selection_status === "suggested" ? "Suggerito" : `Alternativa ${candidate.rank || ""}`;
+        const reason = String(candidate.motivation || "").replace(/\s+/g," ").trim();
+        return `<option value="${value}"${Math.abs(value - selectedMs) < 750 ? " selected" : ""} title="${html(reason)}">${html(prefix)} Â· ${html(secondsLabel(value))} Â· ${score}%</option>`;
+      }).join("");
+    }
     const times = typeof extractedFrameTimes !== "undefined" && Array.isArray(extractedFrameTimes) ? extractedFrameTimes : [];
     if(!times.length) return `<option value="">Nessun frame estratto</option>`;
     return times.map((seconds,index) => {
@@ -371,15 +395,56 @@
     elements.phaseFilter.value = phases.includes(current) ? current : "all";
   }
 
+  function renderSourceFilter(){
+    if(!elements.sourceFilter) return;
+    const current = elements.sourceFilter.value || "all";
+    const sources = Array.from(new Set(state.evidences.map(item => item.source_type).filter(Boolean))).sort();
+    elements.sourceFilter.innerHTML = `<option value="all">Tutte le fonti</option>` + sources.map(value => `<option value="${html(value)}">${html(value.replace(/_/g," "))}</option>`).join("");
+    elements.sourceFilter.value = sources.includes(current) ? current : "all";
+  }
+
+  function renderReviewProgress(){
+    if(!elements.progress) return;
+    const reviewed = state.evidences.filter(item => item.review_status !== "pending").length;
+    const total = state.evidences.length;
+    const percent = total ? Math.round(reviewed / total * 100) : 0;
+    elements.progress.innerHTML = `
+      <div><strong>${reviewed} di ${total}</strong><span> evidenze revisionate</span></div>
+      <div class="vi-progress" aria-label="Revisione completata al ${percent}%"><span style="width:${percent}%"></span></div>
+      <small>N/P naviga Â· C conferma Â· X scarta</small>
+    `;
+  }
+
+  function renderEvidenceQueue(items){
+    if(!elements.queue) return;
+    if(!items.length){ elements.queue.innerHTML = ""; return; }
+    if(!items.some(item => item.evidence_id === state.selectedEvidenceId)){
+      state.selectedEvidenceId = (items.find(item => item.review_status === "pending") || items[0]).evidence_id;
+    }
+    elements.queue.innerHTML = items.map((item,index) => `
+      <button type="button" class="vi-queue-item ${item.evidence_id === state.selectedEvidenceId ? "active" : ""} ${html(item.review_status)}" data-select-evidence="${html(item.evidence_id)}" aria-current="${item.evidence_id === state.selectedEvidenceId ? "true" : "false"}">
+        <span>${index + 1}</span>
+        <b>${html(item.title)}</b>
+        <small>${html(secondsLabel(item.representative_timestamp_ms))} Â· ${html(reviewLabel(item.review_status))}</small>
+      </button>
+    `).join("");
+  }
+
   function renderWorkspace(){
     renderStats();
     renderPhaseFilter();
+    renderSourceFilter();
+    renderReviewProgress();
     const items = filteredEvidences();
     if(!items.length){
+      if(elements.queue) elements.queue.innerHTML = "";
       elements.list.innerHTML = `<div class="vi-empty">Nessuna evidenza per i filtri scelti. Avvia l'analisi oppure cambia filtro.</div>`;
       return;
     }
-    elements.list.innerHTML = items.map(item => {
+    renderEvidenceQueue(items);
+    const selected = items.find(item => item.evidence_id === state.selectedEvidenceId) || items[0];
+    const selectedIndex = items.findIndex(item => item.evidence_id === selected.evidence_id);
+    elements.list.innerHTML = [selected].map(item => {
       const clip = item.clip_reference || {};
       const start = Number(clip.start_timestamp_ms ?? item.start_timestamp_ms ?? 0) / 1000;
       const end = Number(clip.end_timestamp_ms ?? item.end_timestamp_ms ?? 0) / 1000;
@@ -397,6 +462,8 @@
               <p>${html(item.motivation || "Proposta generata dai segnali disponibili nel video.")}</p>
             </div>
             <div class="vi-card-actions">
+              <button class="btn dark small" type="button" data-action="previous-evidence" ${selectedIndex <= 0 ? "disabled" : ""}>Precedente</button>
+              <button class="btn dark small" type="button" data-action="next-evidence" ${selectedIndex >= items.length - 1 ? "disabled" : ""}>Successiva</button>
               <button class="btn dark small" type="button" data-action="open">Apri momento</button>
               <button class="btn dark small" type="button" data-action="play">Riproduci clip</button>
             </div>
@@ -422,7 +489,10 @@
               <button class="btn dark small" type="button" data-action="reset-clip">Ripristina proposta</button>
             </div>
             <div class="vi-frame-editor">
-              <label>Frame rappresentativo<select data-field="frame_timestamp">${frameOptions(item.representative_timestamp_ms)}</select></label>
+              <label>Frame rappresentativo<select data-field="frame_timestamp">${frameOptions(item)}</select></label>
+              <button class="btn dark small" type="button" data-action="previous-frame">Frame prec.</button>
+              <button class="btn dark small" type="button" data-action="next-frame">Frame succ.</button>
+              <button class="btn dark small" type="button" data-action="preview-frame">Anteprima</button>
               <button class="btn dark small" type="button" data-action="save-frame">Sostituisci frame</button>
             </div>
           </div>
@@ -482,6 +552,27 @@
     return card?.querySelector(`[data-field="${field}"]`)?.value || "";
   }
 
+  function moveEvidence(direction){
+    const items = filteredEvidences();
+    if(!items.length) return;
+    const current = Math.max(0,items.findIndex(item => item.evidence_id === state.selectedEvidenceId));
+    const next = Math.max(0,Math.min(items.length - 1,current + direction));
+    state.selectedEvidenceId = items[next].evidence_id;
+    renderWorkspace();
+  }
+
+  function moveFrameCandidate(card,direction){
+    const select = card?.querySelector('[data-field="frame_timestamp"]');
+    if(!select || !select.options.length) return;
+    select.selectedIndex = Math.max(0,Math.min(select.options.length - 1,select.selectedIndex + direction));
+  }
+
+  async function previewSelectedFrame(item,card){
+    const timestamp = Number(cardValue(card,"frame_timestamp"));
+    if(!Number.isFinite(timestamp)) throw new Error("Seleziona un frame candidato");
+    await openMoment({...item,representative_timestamp_ms:timestamp},false);
+  }
+
   async function reviewEvidence(id, status){
     const card = evidenceCard(id);
     const body = {status};
@@ -495,6 +586,8 @@
     const payload = await request(`/projects/${assetId()}/evidences/${encodeURIComponent(id)}/review`, {method:"PATCH",body:JSON.stringify(body)});
     const index = state.evidences.findIndex(item => item.evidence_id === id);
     if(index >= 0) state.evidences[index] = payload.evidence;
+    const nextPending = state.evidences.find(item => item.review_status === "pending" && item.evidence_id !== id);
+    if(nextPending) state.selectedEvidenceId = nextPending.evidence_id;
     renderWorkspace();
   }
 
@@ -538,11 +631,14 @@
     const card = evidenceCard(id);
     const timestamp = Number(cardValue(card,"frame_timestamp"));
     if(!Number.isFinite(timestamp)) throw new Error("Seleziona un frame reale estratto dal video");
+    const item = state.evidences.find(entry => entry.evidence_id === id);
+    const candidate = (Array.isArray(item?.frame_candidates) ? item.frame_candidates : []).find(entry => Math.abs(Number(entry.timestamp_ms) - timestamp) < 750);
     const times = typeof extractedFrameTimes !== "undefined" && Array.isArray(extractedFrameTimes) ? extractedFrameTimes : [];
-    const frameIndex = times.findIndex(value => Math.abs(Number(value)*1000 - timestamp) < 750);
+    const extractedIndex = times.findIndex(value => Math.abs(Number(value)*1000 - timestamp) < 750);
+    const frameIndex = candidate?.frame_index ?? (extractedIndex >= 0 ? extractedIndex : null);
     const payload = await request(`/projects/${assetId()}/evidences/${encodeURIComponent(id)}/frame`, {
       method:"POST",
-      body:JSON.stringify({representative_timestamp_ms:timestamp,frame_index:frameIndex >= 0 ? frameIndex : null,motivation:"Frame scelto manualmente dallo staff"})
+      body:JSON.stringify({representative_timestamp_ms:timestamp,frame_index:frameIndex,motivation:"Frame scelto manualmente dallo staff"})
     });
     const index = state.evidences.findIndex(item => item.evidence_id === id);
     if(index >= 0) state.evidences[index] = payload.evidence;
@@ -623,6 +719,8 @@
   elements.period.addEventListener("change",updateHalftimeAvailability);
   elements.statusFilter.addEventListener("change",renderWorkspace);
   elements.phaseFilter.addEventListener("change",renderWorkspace);
+  elements.sourceFilter?.addEventListener("change",renderWorkspace);
+  elements.mediaFilter?.addEventListener("change",renderWorkspace);
   elements.pending.addEventListener("click",() => {elements.statusFilter.value="pending";renderWorkspace();});
   elements.confirmVisible.addEventListener("click",() => guarded(confirmVisible,"Evidenze visibili confermate."));
   elements.report.addEventListener("click",() => guarded(generateReport,"Report basato sulle evidenze confermate."));
@@ -635,6 +733,8 @@
     const item = state.evidences.find(entry => entry.evidence_id === id);
     if(!item) return;
     const action = button.dataset.action;
+    if(action === "previous-evidence") moveEvidence(-1);
+    if(action === "next-evidence") moveEvidence(1);
     if(action === "open") guarded(() => openMoment(item,false));
     if(action === "play") guarded(() => openMoment(item,true));
     if(action === "confirm") guarded(() => reviewEvidence(id,"confirmed"),"Evidenza confermata.");
@@ -644,6 +744,34 @@
     if(action === "reset-clip") guarded(() => resetClip(id),"Intervallo suggerito ripristinato.");
     if(action === "shift-clip") shiftClip(card,Number(button.dataset.delta || 0));
     if(action === "save-frame") guarded(() => saveFrame(id),"Frame rappresentativo aggiornato.");
+    if(action === "previous-frame") moveFrameCandidate(card,-1);
+    if(action === "next-frame") moveFrameCandidate(card,1);
+    if(action === "preview-frame") guarded(() => previewSelectedFrame(item,card));
+  });
+
+  elements.queue?.addEventListener("click",event => {
+    const button = event.target.closest("[data-select-evidence]");
+    if(!button) return;
+    state.selectedEvidenceId = button.dataset.selectEvidence;
+    renderWorkspace();
+  });
+
+  document.addEventListener("keydown",event => {
+    if(workspace.hidden || event.ctrlKey || event.metaKey || event.altKey) return;
+    if(event.target?.matches?.("input, textarea, select, button, [contenteditable='true']")) return;
+    const key = event.key.toLowerCase();
+    if(key === "n"){ event.preventDefault(); moveEvidence(1); }
+    if(key === "p"){ event.preventDefault(); moveEvidence(-1); }
+    const item = state.evidences.find(entry => entry.evidence_id === state.selectedEvidenceId);
+    if(!item || state.busy) return;
+    if(key === "c"){
+      event.preventDefault();
+      guarded(() => reviewEvidence(item.evidence_id,"confirmed"),"Evidenza confermata.");
+    }
+    if(key === "x"){
+      event.preventDefault();
+      guarded(() => reviewEvidence(item.evidence_id,"rejected"),"Evidenza esclusa dal report.");
+    }
   });
 
   elements.halftimeList?.addEventListener("click",event => {

@@ -165,12 +165,68 @@
 .vi-stat strong{display:block;margin-top:4px;font-size:18px}
 .vi-toolbar{
     display:grid;
-    grid-template-columns:repeat(2,minmax(0,220px)) 1fr;
+    grid-template-columns:repeat(4,minmax(130px,1fr)) auto;
     gap:9px;
     align-items:end;
     margin-bottom:12px;
 }
-.vi-evidence-list{display:grid;gap:10px}
+.vi-review-progress{
+    display:grid;
+    grid-template-columns:auto minmax(140px,1fr) auto;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
+    color:var(--muted);
+    font-size:10px;
+}
+.vi-review-progress strong{color:#fff;font-size:12px}
+.vi-review-progress .vi-progress{width:100%}
+.vi-review-layout{
+    display:grid;
+    grid-template-columns:minmax(190px,240px) minmax(0,1fr);
+    gap:10px;
+    align-items:start;
+}
+.vi-evidence-queue{
+    display:grid;
+    gap:6px;
+    max-height:720px;
+    overflow:auto;
+    padding-right:3px;
+}
+.vi-queue-item{
+    display:grid;
+    grid-template-columns:25px minmax(0,1fr);
+    gap:2px 8px;
+    width:100%;
+    min-height:58px;
+    padding:8px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:10px;
+    background:#07101f;
+    color:#fff;
+    text-align:left;
+    cursor:pointer;
+}
+.vi-queue-item > span{
+    grid-row:1/3;
+    display:grid;
+    place-items:center;
+    width:25px;
+    height:25px;
+    border-radius:7px;
+    background:rgba(255,255,255,.08);
+    color:var(--muted);
+    font-size:10px;
+    font-weight:950;
+}
+.vi-queue-item b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
+.vi-queue-item small{color:var(--muted);font-size:8px}
+.vi-queue-item.active{border-color:var(--green);background:rgba(0,245,160,.08)}
+.vi-queue-item.confirmed,
+.vi-queue-item.corrected{box-shadow:inset 3px 0 rgba(0,245,160,.65)}
+.vi-queue-item.rejected{opacity:.58;box-shadow:inset 3px 0 rgba(255,72,116,.65)}
+.vi-evidence-list{display:grid;gap:10px;min-width:0}
 .vi-evidence{
     padding:13px;
     border:1px solid rgba(255,255,255,.11);
@@ -245,14 +301,14 @@
 .vi-clip-editor,
 .vi-frame-editor{
     display:grid;
-    grid-template-columns:1fr 1fr auto;
+    grid-template-columns:1fr 1fr repeat(4,auto);
     gap:7px;
     align-items:end;
     padding:9px;
     border:1px solid rgba(255,255,255,.08);
     border-radius:11px;
 }
-.vi-frame-editor{grid-template-columns:1fr auto}
+.vi-frame-editor{grid-template-columns:minmax(190px,1fr) repeat(4,auto)}
 .vi-clip-editor label,
 .vi-frame-editor label{color:var(--muted);font-size:9px;font-weight:850}
 .vi-empty{
@@ -269,7 +325,18 @@
     .vi-setup-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .vi-toolbar{grid-template-columns:1fr 1fr}
     .vi-toolbar-actions{grid-column:1/-1}
+    .vi-review-layout{grid-template-columns:1fr}
+    .vi-evidence-queue{
+        grid-auto-flow:column;
+        grid-auto-columns:minmax(180px,42vw);
+        overflow-x:auto;
+        overflow-y:hidden;
+        max-height:none;
+        padding:0 0 5px;
+    }
     .vi-editors{grid-template-columns:1fr}
+    .vi-clip-editor{grid-template-columns:1fr 1fr repeat(2,auto)}
+    .vi-frame-editor{grid-template-columns:1fr repeat(2,auto)}
 }
 @media(max-width:560px){
     .vi-setup,
@@ -281,6 +348,8 @@
     .vi-evidence-meta{grid-template-columns:1fr}
     .vi-evidence-copy .full{grid-column:auto}
     .vi-toolbar-actions{grid-column:auto}
+    .vi-review-progress{grid-template-columns:1fr}
+    .vi-review-progress small{display:none}
     .vi-evidence-top{display:grid}
     .vi-halftime-head{display:grid}
     .vi-halftime-list{grid-template-columns:1fr}
