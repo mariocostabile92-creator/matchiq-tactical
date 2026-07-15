@@ -99,6 +99,47 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         self.assertIn('!module.includes("scout")', state)
         self.assertIn('!module.includes("live")', state)
 
+    def test_club_intelligence_has_one_home_card_without_footer_banner(self):
+        home = read("index.html")
+        render = read("js/home-render.js")
+        entry = read("js/club-intelligence-entry.js")
+        self.assertEqual(render.count('"Club Intelligence"'), 1)
+        self.assertNotIn("club-intelligence-entry", home)
+        self.assertNotIn('path==="/"', entry)
+        self.assertNotIn('"/index.html"', entry)
+        for allowed_path in ("/account.html", "/knowledge.html", "/tactical-identity.html"):
+            self.assertIn(allowed_path, entry)
+        self.assertTrue((FRONTEND / "club-intelligence.html").is_file())
+
+    def test_ai_disclaimer_is_unique_and_contextual(self):
+        home = read("index.html")
+        disclaimer = (
+            "Le analisi e i suggerimenti generati dall'Intelligenza Artificiale "
+            "rappresentano un supporto decisionale e devono essere sempre verificati dallo staff tecnico."
+        )
+        self.assertEqual(home.count(disclaimer), 1)
+        intelligence = home.split('id="homeIntelligence"', 1)[1].split("</section>", 1)[0]
+        self.assertIn('class="ai-disclaimer matchiq-disclaimer ai"', intelligence)
+        self.assertIn('role="note"', intelligence)
+        after_activity = home.split('id="recentWork"', 1)[1]
+        self.assertNotIn("ai-disclaimer", after_activity)
+
+    def test_final_spacing_keeps_activity_footer_and_api_scope(self):
+        home = read("index.html")
+        styles = read("css/home.css")
+        meta = read("js/app-meta.js")
+        api = read("js/home-api.js")
+        self.assertIn('id="recentWork"', home)
+        self.assertIn("#recentWork{margin-bottom:0}", styles)
+        self.assertIn("#homeIntelligence>.ai-disclaimer.matchiq-disclaimer.ai", styles)
+        self.assertIn("injectFooter()", meta)
+        self.assertIn('footer.className = "matchiq-footer"', meta)
+        for endpoint in (
+            "/api/account/limits", "/api/home/summary",
+            "/api/weekly-briefing/current", "/api/training-planner/current",
+        ):
+            self.assertEqual(api.count(endpoint), 1, endpoint)
+
     def test_today_is_pwa_first_and_accessible(self):
         home = read("index.html")
         styles = read("css/home.css")
@@ -110,9 +151,16 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         self.assertIn("safe-area-inset-top", styles)
         self.assertIn("safe-area-inset-bottom", styles)
         self.assertIn("focus-visible", styles)
-        self.assertEqual(manifest["start_url"], "/index.html?v=10529")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v129"', worker)
-        self.assertIn('"/css/home.css?v=10529"', worker)
+        self.assertEqual(manifest["start_url"], "/index.html?v=10530")
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v130"', worker)
+        self.assertIn('"/css/home.css?v=10530"', worker)
+        self.assertIn('caches.match("/index.html?v=10530")', worker)
+        for asset in (
+            "/js/app-meta.js?v=10530", "/css/global-nav.css?v=10530",
+            "/js/auth.js?v=10530", "/js/global-nav-state.js?v=10530",
+            "/js/weekly-briefing-state.js?v=10530", "/js/weekly-briefing-api.js?v=10530",
+        ):
+            self.assertIn(f'"{asset}"', worker)
 
 
 if __name__ == "__main__":

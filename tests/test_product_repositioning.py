@@ -105,10 +105,10 @@ class ProductRepositioningTests(unittest.TestCase):
             manifest["description"],
             "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
         )
-        self.assertEqual(manifest["start_url"], "/index.html?v=10529")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v129"', worker)
-        self.assertIn('version: "10529"', app_meta)
-        self.assertIn('const VERSION = "10529"', config)
+        self.assertEqual(manifest["start_url"], "/index.html?v=10530")
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v130"', worker)
+        self.assertIn('version: "10530"', app_meta)
+        self.assertIn('const VERSION = "10530"', config)
 
     def test_live_and_scout_remain_available_as_direct_products(self):
         worker = read_frontend("service-worker.js")

@@ -115,9 +115,9 @@ class PwaMatchDaySprintTests(unittest.TestCase):
     def test_pwa_release_is_consistent_and_caches_match_day_assets(self):
         manifest = json.loads(read_frontend("manifest.json"))
         worker = read_frontend("service-worker.js")
-        self.assertEqual(manifest["start_url"], "/index.html?v=10529")
+        self.assertEqual(manifest["start_url"], "/index.html?v=10530")
         self.assertEqual(manifest["display"], "standalone")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v129"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v130"', worker)
         for asset in (
             "/css/coach-lineup.css?v=10526",
             "/js/coach-lineup-layouts.js?v=10526",
