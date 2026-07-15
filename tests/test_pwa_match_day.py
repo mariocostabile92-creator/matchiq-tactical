@@ -117,9 +117,9 @@ class PwaMatchDaySprintTests(unittest.TestCase):
         worker = read_frontend("service-worker.js")
         self.assertEqual(manifest["start_url"], "/index.html?v=10530")
         self.assertEqual(manifest["display"], "standalone")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v131"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v132"', worker)
         for asset in (
-            "/css/coach-lineup.css?v=10531",
+            "/css/coach-lineup.css?v=10532",
             "/js/coach-lineup-layouts.js?v=10531",
             "/js/coach-lineup-interactions.js?v=10531",
             "/js/coach-lineup-player-menu.js?v=10531",

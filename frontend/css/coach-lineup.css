@@ -2,11 +2,11 @@
 .lineup-formation-team{display:grid;gap:3px}.lineup-formation-team strong{font-size:14px}.lineup-formation-team span{color:#9fb2d8;font-size:11px}
 .lineup-pitch-layout>*{min-width:0}.pitch-board{--lineup-card-width:84px;--lineup-card-height:66px;--lineup-safe-x:50px;--lineup-safe-y:43px;isolation:isolate;overscroll-behavior:contain}
 .pitch-slot{position:absolute;left:clamp(var(--lineup-safe-x),var(--slot-left),calc(100% - var(--lineup-safe-x)));top:clamp(var(--lineup-safe-y),var(--slot-top),calc(100% - var(--lineup-safe-y)));transform:translate(-50%,-50%);width:var(--lineup-card-width);min-height:var(--lineup-card-height);display:grid;place-items:center;z-index:2;border-radius:18px}
-.pitch-slot>.pitch-player{position:relative;inset:auto;transform:none;width:var(--lineup-card-width);height:var(--lineup-card-height);min-height:var(--lineup-card-height);max-height:var(--lineup-card-height);padding:7px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:inherit;font:inherit;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
-.pitch-slot>.pitch-player .pitch-shirt{flex:0 0 auto;margin-bottom:4px}
+.pitch-slot>.pitch-player{position:relative;inset:auto;transform:none;box-sizing:border-box;width:var(--lineup-card-width);height:var(--lineup-card-height);min-height:var(--lineup-card-height);max-height:var(--lineup-card-height);padding:4px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:inherit;font:inherit;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.pitch-slot>.pitch-player .pitch-shirt{flex:0 0 24px;width:24px;height:24px;margin:0 auto 2px;font-size:11px}
 .pitch-slot>.pitch-player .pitch-name,.pitch-slot>.pitch-player .pitch-role{display:block;width:100%;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;letter-spacing:0}
-.pitch-slot>.pitch-player .pitch-name{line-height:1.15}
-.pitch-slot>.pitch-player .pitch-role{line-height:1.1;margin-top:2px}
+.pitch-slot>.pitch-player .pitch-name{font-size:11px;line-height:1.15}
+.pitch-slot>.pitch-player .pitch-role{font-size:9px;line-height:1.1;margin-top:1px}
 .lineup-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lineup-player-card{min-width:0}.lineup-player-main{min-width:0;overflow:hidden}
 .pitch-player:active,.bench-chip:active{cursor:grabbing}

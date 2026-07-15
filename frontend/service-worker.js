@@ -1,4 +1,4 @@
-const CACHE_NAME = "matchiq-pwa-v131";
+const CACHE_NAME = "matchiq-pwa-v132";
 const APP_SHELL = [
   "/index.html?v=10530",
   "/mobile.html?v=10526",
@@ -20,7 +20,7 @@ const APP_SHELL = [
   "/css/video-intelligence.css?v=10528",
   "/js/ux-hardening.js?v=10526",
   "/css/home.css?v=10530",
-  "/css/coach-lineup.css?v=10531",
+  "/css/coach-lineup.css?v=10532",
   "/css/home-intelligence.css?v=10526",
   "/css/weekly-briefing.css?v=10526",
   "/css/weekly-briefing-home.css?v=10526",

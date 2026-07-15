@@ -139,6 +139,10 @@ class CoachFormationPolishTests(unittest.TestCase):
             "white-space:nowrap",
             "height:var(--lineup-card-height)",
             "max-height:var(--lineup-card-height)",
+            "padding:4px 5px",
+            "flex:0 0 24px",
+            "font-size:11px;line-height:1.15",
+            "font-size:9px;line-height:1.1",
         ):
             self.assertIn(token, self.render + self.styles)
 
@@ -177,12 +181,12 @@ class CoachFormationPolishTests(unittest.TestCase):
         page = read_frontend("coach.html")
         worker = read_frontend("service-worker.js")
         assets = (
-            "/css/coach-lineup.css?v=10531",
+            "/css/coach-lineup.css?v=10532",
             "/js/coach-lineup-layouts.js?v=10531",
             "/js/coach-lineup-interactions.js?v=10531",
             "/js/coach-lineup-player-menu.js?v=10531",
         )
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v131"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v132"', worker)
         for asset in assets:
             with self.subTest(asset=asset):
                 self.assertIn(asset, page)
