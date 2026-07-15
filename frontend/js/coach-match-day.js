@@ -62,6 +62,15 @@
     if(startButton) startButton.textContent = getCoachLiveElapsedSeconds() > 0 ? "Riprendi" : "Avvia";
   }
 
+  function focusManualNote(){
+    const input = document.getElementById("coachVoiceInput");
+    if(!input) return;
+    try{ input.focus({preventScroll:true}); }
+    catch{ input.focus(); }
+    input.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+
   window.setCoachMatchCommand = command;
   window.renderCoachMatchDayStatus = renderStatus;
+  window.focusCoachManualNote = focusManualNote;
 })();

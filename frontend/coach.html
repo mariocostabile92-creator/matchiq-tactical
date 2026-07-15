@@ -1101,7 +1101,6 @@
                         <span class="coach-live-kicker">NOTE E STRUMENTI STAFF</span>
                         <h3 id="coachStaffToolsTitle">Osservazioni tattiche e Voice Coach</h3>
                     </div>
-                    <button class="coach-live-btn coach-staff-voice-btn" id="coachVoiceBtn" type="button" onclick="startCoachVoiceNote()"><strong>AI Voice Coach</strong><span>Parla con Coach</span></button>
                 </div>
                 <div class="coach-tactical-team-row">
                     <label for="eventTeamInput">Squadra osservata</label>
@@ -1111,16 +1110,42 @@
                     </select>
                     <span id="coachTacticalTeamHint">Le osservazioni qui sotto saranno associate alla squadra selezionata.</span>
                 </div>
-                <div class="coach-live-actions coach-tactical-actions">
-                    <button class="coach-live-btn danger" data-tactical-event-label="Linea bassa" type="button" onclick="addTacticalLiveEvent('errore_difensivo','Linea bassa','LINEA','Linea difensiva troppo bassa: controllare distanze e profondita.')"><strong>Linea bassa</strong><span>Difesa da alzare</span></button>
-                    <button class="coach-live-btn warn" data-tactical-event-label="Seconda palla" type="button" onclick="addTacticalLiveEvent('seconda_palla','Seconda palla','2BALL','Seconda palla persa: accorciare dopo il duello e aggredire la respinta.')"><strong>2a palla</strong><span>Duelli e rimbalzi</span></button>
-                    <button class="coach-live-btn warn" data-tactical-event-label="Ampiezza" type="button" onclick="addTacticalLiveEvent('ampiezza','Ampiezza','WIDTH','Manca ampiezza in possesso: aprire lato debole e dare piu linee di passaggio.')"><strong>Ampiezza</strong><span>Squadra stretta</span></button>
-                    <button class="coach-live-btn danger" data-tactical-event-label="Transizione" type="button" onclick="addTacticalLiveEvent('transizione','Transizione subita','TRANS','Transizione centrale subita: controllare rest defense e coperture preventive.')"><strong>Transizione</strong><span>Rest defense</span></button>
-                    <button class="coach-live-btn danger" data-tactical-event-label="Squadra lunga" type="button" onclick="addTacticalLiveEvent('squadra_lunga','Squadra lunga','LONG','Squadra lunga tra i reparti: accorciare e proteggere zona centrale.')"><strong>Squadra lunga</strong><span>Distanze reparti</span></button>
-                    <button class="coach-live-btn warn" data-tactical-event-label="Uscita laterale" type="button" onclick="addTacticalLiveEvent('uscita_lato','Uscita laterale','OUT','Uscita palla sporca sul lato: dare sostegno e terzo uomo.')"><strong>Uscita lato</strong><span>Costruzione</span></button>
-                    <button class="coach-live-btn good" data-tactical-event-label="Profondita" type="button" onclick="addTacticalLiveEvent('profondita','Profondita','DEPTH','Attacco profondita utile: continuare a minacciare spazio alle spalle.')"><strong>Profondita</strong><span>Attacco spazio</span></button>
-                    <button class="coach-live-btn warn" data-tactical-event-label="Comunicazione" type="button" onclick="addTacticalLiveEvent('comunicazione','Comunicazione','VOICE','Manca comunicazione tra reparti: richiamare guida e marcature.')"><strong>Comunica</strong><span>Staff alert</span></button>
+                <div class="coach-observation-groups" aria-label="Osservazioni tattiche">
+                    <section class="coach-observation-group" aria-labelledby="coachTeamStructureTitle">
+                        <div class="coach-observation-group-head">
+                            <span>1</span>
+                            <div><strong id="coachTeamStructureTitle">Struttura della squadra</strong><small>Assetto, distanze e occupazione degli spazi</small></div>
+                        </div>
+                        <div class="coach-live-actions coach-tactical-actions">
+                            <button class="coach-live-btn danger" data-tactical-event-label="Linea bassa" type="button" onclick="addTacticalLiveEvent('errore_difensivo','Linea bassa','LINEA','Linea difensiva troppo bassa: controllare distanze e profondita.')"><strong>Linea bassa</strong><span>Difesa da alzare</span></button>
+                            <button class="coach-live-btn danger" data-tactical-event-label="Squadra lunga" type="button" onclick="addTacticalLiveEvent('squadra_lunga','Squadra lunga','LONG','Squadra lunga tra i reparti: accorciare e proteggere zona centrale.')"><strong>Squadra lunga</strong><span>Distanze reparti</span></button>
+                            <button class="coach-live-btn warn" data-tactical-event-label="Ampiezza" type="button" onclick="addTacticalLiveEvent('ampiezza','Ampiezza','WIDTH','Manca ampiezza in possesso: aprire lato debole e dare piu linee di passaggio.')"><strong>Ampiezza</strong><span>Squadra stretta</span></button>
+                            <button class="coach-live-btn good" data-tactical-event-label="Profondita" type="button" onclick="addTacticalLiveEvent('profondita','Profondita','DEPTH','Attacco profondita utile: continuare a minacciare spazio alle spalle.')"><strong>Profondita</strong><span>Attacco spazio</span></button>
+                        </div>
+                    </section>
+                    <section class="coach-observation-group" aria-labelledby="coachMatchSituationsTitle">
+                        <div class="coach-observation-group-head">
+                            <span>2</span>
+                            <div><strong id="coachMatchSituationsTitle">Fasi e situazioni</strong><small>Momenti chiave da ritrovare nel post-partita</small></div>
+                        </div>
+                        <div class="coach-live-actions coach-tactical-actions">
+                            <button class="coach-live-btn warn" data-tactical-event-label="Seconda palla" type="button" onclick="addTacticalLiveEvent('seconda_palla','Seconda palla','2BALL','Seconda palla persa: accorciare dopo il duello e aggredire la respinta.')"><strong>2a palla</strong><span>Duelli e rimbalzi</span></button>
+                            <button class="coach-live-btn danger" data-tactical-event-label="Transizione" type="button" onclick="addTacticalLiveEvent('transizione','Transizione subita','TRANS','Transizione centrale subita: controllare rest defense e coperture preventive.')"><strong>Transizione</strong><span>Rest defense</span></button>
+                            <button class="coach-live-btn warn" data-tactical-event-label="Uscita laterale" type="button" onclick="addTacticalLiveEvent('uscita_lato','Uscita laterale','OUT','Uscita palla sporca sul lato: dare sostegno e terzo uomo.')"><strong>Uscita lato</strong><span>Costruzione</span></button>
+                        </div>
+                    </section>
                 </div>
+                <section class="coach-staff-actions-group" aria-labelledby="coachStaffActionsTitle">
+                    <div class="coach-observation-group-head">
+                        <span>S</span>
+                        <div><strong id="coachStaffActionsTitle">Strumenti staff</strong><small>Voce, note e richiami operativi</small></div>
+                    </div>
+                    <div class="coach-staff-actions">
+                        <button class="coach-live-btn coach-staff-voice-btn" id="coachVoiceBtn" type="button" onclick="startCoachVoiceNote()"><strong>Voice Coach</strong><span>Parla con Coach</span></button>
+                        <button class="coach-live-btn" type="button" onclick="focusCoachManualNote()"><strong>Nota manuale</strong><span>Scrivi un comando</span></button>
+                        <button class="coach-live-btn warn" data-tactical-event-label="Comunicazione" type="button" onclick="addTacticalLiveEvent('comunicazione','Comunicazione','VOICE','Manca comunicazione tra reparti: richiamare guida e marcature.')"><strong>Comunica</strong><span>Staff alert</span></button>
+                    </div>
+                </section>
 
             <div class="coach-voice-panel" id="coachVoicePanel">
                 <div class="coach-voice-panel-head">

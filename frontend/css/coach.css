@@ -195,6 +195,81 @@
     margin-top:12px;
 }
 
+.coach-observation-groups{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    margin-top:14px;
+}
+
+.coach-observation-group,
+.coach-staff-actions-group{
+    min-width:0;
+    padding:13px;
+    border:1px solid rgba(255,255,255,.11);
+    border-radius:14px;
+    background:rgba(255,255,255,.035);
+}
+
+.coach-observation-group-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.coach-observation-group-head > span{
+    display:grid;
+    place-items:center;
+    flex:0 0 30px;
+    min-height:30px;
+    border:1px solid rgba(24,240,139,.38);
+    border-radius:9px;
+    background:rgba(24,240,139,.12);
+    color:#9ff7c9;
+    font-size:11px;
+    font-weight:1000;
+}
+
+.coach-observation-group-head > div{
+    min-width:0;
+    display:grid;
+    gap:3px;
+}
+
+.coach-observation-group-head strong{
+    color:#fff;
+    font-size:13px;
+}
+
+.coach-observation-group-head small{
+    color:#9fb2d8;
+    font-size:10px;
+    line-height:1.35;
+}
+
+.coach-observation-group .coach-tactical-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+}
+
+.coach-staff-actions-group{
+    margin-top:12px;
+    border-color:rgba(56,169,255,.26);
+}
+
+.coach-staff-actions{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    margin-top:12px;
+}
+
+.coach-staff-actions .coach-live-btn{
+    min-width:0;
+    min-height:64px;
+    padding:10px 9px;
+    border-radius:14px;
+}
+
 .coach-staff-tools-panel > .coach-voice-panel{
     margin-top:16px;
 }
@@ -227,6 +302,14 @@
     .coach-tactical-actions{
         grid-template-columns:repeat(2,minmax(0,1fr));
     }
+
+    .coach-observation-groups{
+        grid-template-columns:1fr;
+    }
+
+    .coach-staff-actions{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+    }
 }
 
 @media(max-width:420px){
@@ -243,6 +326,14 @@
     .coach-team-actions .coach-live-btn,
     .coach-tactical-actions .coach-live-btn{
         min-height:78px;
+    }
+
+    .coach-staff-actions{
+        grid-template-columns:1fr;
+    }
+
+    .coach-staff-actions .coach-live-btn{
+        min-height:54px;
     }
 }
 
