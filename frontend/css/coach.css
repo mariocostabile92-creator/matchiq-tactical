@@ -480,6 +480,27 @@
     }
 }
 
+@media(pointer:coarse){
+    .coach-live-btn,
+    .coach-match-command,
+    .coach-voice-session-actions .btn,
+    .coach-review-bookmark .btn,
+    .coach-voice-actions-row .btn{
+        min-height:48px;
+        touch-action:manipulation;
+    }
+}
+
+@media(display-mode:standalone){
+    body{
+        padding-bottom:env(safe-area-inset-bottom);
+    }
+
+    .coach-staff-tools-panel{
+        scroll-margin-bottom:calc(84px + env(safe-area-inset-bottom));
+    }
+}
+
 *{
     margin:0;
     padding:0;

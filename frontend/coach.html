@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
-<link rel="stylesheet" href="/css/coach.css?v=10526">
+<link rel="stylesheet" href="/css/coach.css?v=10533">
 <link rel="stylesheet" href="/css/coach-lineup.css?v=10532">
 
 <style>
@@ -1141,15 +1141,15 @@
                         <div><strong id="coachStaffActionsTitle">Strumenti staff</strong><small>Voce, note e richiami operativi</small></div>
                     </div>
                     <div class="coach-staff-actions">
-                        <button class="coach-live-btn coach-staff-voice-btn" id="coachVoiceBtn" type="button" onclick="startCoachVoiceNote()"><strong>Voice Coach</strong><span>Parla con Coach</span></button>
-                        <button class="coach-live-btn" type="button" onclick="focusCoachManualNote()"><strong>Nota manuale</strong><span>Scrivi un comando</span></button>
-                        <button class="coach-live-btn warn" data-tactical-event-label="Comunicazione" type="button" onclick="addTacticalLiveEvent('comunicazione','Comunicazione','VOICE','Manca comunicazione tra reparti: richiamare guida e marcature.')"><strong>Comunica</strong><span>Staff alert</span></button>
+                        <button class="coach-live-btn coach-staff-voice-btn" id="coachVoiceBtn" type="button" aria-label="Avvia AI Voice Coach" onclick="startCoachVoiceNote()"><strong>Voice Coach</strong><span>Parla con Coach</span></button>
+                        <button class="coach-live-btn" type="button" aria-label="Vai alla nota manuale" onclick="focusCoachManualNote()"><strong>Nota manuale</strong><span>Scrivi un comando</span></button>
+                        <button class="coach-live-btn warn" data-tactical-event-label="Comunicazione" type="button" aria-label="Registra osservazione sulla comunicazione" onclick="addTacticalLiveEvent('comunicazione','Comunicazione','VOICE','Manca comunicazione tra reparti: richiamare guida e marcature.')"><strong>Comunica</strong><span>Staff alert</span></button>
                     </div>
                     <div class="coach-review-bookmark">
                         <label for="coachReviewNoteInput">Da rivedere nel post-partita</label>
                         <div>
                             <input id="coachReviewNoteInput" type="text" maxlength="180" placeholder="Nota facoltativa: es. uscita lato destro" />
-                            <button class="btn gold" type="button" onclick="addCoachReviewBookmark()">Segna da rivedere</button>
+                            <button class="btn gold" type="button" aria-label="Salva questo momento tra quelli da rivedere" onclick="addCoachReviewBookmark()">Segna da rivedere</button>
                         </div>
                         <small>Salva minuto, fase e squadra osservata senza interrompere la partita.</small>
                     </div>
@@ -1618,16 +1618,16 @@
 <script src="/js/coach-voice-state.js?v=10526"></script>
 <script src="/js/coach-storage.js?v=10526"></script>
 <script src="/js/coach-match-feedback.js?v=10526"></script>
-<script src="/js/coach-actions.js?v=10526"></script>
+<script src="/js/coach-actions.js?v=10533"></script>
 <script src="/js/coach-voice-parser.js?v=10526"></script>
 <script src="/js/coach-voice-api.js?v=10526"></script>
-<script src="/js/coach-voice-actions.js?v=10526"></script>
-<script src="/js/coach-report.js?v=10526"></script>
-<script src="/js/coach-render.js?v=10531"></script>
-<script src="/js/coach-match-day.js?v=10526"></script>
+<script src="/js/coach-voice-actions.js?v=10533"></script>
+<script src="/js/coach-report.js?v=10533"></script>
+<script src="/js/coach-render.js?v=10533"></script>
+<script src="/js/coach-match-day.js?v=10533"></script>
 <script src="/js/coach-lineup-interactions.js?v=10531"></script>
 <script src="/js/coach-lineup-player-menu.js?v=10531"></script>
-<script src="/js/coach-voice-render.js?v=10526"></script>
+<script src="/js/coach-voice-render.js?v=10533"></script>
 <script src="/js/coach-core.js?v=10526"></script>
 <script src="/js/coach-pattern-impact.js?v=10526"></script>
 <script src="/js/coach-training-planner.js?v=10526"></script>
