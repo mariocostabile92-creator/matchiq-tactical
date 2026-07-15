@@ -1,6 +1,6 @@
 .lineup-formation-toolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,240px);gap:12px;align-items:end;margin-bottom:12px;padding:12px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.04)}
 .lineup-formation-team{display:grid;gap:3px}.lineup-formation-team strong{font-size:14px}.lineup-formation-team span{color:#9fb2d8;font-size:11px}
-.pitch-board{--lineup-card-width:92px;--lineup-card-height:66px;--lineup-safe-x:56px;--lineup-safe-y:43px}
+.pitch-board{--lineup-card-width:84px;--lineup-card-height:66px;--lineup-safe-x:50px;--lineup-safe-y:43px}
 .pitch-slot{position:absolute;left:clamp(var(--lineup-safe-x),var(--slot-left),calc(100% - var(--lineup-safe-x)));top:clamp(var(--lineup-safe-y),var(--slot-top),calc(100% - var(--lineup-safe-y)));transform:translate(-50%,-50%);width:var(--lineup-card-width);min-height:var(--lineup-card-height);display:grid;place-items:center;z-index:2;border-radius:18px}
 .pitch-slot>.pitch-player{position:relative;inset:auto;transform:none;width:var(--lineup-card-width);height:var(--lineup-card-height);min-height:var(--lineup-card-height);max-height:var(--lineup-card-height);padding:7px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:inherit;font:inherit;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
 .pitch-slot>.pitch-player .pitch-shirt{flex:0 0 auto;margin-bottom:4px}

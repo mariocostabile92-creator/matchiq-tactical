@@ -8,9 +8,9 @@
     "4-4-2": [slot("gk","Portiere",50,90),slot("d1","Difensore",16,72),slot("d2","Difensore",38,72),slot("d3","Difensore",62,72),slot("d4","Difensore",84,72),slot("m1","Esterno",15,49),slot("m2","Centrocampista",38,52),slot("m3","Centrocampista",62,52),slot("m4","Esterno",85,49),slot("a1","Attaccante",35,23),slot("a2","Attaccante",65,23)],
     "4-2-3-1": [slot("gk","Portiere",50,90),slot("d1","Difensore",16,72),slot("d2","Difensore",38,72),slot("d3","Difensore",62,72),slot("d4","Difensore",84,72),slot("m1","Centrocampista",36,57),slot("m2","Centrocampista",64,57),slot("t1","Esterno",18,38),slot("t2","Centrocampista",50,39),slot("t3","Esterno",82,38),slot("a1","Attaccante",50,18)],
     "4-3-1-2": [slot("gk","Portiere",50,90),slot("d1","Difensore",16,72),slot("d2","Difensore",38,72),slot("d3","Difensore",62,72),slot("d4","Difensore",84,72),slot("m1","Centrocampista",24,53),slot("m2","Centrocampista",50,57),slot("m3","Centrocampista",76,53),slot("t1","Centrocampista",50,38),slot("a1","Attaccante",34,20),slot("a2","Attaccante",66,20)],
-    "3-5-2": [slot("gk","Portiere",50,90),slot("d1","Difensore",24,72),slot("d2","Difensore",50,75),slot("d3","Difensore",76,72),slot("m1","Esterno",12,49),slot("m2","Centrocampista",34,54),slot("m3","Centrocampista",50,47),slot("m4","Centrocampista",66,54),slot("m5","Esterno",88,49),slot("a1","Attaccante",35,21),slot("a2","Attaccante",65,21)],
+    "3-5-2": [slot("gk","Portiere",50,90),slot("d1","Difensore",24,72),slot("d2","Difensore",50,75),slot("d3","Difensore",76,72),slot("m1","Esterno",12,49),slot("m2","Centrocampista",31,54),slot("m3","Centrocampista",50,47),slot("m4","Centrocampista",69,54),slot("m5","Esterno",88,49),slot("a1","Attaccante",35,21),slot("a2","Attaccante",65,21)],
     "3-4-3": [slot("gk","Portiere",50,90),slot("d1","Difensore",24,72),slot("d2","Difensore",50,75),slot("d3","Difensore",76,72),slot("m1","Esterno",14,50),slot("m2","Centrocampista",39,53),slot("m3","Centrocampista",61,53),slot("m4","Esterno",86,50),slot("a1","Attaccante",19,23),slot("a2","Attaccante",50,18),slot("a3","Attaccante",81,23)],
-    "5-3-2": [slot("gk","Portiere",50,90),slot("d1","Difensore",12,68),slot("d2","Difensore",30,73),slot("d3","Difensore",50,76),slot("d4","Difensore",70,73),slot("d5","Difensore",88,68),slot("m1","Centrocampista",27,49),slot("m2","Centrocampista",50,53),slot("m3","Centrocampista",73,49),slot("a1","Attaccante",35,21),slot("a2","Attaccante",65,21)]
+    "5-3-2": [slot("gk","Portiere",50,90),slot("d1","Difensore",12,68),slot("d2","Difensore",31,73),slot("d3","Difensore",50,76),slot("d4","Difensore",69,73),slot("d5","Difensore",88,68),slot("m1","Centrocampista",27,49),slot("m2","Centrocampista",50,53),slot("m3","Centrocampista",73,49),slot("a1","Attaccante",35,21),slot("a2","Attaccante",65,21)]
   });
   const tactical = (label, short) => Object.freeze({ tacticalLabel:label, tacticalShort:short });
   const tacticalLayouts = Object.freeze({
@@ -76,6 +76,28 @@
   function slots(name){
     const formation = normalize(name);
     return layouts[formation].map(item => ({...safePosition(item), ...tacticalSlot(formation, item.id)}));
+  }
+  function collisionPairs(name, metrics){
+    const config = {
+      pitchWidth:480,
+      pitchHeight:560,
+      cardWidth:84,
+      cardHeight:66,
+      gap:4,
+      ...(metrics || {})
+    };
+    const formationSlots = slots(name);
+    const collisions = [];
+    formationSlots.forEach((current, index) => {
+      formationSlots.slice(index + 1).forEach(other => {
+        const horizontal = Math.abs(current.x - other.x) * config.pitchWidth / 100;
+        const vertical = Math.abs(current.y - other.y) * config.pitchHeight / 100;
+        if(horizontal < config.cardWidth + config.gap && vertical < config.cardHeight + config.gap){
+          collisions.push([current.id, other.id]);
+        }
+      });
+    });
+    return collisions;
   }
   function preferredRole(role){ return aliases[role] || role || "Centrocampista"; }
   function assign(players, formation){
@@ -178,6 +200,7 @@
     getFormation,
     ensureSlots,
     tacticalSlot,
+    collisionPairs,
     safePosition,
     safeArea:{...PITCH_SAFE_AREA}
   };
