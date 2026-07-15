@@ -208,6 +208,40 @@ class EvidenceLifecycleTests(unittest.TestCase):
         self.assertEqual(clip["playback_mode"], "seek_and_stop")
         self.assertEqual(clip["stream_url"], "/api/video/library/7/stream")
 
+    def test_suggested_clip_adds_context_and_respects_video_bounds(self):
+        clip = video_clip_service.build_suggested_clip_reference(7, 2_000, 8_000, 10_000)
+        self.assertEqual(clip["start_timestamp_ms"], 0)
+        self.assertEqual(clip["end_timestamp_ms"], 10_000)
+        self.assertEqual(clip["selection_status"], "suggested")
+        self.assertEqual(clip["pre_roll_ms"], 2_000)
+        self.assertEqual(clip["post_roll_ms"], 2_000)
+
+    def test_near_duplicate_clips_keep_the_higher_quality_evidence(self):
+        weaker = sample_evidence("weak", timestamp_ms=30_000)
+        stronger = sample_evidence("strong", timestamp_ms=30_500)
+        weaker["representative_frame"]["score"] = 0.4
+        stronger["representative_frame"]["score"] = 0.9
+        result = video_clip_service.deduplicate_evidence_clips([weaker, stronger])
+        self.assertEqual([item["evidence_id"] for item in result], ["strong"])
+
+    def test_clip_can_restore_the_original_suggestion(self):
+        evidence = sample_evidence()
+        evidence["clip_reference"].update({
+            "suggested_start_timestamp_ms": 24_000,
+            "suggested_end_timestamp_ms": 36_000,
+        })
+        store = ProjectStore(base_project(evidences=[evidence]))
+        with (
+            patch.object(video_clip_service, "load_project", store.load),
+            patch.object(video_clip_service, "save_project", store.save),
+        ):
+            result = video_clip_service.update_evidence_clip(
+                1, 7, "ev_1", EvidenceClipRequest(reset_to_suggestion=True)
+            )
+        self.assertEqual(result["clip_reference"]["start_timestamp_ms"], 24_000)
+        self.assertEqual(result["clip_reference"]["end_timestamp_ms"], 36_000)
+        self.assertEqual(result["clip_reference"]["selection_status"], "suggested")
+
     def test_clip_update_rejects_reversed_interval(self):
         store = ProjectStore(base_project(evidences=[sample_evidence()]))
         with patch.object(video_clip_service, "load_project", store.load):

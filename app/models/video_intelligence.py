@@ -113,8 +113,9 @@ class EvidenceFrameRequest(BaseModel):
 
 
 class EvidenceClipRequest(BaseModel):
-    start_timestamp_ms: int
-    end_timestamp_ms: int
+    start_timestamp_ms: Optional[int] = None
+    end_timestamp_ms: Optional[int] = None
+    reset_to_suggestion: bool = False
 
 
 class EvidenceLinkRequest(BaseModel):

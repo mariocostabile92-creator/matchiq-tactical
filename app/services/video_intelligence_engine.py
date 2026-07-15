@@ -9,7 +9,7 @@ from uuid import uuid4
 from database import create_video_asset, get_saved_matches, get_video_asset, utc_now
 from app.models.video_intelligence import AnalysisMode, EvidenceCreateRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate
 from app.repositories.video_intelligence_repository import load_project, save_project
-from app.services.video_clip_service import build_clip_reference
+from app.services.video_clip_service import build_suggested_clip_reference, deduplicate_evidence_clips
 from app.services.video_coach_link_service import suggest_coach_links
 from app.services.video_evidence_service import build_evidence
 from app.services.video_frame_ranking_service import build_candidate_pool, rank_segments
@@ -242,13 +242,16 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
         evidence["frame_selection_status"] = (
             "manual_review_required" if segment.get("frame_review_required") else "suggested"
         )
-        evidence["clip_reference"] = build_clip_reference(
+        evidence["clip_reference"] = build_suggested_clip_reference(
             asset_id,
             segment["start_timestamp_ms"],
             segment["end_timestamp_ms"],
             duration_ms,
         )
         evidences.append(evidence)
+
+    evidence_count_before_deduplication = len(evidences)
+    evidences = deduplicate_evidence_clips(evidences)
 
     linked = suggest_coach_links(user_id, project, evidences, data.staff_events)
     evidences = linked["evidences"]
@@ -263,7 +266,12 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
         "candidate_detection": {"status": "completed", "progress": 100, "candidates": len(segments)},
         "classification": {"status": "completed", "progress": 100},
         "frame_ranking": {"status": "completed", "progress": 100, "ranked": len(segments)},
-        "clip_windows": {"status": "completed", "progress": 100, "clips": len(evidences)},
+        "clip_windows": {
+            "status": "completed",
+            "progress": 100,
+            "clips": len(evidences),
+            "duplicates_removed": evidence_count_before_deduplication - len(evidences),
+        },
         "evidence_generation": {"status": "completed", "progress": 100, "evidences": len(evidences)},
         "human_review": {"status": "pending", "progress": 0},
     })

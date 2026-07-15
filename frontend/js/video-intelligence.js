@@ -416,7 +416,10 @@
             <div class="vi-clip-editor">
               <label>Inizio clip<input type="number" min="0" step="1" data-field="clip_start" value="${Math.max(0,Math.round(start))}"></label>
               <label>Fine clip<input type="number" min="0" step="1" data-field="clip_end" value="${Math.max(0,Math.round(end))}"></label>
+              <button class="btn dark small" type="button" data-action="shift-clip" data-delta="-5" aria-label="Sposta la clip indietro di 5 secondi">-5 s</button>
+              <button class="btn dark small" type="button" data-action="shift-clip" data-delta="5" aria-label="Sposta la clip avanti di 5 secondi">+5 s</button>
               <button class="btn dark small" type="button" data-action="save-clip">Salva clip</button>
+              <button class="btn dark small" type="button" data-action="reset-clip">Ripristina proposta</button>
             </div>
             <div class="vi-frame-editor">
               <label>Frame rappresentativo<select data-field="frame_timestamp">${frameOptions(item.representative_timestamp_ms)}</select></label>
@@ -503,6 +506,28 @@
     const payload = await request(`/projects/${assetId()}/evidences/${encodeURIComponent(id)}/clip`, {
       method:"POST",
       body:JSON.stringify({start_timestamp_ms:Math.round(start*1000),end_timestamp_ms:Math.round(end*1000)})
+    });
+    const index = state.evidences.findIndex(item => item.evidence_id === id);
+    if(index >= 0) state.evidences[index] = payload.evidence;
+    renderWorkspace();
+  }
+
+  function shiftClip(card,deltaSeconds){
+    const startInput = card?.querySelector('[data-field="clip_start"]');
+    const endInput = card?.querySelector('[data-field="clip_end"]');
+    if(!startInput || !endInput) return;
+    const start = Math.max(0,Number(startInput.value || 0) + deltaSeconds);
+    const duration = Number(document.getElementById("videoPreview")?.duration || 0);
+    const span = Math.max(1,Number(endInput.value || 0) - Number(startInput.value || 0));
+    const boundedStart = duration ? Math.min(start,Math.max(0,duration - span)) : start;
+    startInput.value = String(Math.round(boundedStart));
+    endInput.value = String(Math.round(duration ? Math.min(duration,boundedStart + span) : boundedStart + span));
+  }
+
+  async function resetClip(id){
+    const payload = await request(`/projects/${assetId()}/evidences/${encodeURIComponent(id)}/clip`, {
+      method:"POST",
+      body:JSON.stringify({reset_to_suggestion:true})
     });
     const index = state.evidences.findIndex(item => item.evidence_id === id);
     if(index >= 0) state.evidences[index] = payload.evidence;
@@ -616,6 +641,8 @@
     if(action === "correct") guarded(() => reviewEvidence(id,"corrected"),"Correzione salvata.");
     if(action === "reject") guarded(() => reviewEvidence(id,"rejected"),"Evidenza esclusa dal report.");
     if(action === "save-clip") guarded(() => saveClip(id),"Intervallo clip aggiornato.");
+    if(action === "reset-clip") guarded(() => resetClip(id),"Intervallo suggerito ripristinato.");
+    if(action === "shift-clip") shiftClip(card,Number(button.dataset.delta || 0));
     if(action === "save-frame") guarded(() => saveFrame(id),"Frame rappresentativo aggiornato.");
   });
 
