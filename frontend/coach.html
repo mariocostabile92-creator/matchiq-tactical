@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
 
-<link rel="stylesheet" href="/css/coach.css?v=10533">
+<link rel="stylesheet" href="/css/coach.css?v=10534">
 <link rel="stylesheet" href="/css/coach-lineup.css?v=10532">
 
 <style>
@@ -1054,8 +1054,8 @@
                     <div class="coach-match-command-group coach-match-command-critical">
                         <span class="coach-match-command-label">AZIONI CRITICHE</span>
                         <div class="coach-match-critical-controls">
-                            <button type="button" class="coach-match-command reset" onclick="resetCoachLiveClock()">Azzera timer</button>
-                            <button type="button" class="coach-match-command danger" onclick="setCoachMatchCommand('finish')">Termina partita</button>
+                            <button type="button" class="coach-match-command reset" id="coachLiveReset" onclick="resetCoachLiveClock()">Azzera timer</button>
+                            <button type="button" class="coach-match-command danger" id="coachLiveFinish" onclick="setCoachMatchCommand('finish')">Termina partita</button>
                         </div>
                     </div>
                 </div>
@@ -1064,7 +1064,7 @@
                     <div id="coachNetworkState" class="coach-network-state" role="status">Verifica rete...</div>
                 </div>
                 <div class="coach-live-controls coach-halftime-control">
-                    <button class="btn gold" type="button" onclick="prepareCoachHalftimeSummary()">Prepara sintesi intervallo</button>
+                    <button class="btn gold" id="coachHalftimeSummaryButton" type="button" onclick="prepareCoachHalftimeSummary()">Prepara sintesi intervallo</button>
                 </div>
             </section>
 
@@ -1628,17 +1628,17 @@
 <script src="/js/coach-lineup-layouts.js?v=10531"></script>
 <script src="/js/coach-voice-state.js?v=10526"></script>
 <script src="/js/coach-storage.js?v=10526"></script>
-<script src="/js/coach-match-feedback.js?v=10526"></script>
-<script src="/js/coach-actions.js?v=10533"></script>
+<script src="/js/coach-match-feedback.js?v=10534"></script>
+<script src="/js/coach-actions.js?v=10534"></script>
 <script src="/js/coach-voice-parser.js?v=10526"></script>
 <script src="/js/coach-voice-api.js?v=10526"></script>
-<script src="/js/coach-voice-actions.js?v=10533"></script>
+<script src="/js/coach-voice-actions.js?v=10534"></script>
 <script src="/js/coach-report.js?v=10533"></script>
-<script src="/js/coach-render.js?v=10533"></script>
-<script src="/js/coach-match-day.js?v=10533"></script>
+<script src="/js/coach-render.js?v=10534"></script>
+<script src="/js/coach-match-day.js?v=10534"></script>
 <script src="/js/coach-lineup-interactions.js?v=10531"></script>
 <script src="/js/coach-lineup-player-menu.js?v=10531"></script>
-<script src="/js/coach-voice-render.js?v=10533"></script>
+<script src="/js/coach-voice-render.js?v=10534"></script>
 <script src="/js/coach-core.js?v=10526"></script>
 <script src="/js/coach-pattern-impact.js?v=10526"></script>
 <script src="/js/coach-training-planner.js?v=10526"></script>

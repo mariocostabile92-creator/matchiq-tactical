@@ -50,6 +50,8 @@
     const awayGoals = typeof getGoals === "function" ? getGoals("away") : 0;
     const period = coachState.live?.period || "1T";
     const running = Boolean(coachState.live?.running);
+    const hasMatch = Boolean(coachState.match);
+    const elapsedSeconds = getCoachLiveElapsedSeconds();
     box.innerHTML = `
       <div><span>Partita</span><strong>${esc(home)} <b>${homeGoals} - ${awayGoals}</b> ${esc(away)}</strong></div>
       <div><span>Fase</span><strong>${esc(PERIOD_LABELS[period] || period)}</strong></div>
@@ -57,14 +59,24 @@
     `;
     document.querySelectorAll("[data-match-period]").forEach(button => {
       button.classList.toggle("active", button.dataset.matchPeriod === period);
+      button.disabled = !hasMatch;
     });
     const startButton = document.getElementById("coachLiveToggle");
     if(startButton){
       startButton.textContent = running
         ? "Pausa timer"
-        : (getCoachLiveElapsedSeconds() > 0 ? "Riprendi timer" : "Avvia timer");
+        : (elapsedSeconds > 0 ? "Riprendi timer" : "Avvia timer");
       startButton.setAttribute("aria-pressed", running ? "true" : "false");
+      startButton.disabled = !hasMatch;
     }
+    const periodSelect = document.getElementById("coachLivePeriod");
+    if(periodSelect) periodSelect.disabled = !hasMatch;
+    const resetButton = document.getElementById("coachLiveReset");
+    if(resetButton) resetButton.disabled = !hasMatch || elapsedSeconds <= 0;
+    const finishButton = document.getElementById("coachLiveFinish");
+    if(finishButton) finishButton.disabled = !hasMatch;
+    const halftimeButton = document.getElementById("coachHalftimeSummaryButton");
+    if(halftimeButton) halftimeButton.disabled = !hasMatch;
   }
 
   function focusManualNote(){

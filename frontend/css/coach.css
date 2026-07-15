@@ -545,6 +545,12 @@
         min-height:48px;
         touch-action:manipulation;
     }
+
+    .coach-match-command-primary .coach-match-command,
+    .coach-match-critical-controls .coach-match-command,
+    .coach-live-period{
+        min-height:52px;
+    }
 }
 
 @media(display-mode:standalone){
@@ -555,7 +561,29 @@
     .coach-staff-tools-panel{
         scroll-margin-bottom:calc(84px + env(safe-area-inset-bottom));
     }
+
+    .coach-live-card{
+        padding-left:max(12px,env(safe-area-inset-left));
+        padding-right:max(12px,env(safe-area-inset-right));
+    }
 }
+
+@media(prefers-reduced-motion:reduce){
+    .coach-voice-mic-indicator,
+    .coach-live-btn,
+    .coach-match-command,
+    .coach-event-feedback{
+        animation:none !important;
+        transition:none !important;
+    }
+}
+
+.coach-live-card,
+.coach-match-command-grid,
+.coach-match-command-group,
+.coach-team-events-grid,
+.coach-observation-groups,
+.coach-staff-actions-group{min-width:0;max-width:100%}
 
 *{
     margin:0;
