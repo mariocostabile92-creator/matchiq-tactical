@@ -8,165 +8,109 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Coach AI">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="MatchIQ Coach AI accompagna lo staff tecnico nella preparazione, nel Match Day e nell'analisi post-partita.">
-  <meta property="og:title" content="MatchIQ Coach AI">
-  <meta property="og:description" content="L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.">
-  <meta property="og:type" content="website">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="MatchIQ Coach AI">
-  <meta name="twitter:description" content="L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.">
-  <title>MatchIQ Coach AI | Assistente AI per lo staff tecnico</title>
+  <meta name="description" content="Oggi, la scrivania digitale dello staff tecnico MatchIQ Coach AI.">
+  <title>Oggi | MatchIQ Coach AI</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/assets/matchiq-logo.png">
-  <link rel="stylesheet" href="/css/home.css?v=10526">
-  <link rel="stylesheet" href="/css/weekly-briefing-home.css?v=10526">
-  <link rel="stylesheet" href="/css/pattern-intelligence-home.css?v=10526">
-  <link rel="stylesheet" href="/css/training-planner-home.css?v=10526">
-  <link rel="stylesheet" href="/css/knowledge-entry.css?v=10526">
-  <link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10526">
-  <link rel="stylesheet" href="/css/tactical-identity-entry.css?v=10526">
-  <link rel="stylesheet" href="/css/home-intelligence.css?v=10526">
-  <link rel="stylesheet" href="/css/global-nav.css?v=10526">
+  <link rel="stylesheet" href="/css/home.css?v=10528">
+  <link rel="stylesheet" href="/css/global-nav.css?v=10528">
 </head>
 <body data-miq-module="home">
   <a class="skip-link" href="#homeMain">Vai al contenuto</a>
-  <div class="miq-module-toolbar" aria-label="Strumenti Home">
-    <span class="miq-toolbar-state">Workspace MatchIQ</span>
-    <button class="button button-muted guide-button" type="button" data-home-tour aria-label="Apri la guida iniziale">Guida</button>
-  </div>
 
-  <main id="homeMain" class="home-shell">
+  <main id="homeMain" class="today-shell">
     <div id="homeNotice" class="notice" role="status" aria-live="polite" hidden></div>
 
-    <nav class="field-action-strip" aria-label="Azioni rapide da campo">
-      <a class="field-action primary" href="/coach.html#matchDayWorkspace"><strong>Match Day</strong><span>Apri la plancia</span></a>
-      <a class="field-action" href="/coach.html#coachVoicePanel"><strong>Voice Coach</strong><span>Detta una nota</span></a>
-      <a class="field-action" href="/coach.html#matchSetup"><strong>Prepara</strong><span>Dati partita</span></a>
-      <a class="field-action" href="/coach.html#lineupWorkspace"><strong>Formazione</strong><span>Campo e panchina</span></a>
-    </nav>
-
-    <section class="hero-band" aria-labelledby="heroTitle">
-      <div class="hero-copy">
-        <p id="heroGreeting" class="eyebrow">MATCHIQ COACH AI</p>
-        <h1 id="heroTitle">Il tuo assistente AI per preparare, vivere e analizzare ogni partita.</h1>
-        <p id="heroLead" class="hero-lead">Un unico workspace per organizzare il lavoro dello staff, raccogliere informazioni sul campo e trasformarle in analisi utili per la settimana successiva.</p>
-        <div class="primary-actions" aria-label="Azioni principali">
-          <a class="button button-primary" href="/coach.html">Apri Coach</a>
-          <a class="button button-blue" href="/video.html">Apri Video AI</a>
-        </div>
-        <div id="heroBadges" class="badge-row" aria-label="Stato account"></div>
+    <section id="todayHero" class="today-hero" aria-labelledby="heroTitle">
+      <div class="today-hero__copy">
+        <p id="heroGreeting" class="eyebrow">OGGI</p>
+        <h1 id="heroTitle">La scrivania digitale dell'allenatore.</h1>
+        <p id="heroLead">Sto preparando il tuo lavoro tecnico di oggi.</p>
+        <div id="heroActions" class="hero-actions" aria-label="Azione principale"></div>
+        <div id="heroBadges" class="badge-row" aria-label="Contesto attuale"></div>
       </div>
-      <aside class="hero-brief" aria-labelledby="briefTitle">
-        <div class="section-label">FLUSSO OPERATIVO</div>
-        <h2 id="briefTitle">Prepara. Vivi. Analizza. Pianifica. Riparti.</h2>
-        <ol>
-          <li><span>1</span><div><strong>Prepara</strong><small>Partita, obiettivi e squadra.</small></div></li>
-          <li><span>2</span><div><strong>Vivi</strong><small>Eventi, note e letture dal campo.</small></div></li>
-          <li><span>3</span><div><strong>Analizza</strong><small>Video, report e priorità settimanali.</small></div></li>
-          <li><span>4</span><div><strong>Pianifica</strong><small>Trasforma le evidenze in lavoro settimanale.</small></div></li>
-          <li><span>5</span><div><strong>Riparti</strong><small>Porta conoscenza e priorità nella prossima gara.</small></div></li>
-        </ol>
+      <aside class="today-hero__status" aria-labelledby="heroStatusTitle">
+        <span class="section-label">FOCUS ATTUALE</span>
+        <h2 id="heroStatusTitle">Raccolgo le attività dello staff</h2>
+        <p id="heroStatusText">Partite, briefing e analisi vengono ordinati per urgenza.</p>
       </aside>
     </section>
 
-    <section id="homeIntelligence" class="intelligence-section" aria-labelledby="intelligenceTitle">
-      <div class="intelligence-section__header">
-        <div>
-          <span class="section-label">MATCHIQ INTELLIGENCE</span>
-          <h2 id="intelligenceTitle">MatchIQ Intelligence</h2>
-          <p>L'intelligenza MatchIQ che trasforma dati, partite e conoscenza dello staff in indicazioni verificabili.</p>
-        </div>
-        <p class="intelligence-section__disclaimer">Le analisi e i suggerimenti generati dall'Intelligenza Artificiale rappresentano un supporto decisionale e devono essere sempre verificati dallo staff tecnico.</p>
+    <section id="todayPriorities" class="today-section" aria-labelledby="priorityTitle">
+      <div class="section-heading">
+        <div><span class="section-label">PRIORITÀ DI OGGI</span><h2 id="priorityTitle">Cosa richiede attenzione</h2></div>
+        <p>Massimo quattro indicazioni, solo quando esiste un'azione reale.</p>
+      </div>
+      <div id="priorityGrid" class="priority-grid" aria-live="polite"><div class="loading-row">Ordino le priorità...</div></div>
+    </section>
+
+    <section id="todayContinue" class="today-section" aria-labelledby="continueTitle">
+      <div class="section-heading">
+        <div><span class="section-label">CONTINUA</span><h2 id="continueTitle">Riprendi il lavoro interrotto</h2></div>
+        <button class="icon-button" type="button" title="Aggiorna" aria-label="Aggiorna Oggi" data-home-retry>↻</button>
+      </div>
+      <div id="continueList" class="continue-list" aria-live="polite"><div class="loading-row">Cerco l'ultima attività utile...</div></div>
+    </section>
+
+    <section id="nextMatch" class="today-section context-card" aria-labelledby="nextMatchTitle">
+      <div class="section-heading compact">
+        <div><span class="section-label">PROSSIMA PARTITA</span><h2 id="nextMatchTitle">Il prossimo appuntamento</h2></div>
+      </div>
+      <div id="nextMatchContent" aria-live="polite"><div class="loading-row">Controllo la preparazione...</div></div>
+    </section>
+
+    <section id="weeklyBriefing" class="today-section weekly-card" aria-labelledby="weeklyTitle">
+      <div class="section-heading compact">
+        <div><span class="section-label">WEEKLY AI BRIEFING</span><h2 id="weeklyTitle">La settimana dello staff</h2></div>
+      </div>
+      <div id="weeklyContent" aria-live="polite"><div class="loading-row">Verifico il briefing settimanale...</div></div>
+    </section>
+
+    <section id="videoFocus" class="today-section video-card" aria-labelledby="videoFocusTitle">
+      <div class="section-heading compact">
+        <div><span class="section-label">VIDEO AI</span><h2 id="videoFocusTitle">Il progetto che richiede attenzione</h2></div>
+      </div>
+      <div id="videoFocusContent" aria-live="polite"><div class="loading-row">Controllo le sessioni video...</div></div>
+    </section>
+
+    <section id="weeklyFlow" class="today-section" aria-labelledby="weeklyFlowTitle">
+      <div class="section-heading">
+        <div><span class="section-label">LA TUA SETTIMANA</span><h2 id="weeklyFlowTitle">Il ciclo di lavoro tecnico</h2></div>
+        <p>Una sequenza operativa, dalla gara alla prossima decisione.</p>
+      </div>
+      <ol id="weeklyFlowList" class="weekly-flow" aria-label="Fasi della settimana"></ol>
+    </section>
+
+    <section id="homeIntelligence" class="today-section" aria-labelledby="intelligenceTitle">
+      <div class="section-heading">
+        <div><span class="section-label">MATCHIQ INTELLIGENCE</span><h2 id="intelligenceTitle">Conoscenza che resta allo staff</h2></div>
+        <p>Strumenti specialistici, aperti solo quando servono.</p>
       </div>
       <div id="homeIntelligenceGrid" class="intelligence-grid" aria-live="polite"></div>
     </section>
 
-    <section aria-labelledby="ecosystemTitle">
-      <div class="section-heading"><div><span class="section-label">WORKFLOW STAFF</span><h2 id="ecosystemTitle">Il lavoro tecnico, in un unico posto</h2></div><p>Dalla preparazione al prossimo allenamento, senza perdere il filo.</p></div>
-      <div id="moduleGrid" class="module-grid" aria-live="polite">
-        <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+    <section id="recentWork" class="today-section" aria-labelledby="activityTitle">
+      <div class="section-heading compact">
+        <div><span class="section-label">ULTIME ATTIVITÀ</span><h2 id="activityTitle">Cosa è successo di recente</h2></div>
       </div>
+      <div id="recentActivity" class="timeline-list" aria-live="polite"></div>
     </section>
 
-    <section aria-labelledby="numbersTitle">
-      <div class="section-heading"><div><span class="section-label">STATO</span><h2 id="numbersTitle">Il tuo lavoro in numeri</h2></div><p id="statsCaption">Caricamento dei dati personali...</p></div>
-      <div id="statsGrid" class="stats-grid" aria-live="polite"></div>
-    </section>
-
-    <section class="work-grid">
-      <div class="work-panel" aria-labelledby="continueTitle">
-        <div class="section-heading compact"><div><span class="section-label">RIPRENDI</span><h2 id="continueTitle">Continua da dove eri rimasto</h2></div><button class="icon-button" type="button" title="Aggiorna" aria-label="Aggiorna attività" data-home-retry>↻</button></div>
-        <div id="continueList" class="activity-list" aria-live="polite"><div class="loading-row">Cerco le tue attività più recenti...</div></div>
-      </div>
-      <div class="ai-panel" aria-labelledby="aiTitle">
-        <div class="section-heading compact"><div><span class="section-label">SINTESI OPERATIVA</span><h2 id="aiTitle">MatchIQ AI</h2></div><span class="ai-status">Supporto staff</span></div>
-        <div id="aiPriorities" class="priority-list" aria-live="polite"><div class="loading-row">Preparo una sintesi basata sui tuoi dati...</div></div>
-      </div>
-    </section>
-
-    <section class="work-grid lower-grid">
-      <div class="work-panel" aria-labelledby="activityTitle">
-        <div class="section-heading compact"><div><span class="section-label">STORICO</span><h2 id="activityTitle">Attività recenti</h2></div></div>
-        <div id="recentActivity" class="timeline-list" aria-live="polite"></div>
-      </div>
-      <div class="work-panel" aria-labelledby="quickTitle">
-        <div class="section-heading compact"><div><span class="section-label">SCORCIATOIE</span><h2 id="quickTitle">Azioni rapide</h2></div></div>
-        <div class="quick-grid">
-          <a href="/coach.html">Crea una partita <span>→</span></a>
-          <a href="/video.html#videoUploadSection">Carica un video <span>→</span></a>
-          <a href="/video.html">Apri Video AI <span>→</span></a>
-          <a href="/video.html#hubArchivePane">Apri Video Hub <span>→</span></a>
-          <a href="/training-planner.html">Pianifica la settimana <span>→</span></a>
-          <a id="latestReportAction" href="/video.html">Apri ultimo report <span>→</span></a>
-        </div>
-      </div>
-    </section>
+    <p class="ai-disclaimer">Le analisi e i suggerimenti generati dall'Intelligenza Artificiale rappresentano un supporto decisionale e devono essere sempre verificati dallo staff tecnico.</p>
   </main>
 
-  <dialog id="homeOnboarding" class="onboarding-dialog" aria-labelledby="onboardingTitle" aria-describedby="onboardingDescription">
-    <div class="onboarding-shell">
-      <div class="onboarding-head">
-        <span id="onboardingStep" class="section-label">PASSO 1 DI 4</span>
-        <button class="icon-button" type="button" data-onboarding-close aria-label="Chiudi la guida">×</button>
-      </div>
-      <div id="onboardingContent" class="onboarding-content"></div>
-      <div class="onboarding-progress" aria-hidden="true"><span id="onboardingProgress"></span></div>
-      <div class="onboarding-actions">
-        <button class="button button-muted" type="button" data-onboarding-skip>Salta</button>
-        <button class="button button-muted" type="button" data-onboarding-back>Indietro</button>
-        <button class="button button-primary" type="button" data-onboarding-next>Continua</button>
-      </div>
-    </div>
-  </dialog>
-
-  <template><nav class="mobile-nav" aria-label="Navigazione mobile">
-    <a class="active" href="/index.html" aria-current="page"><span>⌂</span>Home</a>
-    <a href="/coach.html"><span>▣</span>Coach</a>
-    <a href="/video.html"><span>▶</span>Video AI</a>
-    <a href="/video.html#hubArchivePane"><span>▤</span>Video Hub</a>
-    <a href="/account.html"><span>◎</span>Account</a>
-  </nav></template>
-
-  <script src="/js/auth.js?v=10526"></script>
-  <script src="/js/global-nav-config.js?v=10526"></script>
-  <script src="/js/global-nav-state.js?v=10526"></script>
-  <script src="/js/global-nav-render.js?v=10526"></script>
-  <script src="/js/global-nav-menu.js?v=10526"></script>
-  <script src="/js/app-meta.js?v=10526"></script>
-  <script src="/js/home-state.js?v=10526"></script>
-  <script src="/js/home-api.js?v=10526"></script>
-  <script src="/js/home-render.js?v=10526"></script>
-  <script src="/js/home-actions.js?v=10526"></script>
-  <script src="/js/home-onboarding.js?v=10526"></script>
-  <script src="/js/home.js?v=10526"></script>
-  <script src="/js/home-intelligence.js?v=10526"></script>
-  <script src="/js/weekly-briefing-state.js?v=10526"></script>
-  <script src="/js/weekly-briefing-api.js?v=10526"></script>
-  <script src="/js/weekly-briefing-home.js?v=10526"></script>
-  <script src="/js/pattern-intelligence-home.js?v=10526"></script>
-  <script src="/js/training-planner-home.js?v=10526"></script>
-  <script src="/js/knowledge-entry.js?v=10526"></script>
-  <script src="/js/tactical-assistant-entry.js?v=10526"></script>
-  <script src="/js/tactical-identity-entry.js?v=10526"></script>
+  <script src="/js/auth.js?v=10528"></script>
+  <script src="/js/global-nav-config.js?v=10528"></script>
+  <script src="/js/global-nav-state.js?v=10528"></script>
+  <script src="/js/global-nav-render.js?v=10528"></script>
+  <script src="/js/global-nav-menu.js?v=10528"></script>
+  <script src="/js/app-meta.js?v=10528"></script>
+  <script src="/js/weekly-briefing-state.js?v=10528"></script>
+  <script src="/js/weekly-briefing-api.js?v=10528"></script>
+  <script src="/js/home-state.js?v=10528"></script>
+  <script src="/js/home-api.js?v=10528"></script>
+  <script src="/js/home-render.js?v=10528"></script>
+  <script src="/js/home-actions.js?v=10528"></script>
+  <script src="/js/home.js?v=10528"></script>
 </body>
 </html>
