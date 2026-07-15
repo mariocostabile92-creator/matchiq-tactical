@@ -1,6 +1,7 @@
 (function initCoachLineupLayouts(){
   "use strict";
 
+  const PITCH_SAFE_AREA = Object.freeze({ minX:12, maxX:88, minY:9, maxY:91 });
   const slot = (id, role, x, y) => Object.freeze({ id, role, x, y });
   const layouts = Object.freeze({
     "4-3-3": [slot("gk","Portiere",50,90),slot("d1","Difensore",16,72),slot("d2","Difensore",38,72),slot("d3","Difensore",62,72),slot("d4","Difensore",84,72),slot("m1","Centrocampista",24,50),slot("m2","Centrocampista",50,50),slot("m3","Centrocampista",76,50),slot("a1","Attaccante",18,24),slot("a2","Attaccante",50,20),slot("a3","Attaccante",82,24)],
@@ -14,9 +15,23 @@
   const aliases = { Esterno:"Centrocampista", Jolly:"Centrocampista" };
   const SETTINGS_KEY = "matchiq_coach_lineup_formations_v1";
 
+  function clamp(value, min, max){
+    const number = Number(value);
+    return Math.min(max, Math.max(min, Number.isFinite(number) ? number : min));
+  }
+
+  function safePosition(position){
+    const source = position || {};
+    return {
+      ...source,
+      x:clamp(source.x, PITCH_SAFE_AREA.minX, PITCH_SAFE_AREA.maxX),
+      y:clamp(source.y, PITCH_SAFE_AREA.minY, PITCH_SAFE_AREA.maxY)
+    };
+  }
+
   function names(){ return Object.keys(layouts); }
   function normalize(name){ return layouts[name] ? name : "4-3-3"; }
-  function slots(name){ return layouts[normalize(name)].map(item => ({...item})); }
+  function slots(name){ return layouts[normalize(name)].map(item => safePosition(item)); }
   function preferredRole(role){ return aliases[role] || role || "Centrocampista"; }
   function assign(players, formation){
     const available = slots(formation);
@@ -110,5 +125,14 @@
   window.setLineupFormation = setFormation;
   window.syncLineupFormationControl = syncControl;
   window.ensureLineupSlots = ensureSlots;
-  window.MatchIQLineupLayouts = { names, normalize, slots, assign, getFormation, ensureSlots };
+  window.MatchIQLineupLayouts = {
+    names,
+    normalize,
+    slots,
+    assign,
+    getFormation,
+    ensureSlots,
+    safePosition,
+    safeArea:{...PITCH_SAFE_AREA}
+  };
 })();

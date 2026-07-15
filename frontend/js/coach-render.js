@@ -989,7 +989,7 @@ function renderLineupPitch(){
         const player = starters.find(item => item.slot === slot.id);
         const position = player ? getPitchPosition(player, index, starters.length) : slot;
         return `
-            <div class="pitch-slot" data-lineup-slot="${esc(slot.id)}" data-lineup-side="${esc(activeSide)}" style="left:${position.x}%;top:${position.y}%;" aria-label="Posizione ${esc(slot.role)}">
+            <div class="pitch-slot" data-lineup-slot="${esc(slot.id)}" data-lineup-side="${esc(activeSide)}" style="--slot-left:${position.x}%;--slot-top:${position.y}%;" aria-label="Posizione ${esc(slot.role)}">
                 ${player ? `
                     <button type="button" class="pitch-player ${esc(activeSide)}" data-lineup-player="${esc(player.id)}" onclick="openLineupPlayerMenu('${esc(player.id)}')" aria-label="${esc(player.name)}, ${esc(player.role || "Jolly")}. Tocca per modificare o trascina per cambiare posizione.">
                         <span class="pitch-shirt">${esc(player.number || "-")}</span>
