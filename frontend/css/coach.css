@@ -60,6 +60,16 @@
 .coach-event-feedback.ok{border-color:rgba(24,240,139,.35);color:#baffdc}.coach-event-feedback.warn{border-color:rgba(255,209,102,.38);color:#ffe7a8}
 .coach-network-state.online{color:#9ff7c9}.coach-network-state.offline{border-color:rgba(255,138,24,.42);color:#ffd0a0}
 .coach-live-btn[aria-busy="true"]{opacity:.68;transform:scale(.985);cursor:wait}
+.coach-live-btn.card-yellow{
+    border-color:rgba(255,209,102,.58);
+    background:rgba(255,209,102,.12);
+}
+.coach-live-btn.card-yellow strong{color:#ffe69b}
+.coach-live-btn.card-red{
+    border-color:rgba(255,65,108,.58);
+    background:rgba(255,65,108,.13);
+}
+.coach-live-btn.card-red strong{color:#ffb5c5}
 
 .coach-live-section-head,
 .coach-team-panel-head{
