@@ -164,6 +164,12 @@
     return null;
   };
 
+  H.trainingContext = function(){
+    const plan=H.state.training;if(!plan||plan.status==="archiviata")return null;
+    const needsAttention=plan.is_viewed!==true||plan.status==="modificata";
+    return {id:plan.id,needsAttention,status:plan.status||"disponibile",days:Array.isArray(plan.training_days)?plan.training_days.length:0,url:"/training-planner.html"};
+  };
+
   H.contextForToday = function(){
     const current=H.state.local?.coachCurrent;
     const currentItem=current?.match?H.coachItem(current,true):null;
@@ -184,6 +190,9 @@
     }else if(H.videoAttention()&&H.videoAttention().state!=="completed"){
       const item=H.videoAttention();
       hero={key:item.key,kind:"video",eyebrow:`VIDEO AI · ${item.label}`,title:item.title,lead:item.copy,statusTitle:item.action,statusText:"Controlla il progetto prima di passare al prossimo lavoro.",action:item.action,url:item.url};
+    }else if(H.trainingContext()?.needsAttention){
+      const training=H.trainingContext();
+      hero={key:`training:${training.id}`,kind:"training",eyebrow:"AI TRAINING PLANNER",title:"Il piano della settimana richiede attenzione.",lead:training.days?`${training.days} sedute sono disponibili per lo staff.`:"Il piano può essere rivisto prima della prossima seduta.",statusTitle:"Porta le evidenze in campo",statusText:"Controlla e adatta il lavoro proposto alle esigenze della squadra.",action:"Apri Training Planner",url:training.url};
     }
     return {hero,currentItem};
   };
@@ -242,6 +251,10 @@
     if(weekly&&!weekly.isRead&&String(today.hero.key)!==`weekly:${weekly.id}`){
       priorities.unshift({type:"operational",title:"Weekly AI Briefing da leggere",text:weekly.subtitle,url:"/weekly-briefing.html",action:"Inizia la settimana"});
     }
+    const training=H.trainingContext();
+    if(training?.needsAttention&&String(today.hero.key)!==`training:${training.id}`){
+      priorities.push({type:"operational",title:"Piano allenamento da controllare",text:training.days?`${training.days} sedute disponibili.`:"Training Planner disponibile.",url:training.url,action:"Apri piano"});
+    }
     if(current && String(today.hero.key)!==String(current.record_key)){
       const ratings = Array.isArray(local.coachCurrent?.ratings) ? local.coachCurrent.ratings.length : 0;
       const report = String(local.coachCurrent?.report || "").trim();
@@ -264,7 +277,9 @@
       hero:today.hero,
       nextMatch:H.nextMatchContext(),
       weekly,
-      videoAttention
+      videoAttention,
+      training,
+      weeklyFlowCurrent:today.hero.kind==="match-day"?1:today.hero.kind==="video"?2:today.hero.kind==="training"?3:(today.hero.kind==="weekly"?4:0)
     };
     return H.state.view;
   };

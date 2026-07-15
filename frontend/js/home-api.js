@@ -28,10 +28,11 @@
     H.state.loading = true;
     H.state.error = "";
     H.loadLocalContext();
-    const [accountResult, summaryResult, weeklyResult] = await Promise.allSettled([
+    const [accountResult, summaryResult, weeklyResult, trainingResult] = await Promise.allSettled([
       H.fetchJson(`/api/account/limits?ts=${Date.now()}`),
       H.fetchJson(`/api/home/summary?ts=${Date.now()}`),
-      H.hasAuthSession() ? H.fetchJson(`/api/weekly-briefing/current?ts=${Date.now()}`) : Promise.resolve({briefing:null})
+      H.hasAuthSession() ? H.fetchJson(`/api/weekly-briefing/current?ts=${Date.now()}`) : Promise.resolve({briefing:null}),
+      H.hasAuthSession() ? H.fetchJson(`/api/training-planner/current?ts=${Date.now()}`) : Promise.resolve({data:{plan:null}})
     ]);
 
     if(accountResult.status === "fulfilled"){
@@ -59,6 +60,7 @@
       H.state.remote = {stats:{}, stats_available:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:["home_summary"]};
     }
     H.state.weekly = weeklyResult.status === "fulfilled" ? (weeklyResult.value?.briefing || null) : null;
+    H.state.training = trainingResult.status === "fulfilled" ? (trainingResult.value?.data?.plan || null) : null;
     H.state.loading = false;
     return H.mergeData();
   };

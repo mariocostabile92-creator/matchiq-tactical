@@ -82,7 +82,7 @@
       ["Analizza","Video, report ed evidenze."],
       ["Allena","Priorità trasformate in sedute."],
       ["Riparti","Identità e decisioni per la prossima gara."]
-    ].forEach(([title,copy],index)=>{const item=node("li");item.append(node("span",String(index+1),"flow-index"),node("strong",title),node("small",copy));list.append(item)});
+    ].forEach(([title,copy],index)=>{const item=node("li");if(index===(H.state.view?.weeklyFlowCurrent??0)){item.classList.add("is-current");item.setAttribute("aria-current","step")}item.append(node("span",String(index+1),"flow-index"),node("strong",title),node("small",copy));list.append(item)});
   };
 
   H.renderIntelligence=function(){
