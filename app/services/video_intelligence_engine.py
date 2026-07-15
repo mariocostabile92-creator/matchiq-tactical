@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from copy import deepcopy
 from typing import Any, Dict, Optional
 from uuid import uuid4
 
@@ -11,7 +12,7 @@ from app.repositories.video_intelligence_repository import load_project, save_pr
 from app.services.video_clip_service import build_clip_reference
 from app.services.video_coach_link_service import suggest_coach_links
 from app.services.video_evidence_service import build_evidence
-from app.services.video_frame_ranking_service import rank_segments
+from app.services.video_frame_ranking_service import build_candidate_pool, rank_segments
 from app.services.video_segmentation_service import phase_title, segment_frames
 
 
@@ -179,7 +180,20 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
     save_project(user_id, asset_id, project, status="processing", stage="segmentation", progress=20)
 
     duration_ms = max(0, int(float(data.duration_seconds or 0) * 1000))
-    segments = rank_segments(segment_frames(data.frame_times_ms, data.frame_meta, duration_ms))
+    candidate_pool = build_candidate_pool(data.frame_times_ms, data.frame_meta)
+    primary_pool = [
+        item for item in candidate_pool
+        if str(item.get("candidate_role") or "").lower() in {"primary", "selected", "verified"}
+    ] or candidate_pool
+    segments = rank_segments(
+        segment_frames(
+            [item["timestamp_ms"] for item in primary_pool],
+            [item.get("frame_meta") or {} for item in primary_pool],
+            duration_ms,
+        ),
+        candidate_pool=candidate_pool,
+        duration_ms=duration_ms,
+    )
     if not segments:
         update_project_state(
             user_id,
@@ -214,6 +228,7 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
                 "tier": segment["frame_tier"],
                 "rank": segment["frame_rank"],
                 "motivation": segment["frame_ranking_motivation"],
+                "review_required": bool(segment.get("frame_review_required")),
             },
             title=phase_title(segment["phase_type"]),
             observation=observed,
@@ -223,6 +238,10 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
             source_type=segment["source_type"],
         )
         evidence = build_evidence(project, asset_id, evidence_data)
+        evidence["frame_candidates"] = deepcopy(segment.get("frame_candidates") or [])
+        evidence["frame_selection_status"] = (
+            "manual_review_required" if segment.get("frame_review_required") else "suggested"
+        )
         evidence["clip_reference"] = build_clip_reference(
             asset_id,
             segment["start_timestamp_ms"],

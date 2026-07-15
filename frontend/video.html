@@ -4893,6 +4893,8 @@ function scoreTacticalFrame(ctx, width, height, time, duration, focus){
     let lowerGreen = 0;
     let centerGreen = 0;
     let edge = 0;
+    let luminanceSum = 0;
+    let luminanceSquaredSum = 0;
     let previousLum = null;
 
     for(let y=0;y<height;y+=step){
@@ -4905,6 +4907,8 @@ function scoreTacticalFrame(ctx, width, height, time, duration, focus){
             const isGreen = g > r * 1.08 && g > b * 1.05 && g > 45;
             const isWhite = r > 180 && g > 180 && b > 180;
             samples++;
+            luminanceSum += lum;
+            luminanceSquaredSum += lum * lum;
             if(isGreen){
                 green++;
                 if(y < height * .46) upperGreen++;
@@ -4922,6 +4926,12 @@ function scoreTacticalFrame(ctx, width, height, time, duration, focus){
     const whiteRatio = white / Math.max(1,samples);
     const darkRatio = dark / Math.max(1,samples);
     const edgeScore = edge / Math.max(1,samples);
+    const meanLuminance = luminanceSum / Math.max(1,samples);
+    const luminanceVariance = Math.max(0,(luminanceSquaredSum / Math.max(1,samples)) - (meanLuminance * meanLuminance));
+    const brightness = meanLuminance / 255;
+    const contrast = Math.min(1,Math.sqrt(luminanceVariance) / 96);
+    const sharpness = Math.min(1,edgeScore * 5.5);
+    const visualInformation = Math.min(1,(edgeScore * 4) + (greenRatio * .45) + (whiteRatio * 2));
     const verticalBalance = 1 - Math.abs(upperGreen - lowerGreen) / Math.max(1,green);
     const centerPitch = centerGreen / Math.max(1,green);
     const closeupPenalty = greenRatio < .18 ? 42 : greenRatio < .28 ? 18 : 0;
@@ -4951,7 +4961,16 @@ function scoreTacticalFrame(ctx, width, height, time, duration, focus){
         score,
         green_ratio: Number(greenRatio.toFixed(3)),
         white_ratio: Number(whiteRatio.toFixed(3)),
+        black_ratio: Number(darkRatio.toFixed(3)),
+        dark_ratio: Number(darkRatio.toFixed(3)),
         edge_score: Number(edgeScore.toFixed(3)),
+        brightness: Number(brightness.toFixed(3)),
+        contrast: Number(contrast.toFixed(3)),
+        sharpness: Number(sharpness.toFixed(3)),
+        blur: Number((1 - sharpness).toFixed(3)),
+        visual_information: Number(visualInformation.toFixed(3)),
+        scene_stability: Number(Math.max(0,1 - Math.min(1,edgeScore * 2.4)).toFixed(3)),
+        visual_hash: [greenRatio,whiteRatio,darkRatio,edgeScore,brightness,contrast].map(value => Math.round(value * 20)).join("-"),
         label: tacticalFrameLabel(focus, greenRatio, whiteRatio, edgeScore)
     };
 }

@@ -243,14 +243,47 @@
   function pipelinePayload(){
     const times = typeof extractedFrameTimes !== "undefined" && Array.isArray(extractedFrameTimes) ? extractedFrameTimes : [];
     const meta = typeof extractedFrameMeta !== "undefined" && Array.isArray(extractedFrameMeta) ? extractedFrameMeta : [];
-    return {
-      idempotency_key: `vi-${assetId()}-${times.join("-")}-${document.getElementById("videoFocus")?.value || "focus"}`,
-      duration_seconds: Number(document.getElementById("videoPreview")?.duration || 0),
-      frame_times_ms: times.map(value => Math.max(0, Math.round(Number(value || 0) * 1000))),
-      frame_meta: meta.map((item,index) => ({
-        ...(item && typeof item === "object" ? item : {}),
+    const alternatives = typeof candidateFrameResults !== "undefined" && Array.isArray(candidateFrameResults) ? candidateFrameResults : [];
+    const candidates = [];
+
+    times.forEach((seconds,index) => {
+      const timestampMs = Math.max(0,Math.round(Number(seconds || 0) * 1000));
+      candidates.push({
+        timestamp_ms:timestampMs,
         frame_index:index,
-        timestamp_ms:Math.max(0, Math.round(Number(times[index] || 0) * 1000))
+        candidate_role:"primary",
+        frame_meta:{
+          ...(meta[index] && typeof meta[index] === "object" ? meta[index] : {}),
+          candidate_role:"primary"
+        }
+      });
+    });
+
+    alternatives.forEach((item,index) => {
+      const timestampMs = Math.max(0,Math.round(Number(item?.time || 0) * 1000));
+      if(candidates.some(candidate => Math.abs(candidate.timestamp_ms - timestampMs) < 450)) return;
+      candidates.push({
+        timestamp_ms:timestampMs,
+        frame_index:times.length + index,
+        candidate_role:"alternative",
+        frame_meta:{
+          ...(item?.meta && typeof item.meta === "object" ? item.meta : {}),
+          candidate_role:"alternative"
+        }
+      });
+    });
+
+    candidates.sort((left,right) => left.timestamp_ms - right.timestamp_ms || left.frame_index - right.frame_index);
+    const candidateKey = candidates.map(item => `${item.timestamp_ms}:${item.candidate_role}`).join("-");
+    return {
+      idempotency_key: `vi-${assetId()}-${candidateKey}-${document.getElementById("videoFocus")?.value || "focus"}`,
+      duration_seconds: Number(document.getElementById("videoPreview")?.duration || 0),
+      frame_times_ms: candidates.map(item => item.timestamp_ms),
+      frame_meta: candidates.map(item => ({
+        ...item.frame_meta,
+        frame_index:item.frame_index,
+        timestamp_ms:item.timestamp_ms,
+        candidate_role:item.candidate_role
       })),
       staff_events: []
     };
