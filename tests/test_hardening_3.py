@@ -85,7 +85,7 @@ class HardeningThreeTests(unittest.TestCase):
         self.assertIn('"start_url": "/index.html?v=10530"', manifest)
         self.assertIn('version: "10530"', app_meta)
         self.assertIn('const APP_VERSION = "10528"', video)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v132"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v133"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -160,11 +160,11 @@ class HardeningThreeTests(unittest.TestCase):
 
         for element_id in ("coachLivePeriod", "coachLiveToggle", "coachVoiceBtn", "eventTeamInput"):
             self.assertEqual(coach.count(f'id="{element_id}"'), 1)
-        self.assertEqual(coach.count("data-live-team-action"), 14)
-        self.assertEqual(coach.count('data-team="home"'), 7)
-        self.assertEqual(coach.count('data-team="away"'), 7)
+        self.assertEqual(coach.count("data-live-team-action"), 18)
+        self.assertEqual(coach.count('data-team="home"'), 9)
+        self.assertEqual(coach.count('data-team="away"'), 9)
         self.assertEqual(coach.count("data-tactical-event-label"), 8)
-        self.assertEqual(coach.count("onclick=\"addLiveEvent("), 14)
+        self.assertEqual(coach.count("onclick=\"addLiveEvent("), 18)
         self.assertIn("NOTE E STRUMENTI STAFF", coach)
         self.assertIn("SQUADRA DI CASA", coach)
         self.assertIn("SQUADRA OSPITE", coach)

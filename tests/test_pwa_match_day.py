@@ -75,9 +75,9 @@ class PwaMatchDaySprintTests(unittest.TestCase):
 
     def test_match_day_keeps_team_events_and_staff_tools_separate(self):
         page = read_frontend("coach.html")
-        self.assertEqual(page.count("data-live-team-action"), 14)
-        self.assertEqual(page.count('data-team="home"'), 7)
-        self.assertEqual(page.count('data-team="away"'), 7)
+        self.assertEqual(page.count("data-live-team-action"), 18)
+        self.assertEqual(page.count('data-team="home"'), 9)
+        self.assertEqual(page.count('data-team="away"'), 9)
         self.assertEqual(page.count("data-tactical-event-label"), 8)
         self.assertIn("NOTE E STRUMENTI STAFF", page)
         self.assertIn('id="eventTeamInput"', page)
@@ -117,13 +117,13 @@ class PwaMatchDaySprintTests(unittest.TestCase):
         worker = read_frontend("service-worker.js")
         self.assertEqual(manifest["start_url"], "/index.html?v=10530")
         self.assertEqual(manifest["display"], "standalone")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v132"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v133"', worker)
         for asset in (
             "/css/coach-lineup.css?v=10532",
             "/js/coach-lineup-layouts.js?v=10531",
             "/js/coach-lineup-interactions.js?v=10531",
             "/js/coach-lineup-player-menu.js?v=10531",
-            "/js/coach-match-day.js?v=10526",
+            "/js/coach-match-day.js?v=10533",
             "/js/coach-match-feedback.js?v=10526",
         ):
             self.assertIn(f'"{asset}"', worker)
@@ -134,7 +134,7 @@ class PwaMatchDaySprintTests(unittest.TestCase):
         for asset in (
             "/js/coach-lineup-layouts.js?v=10531",
             "/js/coach-match-feedback.js?v=10526",
-            "/js/coach-match-day.js?v=10526",
+            "/js/coach-match-day.js?v=10533",
             "/js/coach-lineup-interactions.js?v=10531",
             "/js/coach-lineup-player-menu.js?v=10531",
         ):
