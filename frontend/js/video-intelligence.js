@@ -143,11 +143,34 @@
       return;
     }
     const error = pipeline.error?.message || "";
+    const action = status === "failed" || status === "cancelled"
+      ? `<button type="button" class="btn dark small" data-project-action="retry">Riprova analisi</button>`
+      : status === "processing" || status === "queued"
+        ? `<button type="button" class="btn dark small" data-project-action="cancel">Annulla elaborazione</button>`
+        : "";
     elements.projectState.innerHTML = `
       <b>${html(labels[status] || status)}</b>
       <span>${html(error || `${pipeline.stage || "project"} · ${progress}%`)}</span>
       <div class="vi-progress" aria-label="Avanzamento ${progress}%"><span style="width:${progress}%"></span></div>
+      ${action}
     `;
+  }
+
+  async function retryPipeline(){
+    if(!assetId()) throw new Error("Progetto Video Intelligence non disponibile");
+    const response = await request(`/projects/${assetId()}/retry`, {method:"POST"});
+    state.project = response.project;
+    renderProjectState();
+    await runPipeline();
+  }
+
+  async function cancelPipeline(){
+    if(!assetId()) throw new Error("Progetto Video Intelligence non disponibile");
+    const response = await request(`/projects/${assetId()}/cancel`, {method:"POST"});
+    state.project = response.project;
+    state.evidences = Array.isArray(state.project.evidences) ? state.project.evidences : [];
+    renderProjectState();
+    renderWorkspace();
   }
 
   async function loadCoachMatches(){
@@ -728,6 +751,13 @@
   elements.pending.addEventListener("click",() => {elements.statusFilter.value="pending";renderWorkspace();});
   elements.confirmVisible.addEventListener("click",() => guarded(confirmVisible,"Evidenze visibili confermate."));
   elements.report.addEventListener("click",() => guarded(generateReport,"Report basato sulle evidenze confermate."));
+  elements.projectState.addEventListener("click",event => {
+    const button = event.target.closest("[data-project-action]");
+    if(!button) return;
+    const action = button.dataset.projectAction;
+    if(action === "retry") guarded(retryPipeline,"Analisi riavviata.");
+    if(action === "cancel") guarded(cancelPipeline,"Elaborazione annullata. Il progetto resta salvato.");
+  });
 
   elements.list.addEventListener("click",event => {
     const button = event.target.closest("[data-action]");

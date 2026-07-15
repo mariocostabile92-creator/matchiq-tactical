@@ -333,6 +333,9 @@ class PipelineAndSecurityTests(unittest.TestCase):
         self.assertEqual(first["pipeline"]["last_completed_key"], second["pipeline"]["last_completed_key"])
         self.assertEqual(store.saves, saves_after_first)
         self.assertEqual([item["representative_timestamp_ms"] for item in first["evidences"]], [10_000, 60_000])
+        self.assertGreaterEqual(first["pipeline"]["performance"]["total_ms"], 0)
+        self.assertEqual(first["pipeline"]["performance"]["candidate_count"], 2)
+        self.assertEqual(first["pipeline"]["performance"]["evidence_count"], 2)
 
     def test_pipeline_persists_recoverable_failure(self):
         store = ProjectStore()

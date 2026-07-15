@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from copy import deepcopy
 from typing import Any, Dict, Optional
 from uuid import uuid4
@@ -149,6 +150,7 @@ def retry_project(user_id: int, asset_id: int) -> Dict[str, Any]:
 
 
 def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dict[str, Any]:
+    pipeline_started_at = time.perf_counter()
     project = load_project(user_id, asset_id)
     if not project:
         raise LookupError("Progetto Video Intelligence non trovato")
@@ -180,6 +182,7 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
     save_project(user_id, asset_id, project, status="processing", stage="segmentation", progress=20)
 
     duration_ms = max(0, int(float(data.duration_seconds or 0) * 1000))
+    segmentation_started_at = time.perf_counter()
     candidate_pool = build_candidate_pool(data.frame_times_ms, data.frame_meta)
     primary_pool = [
         item for item in candidate_pool
@@ -194,6 +197,7 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
         candidate_pool=candidate_pool,
         duration_ms=duration_ms,
     )
+    segmentation_elapsed_ms = round((time.perf_counter() - segmentation_started_at) * 1000, 2)
     if not segments:
         update_project_state(
             user_id,
@@ -208,6 +212,7 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
         )
         raise ValueError("Nessun segmento affidabile ricavato dai timestamp forniti")
 
+    evidence_started_at = time.perf_counter()
     evidences = []
     for segment in segments:
         signals = segment.get("signals") or []
@@ -252,7 +257,9 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
 
     evidence_count_before_deduplication = len(evidences)
     evidences = deduplicate_evidence_clips(evidences)
+    evidence_elapsed_ms = round((time.perf_counter() - evidence_started_at) * 1000, 2)
 
+    coach_link_started_at = time.perf_counter()
     linked = suggest_coach_links(user_id, project, evidences, data.staff_events)
     evidences = linked["evidences"]
     project["coach_context"] = {
@@ -260,6 +267,7 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
         "events": linked["events"],
         "link_policy": "probable_until_staff_confirmation",
     }
+    coach_link_elapsed_ms = round((time.perf_counter() - coach_link_started_at) * 1000, 2)
 
     pipeline["stages"].update({
         "segmentation": {"status": "completed", "progress": 100, "segments": len(segments)},
@@ -282,6 +290,15 @@ def run_pipeline(user_id: int, asset_id: int, data: VideoPipelineRequest) -> Dic
         "last_completed_key": request_key,
         "active_key": None,
         "duration_ms": duration_ms,
+        "performance": {
+            "segmentation_and_ranking_ms": segmentation_elapsed_ms,
+            "evidence_and_clip_ms": evidence_elapsed_ms,
+            "coach_link_ms": coach_link_elapsed_ms,
+            "total_ms": round((time.perf_counter() - pipeline_started_at) * 1000, 2),
+            "candidate_count": len(candidate_pool),
+            "segment_count": len(segments),
+            "evidence_count": len(evidences),
+        },
     })
     project["segments"] = segments
     project["evidences"] = evidences
