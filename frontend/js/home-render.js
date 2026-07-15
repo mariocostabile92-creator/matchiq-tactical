@@ -48,6 +48,15 @@
     });
   };
 
+  H.renderNextMatch=function(){
+    const root=$("nextMatchContent");if(!root)return;root.replaceChildren();const match=H.state.view?.nextMatch;
+    if(!match){root.append(H.emptyState("Nessuna partita programmata.","Quando crei la prossima partita in Coach, qui troverai avversario, appuntamento e stato della preparazione.",[{label:"Prepara partita",url:"/coach.html#matchSetup",primary:true}]));return}
+    const card=node("article",undefined,"match-summary"),copy=node("div"),facts=node("div",undefined,"summary-facts");
+    copy.append(node("span",match.preparation,"summary-kicker"),node("strong",`${match.home} - ${match.away}`,"summary-title"));
+    facts.append(node("span",match.date));if(match.time)facts.append(node("span",match.time));if(match.location)facts.append(node("span",match.location));copy.append(facts);
+    card.append(copy,link(match.action,match.url,"card-action primary"));root.append(card);
+  };
+
   H.renderWeeklyFlow=function(){
     const list=$("weeklyFlowList");if(!list)return;list.replaceChildren();
     [
@@ -77,6 +86,6 @@
   };
 
   H.renderHome=function(){
-    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderWeeklyFlow();H.renderIntelligence();H.renderNotice();
+    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderNextMatch();H.renderWeeklyFlow();H.renderIntelligence();H.renderNotice();
   };
 })();

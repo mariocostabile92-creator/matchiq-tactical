@@ -160,6 +160,27 @@
     return {hero,currentItem};
   };
 
+  H.nextMatchContext = function(){
+    const current=H.state.local?.coachCurrent;
+    const match=current?.match;
+    if(!match || (String(current.report||"").trim() && !H.isMatchDayActive(current))) return null;
+    const lineup=Array.isArray(current.lineup)?current.lineup:[];
+    const notes=String(current.preNotes||match.preNotes||"").trim();
+    let preparation="Dati partita inseriti";
+    if(H.isMatchDayActive(current)) preparation="Match Day in corso";
+    else if(lineup.length>=11 && notes) preparation="Preparazione avanzata";
+    else if(lineup.length) preparation="Formazione da completare";
+    const rawDate=String(match.date||"").trim();
+    const parsed=rawDate?new Date(`${rawDate.slice(0,10)}T12:00:00`):null;
+    const dateLabel=parsed&&!Number.isNaN(parsed.getTime())?new Intl.DateTimeFormat("it-IT",{weekday:"short",day:"2-digit",month:"short"}).format(parsed):"Data da definire";
+    return {
+      home:match.homeTeam||"Casa",away:match.awayTeam||"Trasferta",date:dateLabel,
+      time:String(match.time||match.kickoffTime||"").trim(),location:String(match.field||match.matchField||match.venue||current.metadata?.field||"").trim(),
+      preparation,url:H.isMatchDayActive(current)?"/coach.html#matchDayWorkspace":"/coach.html#matchSetup",
+      action:H.isMatchDayActive(current)?"Apri Match Day":"Continua preparazione"
+    };
+  };
+
   H.mergeData = function(){
     const remote = H.state.remote || {};
     const local = H.state.local || {};
@@ -204,7 +225,8 @@
       activities:activities.slice(0,8),
       continueItems,
       priorities:uniquePriorities,
-      hero:today.hero
+      hero:today.hero,
+      nextMatch:H.nextMatchContext()
     };
     return H.state.view;
   };
