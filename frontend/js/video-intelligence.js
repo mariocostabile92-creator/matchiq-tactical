@@ -687,7 +687,11 @@
     const text = [
       report.title || "Report tecnico Video Intelligence",
       report.evidence_policy || "",
-      ...findings.map(item => `${item.timecode} · ${item.title}\n${item.observation}${item.interpretation ? `\nLettura: ${item.interpretation}` : ""}`),
+      ...findings.map(item => {
+        const trace = item.traceability || {};
+        const clip = item.clip || {};
+        return `${item.timecode} · ${item.title}\n${item.observation}${item.interpretation ? `\nLettura: ${item.interpretation}` : ""}\nEvidenza: ${item.evidence_id || "-"} · Frame ${trace.frame_index ?? "-"} · Clip ${secondsLabel(clip.start_timestamp_ms)}-${secondsLabel(clip.end_timestamp_ms)}`;
+      }),
       ...(report.limitations || []).map(item => `Limite: ${item}`)
     ].filter(Boolean).join("\n\n");
     const target = document.getElementById("reportBox");

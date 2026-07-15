@@ -297,6 +297,13 @@ class CoachLinkAndReportTests(unittest.TestCase):
         self.assertEqual(first["summary"]["accepted_evidences"], 1)
         self.assertEqual(first["summary"]["pending_appendix"], 1)
         self.assertEqual(first["summary"]["rejected_excluded"], 1)
+        finding = first["sections"][0]["findings"][0]
+        self.assertEqual(finding["traceability"]["evidence_id"], "confirmed")
+        self.assertEqual(finding["traceability"]["video_id"], 7)
+        self.assertEqual(finding["traceability"]["clip_start_ms"], 5_000)
+        self.assertEqual(first["evidence_index"][0]["review_status"], "confirmed")
+        self.assertEqual(first["review_policy"]["rejected_destination"], "excluded")
+        self.assertEqual(first["pending_appendix"][0]["traceability"]["review_status"], "pending")
 
     def test_report_refuses_unreviewed_only_project(self):
         store = ProjectStore(base_project(evidences=[sample_evidence()]))

@@ -48,8 +48,12 @@ def _fingerprint(project: Dict[str, Any], accepted: List[Dict[str, Any]], includ
 
 def _finding(evidence: Dict[str, Any]) -> Dict[str, Any]:
     timestamp = int(evidence.get("representative_timestamp_ms") or 0)
+    evidence_id = str(evidence.get("evidence_id") or "")
+    video_id = int(evidence.get("video_id") or 0)
+    frame = deepcopy(evidence.get("representative_frame") or {})
+    clip = deepcopy(evidence.get("clip_reference") or {})
     return {
-        "evidence_id": evidence.get("evidence_id"),
+        "evidence_id": evidence_id,
         "title": evidence.get("title") or phase_title(str(evidence.get("phase_type") or "unclassified")),
         "phase_type": evidence.get("phase_type") or "unclassified",
         "timecode": _timecode(timestamp),
@@ -60,8 +64,23 @@ def _finding(evidence: Dict[str, Any]) -> Dict[str, Any]:
         "review_status": evidence.get("review_status"),
         "confidence_score": evidence.get("confidence_score"),
         "confidence_label": evidence.get("confidence_label"),
-        "frame": deepcopy(evidence.get("representative_frame") or {}),
-        "clip": deepcopy(evidence.get("clip_reference") or {}),
+        "frame": frame,
+        "clip": clip,
+        "traceability": {
+            "trace_id": f"{video_id}:{evidence_id}:{timestamp}",
+            "project_id": evidence.get("project_id"),
+            "video_id": video_id,
+            "evidence_id": evidence_id,
+            "source_type": evidence.get("source_type"),
+            "review_status": evidence.get("review_status"),
+            "reviewed_by": evidence.get("reviewed_by"),
+            "reviewed_at": evidence.get("reviewed_at"),
+            "timestamp_ms": timestamp,
+            "frame_index": frame.get("frame_index"),
+            "frame_score": frame.get("score"),
+            "clip_start_ms": clip.get("start_timestamp_ms"),
+            "clip_end_ms": clip.get("end_timestamp_ms"),
+        },
         "coach_link": {
             "event_id": evidence.get("linked_match_event_id"),
             "note_id": evidence.get("linked_note_id"),
@@ -102,6 +121,13 @@ def generate_evidence_report(user_id: int, asset_id: int, data: VideoReportReque
             "title": item.get("title"),
             "timecode": _timecode(int(item.get("representative_timestamp_ms") or 0)),
             "reason": "Evidenza ancora da verificare dallo staff.",
+            "traceability": {
+                "project_id": item.get("project_id"),
+                "video_id": item.get("video_id"),
+                "evidence_id": item.get("evidence_id"),
+                "timestamp_ms": int(item.get("representative_timestamp_ms") or 0),
+                "review_status": "pending",
+            },
         }
         for item in evidences
         if data.include_pending_appendix and item.get("review_status") == "pending"
@@ -117,6 +143,11 @@ def generate_evidence_report(user_id: int, asset_id: int, data: VideoReportReque
         "generated_at": utc_now(),
         "status": "ready",
         "evidence_policy": "Solo evidenze confermate o corrette dallo staff alimentano le conclusioni.",
+        "review_policy": {
+            "accepted_statuses": sorted(ACCEPTED_STATUSES),
+            "pending_destination": "appendix" if data.include_pending_appendix else "excluded",
+            "rejected_destination": "excluded",
+        },
         "summary": {
             "accepted_evidences": len(accepted),
             "confirmed": len(accepted) - corrected,
@@ -125,6 +156,16 @@ def generate_evidence_report(user_id: int, asset_id: int, data: VideoReportReque
             "rejected_excluded": sum(1 for item in evidences if item.get("review_status") == "rejected"),
         },
         "sections": sections,
+        "evidence_index": [
+            {
+                "evidence_id": item.get("evidence_id"),
+                "timecode": _timecode(int(item.get("representative_timestamp_ms") or 0)),
+                "phase_type": item.get("phase_type"),
+                "review_status": item.get("review_status"),
+                "source_type": item.get("source_type"),
+            }
+            for item in accepted
+        ],
         "pending_appendix": pending,
         "limitations": [
             "Il report descrive solo i momenti coperti dalle evidenze revisionate.",
