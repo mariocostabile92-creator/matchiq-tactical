@@ -57,6 +57,15 @@
     card.append(copy,link(match.action,match.url,"card-action primary"));root.append(card);
   };
 
+  H.renderWeekly=function(){
+    const root=$("weeklyContent");if(!root)return;root.replaceChildren();const weekly=H.state.view?.weekly;
+    if(!weekly){root.append(H.emptyState("Il briefing di questa settimana non è ancora disponibile.","Apri Weekly per costruire la sintesi usando partite, osservazioni e materiali già raccolti.",[{label:"Prepara il briefing",url:"/weekly-briefing.html",primary:true}]));return}
+    const card=node("article",undefined,"weekly-summary"),copy=node("div"),facts=node("div",undefined,"summary-facts");
+    copy.append(node("span",weekly.isRead?"GIÀ LETTO":"DA LEGGERE","summary-kicker"),node("strong",weekly.title,"summary-title"),node("p",weekly.subtitle,"summary-copy"));
+    weekly.sources.forEach(source=>facts.append(node("span",source)));if(weekly.sources.length)copy.append(facts);
+    card.append(copy,link(weekly.isRead?"Rileggi":"Inizia la settimana","/weekly-briefing.html","card-action primary"));root.append(card);
+  };
+
   H.renderWeeklyFlow=function(){
     const list=$("weeklyFlowList");if(!list)return;list.replaceChildren();
     [
@@ -86,6 +95,6 @@
   };
 
   H.renderHome=function(){
-    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderNextMatch();H.renderWeeklyFlow();H.renderIntelligence();H.renderNotice();
+    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderNextMatch();H.renderWeekly();H.renderWeeklyFlow();H.renderIntelligence();H.renderNotice();
   };
 })();

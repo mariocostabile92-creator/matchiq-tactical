@@ -139,6 +139,15 @@
     return hasWork && !hasFinalReport;
   };
 
+  H.weeklyContext = function(){
+    const briefing=H.state.weekly;if(!briefing)return null;
+    const content=briefing.content||{};const materials=content.materials||{};
+    const sources=[];
+    [["report",materials.reports],["sessioni video",materials.video_sessions],["frame",materials.frames],["pagelle",materials.ratings],["partite",materials.history]]
+      .forEach(([label,value])=>{if(Number(value)>0)sources.push(`${value} ${label}`)});
+    return {id:briefing.id,isRead:briefing.is_read===true,title:content.title||"Weekly AI Briefing",subtitle:content.subtitle||"Sintesi tecnica della settimana.",sources:sources.slice(0,3)};
+  };
+
   H.contextForToday = function(){
     const current=H.state.local?.coachCurrent;
     const currentItem=current?.match?H.coachItem(current,true):null;
@@ -153,6 +162,9 @@
       hero={key:currentItem.record_key,kind:"match-day",eyebrow:"MATCH DAY ATTIVO",title:currentItem.title,lead:"La partita è in corso. Eventi, Voice Coach e note devono restare a portata di mano.",statusTitle:"Torna alla plancia",statusText:"Riprendi timer e raccolta eventi senza perdere il contesto.",action:"Apri Match Day",url:"/coach.html#matchDayWorkspace"};
     }else if(H.isCoachWorkIncomplete(current)){
       hero={key:currentItem.record_key,kind:"coach-work",eyebrow:"LAVORO DA RIPRENDERE",title:currentItem.title,lead:"La preparazione è iniziata ma non è ancora completa.",statusTitle:"Continua da dove eri rimasto",statusText:"Completa formazione, obiettivi o note prima della gara.",action:"Continua in Coach",url:"/coach.html"};
+    }else if(H.weeklyContext()&&!H.weeklyContext().isRead){
+      const weekly=H.weeklyContext();
+      hero={key:`weekly:${weekly.id}`,kind:"weekly",eyebrow:"WEEKLY AI BRIEFING",title:weekly.title,lead:weekly.subtitle,statusTitle:"Briefing da leggere",statusText:"Inizia la settimana dalle evidenze già raccolte dallo staff.",action:"Inizia la settimana",url:"/weekly-briefing.html"};
     }else if(remotePriorities.length){
       const item=remotePriorities[0];
       hero={key:`priority:${item.url||item.title}`,kind:"video",eyebrow:"VIDEO AI · ATTENZIONE",title:item.title,lead:item.text||"Una sessione Video AI richiede un controllo.",statusTitle:item.action||"Apri Video AI",statusText:"Controlla il progetto prima di passare al prossimo lavoro.",action:item.action||"Apri",url:item.url||"/video.html"};
@@ -206,6 +218,10 @@
       available.coach_matches = true;
     }
     const priorities = [...(remote.ai_priorities || [])];
+    const weekly=H.weeklyContext();
+    if(weekly&&!weekly.isRead&&String(today.hero.key)!==`weekly:${weekly.id}`){
+      priorities.unshift({type:"operational",title:"Weekly AI Briefing da leggere",text:weekly.subtitle,url:"/weekly-briefing.html",action:"Inizia la settimana"});
+    }
     if(current && String(today.hero.key)!==String(current.record_key)){
       const ratings = Array.isArray(local.coachCurrent?.ratings) ? local.coachCurrent.ratings.length : 0;
       const report = String(local.coachCurrent?.report || "").trim();
@@ -226,7 +242,8 @@
       continueItems,
       priorities:uniquePriorities,
       hero:today.hero,
-      nextMatch:H.nextMatchContext()
+      nextMatch:H.nextMatchContext(),
+      weekly
     };
     return H.state.view;
   };
