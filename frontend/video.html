@@ -1395,9 +1395,142 @@ video{
 </style>
 <link rel="stylesheet" href="/css/global-nav.css?v=10528">
 <link rel="stylesheet" href="/css/video-intelligence.css?v=10535">
+<link rel="stylesheet" href="/css/video-experience.css?v=10536">
 </head>
 <body data-miq-module="video">
 <main class="wrap">
+    <section class="vx-shell" id="videoExperienceShell" aria-labelledby="vxExperienceTitle" hidden>
+        <header class="vx-shell-head">
+            <div>
+                <span class="badge">MATCHIQ VIDEO AI</span>
+                <h1 id="vxExperienceTitle">Sala video dello staff</h1>
+                <p id="vxExperienceLead">Carica una partita. MatchIQ prepara frame, clip ed evidenze da revisionare.</p>
+            </div>
+            <div class="vx-shell-actions">
+                <button class="btn dark small" type="button" data-vx-action="projects">I tuoi progetti</button>
+                <button class="btn dark small" type="button" data-vx-action="settings">Contesto analisi</button>
+            </div>
+        </header>
+
+        <nav class="vx-steps" aria-label="Avanzamento analisi video">
+            <span data-vx-step="start"><b>1</b> Carica</span>
+            <span data-vx-step="setup"><b>2</b> Prepara</span>
+            <span data-vx-step="processing"><b>3</b> Analizza</span>
+            <span data-vx-step="review"><b>4</b> Revisiona</span>
+            <span data-vx-step="report"><b>5</b> Consegna</span>
+        </nav>
+
+        <section class="vx-view vx-start" id="vxStartView" data-vx-view="start">
+            <div class="vx-start-copy">
+                <span class="vx-eyebrow">NUOVA ANALISI</span>
+                <h2>Il video e il punto di partenza.</h2>
+                <p>Scegli un file o riprendi un progetto. Le opzioni tecniche appariranno soltanto quando servono.</p>
+            </div>
+            <div class="vx-dropzone" id="vxUploadDropzone" tabindex="0" role="button" aria-label="Carica un video dal dispositivo">
+                <strong>Trascina qui il video</strong>
+                <span>Partita, allenamento o clip da una sorgente autorizzata.</span>
+                <div id="vxUploadInputMount"></div>
+                <button class="btn" id="vxSelectVideoBtn" type="button">Seleziona file</button>
+            </div>
+            <div class="vx-mode-choice" role="group" aria-label="Modalita di analisi">
+                <button type="button" class="active" data-vx-mode="analysis">
+                    <strong>Analisi indipendente</strong>
+                    <span>Lavora su un video senza collegarlo a una partita Coach.</span>
+                </button>
+                <button type="button" data-vx-mode="coach">
+                    <strong>Usa una partita Coach</strong>
+                    <span>Collega il video al contesto gia registrato dallo staff.</span>
+                </button>
+            </div>
+            <div class="vx-resume">
+                <div><span class="vx-eyebrow">RIPRENDI IL LAVORO</span><strong>Progetti, analisi e report restano nel Video Hub.</strong></div>
+                <button class="btn dark" type="button" data-vx-action="projects">Apri Video Hub</button>
+            </div>
+        </section>
+
+        <section class="vx-view vx-setup" id="vxSetupView" data-vx-view="setup" hidden>
+            <header class="vx-view-head">
+                <div><span class="vx-eyebrow">PREPARA</span><h2>Definisci il contesto essenziale</h2><p>Pochi dati chiari aiutano MatchIQ a organizzare meglio le evidenze.</p></div>
+                <button class="btn dark small" type="button" data-vx-action="start">Cambia video</button>
+            </header>
+            <div id="vxSetupEngineMount"></div>
+            <div class="vx-primary-fields" id="vxPrimaryFields"></div>
+            <details class="vx-advanced" id="vxAdvancedSettings">
+                <summary>Impostazioni avanzate</summary>
+                <p>Formazioni, note staff, opzioni report e metadati restano disponibili senza occupare il flusso principale.</p>
+                <div class="form-grid" id="vxAdvancedFields"></div>
+            </details>
+            <div class="vx-setup-footer">
+                <p id="vxSetupHint">Seleziona il video, completa il focus e avvia l'analisi.</p>
+                <button class="btn" id="vxStartAnalysisBtn" type="button">Avvia analisi</button>
+            </div>
+        </section>
+
+        <section class="vx-view vx-processing" id="vxProcessingView" data-vx-view="processing" hidden aria-live="polite">
+            <div class="vx-processing-main">
+                <span class="vx-eyebrow">ANALISI IN CORSO</span>
+                <h2 id="vxProcessingTitle">MatchIQ sta preparando le evidenze</h2>
+                <p id="vxProcessingFile">Il progetto restera recuperabile dal Video Hub anche se lasci questa pagina.</p>
+                <div class="vx-progress" aria-label="Avanzamento elaborazione"><span id="vxProcessingBar"></span></div>
+                <div class="vx-processing-meta">
+                    <div><span>Fase</span><strong id="vxProcessingStage">Preparazione video</strong></div>
+                    <div><span>Avanzamento</span><strong id="vxProcessingPercent">0%</strong></div>
+                    <div><span>Tempo trascorso</span><strong id="vxProcessingElapsed">00:00</strong></div>
+                    <div><span>Evidenze</span><strong id="vxProcessingEvidenceCount">0</strong></div>
+                </div>
+                <div id="vxProcessingActions"></div>
+            </div>
+        </section>
+
+        <section class="vx-view vx-review" id="vxReviewView" data-vx-view="review" hidden>
+            <header class="vx-workspace-head">
+                <div><span class="vx-eyebrow">REVIEW WORKSPACE</span><h2 id="vxProjectTitle">Analisi video</h2><p id="vxProjectMeta">Revisiona le evidenze proposte prima di generare il report.</p></div>
+                <div class="vx-workspace-actions">
+                    <button class="btn dark small" type="button" data-vx-action="projects">Torna ai progetti</button>
+                    <button class="btn dark small" type="button" data-vx-action="settings">Impostazioni</button>
+                    <button class="btn small" type="button" data-vx-action="report">Genera report</button>
+                </div>
+            </header>
+            <div class="vx-review-grid">
+                <div class="vx-player-column">
+                    <div id="vxPlayerMount"></div>
+                    <div id="vxPlayerToolsMount"></div>
+                </div>
+                <aside class="vx-evidence-column" id="vxEvidenceMount" aria-label="Evidenze da revisionare"></aside>
+            </div>
+            <div class="vx-review-secondary" id="vxReviewSecondaryMount"></div>
+        </section>
+
+        <section class="vx-view vx-report-ready" id="vxReportView" data-vx-view="report" hidden>
+            <header class="vx-view-head">
+                <div><span class="vx-eyebrow">REPORT PRONTO</span><h2>Il lavoro e pronto per lo staff</h2><p>Controlla i numeri finali, apri il report o torna alle evidenze ancora pendenti.</p></div>
+            </header>
+            <div class="vx-report-stats" id="vxReportStats"></div>
+            <div id="vxReportMount"></div>
+            <div class="vx-report-actions">
+                <button class="btn dark" type="button" data-vx-action="review">Torna alla review</button>
+                <button class="btn dark" type="button" data-vx-action="pending">Completa evidenze pendenti</button>
+                <button class="btn" type="button" data-vx-action="download">Scarica PDF</button>
+            </div>
+        </section>
+
+        <section class="vx-view vx-error" id="vxErrorView" data-vx-view="error" hidden role="alert">
+            <span class="vx-eyebrow">RECUPERO ANALISI</span>
+            <h2>Il progetto si e fermato, ma il lavoro salvato resta disponibile.</h2>
+            <p id="vxErrorMessage">Controlla il dettaglio e riprova l'elaborazione.</p>
+            <div class="vx-error-actions">
+                <button class="btn" type="button" data-vx-action="retry">Riprova analisi</button>
+                <button class="btn dark" type="button" data-vx-action="projects">Torna ai progetti</button>
+                <button class="btn dark" type="button" data-vx-action="setup">Apri impostazioni</button>
+            </div>
+            <details><summary>Dettagli tecnici</summary><pre id="vxErrorDetails">Nessun dettaglio disponibile.</pre></details>
+        </section>
+
+        <dialog class="vx-projects" id="vxProjectsDialog" aria-labelledby="vxProjectsTitle">
+            <header><div><span class="vx-eyebrow">VIDEO HUB</span><h2 id="vxProjectsTitle">I tuoi progetti</h2></div><button class="btn dark small" type="button" data-vx-action="close-projects">Chiudi</button></header>
+            <div id="vxProjectsMount"></div>
+        </dialog>
+    </section>
     <section class="hero">
         <div class="panel">
             <span class="badge">MATCHIQ VIDEO AI</span>
@@ -5334,6 +5467,7 @@ if("serviceWorker" in navigator){
 }
 </script>
 <script src="/js/video-intelligence.js?v=10535"></script>
+<script src="/js/video-experience.js?v=10536"></script>
 <script src="/js/app-meta.js"></script>
 <link rel="stylesheet" href="/css/knowledge-entry.css?v=10528">
 <link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10528">

@@ -15,6 +15,23 @@
     clipStopHandler: null
   };
 
+  function experienceSnapshot(reason){
+    return {
+      reason: reason || "update",
+      mode: state.mode,
+      project: state.project,
+      evidences: state.evidences.slice(),
+      selectedEvidenceId: state.selectedEvidenceId,
+      busy: state.busy
+    };
+  }
+
+  function emitExperienceState(reason){
+    document.dispatchEvent(new CustomEvent("matchiq:video-experience", {
+      detail: experienceSnapshot(reason)
+    }));
+  }
+
   const elements = {
     modeButtons: Array.from(setup.querySelectorAll("[data-vi-mode]")),
     coachField: document.getElementById("viCoachMatchField"),
@@ -140,6 +157,7 @@
     };
     if(!state.project){
       elements.projectState.innerHTML = `<b>Non avviato</b><span>Prepara il progetto dopo aver scelto il contesto.</span><div class="vi-progress" aria-hidden="true"><span></span></div>`;
+      emitExperienceState("project-state");
       return;
     }
     const error = pipeline.error?.message || "";
@@ -154,6 +172,7 @@
       <div class="vi-progress" aria-label="Avanzamento ${progress}%"><span style="width:${progress}%"></span></div>
       ${action}
     `;
+    emitExperienceState("project-state");
   }
 
   async function retryPipeline(){
@@ -214,6 +233,7 @@
     });
     elements.coachField.hidden = state.mode !== "coach";
     if(state.mode === "coach" && !state.matches.length) loadCoachMatches();
+    emitExperienceState("mode");
   }
 
   function projectPayload(){
@@ -462,6 +482,7 @@
     if(!items.length){
       if(elements.queue) elements.queue.innerHTML = "";
       elements.list.innerHTML = `<div class="vi-empty">Nessuna evidenza per i filtri scelti. Avvia l'analisi oppure cambia filtro.</div>`;
+      emitExperienceState("workspace");
       return;
     }
     renderEvidenceQueue(items);
@@ -527,6 +548,7 @@
         </article>
       `;
     }).join("");
+    emitExperienceState("workspace");
   }
 
   function renderHalftimeAnalysis(){
@@ -847,5 +869,11 @@
   setMode("analysis");
   renderProjectState();
   loadHalftimeConfig();
-  window.MatchIQVideoIntelligence = {loadProject,runPipeline,prepareProject};
+  window.MatchIQVideoIntelligence = {
+    loadProject,
+    runPipeline,
+    prepareProject,
+    getExperienceState:() => experienceSnapshot("snapshot")
+  };
+  emitExperienceState("ready");
 })();
