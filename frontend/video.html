@@ -1512,12 +1512,16 @@ video{
                 <div><span class="vx-eyebrow">REPORT PRONTO</span><h2>Il lavoro e pronto per lo staff</h2><p>Controlla i numeri finali, apri il report o torna alle evidenze ancora pendenti.</p></div>
             </header>
             <div class="vx-report-stats" id="vxReportStats"></div>
-            <div id="vxReportMount"></div>
             <div class="vx-report-actions">
+                <button class="btn" type="button" data-vx-action="show-report">Apri report</button>
                 <button class="btn dark" type="button" data-vx-action="review">Torna alla review</button>
                 <button class="btn dark" type="button" data-vx-action="pending">Completa evidenze pendenti</button>
                 <button class="btn" type="button" data-vx-action="download">Scarica PDF</button>
             </div>
+            <details class="vx-report-document" id="vxReportDocument">
+                <summary>Documento tecnico generato</summary>
+                <div id="vxReportMount"></div>
+            </details>
         </section>
 
         <section class="vx-view vx-error" id="vxErrorView" data-vx-view="error" hidden role="alert">
@@ -1538,6 +1542,7 @@ video{
 
         <dialog class="vx-projects" id="vxProjectsDialog" aria-labelledby="vxProjectsTitle">
             <header><div><span class="vx-eyebrow">VIDEO HUB</span><h2 id="vxProjectsTitle">I tuoi progetti</h2></div><button class="btn dark small" type="button" data-vx-action="close-projects">Chiudi</button></header>
+            <div class="vx-project-summary" id="vxProjectSummary" aria-live="polite"></div>
             <div id="vxProjectsMount"></div>
         </dialog>
     </section>

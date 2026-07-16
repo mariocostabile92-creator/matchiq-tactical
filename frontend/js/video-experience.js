@@ -19,6 +19,7 @@
 
   function node(id){ return document.getElementById(id); }
   function text(value){ return String(value == null ? "" : value); }
+  function html(value){ return text(value).replace(/[&<>"']/g,char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]); }
   function safeProject(){ return state.project && typeof state.project === "object" ? state.project : {}; }
   function pipeline(){ return safeProject().pipeline || {}; }
   function hasVideo(){ return Boolean(node("videoInput")?.files?.[0] || node("videoPreview")?.src); }
@@ -149,6 +150,10 @@
     const stage = text(currentPipeline.stage || "preparing");
     if(node("vxProcessingStage")) node("vxProcessingStage").textContent = stageLabels[stage] || stage.replace(/_/g," ");
     if(node("vxProcessingEvidenceCount")) node("vxProcessingEvidenceCount").textContent = String(state.evidences.length);
+    if(node("vxProjectSummary")){
+      const reports = Array.isArray(safeProject().reports) ? safeProject().reports.length : 0;
+      node("vxProjectSummary").innerHTML = `<div><span>Progetto corrente</span><strong>${html(title)}</strong></div><div><span>Stato</span><strong>${html(text(currentPipeline.status || "bozza").replace(/_/g," "))}</strong></div><div><span>Evidenze</span><strong>${state.evidences.length}</strong></div><div><span>Report</span><strong>${reports}</strong></div>`;
+    }
     renderProcessingActions();
     renderReportStats();
   }
@@ -236,7 +241,6 @@
   function openReport(){
     const button = node("viReportBtn");
     if(button && !button.disabled) button.click();
-    window.setTimeout(() => setView("report"),180);
   }
 
   function applyExperienceState(detail={}){
@@ -281,6 +285,10 @@
       node("viStatusFilter")?.dispatchEvent(new Event("change",{bubbles:true}));
       setView("review");
     }
+    if(action === "show-report"){
+      const report = node("vxReportDocument");
+      if(report){ report.open = true; report.scrollIntoView({behavior:"smooth",block:"start"}); }
+    }
     if(action === "download") node("downloadPdfBtn")?.click();
     if(action === "retry") node("viProjectState")?.querySelector('[data-project-action="retry"]')?.click();
     if(action === "cancel") node("viProjectState")?.querySelector('[data-project-action="cancel"]')?.click();
@@ -300,6 +308,14 @@
   });
   projectDialog?.addEventListener("click",event => { if(event.target === projectDialog) closeProjects(); });
   document.addEventListener("matchiq:video-experience",event => applyExperienceState(event.detail || {}));
+  document.addEventListener("matchiq:video-report-ready",event => {
+    const detail = event.detail || {};
+    if(detail.project) state.project = detail.project;
+    if(Array.isArray(detail.evidences)) state.evidences = detail.evidences;
+    const report = node("vxReportDocument");
+    if(report) report.open = false;
+    setView("report");
+  });
 
   mountExistingExperience();
   updateSelectedFile();

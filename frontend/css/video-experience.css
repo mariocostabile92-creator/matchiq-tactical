@@ -260,6 +260,15 @@
 .vx-report-stats{margin:18px 0}
 .vx-report-ready .report{max-height:min(58dvh,680px);overflow:auto}
 .vx-report-actions{margin-top:16px}
+.vx-report-document{
+    margin-top:16px;
+    padding:14px;
+    border:1px solid var(--border);
+    border-radius:16px;
+    background:rgba(5,10,22,.58);
+}
+.vx-report-document summary{cursor:pointer;color:#fff;font-size:12px;font-weight:950}
+.vx-report-document[open] summary{margin-bottom:12px}
 .vx-error{display:grid;align-content:center;max-width:900px;margin:0 auto}
 .vx-error h2{font-size:clamp(28px,4vw,44px)}
 .vx-error-actions{margin-top:20px}
@@ -298,6 +307,15 @@
     background:rgba(9,16,31,.96);
 }
 .vx-projects #vxProjectsMount{padding:18px}
+.vx-project-summary{
+    display:grid;
+    grid-template-columns:2fr repeat(3,minmax(100px,1fr));
+    gap:8px;
+    padding:14px 18px 0;
+}
+.vx-project-summary div{padding:10px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.04)}
+.vx-project-summary span{display:block;color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase}
+.vx-project-summary strong{display:block;margin-top:4px;color:#fff;font-size:12px}
 .vx-projects .video-library{margin:0}
 .video-experience-enhanced > .wrap > .hero{display:none}
 .video-experience-enhanced .vx-shell{display:block}
@@ -321,6 +339,7 @@
     .vx-start-copy h2{font-size:34px}
     .vx-dropzone{min-height:230px;padding:22px 14px}
     .vx-mode-choice,.vx-primary-fields,.vx-processing-meta,.vx-report-stats,.vx-recovery-summary{grid-template-columns:1fr}
+    .vx-project-summary{grid-template-columns:1fr 1fr;padding:10px 10px 0}
     .vx-setup-footer{position:sticky;bottom:max(6px,env(safe-area-inset-bottom))}
     .vx-setup-footer .btn{width:100%}
     .vx-review{padding:10px;padding-bottom:max(18px,env(safe-area-inset-bottom))}

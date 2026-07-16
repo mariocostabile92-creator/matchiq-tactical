@@ -765,6 +765,7 @@
     const target = document.getElementById("reportBox");
     if(target) target.textContent = text;
     if(typeof updateReportMeta === "function") updateReportMeta("report",findings.length);
+    document.dispatchEvent(new CustomEvent("matchiq:video-report-ready",{detail:{report,project:state.project,evidences:state.evidences}}));
   }
 
   async function guarded(action, successMessage){
