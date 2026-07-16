@@ -35,6 +35,17 @@ def write_json(path: Path, payload: Any) -> None:
     temp_path.replace(path)
 
 
+def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=path.parent, delete=False, suffix=".tmp"
+    ) as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=True, separators=(",", ":")) + "\n")
+        temp_path = Path(handle.name)
+    temp_path.replace(path)
+
+
 def ensure_writable_directory(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
     probe = path / ".write-probe"

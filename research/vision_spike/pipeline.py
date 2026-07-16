@@ -9,11 +9,12 @@ from .config import VisionSpikeConfig
 from .contracts import FrameResult, RunManifest, utc_now
 from .detector import VisionDetector, build_detector
 from .evaluator import EvaluationSampler, MetricsCollector, write_evaluation
+from .inference_modes import TiledInferenceDetector
 from .overlay import VideoOverlayWriter, draw_overlay
 from .pitch_detector import PitchDetector
 from .team_classifier import OnlineTeamClassifier
 from .tracker import IoUTracker, ObjectTracker
-from .utils import ensure_writable_directory, require_cv2_numpy, runtime_versions, sha256_file, write_json
+from .utils import ensure_writable_directory, require_cv2_numpy, runtime_versions, sha256_file, write_json, write_jsonl
 from .video_reader import LocalVideoReader
 
 
@@ -88,7 +89,16 @@ def run_pipeline(
             batch_size=config.batch_size,
             half_precision=config.half_precision,
             max_detections=config.max_detections,
+            inference_mode=config.inference_mode,
         )
+        if config.inference_mode == "tiled":
+            detector_instance = TiledInferenceDetector(
+                detector_instance,
+                tile_size=config.tile_size,
+                overlap=config.tile_overlap,
+                nms_iou_threshold=config.iou_threshold,
+                max_detections=config.max_detections,
+            )
     else:
         detector_instance = build_detector(
             config.detector_backend,
@@ -139,6 +149,8 @@ def run_pipeline(
         }
         write_json(config.output_dir / "detections.json", detections_payload)
         write_json(config.output_dir / "tracks.json", tracks_payload)
+        write_jsonl(config.output_dir / "detections.jsonl", detections_payload)
+        write_jsonl(config.output_dir / "tracks.jsonl", tracks_payload)
         write_json(config.output_dir / "frames.json", frame_payload)
         write_json(config.output_dir / "metrics.json", final_metrics)
         write_json(config.output_dir / "team_clusters.json", team_metadata)

@@ -7,6 +7,7 @@ from typing import Any, Callable
 
 from .contracts import Detection
 from .detector import VisionDetector
+from .inference_modes import letterbox_frame, restore_letterbox_box
 from .utils import OptionalDependencyError, sha256_file
 
 
@@ -34,6 +35,7 @@ class RFDETRDetector(VisionDetector):
         half_precision: bool = False,
         max_detections: int = 100,
         model_factory: Callable[..., Any] | None = None,
+        inference_mode: str = "standard",
     ) -> None:
         if model_size not in {"small", "medium"}:
             raise ValueError(f"unsupported RF-DETR model size: {model_size}")
@@ -51,6 +53,7 @@ class RFDETRDetector(VisionDetector):
         self.half_precision_requested = half_precision
         self.max_detections = max_detections
         self._model_factory = model_factory
+        self.inference_mode = inference_mode
         self._model: Any = None
         self._device = "unresolved"
         self._warnings: list[str] = []
@@ -112,8 +115,10 @@ class RFDETRDetector(VisionDetector):
     def detect(self, frame: object, *, frame_index: int, timestamp_seconds: float) -> list[Detection]:
         if self._model is None:
             raise RuntimeError("RF-DETR detector is not loaded")
+        original_height, original_width = frame.shape[:2]
+        working, scale, offset_x, offset_y = letterbox_frame(frame, self.input_resolution)
         prediction = self._model.predict(
-            frame,
+            working,
             threshold=self.confidence_threshold,
             shape=(self.input_resolution, self.input_resolution),
             include_source_image=False,
@@ -131,7 +136,16 @@ class RFDETRDetector(VisionDetector):
             if mapped_name != "person":
                 continue
             class_id = int(class_ids[index]) if class_ids is not None else -1
-            coords = tuple(float(value) for value in box)
+            coords = restore_letterbox_box(
+                tuple(float(value) for value in box),
+                scale=scale,
+                offset_x=offset_x,
+                offset_y=offset_y,
+                original_width=original_width,
+                original_height=original_height,
+            )
+            if coords[2] <= coords[0] or coords[3] <= coords[1]:
+                continue
             candidates.append((score, class_id, source_name, coords))
         candidates.sort(key=lambda item: item[0], reverse=True)
 
@@ -200,6 +214,8 @@ class RFDETRDetector(VisionDetector):
             "device": self._device,
             "requested_device": self.requested_device,
             "input_resolution": self.input_resolution,
+            "inference_mode": self.inference_mode,
+            "aspect_ratio_preserved": True,
             "batch_size": self.batch_size,
             "half_precision_requested": self.half_precision_requested,
             "half_precision_active": bool(self.half_precision_requested and self._device == "cuda"),
