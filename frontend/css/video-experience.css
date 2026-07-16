@@ -327,6 +327,7 @@
     .vx-evidence-column{max-height:none;overflow:visible}
     .vx-player-column video{max-height:none}
     .vx-workspace-head{position:static;margin:-18px -18px 14px}
+    .vx-review-assets{margin-bottom:max(12px,env(safe-area-inset-bottom))}
 }
 @media(max-width:700px){
     .vx-shell-head,.vx-view-head,.vx-workspace-head,.vx-resume,.vx-setup-footer{display:grid}
@@ -344,13 +345,13 @@
     .vx-setup-footer .btn{width:100%}
     .vx-review{padding:10px;padding-bottom:max(18px,env(safe-area-inset-bottom))}
     .vx-workspace-head{margin:-10px -10px 10px;padding:12px 10px}
-    .vx-evidence-column{display:flex;flex-direction:column}
-    .vx-evidence-column .vi-section-head{order:0}
-    .vx-evidence-column .vi-stats{order:1}
-    .vx-evidence-column .vi-review-progress{order:2}
-    .vx-evidence-column .vi-review-layout{order:3}
-    .vx-evidence-column .vi-toolbar{order:4}
-    .vx-evidence-column .vi-halftime{order:5}
+    .vx-evidence-column .vi-workspace{display:flex;flex-direction:column;overflow:visible}
+    .vx-evidence-column .vi-workspace > .vi-section-head{order:0}
+    .vx-evidence-column .vi-workspace > .vi-stats{order:1}
+    .vx-evidence-column .vi-workspace > .vi-review-progress{order:2}
+    .vx-evidence-column .vi-workspace > .vi-review-layout{order:3}
+    .vx-evidence-column .vi-workspace > .vi-toolbar{order:4}
+    .vx-evidence-column .vi-workspace > .vi-halftime{order:5}
     .vx-evidence-column .vi-card-actions{
         position:sticky;
         bottom:max(6px,env(safe-area-inset-bottom));
@@ -362,6 +363,8 @@
     }
     .vx-projects{width:100%;max-height:100dvh;border-radius:0}
     .vx-projects #vxProjectsMount{padding:10px}
+    .vx-report-actions .btn,.vx-error-actions .btn{flex:1 1 100%;min-height:44px}
+    .vx-report-document{padding:11px}
 }
 @media(prefers-reduced-motion:reduce){
     .vx-dropzone,.vx-progress span{transition:none}
