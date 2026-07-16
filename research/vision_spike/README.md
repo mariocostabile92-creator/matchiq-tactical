@@ -171,3 +171,42 @@ Videos, weights, frames, overlays, datasets, and run outputs remain ignored by G
 
 See `RFDETR_V2_REPORT.md`, `RFDETR_LICENSE_AUDIT.md`, and
 `RFDETR_FINE_TUNING_PLAN.md` for the controlled results and decision.
+
+## Football-specific dataset and fine-tuning V3
+
+V3 is an isolated, local-only preparation pipeline for the four classes `player`,
+`goalkeeper`, `referee`, and `ball`. It does not change the product and does not
+begin V4 tracking or team association.
+
+Current status: **`DATASET_NOT_READY`**. No approved commercial training dataset is
+registered, so the mandatory gate blocks fine-tuning and no V3 performance metric
+is claimed. See `V3_DATASET_LICENSE_AUDIT.md`, `V3_ANNOTATION_GUIDELINES.md`,
+`V3_REPORT.md`, and `V3_DECISION_GATE.md`.
+
+Create the external local scaffold and inspect the command help:
+
+```powershell
+$dataset = "C:\datasets\matchiq-v3"
+.\.venv\Scripts\python.exe -m research.vision_spike.v3.scaffold `
+  --dataset $dataset --repository-root (Get-Location)
+.\.venv\Scripts\python.exe -m research.vision_spike.v3.extract_frames --help
+.\.venv\Scripts\python.exe -m research.vision_spike.v3.validate_dataset --help
+.\.venv\Scripts\python.exe -m research.vision_spike.v3.split_dataset --help
+```
+
+After authorized footage is extracted and annotated, validate and split by whole
+match before running the gate:
+
+```powershell
+.\.venv\Scripts\python.exe -m research.vision_spike.v3.validate_dataset `
+  --dataset $dataset
+.\.venv\Scripts\python.exe -m research.vision_spike.v3.split_dataset `
+  --dataset $dataset --train-ratio 0.70 --val-ratio 0.15 --seed 42
+& "$env:TEMP\matchiq-rfdetr-venv\Scripts\python.exe" `
+  -m research.vision_spike.v3.training_gate --dataset $dataset
+```
+
+The training command additionally requires `--confirm-training` and still refuses
+to run when any dataset, license, split, disk, or hardware check fails. All real
+frames, annotations, manifests with private provenance, weights, checkpoints,
+overlays, logs, and training outputs are excluded from Git.
