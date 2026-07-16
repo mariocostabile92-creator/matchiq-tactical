@@ -15,7 +15,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--input", required=True, type=Path, dest="input_video")
     parser.add_argument("--output", required=True, type=Path, dest="output_dir")
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
-    parser.add_argument("--detector", choices=("opencv_hog",), default="opencv_hog")
+    parser.add_argument("--detector", choices=("opencv_hog", "rfdetr"), default="opencv_hog")
     parser.add_argument("--confidence", type=float, default=0.35)
     parser.add_argument("--iou", type=float, default=0.45)
     parser.add_argument("--frame-stride", type=int, default=5)
@@ -23,6 +23,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-seconds", type=float, default=60.0)
     parser.add_argument("--max-frames", type=int)
     parser.add_argument("--detector-width", type=int, default=960)
+    parser.add_argument("--model-size", choices=("small", "medium"), default="small")
+    parser.add_argument("--model-path", type=Path)
+    parser.add_argument("--input-resolution", type=int, default=512)
+    parser.add_argument("--inference-mode", choices=("standard", "highres", "tiled"), default="standard")
+    parser.add_argument("--tile-size", type=int, default=960)
+    parser.add_argument("--tile-overlap", type=float, default=0.2)
+    parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument("--half-precision", action="store_true")
+    parser.add_argument("--max-detections", type=int, default=100)
     parser.add_argument("--output-fps", type=float)
     parser.add_argument("--no-overlay", action="store_true")
     parser.add_argument("--no-team-clustering", action="store_true")
@@ -52,6 +61,15 @@ def main(argv: list[str] | None = None) -> int:
         pitch_detection_enabled=not args.disable_pitch,
         save_debug_frames=args.save_debug_frames,
         detector_width=args.detector_width,
+        model_size=args.model_size,
+        model_path=args.model_path,
+        input_resolution=args.input_resolution,
+        inference_mode=args.inference_mode,
+        tile_size=args.tile_size,
+        tile_overlap=args.tile_overlap,
+        batch_size=args.batch_size,
+        half_precision=args.half_precision,
+        max_detections=args.max_detections,
     )
     try:
         result = run_pipeline(config)

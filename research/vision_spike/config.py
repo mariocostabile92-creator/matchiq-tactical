@@ -6,7 +6,9 @@ from typing import Any
 
 
 VALID_DEVICES = {"auto", "cpu", "cuda"}
-VALID_DETECTORS = {"opencv_hog", "fake"}
+VALID_DETECTORS = {"opencv_hog", "rfdetr", "fake"}
+VALID_RFDETR_MODELS = {"small", "medium"}
+VALID_INFERENCE_MODES = {"standard", "highres", "tiled"}
 
 
 @dataclass(slots=True)
@@ -45,6 +47,15 @@ class VisionSpikeConfig:
     save_debug_frames: bool = False
     random_seed: int = 42
     detector_width: int = 960
+    model_size: str = "small"
+    input_resolution: int = 512
+    inference_mode: str = "standard"
+    tile_size: int = 960
+    tile_overlap: float = 0.2
+    batch_size: int = 1
+    half_precision: bool = False
+    max_detections: int = 100
+    class_mapping: dict[str, str] = field(default_factory=lambda: {"person": "person"})
     tracker: TrackerSettings = field(default_factory=TrackerSettings)
 
     def validate(self, *, require_input: bool = True) -> None:
@@ -70,6 +81,20 @@ class VisionSpikeConfig:
             raise ValueError("output_fps must be positive")
         if self.detector_width < 320:
             raise ValueError("detector_width must be at least 320")
+        if self.model_size not in VALID_RFDETR_MODELS:
+            raise ValueError(f"unsupported RF-DETR model size: {self.model_size}")
+        if self.inference_mode not in VALID_INFERENCE_MODES:
+            raise ValueError(f"unsupported inference mode: {self.inference_mode}")
+        if self.input_resolution < 320 or self.input_resolution % 32:
+            raise ValueError("input_resolution must be at least 320 and divisible by 32")
+        if self.tile_size < 320:
+            raise ValueError("tile_size must be at least 320")
+        if not 0.0 <= self.tile_overlap < 0.5:
+            raise ValueError("tile_overlap must be between 0 and 0.5")
+        if self.batch_size < 1:
+            raise ValueError("batch_size must be at least 1")
+        if self.max_detections < 1:
+            raise ValueError("max_detections must be at least 1")
         self.tracker.validate()
 
     def to_dict(self) -> dict[str, Any]:

@@ -33,7 +33,20 @@ def _expected_frames(config: VisionSpikeConfig, source_fps: float) -> int:
     return max(1, expected)
 
 
-def _resolve_device(requested: str) -> tuple[str, list[str]]:
+def _resolve_device(requested: str, detector_backend: str) -> tuple[str, list[str]]:
+    if detector_backend == "rfdetr":
+        if requested == "cpu":
+            return "cpu", []
+        try:
+            import torch
+
+            available = bool(torch.cuda.is_available())
+        except ImportError:
+            available = False
+        if available:
+            return "cuda", []
+        warning = "CUDA requested but unavailable; RF-DETR CPU fallback used."
+        return "cpu", [warning] if requested == "cuda" else []
     if requested == "cuda":
         return "cpu", ["CUDA requested but the V0 detector has no CUDA adapter; CPU fallback used."]
     if requested == "auto":
@@ -50,7 +63,7 @@ def run_pipeline(
 ) -> PipelineResult:
     config.validate()
     ensure_writable_directory(config.output_dir)
-    device, warnings = _resolve_device(config.device)
+    device, warnings = _resolve_device(config.device, config.detector_backend)
     manifest = RunManifest(
         input_file=str(config.input_video.resolve()),
         output_dir=str(config.output_dir.resolve()),
@@ -61,12 +74,28 @@ def run_pipeline(
     manifest_path = config.output_dir / "run_manifest.json"
     write_json(manifest_path, manifest.to_dict())
 
-    detector_instance = detector or build_detector(
-        config.detector_backend,
-        confidence_threshold=config.confidence_threshold,
-        nms_threshold=config.iou_threshold,
-        detector_width=config.detector_width,
-    )
+    if detector is not None:
+        detector_instance = detector
+    elif config.detector_backend == "rfdetr":
+        detector_instance = build_detector(
+            "rfdetr",
+            model_size=config.model_size,
+            model_path=config.model_path,
+            confidence_threshold=config.confidence_threshold,
+            input_resolution=config.input_resolution,
+            device=config.device,
+            class_mapping=config.class_mapping,
+            batch_size=config.batch_size,
+            half_precision=config.half_precision,
+            max_detections=config.max_detections,
+        )
+    else:
+        detector_instance = build_detector(
+            config.detector_backend,
+            confidence_threshold=config.confidence_threshold,
+            nms_threshold=config.iou_threshold,
+            detector_width=config.detector_width,
+        )
     tracker_instance = tracker or IoUTracker(
         iou_threshold=config.tracker.iou_threshold,
         max_lost=config.tracker.max_lost,
@@ -126,6 +155,7 @@ def run_pipeline(
         cv2, _ = require_cv2_numpy()
         detector_instance.load()
         detector_metadata = detector_instance.metadata()
+        warnings.extend(item for item in detector_metadata.get("warnings", []) if item not in warnings)
         manifest.model = detector_metadata.get("model", "unknown")
         manifest.status = "processing"
         write_json(manifest_path, manifest.to_dict())
@@ -143,6 +173,7 @@ def run_pipeline(
         manifest.skipped_frames = max(0, config.frame_stride - 1)
         manifest.versions["input_sha256"] = sha256_file(config.input_video)
         manifest.versions["detector"] = detector_metadata.get("backend", "unknown")
+        manifest.versions["detector_metadata"] = detector_metadata
         sampler = EvaluationSampler(_expected_frames(config, metadata.fps))
         if config.overlay_enabled:
             output_fps = config.output_fps or max(0.1, metadata.fps / config.frame_stride)

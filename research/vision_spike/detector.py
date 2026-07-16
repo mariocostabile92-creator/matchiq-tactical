@@ -121,4 +121,8 @@ class OpenCvHogPersonDetector(VisionDetector):
 def build_detector(backend: str, **settings: Any) -> VisionDetector:
     if backend == "opencv_hog":
         return OpenCvHogPersonDetector(**settings)
+    if backend == "rfdetr":
+        from .rfdetr_detector import RFDETRDetector
+
+        return RFDETRDetector(**settings)
     raise ValueError(f"detector backend is not available for CLI use: {backend}")
