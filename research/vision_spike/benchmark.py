@@ -179,7 +179,8 @@ def write_comparison(output_root: Path, rows: list[dict[str, Any]]) -> None:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         for variant in variants:
-            writer.writerow({"variant": variant, **aggregates[variant]})
+            row = {"variant": variant, **aggregates[variant]}
+            writer.writerow({field: row.get(field) for field in fields})
     lines = ["# Detector comparison", "", "No precision or recall is claimed; see manual exploratory coverage.", ""]
     lines.extend(
         f"- {name}: {data['average_people_detected']} people/frame, "
