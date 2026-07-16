@@ -23,6 +23,19 @@
   function pipeline(){ return safeProject().pipeline || {}; }
   function hasVideo(){ return Boolean(node("videoInput")?.files?.[0] || node("videoPreview")?.src); }
 
+  function updateSelectedFile(){
+    const dropzone = node("vxUploadDropzone");
+    const file = node("videoInput")?.files?.[0];
+    if(!dropzone) return;
+    dropzone.classList.toggle("has-file",Boolean(file));
+    const title = dropzone.querySelector("strong");
+    const description = dropzone.querySelector("span");
+    if(title) title.textContent = file ? file.name : "Trascina qui il video";
+    if(description) description.textContent = file
+      ? `${Math.max(.1,file.size / 1024 / 1024).toFixed(1)} MB · pronto per la configurazione`
+      : "Partita, allenamento o clip da una sorgente autorizzata.";
+  }
+
   function move(targetId, element){
     const target = node(targetId);
     if(target && element) target.appendChild(element);
@@ -265,11 +278,15 @@
   dropzone?.addEventListener("drop",event => setInputFiles(event.dataTransfer?.files));
   node("vxSelectVideoBtn")?.addEventListener("click",() => node("videoInput")?.click());
   node("vxStartAnalysisBtn")?.addEventListener("click",startAnalysis);
-  node("videoInput")?.addEventListener("change",() => { if(node("videoInput")?.files?.length) setView("setup"); });
+  node("videoInput")?.addEventListener("change",() => {
+    updateSelectedFile();
+    if(node("videoInput")?.files?.length) setView("setup");
+  });
   projectDialog?.addEventListener("click",event => { if(event.target === projectDialog) closeProjects(); });
   document.addEventListener("matchiq:video-experience",event => applyExperienceState(event.detail || {}));
 
   mountExistingExperience();
+  updateSelectedFile();
   syncMode("analysis");
   setView(hasVideo() ? "setup" : "start",{instant:true,keepScroll:true});
   state.elapsedTimer = window.setInterval(updateElapsed,1000);

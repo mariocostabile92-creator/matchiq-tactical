@@ -103,7 +103,16 @@
 .vx-dropzone strong{font-size:23px}
 .vx-dropzone span{color:var(--muted);font-size:13px}
 .vx-dropzone input[type=file]{max-width:520px}
-.vx-dropzone #vxUploadInputMount{width:100%}
+.vx-dropzone #vxUploadInputMount{
+    position:absolute;
+    width:1px;
+    height:1px;
+    overflow:hidden;
+    clip:rect(0 0 0 0);
+    clip-path:inset(50%);
+}
+.vx-dropzone.has-file{border-style:solid}
+.vx-dropzone.has-file strong::before{content:"Video selezionato";display:block;margin-bottom:5px;color:var(--green);font-size:10px;text-transform:uppercase}
 .vx-mode-choice{grid-area:modes;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .vx-mode-choice button{
     display:grid;
@@ -130,6 +139,17 @@
 }
 .vx-resume strong{display:block;font-size:15px}
 .vx-setup{max-width:1180px;margin:0 auto}
+.vx-setup #videoIntelligenceSetup{
+    margin-top:18px;
+    padding:16px;
+    border-radius:16px;
+    background:rgba(5,10,22,.58);
+}
+.vx-setup #videoIntelligenceSetup .vi-section-head{align-items:center}
+.vx-setup #videoIntelligenceSetup .vi-section-head h2{font-size:16px;margin-bottom:3px}
+.vx-setup #videoIntelligenceSetup .vi-section-head p{font-size:11px}
+.vx-setup #videoIntelligenceSetup .vi-kicker{display:none}
+.vx-setup #videoIntelligenceSetup .vi-setup-actions{display:none}
 .vx-primary-fields{
     display:grid;
     grid-template-columns:repeat(4,minmax(0,1fr));
@@ -137,6 +157,9 @@
     margin:16px 0;
 }
 .vx-primary-fields .field{min-width:0}
+.vx-primary-fields .field label::after{content:""}
+.vx-primary-fields .field:has(#videoTitle){grid-column:span 2}
+.vx-primary-fields .field:has(#observedTeam){grid-column:span 2}
 .vx-advanced{
     margin-top:14px;
     padding:14px;
