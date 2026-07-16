@@ -126,11 +126,12 @@ def run_pipeline(
     first_pitch_mask = None
     started = time.perf_counter()
     final_metrics: dict = {}
+    detector_metadata: dict = {}
     status = "failed"
     cv2 = None
 
     def persist_partial(current_status: str, error: str | None = None) -> None:
-        nonlocal final_metrics
+        nonlocal final_metrics, detector_metadata
         elapsed = max(0.0, time.perf_counter() - started)
         tracker_metadata = tracker_instance.metadata()
         team_metadata = team_classifier.metadata()
@@ -141,6 +142,21 @@ def run_pipeline(
             device=device,
         )
         final_metrics["warnings"] = warnings
+        detector_metadata = detector_instance.metadata()
+        final_metrics["detector"] = detector_metadata
+        final_metrics["model_load_seconds"] = detector_metadata.get("load_seconds", 0.0)
+        final_metrics["model_size_bytes"] = detector_metadata.get("weights_size_bytes")
+        final_metrics["duplicate_detections_removed"] = detector_metadata.get("duplicates_removed", 0)
+        try:
+            import torch
+
+            if device == "cuda" and torch.cuda.is_available():
+                final_metrics["gpu_used"] = True
+                final_metrics["peak_vram_mb"] = round(torch.cuda.max_memory_allocated() / (1024 * 1024), 2)
+            else:
+                final_metrics["peak_vram_mb"] = 0.0
+        except ImportError:
+            final_metrics["peak_vram_mb"] = 0.0
         final_metrics["ball_detection"] = {
             "requested": config.ball_detection_enabled,
             "supported": False,
@@ -167,6 +183,13 @@ def run_pipeline(
         cv2, _ = require_cv2_numpy()
         detector_instance.load()
         detector_metadata = detector_instance.metadata()
+        try:
+            import torch
+
+            if device == "cuda" and torch.cuda.is_available():
+                torch.cuda.reset_peak_memory_stats()
+        except ImportError:
+            pass
         warnings.extend(item for item in detector_metadata.get("warnings", []) if item not in warnings)
         manifest.model = detector_metadata.get("model", "unknown")
         manifest.status = "processing"

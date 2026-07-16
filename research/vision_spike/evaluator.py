@@ -82,6 +82,10 @@ class MetricsCollector:
         self.pitch_frames = 0
         self.outside_pitch_detections = 0
         self.total_detections = 0
+        self.frames_with_detections = 0
+        self.scene_counts = {"wide_tactical": 0, "close_or_nontactical": 0}
+        self.scene_people = {"wide_tactical": 0, "close_or_nontactical": 0}
+        self.scene_active_tracks = {"wide_tactical": 0, "close_or_nontactical": 0}
 
     def observe(self, result: FrameResult, pitch_mask: object | None) -> None:
         self.processing_ms.append(result.processing_ms)
@@ -90,6 +94,11 @@ class MetricsCollector:
         self.track_counts.append(len(result.tracks))
         self.pitch_frames += int(result.pitch_visible)
         self.total_detections += len(result.detections)
+        self.frames_with_detections += int(bool(result.detections))
+        scene = "wide_tactical" if result.pitch_visible and result.tactical_view_score >= 0.45 else "close_or_nontactical"
+        self.scene_counts[scene] += 1
+        self.scene_people[scene] += self.person_counts[-1]
+        self.scene_active_tracks[scene] += int(bool(result.tracks))
         if pitch_mask is None:
             return
         height, width = pitch_mask.shape[:2]
@@ -110,12 +119,22 @@ class MetricsCollector:
     ) -> dict[str, Any]:
         frame_count = len(self.processing_ms)
         average_ms = sum(self.processing_ms) / frame_count if frame_count else 0.0
+        scene_metrics = {}
+        for scene, count in self.scene_counts.items():
+            scene_metrics[scene] = {
+                "frames": count,
+                "average_people_detected": round(self.scene_people[scene] / count, 4) if count else 0.0,
+                "frames_with_active_tracks_percent": round(100.0 * self.scene_active_tracks[scene] / count, 2)
+                if count
+                else 0.0,
+            }
         return {
             "processed_frames": frame_count,
             "elapsed_seconds": round(elapsed_seconds, 4),
             "processing_fps": round(frame_count / elapsed_seconds, 4) if elapsed_seconds > 0 else 0.0,
             "average_latency_ms": round(average_ms, 4),
             "average_people_detected": round(sum(self.person_counts) / frame_count, 4) if frame_count else 0.0,
+            "frames_with_detections_percent": round(100.0 * self.frames_with_detections / frame_count, 2) if frame_count else 0.0,
             "possible_ball_detections": sum(self.possible_ball_counts),
             "tracks_total": tracker_metadata.get("tracks_created", 0),
             "average_track_age_frames": tracker_metadata.get("average_track_age_frames", 0.0),
@@ -130,12 +149,16 @@ class MetricsCollector:
             "team_clustering": team_metadata,
             "accuracy_note": "No precision/recall: this run has no annotated ground truth.",
             "id_switch_note": "ID switches require manual review of the overlay.",
+            "scene_frames": dict(self.scene_counts),
+            "scene_metrics": scene_metrics,
         }
 
 
 def write_evaluation(path: Path, metrics: dict[str, Any], samples: list[dict[str, Any]]) -> None:
+    detector = metrics.get("detector", {})
+    spike_version = "V2" if detector.get("backend") == "rfdetr" else "V0"
     lines = [
-        "# MatchIQ Vision Spike V0 - Evaluation",
+        f"# MatchIQ Vision Spike {spike_version} - Evaluation",
         "",
         "This report is a feasibility record, not a product capability claim.",
         "No precision or recall is reported because no ground-truth annotation is available.",
@@ -150,6 +173,8 @@ def write_evaluation(path: Path, metrics: dict[str, Any], samples: list[dict[str
         f"- Frames with active tracks: {metrics.get('frames_with_active_tracks_percent', 0)}%",
         f"- Pitch visible: {metrics.get('pitch_visible_percent', 0)}%",
         f"- Peak process RSS: {metrics.get('peak_rss_mb', 0)} MB",
+        f"- Peak VRAM: {metrics.get('peak_vram_mb', 0)} MB",
+        f"- Wide tactical scene metrics: {metrics.get('scene_metrics', {}).get('wide_tactical', {})}",
         "",
         "## Manual review table",
         "",

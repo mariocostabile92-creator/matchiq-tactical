@@ -80,6 +80,8 @@ class TiledInferenceDetector(VisionDetector):
         self.overlap = overlap
         self.nms_iou_threshold = nms_iou_threshold
         self.max_detections = max_detections
+        self.raw_detections = 0
+        self.duplicates_removed = 0
 
     def load(self) -> None:
         self.detector.load()
@@ -106,6 +108,8 @@ class TiledInferenceDetector(VisionDetector):
                     )
                 tile_index += 1
         merged = deduplicate_detections(all_detections, self.nms_iou_threshold)
+        self.raw_detections += len(all_detections)
+        self.duplicates_removed += max(0, len(all_detections) - len(merged))
         for index, detection in enumerate(merged):
             detection.detection_id = f"f{frame_index}-rfdetr-tiled-person-{index}"
         return merged[: self.max_detections]
@@ -130,4 +134,6 @@ class TiledInferenceDetector(VisionDetector):
             "tile_size": self.tile_size,
             "tile_overlap": self.overlap,
             "global_nms_iou_threshold": self.nms_iou_threshold,
+            "raw_tile_detections": self.raw_detections,
+            "duplicates_removed": self.duplicates_removed,
         }
