@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "source_id": "anonymous-match-source-001",
+      "name": "Replace with authorized source name",
+      "author": "Replace with rights holder",
+      "origin": "Internal authorization reference, never a personal file path",
+      "license_name": "Written commercial training authorization",
+      "license_url": "",
+      "modification_allowed": false,
+      "commercial_use_allowed": false,
+      "commercial_weight_training_allowed": false,
+      "redistribution_allowed": false,
+      "attribution_required": false,
+      "authorization_reference": "",
+      "media_types": ["video"],
+      "annotation_quality": "unannotated",
+      "classes": ["player", "goalkeeper", "referee", "ball"],
+      "image_count": 0,
+      "camera_types": ["tactical_wide"],
+      "matchiq_relevance": "Pending legal and dataset review",
+      "status": "pending",
+      "notes": "This is a non-approved example and must not unlock training."
+    }
+  ]
+}
