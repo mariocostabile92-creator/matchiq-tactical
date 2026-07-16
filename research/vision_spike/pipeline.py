@@ -125,6 +125,7 @@ def run_pipeline(
     sampler: EvaluationSampler | None = None
     first_pitch_mask = None
     started = time.perf_counter()
+    processing_started: float | None = None
     final_metrics: dict = {}
     detector_metadata: dict = {}
     status = "failed"
@@ -132,7 +133,7 @@ def run_pipeline(
 
     def persist_partial(current_status: str, error: str | None = None) -> None:
         nonlocal final_metrics, detector_metadata
-        elapsed = max(0.0, time.perf_counter() - started)
+        elapsed = max(0.0, time.perf_counter() - (processing_started or started))
         tracker_metadata = tracker_instance.metadata()
         team_metadata = team_classifier.metadata()
         final_metrics = metrics_collector.finalize(
@@ -210,6 +211,7 @@ def run_pipeline(
         manifest.versions["detector"] = detector_metadata.get("backend", "unknown")
         manifest.versions["detector_metadata"] = detector_metadata
         sampler = EvaluationSampler(_expected_frames(config, metadata.fps))
+        processing_started = time.perf_counter()
         if config.overlay_enabled:
             output_fps = config.output_fps or max(0.1, metadata.fps / config.frame_stride)
             overlay_writer = VideoOverlayWriter(

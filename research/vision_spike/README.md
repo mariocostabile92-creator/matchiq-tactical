@@ -123,3 +123,51 @@ recall, track stability, and resource cost.
 
 See `FEASIBILITY_REPORT.md` for the evidence and the recommended V1 gate. The spike
 stops here and does not start V1.
+
+## RF-DETR feasibility benchmark V2
+
+V2 keeps the V0 reader, tracker, pitch heuristic, team clustering, clips, frame
+stride, outputs, and decision criteria unchanged. Only the detector and its
+preprocessing mode vary. The implementation remains research-only and is not
+imported by the MatchIQ product.
+
+Create a dedicated environment; do not install these packages into the product
+environment and do not merge them into the product requirements:
+
+```powershell
+python -m venv "$env:TEMP\matchiq-rfdetr-venv"
+& "$env:TEMP\matchiq-rfdetr-venv\Scripts\python.exe" -m pip install `
+  -r research\vision_spike\requirements-rfdetr.txt
+```
+
+Run one or more controlled variants:
+
+```powershell
+& "$env:TEMP\matchiq-rfdetr-venv\Scripts\python.exe" `
+  -m research.vision_spike.benchmark `
+  --clip-root "$env:TEMP\matchiq-vision-spike" `
+  --output-root "$env:TEMP\matchiq-vision-spike-v2" `
+  --device cuda `
+  --variant rfdetr_small_standard `
+  --variant rfdetr_small_highres `
+  --variant rfdetr_small_tiled
+```
+
+Generate contact sheets and the manual exploratory coverage summary:
+
+```powershell
+& "$env:TEMP\matchiq-rfdetr-venv\Scripts\python.exe" `
+  -m research.vision_spike.manual_evaluation `
+  --clip-root "$env:TEMP\matchiq-vision-spike" `
+  --output-root "$env:TEMP\matchiq-vision-spike-v2" `
+  --review "$env:TEMP\matchiq-vision-spike-v2\comparison\manual_review.json"
+```
+
+Each variant/clip directory contains `overlay.mp4`, `detections.jsonl`,
+`tracks.jsonl`, `metrics.json`, `run_manifest.json`, and `evaluation.md`.
+Comparison JSON, CSV, Markdown, overlays, contact sheets, and manual-review files
+are written below `vision_output_v2/comparison` or the caller-selected equivalent.
+Videos, weights, frames, overlays, datasets, and run outputs remain ignored by Git.
+
+See `RFDETR_V2_REPORT.md`, `RFDETR_LICENSE_AUDIT.md`, and
+`RFDETR_FINE_TUNING_PLAN.md` for the controlled results and decision.
