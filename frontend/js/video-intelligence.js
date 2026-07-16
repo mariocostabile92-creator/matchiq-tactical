@@ -604,6 +604,7 @@
     const next = Math.max(0,Math.min(items.length - 1,current + direction));
     state.selectedEvidenceId = items[next].evidence_id;
     renderWorkspace();
+    openMoment(items[next],false,false).catch(() => {});
   }
 
   function moveFrameCandidate(card,direction){
@@ -690,7 +691,7 @@
     renderWorkspace();
   }
 
-  async function openMoment(item, playClip=false){
+  async function openMoment(item, playClip=false, shouldScroll=true){
     const video = document.getElementById("videoPreview");
     if(!video?.src) throw new Error("Apri prima il video collegato alla sessione");
     const clip = item.clip_reference || {};
@@ -699,7 +700,7 @@
     video.pause();
     if(typeof seekVideo === "function") await seekVideo(video,targetMs/1000);
     else video.currentTime = targetMs/1000;
-    video.scrollIntoView({behavior:"smooth",block:"center"});
+    if(shouldScroll) video.scrollIntoView({behavior:"smooth",block:"center"});
     if(playClip){
       if(state.clipStopHandler) video.removeEventListener("timeupdate",state.clipStopHandler);
       state.clipStopHandler = () => {
@@ -810,6 +811,8 @@
     if(!button) return;
     state.selectedEvidenceId = button.dataset.selectEvidence;
     renderWorkspace();
+    const item = state.evidences.find(entry => entry.evidence_id === state.selectedEvidenceId);
+    if(item) guarded(() => openMoment(item,false,false));
   });
 
   document.addEventListener("keydown",event => {

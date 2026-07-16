@@ -246,6 +246,16 @@
 .vx-evidence-column .vi-clip-editor button,.vx-evidence-column .vi-frame-editor button{min-height:40px}
 .vx-review-secondary{display:grid;gap:12px;margin-top:14px}
 .vx-review-secondary:empty{display:none}
+.vx-review-assets{
+    margin-top:12px;
+    padding:12px;
+    border:1px solid var(--border);
+    border-radius:15px;
+    background:rgba(5,10,22,.52);
+}
+.vx-review-assets summary{cursor:pointer;color:#fff;font-size:12px;font-weight:950}
+.vx-review-assets[open] summary{margin-bottom:10px}
+.vx-review-assets .slide-deck,.vx-review-assets .frames{margin-top:0}
 .vx-report-ready{max-width:1120px;margin:0 auto}
 .vx-report-stats{margin:18px 0}
 .vx-report-ready .report{max-height:min(58dvh,680px);overflow:auto}

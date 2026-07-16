@@ -1451,7 +1451,10 @@ video{
         <section class="vx-view vx-setup" id="vxSetupView" data-vx-view="setup" hidden>
             <header class="vx-view-head">
                 <div><span class="vx-eyebrow">PREPARA</span><h2>Definisci il contesto essenziale</h2><p>Pochi dati chiari aiutano MatchIQ a organizzare meglio le evidenze.</p></div>
-                <button class="btn dark small" type="button" data-vx-action="start">Cambia video</button>
+                <div class="vx-workspace-actions">
+                    <button class="btn dark small" type="button" data-vx-action="review">Torna al workspace</button>
+                    <button class="btn dark small" type="button" data-vx-action="start">Cambia video</button>
+                </div>
             </header>
             <div id="vxSetupEngineMount"></div>
             <div class="vx-primary-fields" id="vxPrimaryFields"></div>
@@ -1498,7 +1501,10 @@ video{
                 </div>
                 <aside class="vx-evidence-column" id="vxEvidenceMount" aria-label="Evidenze da revisionare"></aside>
             </div>
-            <div class="vx-review-secondary" id="vxReviewSecondaryMount"></div>
+            <details class="vx-review-assets">
+                <summary>Frame, diapositive e strumenti tecnici</summary>
+                <div class="vx-review-secondary" id="vxReviewSecondaryMount"></div>
+            </details>
         </section>
 
         <section class="vx-view vx-report-ready" id="vxReportView" data-vx-view="report" hidden>
