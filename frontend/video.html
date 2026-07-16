@@ -1433,11 +1433,11 @@ video{
                 <button class="btn" id="vxSelectVideoBtn" type="button">Seleziona file</button>
             </div>
             <div class="vx-mode-choice" role="group" aria-label="Modalita di analisi">
-                <button type="button" class="active" data-vx-mode="analysis">
+                <button type="button" class="active" data-vx-mode="analysis" aria-pressed="true">
                     <strong>Analisi indipendente</strong>
                     <span>Lavora su un video senza collegarlo a una partita Coach.</span>
                 </button>
-                <button type="button" data-vx-mode="coach">
+                <button type="button" data-vx-mode="coach" aria-pressed="false">
                     <strong>Usa una partita Coach</strong>
                     <span>Collega il video al contesto gia registrato dallo staff.</span>
                 </button>
@@ -1549,7 +1549,7 @@ video{
     <section class="hero">
         <div class="panel">
             <span class="badge">MATCHIQ VIDEO AI</span>
-            <h1>Trasforma ogni video in un'analisi tattica pronta per lo staff</h1>
+            <h2 class="legacy-video-title">Trasforma ogni video in un'analisi tattica pronta per lo staff</h2>
             <p>
                 Carica una partita, un allenamento o una clip. MatchIQ individua i momenti rilevanti,
                 organizza i frame e prepara materiale tecnico utile per analisi, riunioni e lavoro sul campo.

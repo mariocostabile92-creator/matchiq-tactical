@@ -465,7 +465,7 @@
       state.selectedEvidenceId = (items.find(item => item.review_status === "pending") || items[0]).evidence_id;
     }
     elements.queue.innerHTML = items.map((item,index) => `
-      <button type="button" class="vi-queue-item ${item.evidence_id === state.selectedEvidenceId ? "active" : ""} ${html(item.review_status)}" data-select-evidence="${html(item.evidence_id)}" aria-current="${item.evidence_id === state.selectedEvidenceId ? "true" : "false"}">
+      <button type="button" class="vi-queue-item ${item.evidence_id === state.selectedEvidenceId ? "active" : ""} ${html(item.review_status)}" data-select-evidence="${html(item.evidence_id)}" aria-current="${item.evidence_id === state.selectedEvidenceId ? "true" : "false"}" aria-selected="${item.evidence_id === state.selectedEvidenceId ? "true" : "false"}">
         <span>${index + 1}</span>
         <b>${html(item.title)}</b>
         <em>${Number.isFinite(Number(item.representative_timestamp_ms)) ? "FRAME" : ""}${Number.isFinite(Number(item.representative_timestamp_ms)) && item.clip_reference ? " / " : ""}${item.clip_reference ? "CLIP" : ""}</em>

@@ -6,6 +6,7 @@
   const views = new Map(Array.from(shell.querySelectorAll("[data-vx-view]")).map(node => [node.dataset.vxView,node]));
   const steps = Array.from(shell.querySelectorAll("[data-vx-step]"));
   const projectDialog = document.getElementById("vxProjectsDialog");
+  let projectDialogOpener = null;
   const state = {
     view:"start",
     previousView:"start",
@@ -191,21 +192,40 @@
 
   function syncMode(mode){
     state.mode = mode === "coach" ? "coach" : "analysis";
-    shell.querySelectorAll("[data-vx-mode]").forEach(button => button.classList.toggle("active",button.dataset.vxMode === state.mode));
+    shell.querySelectorAll("[data-vx-mode]").forEach(button => {
+      const active = button.dataset.vxMode === state.mode;
+      button.classList.toggle("active",active);
+      button.setAttribute("aria-pressed",active ? "true" : "false");
+    });
     const original = document.querySelector(`[data-vi-mode="${state.mode}"]`);
     if(original && original.getAttribute("aria-pressed") !== "true") original.click();
   }
 
   function showProjects(){
     if(!projectDialog) return;
+    projectDialogOpener = document.activeElement;
     if(typeof projectDialog.showModal === "function") projectDialog.showModal();
     else projectDialog.setAttribute("open","");
+    projectDialog.querySelector('[data-vx-action="close-projects"]')?.focus();
   }
 
   function closeProjects(){
     if(!projectDialog) return;
     if(typeof projectDialog.close === "function") projectDialog.close();
     else projectDialog.removeAttribute("open");
+    if(projectDialogOpener instanceof HTMLElement) projectDialogOpener.focus();
+    projectDialogOpener = null;
+  }
+
+  function trapProjectDialogFocus(event){
+    if(event.key !== "Tab" || !projectDialog?.hasAttribute("open")) return;
+    const focusable = Array.from(projectDialog.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'))
+      .filter(item => !item.disabled && item.getAttribute("aria-hidden") !== "true");
+    if(!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if(event.shiftKey && document.activeElement === first){ event.preventDefault(); last.focus(); }
+    else if(!event.shiftKey && document.activeElement === last){ event.preventDefault(); first.focus(); }
   }
 
   function setInputFiles(files){
@@ -307,6 +327,8 @@
     if(node("videoInput")?.files?.length) setView("setup");
   });
   projectDialog?.addEventListener("click",event => { if(event.target === projectDialog) closeProjects(); });
+  projectDialog?.addEventListener("keydown",trapProjectDialogFocus);
+  projectDialog?.addEventListener("cancel",event => { event.preventDefault(); closeProjects(); });
   document.addEventListener("matchiq:video-experience",event => applyExperienceState(event.detail || {}));
   document.addEventListener("matchiq:video-report-ready",event => {
     const detail = event.detail || {};

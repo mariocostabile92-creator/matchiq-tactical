@@ -3,6 +3,11 @@
     min-width:0;
     color:var(--text);
 }
+.vx-shell :focus-visible,.vx-projects :focus-visible{
+    outline:3px solid var(--green);
+    outline-offset:3px;
+}
+.legacy-video-title{font-size:clamp(34px,3.2vw,58px);line-height:1.02;margin-bottom:14px;max-width:820px}
 .vx-shell[hidden],.vx-view[hidden]{display:none!important}
 .vx-shell-head,.vx-view-head,.vx-workspace-head{
     display:flex;
@@ -330,15 +335,18 @@
     .vx-review-assets{margin-bottom:max(12px,env(safe-area-inset-bottom))}
 }
 @media(max-width:700px){
+    .vx-shell,.vx-shell *{min-width:0}
+    .vx-shell{width:100%;max-width:100%}
+    .vx-shell p,.vx-shell span,.vx-shell strong,.vx-shell button{overflow-wrap:anywhere}
     .vx-shell-head,.vx-view-head,.vx-workspace-head,.vx-resume,.vx-setup-footer{display:grid}
-    .vx-shell-actions,.vx-workspace-actions{width:100%}
-    .vx-shell-actions .btn,.vx-workspace-actions .btn{flex:1}
+    .vx-shell-actions,.vx-workspace-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+    .vx-shell-actions .btn,.vx-workspace-actions .btn{width:100%;white-space:normal}
     .vx-steps{top:68px;grid-template-columns:repeat(5,1fr);gap:3px;padding:5px}
-    .vx-steps span{min-width:0;padding:6px 2px;font-size:0}
+    .vx-steps span{min-width:0;overflow:hidden;padding:6px 2px;font-size:0}
     .vx-steps b{font-size:10px}
     .vx-view{min-height:calc(100dvh - 154px);padding:15px;border-radius:18px}
     .vx-start-copy h2{font-size:34px}
-    .vx-dropzone{min-height:230px;padding:22px 14px}
+    .vx-dropzone{width:100%;min-height:230px;padding:22px 14px;box-sizing:border-box}
     .vx-mode-choice,.vx-primary-fields,.vx-processing-meta,.vx-report-stats,.vx-recovery-summary{grid-template-columns:1fr}
     .vx-project-summary{grid-template-columns:1fr 1fr;padding:10px 10px 0}
     .vx-setup-footer{position:sticky;bottom:max(6px,env(safe-area-inset-bottom))}
