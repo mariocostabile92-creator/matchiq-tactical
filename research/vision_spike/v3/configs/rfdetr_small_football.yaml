@@ -1,0 +1,42 @@
+{
+  "base_model": "rfdetr-small-coco",
+  "class_names": ["player", "goalkeeper", "referee", "ball"],
+  "dataset_path": "${MATCHIQ_V3_DATASET}",
+  "train_split": "train",
+  "val_split": "valid",
+  "test_split": "test",
+  "image_size": 512,
+  "batch_size": 2,
+  "gradient_accumulation": 4,
+  "learning_rate": 0.0001,
+  "encoder_learning_rate": 0.00001,
+  "epochs": 40,
+  "warmup_epochs": 2,
+  "weight_decay": 0.0001,
+  "seed": 42,
+  "device": "cuda",
+  "workers": 2,
+  "mixed_precision": true,
+  "early_stopping": true,
+  "early_stopping_patience": 8,
+  "evaluation_interval": 1,
+  "checkpoint_directory": "checkpoints/rfdetr_small_football",
+  "augmentations": {
+    "HorizontalFlip": {"p": 0.5},
+    "RandomBrightnessContrast": {"brightness_limit": 0.12, "contrast_limit": 0.12, "p": 0.35},
+    "ColorJitter": {"brightness": 0.1, "contrast": 0.1, "saturation": 0.1, "hue": 0.03, "p": 0.25},
+    "GaussianBlur": {"blur_limit": 3, "p": 0.12},
+    "GaussNoise": {"std_range": [0.01, 0.04], "p": 0.12}
+  },
+  "minimums": {
+    "images": 500,
+    "matches": 3,
+    "free_disk_gb": 8,
+    "class_examples": {
+      "player": 500,
+      "goalkeeper": 50,
+      "referee": 50,
+      "ball": 150
+    }
+  }
+}
