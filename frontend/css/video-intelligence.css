@@ -222,6 +222,14 @@
 }
 .vi-queue-item b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
 .vi-queue-item small{color:var(--muted);font-size:8px}
+.vi-queue-item em{
+    grid-column:2;
+    color:#78d7ff;
+    font-size:8px;
+    font-style:normal;
+    font-weight:900;
+    letter-spacing:.04em;
+}
 .vi-queue-item.active{border-color:var(--green);background:rgba(0,245,160,.08)}
 .vi-queue-item.confirmed,
 .vi-queue-item.corrected{box-shadow:inset 3px 0 rgba(0,245,160,.65)}
@@ -297,6 +305,23 @@
     font-size:10px;
 }
 .vi-evidence-meta strong{display:block;color:#fff;margin-top:3px;font-size:11px}
+.vi-media-review{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    margin-bottom:10px;
+}
+.vi-media-review section{
+    min-width:0;
+    padding:10px;
+    border:1px solid rgba(49,178,255,.22);
+    border-radius:11px;
+    background:rgba(4,27,42,.64);
+}
+.vi-media-review span,
+.vi-media-review small{display:block;color:var(--muted);font-size:9px}
+.vi-media-review strong{display:block;margin:4px 0;color:#fff;font-size:12px}
+.vi-media-review p{margin:0 0 5px;color:#cbd8f4;font-size:10px;line-height:1.45}
 .vi-editors{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .vi-clip-editor,
 .vi-frame-editor{
@@ -347,6 +372,7 @@
     .vi-evidence-copy,
     .vi-evidence-meta{grid-template-columns:1fr}
     .vi-evidence-copy .full{grid-column:auto}
+    .vi-media-review{grid-template-columns:1fr}
     .vi-toolbar-actions{grid-column:auto}
     .vi-review-progress{grid-template-columns:1fr}
     .vi-review-progress small{display:none}

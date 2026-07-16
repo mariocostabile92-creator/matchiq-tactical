@@ -468,6 +468,7 @@
       <button type="button" class="vi-queue-item ${item.evidence_id === state.selectedEvidenceId ? "active" : ""} ${html(item.review_status)}" data-select-evidence="${html(item.evidence_id)}" aria-current="${item.evidence_id === state.selectedEvidenceId ? "true" : "false"}">
         <span>${index + 1}</span>
         <b>${html(item.title)}</b>
+        <em>${Number.isFinite(Number(item.representative_timestamp_ms)) ? "FRAME" : ""}${Number.isFinite(Number(item.representative_timestamp_ms)) && item.clip_reference ? " / " : ""}${item.clip_reference ? "CLIP" : ""}</em>
         <small>${html(secondsLabel(item.representative_timestamp_ms))} Â· ${html(reviewLabel(item.review_status))}</small>
       </button>
     `).join("");
@@ -493,6 +494,13 @@
       const start = Number(clip.start_timestamp_ms ?? item.start_timestamp_ms ?? 0) / 1000;
       const end = Number(clip.end_timestamp_ms ?? item.end_timestamp_ms ?? 0) / 1000;
       const confidence = Math.round(Number(item.confidence_score || 0) * (Number(item.confidence_score || 0) <= 1 ? 100 : 1));
+      const candidates = Array.isArray(item.frame_candidates) ? item.frame_candidates : [];
+      const selectedCandidate = candidates.find(candidate => Math.abs(Number(candidate.timestamp_ms || 0) - Number(item.representative_timestamp_ms || 0)) < 750) || candidates[0] || {};
+      const candidateScoreRaw = Number(selectedCandidate.score || 0);
+      const candidateScore = Math.round(candidateScoreRaw * (candidateScoreRaw <= 1 ? 100 : 1));
+      const candidateReason = selectedCandidate.motivation || item.frame_motivation || "Frame collegato all'evidenza selezionata.";
+      const preRoll = Math.max(0,Math.round(Number(clip.pre_roll_ms || 0) / 1000));
+      const postRoll = Math.max(0,Math.round(Number(clip.post_roll_ms || 0) / 1000));
       return `
         <article class="vi-evidence ${html(item.review_status)}" data-evidence-id="${html(item.evidence_id)}">
           <div class="vi-evidence-top">
@@ -522,6 +530,20 @@
             <div>Affidabilità<strong>${confidence}% · ${html(item.confidence_label || "")}</strong></div>
             <div>Fonte<strong>${html(item.source_type || "video")}</strong></div>
             <div>Collegamento Coach<strong>${html(item.linked_match_event_id || item.linked_note_id || "Nessuno")}</strong></div>
+          </div>
+          <div class="vi-media-review" aria-label="Riepilogo frame e clip">
+            <section>
+              <span>Frame suggerito</span>
+              <strong>${html(secondsLabel(item.representative_timestamp_ms))}${candidateScore ? ` / ${candidateScore}%` : ""}</strong>
+              <p>${html(candidateReason)}</p>
+              <small>${Math.max(0,candidates.length - 1)} alternative disponibili</small>
+            </section>
+            <section>
+              <span>Clip proposta</span>
+              <strong>${html(secondsLabel(Math.round(start * 1000)))} - ${html(secondsLabel(Math.round(end * 1000)))}</strong>
+              <p>Durata ${Math.max(0,Math.round(end - start))} s</p>
+              <small>Pre-roll ${preRoll} s / Post-roll ${postRoll} s</small>
+            </section>
           </div>
           <div class="vi-editors">
             <div class="vi-clip-editor">
