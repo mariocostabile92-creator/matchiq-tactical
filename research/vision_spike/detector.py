@@ -56,6 +56,8 @@ class OpenCvHogPersonDetector(VisionDetector):
         working = frame
         if scale < 1.0:
             working = cv2.resize(frame, (int(width * scale), int(height * scale)))
+        if working.shape[0] < 128 or working.shape[1] < 64:
+            return []
         rects, weights = self._hog.detectMultiScale(
             working,
             winStride=(8, 8),

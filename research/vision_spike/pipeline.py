@@ -50,7 +50,6 @@ def run_pipeline(
 ) -> PipelineResult:
     config.validate()
     ensure_writable_directory(config.output_dir)
-    cv2, _ = require_cv2_numpy()
     device, warnings = _resolve_device(config.device)
     manifest = RunManifest(
         input_file=str(config.input_video.resolve()),
@@ -89,6 +88,7 @@ def run_pipeline(
     started = time.perf_counter()
     final_metrics: dict = {}
     status = "failed"
+    cv2 = None
 
     def persist_partial(current_status: str, error: str | None = None) -> None:
         nonlocal final_metrics
@@ -123,6 +123,7 @@ def run_pipeline(
         write_json(manifest_path, manifest.to_dict())
 
     try:
+        cv2, _ = require_cv2_numpy()
         detector_instance.load()
         detector_metadata = detector_instance.metadata()
         manifest.model = detector_metadata.get("model", "unknown")
@@ -215,7 +216,7 @@ def run_pipeline(
 
         if status == "failed":
             status = "completed"
-        if first_pitch_mask is not None:
+        if first_pitch_mask is not None and cv2 is not None:
             cv2.imwrite(str(config.output_dir / "pitch_mask.png"), first_pitch_mask)
         persist_partial(status)
         samples = sampler.save(config.output_dir / "frames") if sampler else []

@@ -11,7 +11,7 @@ from research.vision_spike.config import TrackerSettings, VisionSpikeConfig
 from research.vision_spike.contracts import Detection, FrameResult, RunManifest, Track
 from research.vision_spike.detector import OpenCvHogPersonDetector, VisionDetector
 from research.vision_spike.evaluator import MetricsCollector, write_evaluation
-from research.vision_spike.make_clip import make_clip
+from research.vision_spike.make_clip import make_clip, parse_timecode
 from research.vision_spike.overlay import VideoOverlayWriter, draw_overlay, format_timestamp
 from research.vision_spike.pipeline import run_pipeline
 from research.vision_spike.pitch_detector import PitchDetector
@@ -298,6 +298,47 @@ class VisionSpikeUnitTests(unittest.TestCase):
         detector = FakeDetector()
         run_pipeline(self.config(), detector=detector)
         self.assertTrue(detector.closed)
+
+    def test_43_timecode_parser(self):
+        self.assertEqual(parse_timecode("00:12:30"), 750.0)
+
+    def test_44_cli_short_clip(self):
+        output = self.root / "cli-output"
+        completed = subprocess.run(
+            [
+                str(Path(__import__("sys").executable)),
+                "-m",
+                "research.vision_spike.cli",
+                "--input",
+                str(self.video),
+                "--output",
+                str(output),
+                "--max-frames",
+                "1",
+                "--no-overlay",
+                "--no-team-clustering",
+                "--detector-width",
+                "320",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+        self.assertEqual(json.loads((output / "run_manifest.json").read_text(encoding="utf-8"))["status"], "completed")
+
+    def test_45_unreadable_video_has_clear_error(self):
+        broken = self.root / "broken.mp4"
+        broken.write_bytes(b"not a video")
+        with self.assertRaisesRegex(ValueError, "cannot be opened"):
+            run_pipeline(self.config(input_video=broken), detector=FakeDetector())
+        manifest = json.loads((self.root / "output" / "run_manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["status"], "failed")
+
+    def test_46_peak_memory_is_reported(self):
+        result = run_pipeline(self.config(), detector=FakeDetector())
+        self.assertGreater(result.metrics["peak_rss_mb"], 0)
 
 
 if __name__ == "__main__":

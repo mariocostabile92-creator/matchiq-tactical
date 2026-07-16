@@ -5,6 +5,23 @@ import subprocess
 from pathlib import Path
 
 
+def parse_timecode(value: str | float | int) -> float:
+    if isinstance(value, (float, int)):
+        return float(value)
+    parts = value.strip().split(":")
+    try:
+        numbers = [float(item) for item in parts]
+    except ValueError as exc:
+        raise ValueError(f"invalid timecode: {value}") from exc
+    if len(numbers) == 1:
+        return numbers[0]
+    if len(numbers) == 2:
+        return (numbers[0] * 60.0) + numbers[1]
+    if len(numbers) == 3:
+        return (numbers[0] * 3600.0) + (numbers[1] * 60.0) + numbers[2]
+    raise ValueError(f"invalid timecode: {value}")
+
+
 def make_clip(input_path: Path, output_path: Path, *, start_seconds: float, duration_seconds: float) -> Path:
     if not input_path.is_file():
         raise ValueError(f"input video not found: {input_path}")
@@ -49,15 +66,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Create a local test clip for the Vision Spike.")
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
-    parser.add_argument("--start-seconds", type=float, default=0.0)
-    parser.add_argument("--duration-seconds", type=float, default=30.0)
+    parser.add_argument("--start-seconds", "--start", dest="start_seconds", default="0")
+    parser.add_argument("--duration-seconds", "--duration", dest="duration_seconds", default="30")
     args = parser.parse_args(argv)
     try:
         path = make_clip(
             args.input,
             args.output,
-            start_seconds=args.start_seconds,
-            duration_seconds=args.duration_seconds,
+            start_seconds=parse_timecode(args.start_seconds),
+            duration_seconds=parse_timecode(args.duration_seconds),
         )
     except (ValueError, RuntimeError) as exc:
         print(f"Clip creation failed: {exc}")
