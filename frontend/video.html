@@ -1394,8 +1394,8 @@ video{
 }
 </style>
 <link rel="stylesheet" href="/css/global-nav.css?v=10528">
-<link rel="stylesheet" href="/css/video-intelligence.css?v=10536">
-<link rel="stylesheet" href="/css/video-experience.css?v=10536">
+<link rel="stylesheet" href="/css/video-intelligence.css?v=10537">
+<link rel="stylesheet" href="/css/video-experience.css?v=10537">
 </head>
 <body data-miq-module="video">
 <main class="wrap">
@@ -1412,12 +1412,13 @@ video{
             </div>
         </header>
 
+        <span class="vx-step-anchor" id="vxStepAnchor" aria-hidden="true"></span>
         <nav class="vx-steps" aria-label="Avanzamento analisi video">
-            <span data-vx-step="start"><b>1</b> Carica</span>
-            <span data-vx-step="setup"><b>2</b> Prepara</span>
-            <span data-vx-step="processing"><b>3</b> Analizza</span>
-            <span data-vx-step="review"><b>4</b> Revisiona</span>
-            <span data-vx-step="report"><b>5</b> Consegna</span>
+            <span data-vx-step="start"><b aria-hidden="true">○</b><span class="vx-step-label">Carica</span></span>
+            <span data-vx-step="setup"><b aria-hidden="true">○</b><span class="vx-step-label">Prepara</span></span>
+            <span data-vx-step="processing"><b aria-hidden="true">○</b><span class="vx-step-label">Analizza</span></span>
+            <span data-vx-step="review"><b aria-hidden="true">○</b><span class="vx-step-label">Revisiona</span></span>
+            <span data-vx-step="report"><b aria-hidden="true">○</b><span class="vx-step-label">Consegna</span></span>
         </nav>
 
         <section class="vx-view vx-start" id="vxStartView" data-vx-view="start">
@@ -1508,6 +1509,10 @@ video{
         </section>
 
         <section class="vx-view vx-report-ready" id="vxReportView" data-vx-view="report" hidden>
+            <div class="vx-report-completion" role="status">
+                <span aria-hidden="true">✓</span>
+                <div><strong>Workflow completato</strong><small>Le evidenze revisionate sono confluite nel documento tecnico.</small></div>
+            </div>
             <header class="vx-view-head">
                 <div><span class="vx-eyebrow">REPORT PRONTO</span><h2>Il lavoro e pronto per lo staff</h2><p>Controlla i numeri finali, apri il report o torna alle evidenze ancora pendenti.</p></div>
             </header>
@@ -2297,7 +2302,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10536";
+const APP_VERSION = "10537";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -5481,8 +5486,8 @@ if("serviceWorker" in navigator){
     });
 }
 </script>
-<script src="/js/video-intelligence.js?v=10536"></script>
-<script src="/js/video-experience.js?v=10536"></script>
+<script src="/js/video-intelligence.js?v=10537"></script>
+<script src="/js/video-experience.js?v=10537"></script>
 <script src="/js/app-meta.js"></script>
 <link rel="stylesheet" href="/css/knowledge-entry.css?v=10528">
 <link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10528">

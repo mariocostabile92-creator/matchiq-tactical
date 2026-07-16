@@ -309,7 +309,7 @@
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:8px;
-    margin-bottom:10px;
+    margin:0;
 }
 .vi-media-review section{
     min-width:0;
@@ -322,16 +322,27 @@
 .vi-media-review small{display:block;color:var(--muted);font-size:9px}
 .vi-media-review strong{display:block;margin:4px 0;color:#fff;font-size:12px}
 .vi-media-review p{margin:0 0 5px;color:#cbd8f4;font-size:10px;line-height:1.45}
-.vi-editors{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.vi-media-stack{
+    display:grid;
+    gap:0;
+    margin-bottom:10px;
+    padding:8px;
+    border:1px solid rgba(49,178,255,.22);
+    border-radius:13px;
+    background:linear-gradient(180deg,rgba(4,27,42,.72),rgba(4,18,31,.56));
+}
+.vi-media-stack .vi-media-review section{border-radius:9px 9px 0 0;background:rgba(4,27,42,.46)}
+.vi-editors{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0}
 .vi-clip-editor,
 .vi-frame-editor{
     display:grid;
     grid-template-columns:1fr 1fr repeat(4,auto);
     gap:7px;
     align-items:end;
-    padding:9px;
+    padding:8px;
     border:1px solid rgba(255,255,255,.08);
-    border-radius:11px;
+    border-radius:0 0 9px 9px;
+    background:rgba(3,14,26,.64);
 }
 .vi-frame-editor{grid-template-columns:minmax(190px,1fr) repeat(4,auto)}
 .vi-clip-editor label,
@@ -344,6 +355,20 @@
     text-align:center;
     font-size:12px;
 }
+.vi-review-decisions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.vi-review-decision{
+    min-height:46px;
+    width:100%;
+    border:1px solid transparent;
+    color:#03111c;
+    font-weight:1000;
+    box-shadow:0 9px 20px rgba(0,0,0,.18);
+}
+.vi-review-confirm{background:var(--green)}
+.vi-review-correct{background:var(--blue);color:#fff}
+.vi-review-reject{background:#ff5278;color:#fff}
+.vi-review-decision:hover{filter:brightness(1.08)}
+.vi-review-decision:disabled{filter:none;opacity:.52}
 @media(max-width:900px){
     .vi-section-head{display:grid}
     .vi-mode{width:100%}
@@ -382,7 +407,9 @@
     .vi-clip-editor{grid-template-columns:1fr 1fr}
     .vi-clip-editor button{grid-column:1/-1}
     .vi-frame-editor{grid-template-columns:1fr}
-    .vi-card-actions .btn{flex:1;min-width:118px}
+    .vi-card-actions .btn{flex:1;min-width:0}
+    .vi-review-decisions{grid-template-columns:repeat(3,minmax(0,1fr));position:sticky;bottom:max(6px,env(safe-area-inset-bottom));z-index:5;padding:7px;border:1px solid var(--border);border-radius:13px;background:rgba(5,9,20,.96)}
+    .vi-review-decision{min-height:48px;padding-inline:6px}
     .vi-workspace{
         max-width:100%;
         overflow:hidden;

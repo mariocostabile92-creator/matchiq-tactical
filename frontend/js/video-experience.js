@@ -6,7 +6,10 @@
   const views = new Map(Array.from(shell.querySelectorAll("[data-vx-view]")).map(node => [node.dataset.vxView,node]));
   const steps = Array.from(shell.querySelectorAll("[data-vx-step]"));
   const projectDialog = document.getElementById("vxProjectsDialog");
+  const stepBar = shell.querySelector(".vx-steps");
+  const stepAnchor = node("vxStepAnchor");
   let projectDialogOpener = null;
+  let stickyFrame = 0;
   const state = {
     view:"start",
     previousView:"start",
@@ -92,21 +95,49 @@
     return ({start:0,setup:1,processing:2,error:2,review:3,report:4})[view] ?? 0;
   }
 
+  function updateStepStates(activeIndex, view){
+    steps.forEach((step,index) => {
+      const completed = view === "report" || index < activeIndex;
+      const active = view !== "report" && index === activeIndex;
+      const label = step.querySelector(".vx-step-label")?.textContent.trim() || `Step ${index + 1}`;
+      const glyph = step.querySelector("b");
+      step.classList.toggle("active",active);
+      step.classList.toggle("complete",completed);
+      if(glyph) glyph.textContent = completed ? "✓" : active ? "→" : "○";
+      step.setAttribute("aria-label",`${label}: ${completed ? "completato" : active ? "in corso" : "da completare"}`);
+      if(index === activeIndex) step.setAttribute("aria-current","step");
+      else step.removeAttribute("aria-current");
+    });
+  }
+
+  function syncStickyChrome(){
+    stickyFrame = 0;
+    const nav = document.querySelector(".miq-global-nav");
+    const navHeight = Math.ceil(nav?.getBoundingClientRect().height || 0);
+    const stepHeight = Math.ceil(stepBar?.getBoundingClientRect().height || 0);
+    shell.style.setProperty("--vx-nav-height",`${navHeight}px`);
+    shell.style.setProperty("--vx-step-height",`${stepHeight}px`);
+    if(!stepBar || !stepAnchor) return;
+    const anchorTop = stepAnchor.getBoundingClientRect().top;
+    stepBar.classList.toggle("is-stuck",anchorTop <= navHeight + 1);
+  }
+
+  function scheduleStickyChrome(){
+    if(stickyFrame) return;
+    stickyFrame = window.requestAnimationFrame(syncStickyChrome);
+  }
+
   function setView(next, options={}){
     if(!views.has(next)) next = "start";
     if(state.view !== next && !["processing","error"].includes(state.view)) state.previousView = state.view;
     state.view = next;
     views.forEach((view,key) => { view.hidden = key !== next; });
     const activeIndex = stepIndex(next);
-    steps.forEach((step,index) => {
-      step.classList.toggle("active",index === activeIndex);
-      step.classList.toggle("complete",index < activeIndex);
-      if(index === activeIndex) step.setAttribute("aria-current","step");
-      else step.removeAttribute("aria-current");
-    });
+    updateStepStates(activeIndex,next);
     shell.dataset.state = next;
     if(!options.keepScroll) shell.scrollIntoView({block:"start",behavior:options.instant ? "auto" : "smooth"});
     updateChrome();
+    scheduleStickyChrome();
   }
 
   function projectTitle(){
@@ -338,6 +369,9 @@
     if(report) report.open = false;
     setView("report");
   });
+  window.addEventListener("scroll",scheduleStickyChrome,{passive:true});
+  window.addEventListener("resize",scheduleStickyChrome,{passive:true});
+  window.addEventListener("matchiq:global-nav-ready",scheduleStickyChrome);
 
   mountExistingExperience();
   updateSelectedFile();
@@ -345,5 +379,6 @@
   setView(hasVideo() ? "setup" : "start",{instant:true,keepScroll:true});
   state.elapsedTimer = window.setInterval(updateElapsed,1000);
   updateChrome();
+  scheduleStickyChrome();
   window.MatchIQVideoExperience = {setView,showProjects,applyExperienceState};
 })();

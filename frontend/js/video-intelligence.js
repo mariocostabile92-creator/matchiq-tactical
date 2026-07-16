@@ -531,41 +531,43 @@
             <div>Fonte<strong>${html(item.source_type || "video")}</strong></div>
             <div>Collegamento Coach<strong>${html(item.linked_match_event_id || item.linked_note_id || "Nessuno")}</strong></div>
           </div>
-          <div class="vi-media-review" aria-label="Riepilogo frame e clip">
-            <section>
-              <span>Frame suggerito</span>
-              <strong>${html(secondsLabel(item.representative_timestamp_ms))}${candidateScore ? ` / ${candidateScore}%` : ""}</strong>
-              <p>${html(candidateReason)}</p>
-              <small>${Math.max(0,candidates.length - 1)} alternative disponibili</small>
-            </section>
-            <section>
-              <span>Clip proposta</span>
-              <strong>${html(secondsLabel(Math.round(start * 1000)))} - ${html(secondsLabel(Math.round(end * 1000)))}</strong>
-              <p>Durata ${Math.max(0,Math.round(end - start))} s</p>
-              <small>Pre-roll ${preRoll} s / Post-roll ${postRoll} s</small>
-            </section>
-          </div>
-          <div class="vi-editors">
-            <div class="vi-clip-editor">
-              <label>Inizio clip<input type="number" min="0" step="1" data-field="clip_start" value="${Math.max(0,Math.round(start))}"></label>
-              <label>Fine clip<input type="number" min="0" step="1" data-field="clip_end" value="${Math.max(0,Math.round(end))}"></label>
-              <button class="btn dark small" type="button" data-action="shift-clip" data-delta="-5" aria-label="Sposta la clip indietro di 5 secondi">-5 s</button>
-              <button class="btn dark small" type="button" data-action="shift-clip" data-delta="5" aria-label="Sposta la clip avanti di 5 secondi">+5 s</button>
-              <button class="btn dark small" type="button" data-action="save-clip">Salva clip</button>
-              <button class="btn dark small" type="button" data-action="reset-clip">Ripristina proposta</button>
+          <div class="vi-media-stack" aria-label="Timeline, frame e clip">
+            <div class="vi-media-review" aria-label="Riepilogo frame e clip">
+              <section>
+                <span>Frame suggerito</span>
+                <strong>${html(secondsLabel(item.representative_timestamp_ms))}${candidateScore ? ` / ${candidateScore}%` : ""}</strong>
+                <p>${html(candidateReason)}</p>
+                <small>${Math.max(0,candidates.length - 1)} alternative disponibili</small>
+              </section>
+              <section>
+                <span>Clip proposta</span>
+                <strong>${html(secondsLabel(Math.round(start * 1000)))} - ${html(secondsLabel(Math.round(end * 1000)))}</strong>
+                <p>Durata ${Math.max(0,Math.round(end - start))} s</p>
+                <small>Pre-roll ${preRoll} s / Post-roll ${postRoll} s</small>
+              </section>
             </div>
-            <div class="vi-frame-editor">
-              <label>Frame rappresentativo<select data-field="frame_timestamp">${frameOptions(item)}</select></label>
-              <button class="btn dark small" type="button" data-action="previous-frame">Frame prec.</button>
-              <button class="btn dark small" type="button" data-action="next-frame">Frame succ.</button>
-              <button class="btn dark small" type="button" data-action="preview-frame">Anteprima</button>
-              <button class="btn dark small" type="button" data-action="save-frame">Sostituisci frame</button>
+            <div class="vi-editors">
+              <div class="vi-clip-editor">
+                <label>Inizio clip<input type="number" min="0" step="1" data-field="clip_start" value="${Math.max(0,Math.round(start))}"></label>
+                <label>Fine clip<input type="number" min="0" step="1" data-field="clip_end" value="${Math.max(0,Math.round(end))}"></label>
+                <button class="btn dark small" type="button" data-action="shift-clip" data-delta="-5" aria-label="Sposta la clip indietro di 5 secondi">-5 s</button>
+                <button class="btn dark small" type="button" data-action="shift-clip" data-delta="5" aria-label="Sposta la clip avanti di 5 secondi">+5 s</button>
+                <button class="btn dark small" type="button" data-action="save-clip">Salva clip</button>
+                <button class="btn dark small" type="button" data-action="reset-clip">Ripristina proposta</button>
+              </div>
+              <div class="vi-frame-editor">
+                <label>Frame rappresentativo<select data-field="frame_timestamp">${frameOptions(item)}</select></label>
+                <button class="btn dark small" type="button" data-action="previous-frame">Frame prec.</button>
+                <button class="btn dark small" type="button" data-action="next-frame">Frame succ.</button>
+                <button class="btn dark small" type="button" data-action="preview-frame">Anteprima</button>
+                <button class="btn dark small" type="button" data-action="save-frame">Sostituisci frame</button>
+              </div>
             </div>
           </div>
-          <div class="vi-card-actions">
-            <button class="btn small" type="button" data-action="confirm">Conferma</button>
-            <button class="btn dark small" type="button" data-action="correct">Salva correzione</button>
-            <button class="btn dark small" type="button" data-action="reject">Scarta</button>
+          <div class="vi-card-actions vi-review-decisions" aria-label="Decisione sulla evidenza">
+            <button class="btn small vi-review-decision vi-review-confirm" type="button" data-action="confirm">Conferma</button>
+            <button class="btn small vi-review-decision vi-review-correct" type="button" data-action="correct">Correggi</button>
+            <button class="btn small vi-review-decision vi-review-reject" type="button" data-action="reject">Scarta</button>
           </div>
         </article>
       `;
