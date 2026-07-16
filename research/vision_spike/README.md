@@ -34,4 +34,92 @@ components; the workstation binary reports `--enable-gpl` and is therefore treat
 - Pitch detection is a green-area heuristic, not geometric calibration or homography.
 - No tactical event or phase recognition is claimed.
 
-Installation and CLI commands are documented after the implementation is complete.
+## Local installation
+
+The spike has its own dependency file. Do not merge it into the product requirements.
+
+```powershell
+cd C:\Users\Mario\Desktop\matchiq-tactical\matchiq-tactical\backend
+.\.venv\Scripts\python.exe -m pip install -r research\vision_spike\requirements.txt
+```
+
+No detector weights or match videos are stored in the repository.
+
+## CLI
+
+Create a short local clip without copying it into the repository:
+
+```powershell
+.\.venv\Scripts\python.exe -m research.vision_spike.make_clip `
+  --input "C:\path\to\full-match.mp4" `
+  --output "$env:TEMP\matchiq-vision-spike\clip.mp4" `
+  --start 00:01:00 `
+  --duration 30
+```
+
+Run the experiment:
+
+```powershell
+.\.venv\Scripts\python.exe -m research.vision_spike.cli `
+  --input "$env:TEMP\matchiq-vision-spike\clip.mp4" `
+  --output "$env:TEMP\matchiq-vision-spike\run" `
+  --device auto `
+  --frame-stride 15 `
+  --max-seconds 30
+```
+
+Use `--no-overlay` for a metrics-only run. `auto` falls back to CPU when no
+supported CUDA detector is configured. Use `--help` to inspect every centralized
+parameter.
+
+## Outputs
+
+Each run writes only below the selected output directory:
+
+- `manifest.json`: versioned state, configuration, input fingerprint, and failures.
+- `frames.jsonl`: frame-level detections, temporary tracks, pitch, and team estimates.
+- `metrics.json`: throughput, latency, memory, and aggregate diagnostic metrics.
+- `evaluation.md`: automatic metrics plus the manual-review gate.
+- `overlay.mp4`: optional visual diagnostic, never a product export.
+- `frames/`: a small deterministic sample for manual inspection.
+
+An interrupted or failed run leaves a readable manifest and can be restarted in a
+new output directory. Input videos are opened read-only and are never uploaded.
+
+## Real-video benchmark
+
+Three 30-second clips from the same 1920x1080, 30 fps youth match were processed
+locally. The timestamps were deliberately spread across the match.
+
+| Source interval | Sampled frames | Pipeline FPS | Avg latency | Avg persons | Pitch visible | Frames with tracks | Peak RSS |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 01:00-01:30 | 60 | 6.2043 | 40.5282 ms | 0.2500 | 70.00% | 16.67% | 417.29 MB |
+| 20:00-20:30 | 30 | 4.1132 | 42.8436 ms | 0.6333 | 96.67% | 23.33% | 390.66 MB |
+| 80:00-80:30 | 30 | 4.2960 | 41.1178 ms | 0.6000 | 100.00% | 33.33% | 390.73 MB |
+
+These numbers are diagnostics, not accuracy claims. The clips have no ground-truth
+annotations, so precision, recall, MOTA, and IDF1 are intentionally not reported.
+
+## Test commands
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_vision_spike.py"
+.\.venv\Scripts\python.exe -m py_compile (Get-ChildItem research\vision_spike -Filter *.py).FullName
+```
+
+The isolated suite also checks that the spike does not import product routers,
+register routes, access the product database, or write video/model assets into Git.
+
+## Decision gate
+
+**YELLOW - continue research, do not integrate into the product.**
+
+The streaming pipeline, contracts, recovery, overlay, and local evaluation workflow
+are feasible. The generic OpenCV HOG baseline misses most distant football players,
+creates unstable tracks, has no ball model, and cannot distinguish player,
+goalkeeper, referee, or staff. Product integration is therefore blocked until a
+football-specific detector and annotated evaluation set demonstrate acceptable
+recall, track stability, and resource cost.
+
+See `FEASIBILITY_REPORT.md` for the evidence and the recommended V1 gate. The spike
+stops here and does not start V1.
