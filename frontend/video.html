@@ -1394,8 +1394,8 @@ video{
 }
 </style>
 <link rel="stylesheet" href="/css/global-nav.css?v=10528">
-<link rel="stylesheet" href="/css/video-intelligence.css?v=10537">
-<link rel="stylesheet" href="/css/video-experience.css?v=10537">
+<link rel="stylesheet" href="/css/video-intelligence.css?v=10538">
+<link rel="stylesheet" href="/css/video-experience.css?v=10538">
 </head>
 <body data-miq-module="video">
 <main class="wrap">
@@ -1521,7 +1521,7 @@ video{
                 <button class="btn" type="button" data-vx-action="show-report">Apri report</button>
                 <button class="btn dark" type="button" data-vx-action="review">Torna alla review</button>
                 <button class="btn dark" type="button" data-vx-action="pending">Completa evidenze pendenti</button>
-                <button class="btn" type="button" data-vx-action="download">Scarica PDF</button>
+                <button class="btn" type="button" data-vx-action="download" disabled aria-disabled="true">Scarica PDF</button>
             </div>
             <details class="vx-report-document" id="vxReportDocument">
                 <summary>Documento tecnico generato</summary>
@@ -2302,7 +2302,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10537";
+const APP_VERSION = "10538";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -5486,8 +5486,8 @@ if("serviceWorker" in navigator){
     });
 }
 </script>
-<script src="/js/video-intelligence.js?v=10537"></script>
-<script src="/js/video-experience.js?v=10537"></script>
+<script src="/js/video-intelligence.js?v=10538"></script>
+<script src="/js/video-experience.js?v=10538"></script>
 <script src="/js/app-meta.js"></script>
 <link rel="stylesheet" href="/css/knowledge-entry.css?v=10528">
 <link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10528">

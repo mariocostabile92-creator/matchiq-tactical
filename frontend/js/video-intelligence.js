@@ -11,6 +11,7 @@
     halftimeAvailable: false,
     halftimeAnalysis: null,
     selectedEvidenceId: null,
+    currentReport: null,
     busy: false,
     clipStopHandler: null
   };
@@ -21,6 +22,7 @@
       mode: state.mode,
       project: state.project,
       evidences: state.evidences.slice(),
+      report: state.currentReport,
       selectedEvidenceId: state.selectedEvidenceId,
       busy: state.busy
     };
@@ -89,7 +91,11 @@
     try{ payload = await response.json(); }catch(err){}
     if(!response.ok || payload.ok === false){
       const detail = payload && payload.detail;
-      throw new Error(typeof detail === "string" ? detail : (detail?.message || payload.message || "Operazione Video Intelligence non riuscita"));
+      const error = new Error(typeof detail === "string" ? detail : (detail?.message || payload.message || "Operazione Video Intelligence non riuscita"));
+      error.status = response.status;
+      error.code = detail?.code || payload.code || "request_failed";
+      error.details = typeof detail === "object" && detail ? detail : payload;
+      throw error;
     }
     return payload;
   }
@@ -140,6 +146,33 @@
       if(button) button.disabled = busy;
     });
     updateHalftimeAvailability();
+    emitExperienceState("busy");
+  }
+
+  function latestProjectReport(){
+    const reports = Array.isArray(state.project?.reports) ? state.project.reports : [];
+    return reports.length ? reports[reports.length - 1] : null;
+  }
+
+  function renderReport(report){
+    if(!report || !report.report_id) return false;
+    state.currentReport = report;
+    const findings = (report.sections || []).flatMap(section => section.findings || []);
+    const reportText = [
+      report.title || "Report tecnico Video Intelligence",
+      report.evidence_policy || "",
+      ...findings.map(item => {
+        const trace = item.traceability || {};
+        const clip = item.clip || {};
+        return `${item.timecode} - ${item.title}\n${item.observation}${item.interpretation ? `\nLettura: ${item.interpretation}` : ""}\nEvidenza: ${item.evidence_id || "-"} - Frame ${trace.frame_index ?? "-"} - Clip ${secondsLabel(clip.start_timestamp_ms)}-${secondsLabel(clip.end_timestamp_ms)}`;
+      }),
+      ...(report.limitations || []).map(item => `Limite: ${item}`)
+    ].filter(Boolean).join("\n\n");
+    const target = document.getElementById("reportBox");
+    if(target) target.textContent = reportText;
+    if(typeof updateReportMeta === "function") updateReportMeta("report",findings.length);
+    emitExperienceState("report-ready");
+    return true;
   }
 
   function renderProjectState(){
@@ -272,6 +305,8 @@
         const existing = await request(`/projects/${assetId()}`);
         state.project = existing.project;
         state.evidences = Array.isArray(state.project.evidences) ? state.project.evidences : [];
+        state.currentReport = latestProjectReport();
+        if(state.currentReport) renderReport(state.currentReport);
         renderProjectState();
         renderWorkspace();
         workspace.hidden = false;
@@ -282,6 +317,7 @@
     }
     const payload = await request("/projects", {method:"POST", body:JSON.stringify(projectPayload())});
     state.project = payload.project;
+    state.currentReport = latestProjectReport();
     if(typeof currentVideoAssetId !== "undefined") currentVideoAssetId = Number(state.project.video_asset_id) || currentVideoAssetId;
     renderProjectState();
     workspace.hidden = false;
@@ -365,6 +401,8 @@
       setMode(state.mode);
       if(state.project.match_id) elements.coachMatch.value = String(state.project.match_id);
       state.evidences = Array.isArray(state.project.evidences) ? state.project.evidences : [];
+      state.currentReport = latestProjectReport();
+      if(state.currentReport) renderReport(state.currentReport);
       const halftimeRuns = Array.isArray(state.project.halftime_runs) ? state.project.halftime_runs : [];
       state.halftimeAnalysis = halftimeRuns.length ? halftimeRuns[halftimeRuns.length - 1] : null;
       renderProjectState();
@@ -374,6 +412,7 @@
     }catch(err){
       state.project = null;
       state.evidences = [];
+      state.currentReport = null;
       state.halftimeAnalysis = null;
       renderProjectState();
       renderHalftimeAnalysis();
@@ -750,9 +789,16 @@
       method:"POST",
       body:JSON.stringify({title:document.getElementById("videoTitle")?.value.trim() || "Report tecnico Video Intelligence",include_pending_appendix:true})
     });
+    if(payload.status === "processing" || !payload.report){
+      notify(payload.message || "Report in elaborazione. Riprova tra qualche istante.","warn");
+      return false;
+    }
+    let report = payload.report;
     state.project = (await request(`/projects/${assetId()}`)).project;
+    state.evidences = Array.isArray(state.project.evidences) ? state.project.evidences : state.evidences;
     renderProjectState();
-    const report = payload.report || {};
+    report = payload.report || report || {};
+    state.currentReport = report;
     const findings = (report.sections || []).flatMap(section => section.findings || []);
     const text = [
       report.title || "Report tecnico Video Intelligence",
@@ -768,14 +814,61 @@
     if(target) target.textContent = text;
     if(typeof updateReportMeta === "function") updateReportMeta("report",findings.length);
     document.dispatchEvent(new CustomEvent("matchiq:video-report-ready",{detail:{report,project:state.project,evidences:state.evidences}}));
+    emitExperienceState("report-ready");
+    return true;
+  }
+
+  function downloadFilename(response, report){
+    const disposition = response.headers.get("Content-Disposition") || "";
+    const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if(encoded?.[1]){
+      try{ return decodeURIComponent(encoded[1]); }catch(err){}
+    }
+    const plain = disposition.match(/filename="?([^";]+)"?/i);
+    return plain?.[1] || report?.pdf_filename || "matchiq-video-report.pdf";
+  }
+
+  async function downloadReport(){
+    let report = state.currentReport || latestProjectReport();
+    if(!report?.report_id){
+      const payload = await request(`/projects/${assetId()}/reports`);
+      const reports = Array.isArray(payload.items) ? payload.items : [];
+      report = reports.length ? reports[reports.length - 1] : null;
+    }
+    if(!report?.report_id) throw new Error("Genera prima il report dalle evidenze confermate");
+    if(report.pdf_ready === false) throw new Error("Il PDF non e ancora pronto. Riprova tra qualche istante.");
+    const headers = authJsonHeaders();
+    delete headers["Content-Type"];
+    const response = await fetch(`${window.location.origin}/api/video/intelligence/projects/${assetId()}/reports/${encodeURIComponent(report.report_id)}/pdf`, {headers});
+    if(!response.ok){
+      let payload = {};
+      try{ payload = await response.json(); }catch(err){}
+      const detail = payload?.detail;
+      throw new Error(typeof detail === "string" ? detail : (detail?.message || "Download PDF non riuscito"));
+    }
+    const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
+    if(!contentType.includes("application/pdf")) throw new Error("Il server non ha restituito un PDF valido");
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if(bytes.length < 4 || String.fromCharCode(...bytes.slice(0,4)) !== "%PDF") throw new Error("Il PDF ricevuto non e valido");
+    const url = URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadFilename(response,report);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url),1000);
+    state.currentReport = {...report,pdf_ready:true};
+    emitExperienceState("report-download");
+    return true;
   }
 
   async function guarded(action, successMessage){
     if(state.busy) return;
     setBusy(true);
     try{
-      await action();
-      if(successMessage) notify(successMessage,"ok");
+      const result = await action();
+      if(successMessage && result !== false) notify(successMessage,"ok");
     }catch(err){
       notify(err.message || "Operazione non completata","err");
     }finally{
@@ -888,6 +981,7 @@
   document.getElementById("videoInput")?.addEventListener("change",() => {
     state.project = null;
     state.evidences = [];
+    state.currentReport = null;
     state.halftimeAnalysis = null;
     workspace.hidden = true;
     renderHalftimeAnalysis();
@@ -901,6 +995,7 @@
     loadProject,
     runPipeline,
     prepareProject,
+    downloadReport:() => guarded(downloadReport,"PDF scaricato."),
     getExperienceState:() => experienceSnapshot("snapshot")
   };
   emitExperienceState("ready");

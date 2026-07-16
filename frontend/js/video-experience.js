@@ -15,6 +15,8 @@
     previousView:"start",
     project:null,
     evidences:[],
+    report:null,
+    busy:false,
     mode:"analysis",
     processingStarted:0,
     elapsedTimer:0,
@@ -186,6 +188,12 @@
       const reports = Array.isArray(safeProject().reports) ? safeProject().reports.length : 0;
       node("vxProjectSummary").innerHTML = `<div><span>Progetto corrente</span><strong>${html(title)}</strong></div><div><span>Stato</span><strong>${html(text(currentPipeline.status || "bozza").replace(/_/g," "))}</strong></div><div><span>Evidenze</span><strong>${state.evidences.length}</strong></div><div><span>Report</span><strong>${reports}</strong></div>`;
     }
+    const download = shell.querySelector('[data-vx-action="download"]');
+    if(download){
+      const ready = Boolean(state.report?.report_id) && state.report?.pdf_ready !== false;
+      download.disabled = Boolean(state.busy) || !ready;
+      download.setAttribute("aria-disabled",download.disabled ? "true" : "false");
+    }
     renderProcessingActions();
     renderReportStats();
   }
@@ -297,6 +305,8 @@
   function applyExperienceState(detail={}){
     if(detail.project !== undefined) state.project = detail.project;
     if(Array.isArray(detail.evidences)) state.evidences = detail.evidences;
+    if(detail.report !== undefined) state.report = detail.report;
+    state.busy = Boolean(detail.busy);
     if(detail.mode) state.mode = detail.mode;
     const status = pipeline().status || "draft";
     if(status === "queued" || status === "processing"){
@@ -340,7 +350,10 @@
       const report = node("vxReportDocument");
       if(report){ report.open = true; report.scrollIntoView({behavior:"smooth",block:"start"}); }
     }
-    if(action === "download") node("downloadPdfBtn")?.click();
+    if(action === "download"){
+      if(window.MatchIQVideoIntelligence?.downloadReport) window.MatchIQVideoIntelligence.downloadReport();
+      else node("downloadPdfBtn")?.click();
+    }
     if(action === "retry") node("viProjectState")?.querySelector('[data-project-action="retry"]')?.click();
     if(action === "cancel") node("viProjectState")?.querySelector('[data-project-action="cancel"]')?.click();
   });
@@ -365,6 +378,7 @@
     const detail = event.detail || {};
     if(detail.project) state.project = detail.project;
     if(Array.isArray(detail.evidences)) state.evidences = detail.evidences;
+    if(detail.report) state.report = detail.report;
     const report = node("vxReportDocument");
     if(report) report.open = false;
     setView("report");
@@ -377,6 +391,7 @@
   updateSelectedFile();
   syncMode("analysis");
   setView(hasVideo() ? "setup" : "start",{instant:true,keepScroll:true});
+  applyExperienceState(window.MatchIQVideoIntelligence?.getExperienceState?.() || {});
   state.elapsedTimer = window.setInterval(updateElapsed,1000);
   updateChrome();
   scheduleStickyChrome();

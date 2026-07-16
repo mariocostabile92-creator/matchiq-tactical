@@ -43,9 +43,9 @@ CONTRACT_CASES = [
     ("error_alert", "html", 'data-vx-view="error" hidden role="alert"'),
     ("dialog_label", "html", 'aria-labelledby="vxProjectsTitle"'),
     ("project_summary_live", "html", 'id="vxProjectSummary" aria-live="polite"'),
-    ("experience_css_asset", "html", '/css/video-experience.css?v=10537'),
-    ("experience_js_asset", "html", '/js/video-experience.js?v=10537'),
-    ("video_release", "html", 'const APP_VERSION = "10537"'),
+    ("experience_css_asset", "html", '/css/video-experience.css?v=10538'),
+    ("experience_js_asset", "html", '/js/video-experience.js?v=10538'),
+    ("video_release", "html", 'const APP_VERSION = "10538"'),
     ("mount_guard", "experience", 'shell.dataset.mounted === "true"'),
     ("reuse_video_input", "experience", 'move("vxUploadInputMount",node("videoInput"))'),
     ("reuse_setup", "experience", 'move("vxSetupEngineMount",setup)'),
@@ -69,12 +69,17 @@ CONTRACT_CASES = [
     ("existing_frame_extraction", "experience", 'await window.extractFrames()'),
     ("existing_pipeline", "experience", 'MatchIQVideoIntelligence.runPipeline'),
     ("report_ready_listener", "experience", 'document.addEventListener("matchiq:video-report-ready"'),
+    ("report_download_facade", "experience", 'MatchIQVideoIntelligence?.downloadReport'),
     ("project_summary_escape", "experience", '${html(title)}'),
     ("file_to_setup", "experience", 'if(node("videoInput")?.files?.length) setView("setup")'),
     ("reuse_report_button", "experience", 'const button = node("viReportBtn")'),
     ("completed_to_report", "experience", 'setView("report",{keepScroll:true})'),
     ("experience_event", "intelligence", 'new CustomEvent("matchiq:video-experience"'),
     ("report_ready_event", "intelligence", 'new CustomEvent("matchiq:video-report-ready"'),
+    ("authenticated_report_pdf", "intelligence", '/reports/${encodeURIComponent(report.report_id)}/pdf'),
+    ("pdf_content_type_guard", "intelligence", 'contentType.includes("application/pdf")'),
+    ("pdf_signature_guard", "intelligence", 'String.fromCharCode(...bytes.slice(0,4)) !== "%PDF"'),
+    ("report_busy_guard", "intelligence", 'if(state.busy) return;'),
     ("queue_selection", "intelligence", 'aria-selected="${item.evidence_id === state.selectedEvidenceId'),
     ("frame_review", "intelligence", '<span>Frame suggerito</span>'),
     ("frame_alternatives", "intelligence", 'alternative disponibili'),
@@ -100,12 +105,12 @@ CONTRACT_CASES = [
     ("safe_area", "css", 'env(safe-area-inset-bottom)'),
     ("reduced_motion", "css", '@media(prefers-reduced-motion:reduce)'),
     ("focus_visible", "css", '.vx-shell :focus-visible,.vx-projects :focus-visible'),
-    ("pwa_cache", "worker", 'const CACHE_NAME = "matchiq-pwa-v137"'),
-    ("pwa_video_entry", "worker", '"/video.html?v=10537"'),
-    ("pwa_css_entry", "worker", '"/css/video-experience.css?v=10537"'),
-    ("pwa_intelligence_css_entry", "worker", '"/css/video-intelligence.css?v=10537"'),
-    ("pwa_js_entry", "worker", '"/js/video-experience.js?v=10537"'),
-    ("pwa_intelligence_js_entry", "worker", '"/js/video-intelligence.js?v=10537"'),
+    ("pwa_cache", "worker", 'const CACHE_NAME = "matchiq-pwa-v138"'),
+    ("pwa_video_entry", "worker", '"/video.html?v=10538"'),
+    ("pwa_css_entry", "worker", '"/css/video-experience.css?v=10538"'),
+    ("pwa_intelligence_css_entry", "worker", '"/css/video-intelligence.css?v=10538"'),
+    ("pwa_js_entry", "worker", '"/js/video-experience.js?v=10538"'),
+    ("pwa_intelligence_js_entry", "worker", '"/js/video-intelligence.js?v=10538"'),
     ("pwa_video_privacy", "worker", 'pdf|mp4|webm|mov|avi|mp3|wav|m4a|ogg|csv'),
 ]
 
@@ -128,6 +133,12 @@ class VideoExperienceRegressionTests(unittest.TestCase):
 
     def test_experience_adapter_does_not_duplicate_api_requests(self):
         self.assertNotIn("fetch(", SOURCES["experience"])
+
+    def test_report_download_no_longer_delegates_to_legacy_pdf_button(self):
+        self.assertNotIn('if(action === "download") node("downloadPdfBtn")?.click();', SOURCES["experience"])
+
+    def test_report_download_button_starts_disabled_until_pdf_is_ready(self):
+        self.assertIn('data-vx-action="download" disabled aria-disabled="true"', SOURCES["html"])
 
     def test_experience_states_are_unique(self):
         states = re.findall(r'data-vx-view="([a-z]+)"', SOURCES["html"])
