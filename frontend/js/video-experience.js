@@ -134,7 +134,20 @@
     const progress = Math.max(0,Math.min(100,Number(currentPipeline.progress || 0)));
     if(node("vxProcessingBar")) node("vxProcessingBar").style.width = `${progress}%`;
     if(node("vxProcessingPercent")) node("vxProcessingPercent").textContent = `${progress}%`;
-    if(node("vxProcessingStage")) node("vxProcessingStage").textContent = text(currentPipeline.stage || "Preparazione video").replace(/_/g," ");
+    const stageLabels = {
+      upload:"Caricamento",
+      preparing:"Preparazione video",
+      segmentation:"Segmentazione",
+      frame_extraction:"Estrazione frame",
+      frame_ranking:"Ranking frame",
+      clip_generation:"Generazione clip",
+      evidence_generation:"Preparazione evidenze",
+      human_review:"Revisione staff",
+      report:"Preparazione report",
+      completed:"Completata"
+    };
+    const stage = text(currentPipeline.stage || "preparing");
+    if(node("vxProcessingStage")) node("vxProcessingStage").textContent = stageLabels[stage] || stage.replace(/_/g," ");
     if(node("vxProcessingEvidenceCount")) node("vxProcessingEvidenceCount").textContent = String(state.evidences.length);
     renderProcessingActions();
     renderReportStats();
@@ -238,6 +251,9 @@
       const error = pipeline().error?.message || (status === "cancelled" ? "Elaborazione annullata. Puoi riprenderla dal progetto salvato." : "Elaborazione interrotta.");
       if(node("vxErrorMessage")) node("vxErrorMessage").textContent = error;
       if(node("vxErrorDetails")) node("vxErrorDetails").textContent = JSON.stringify(pipeline().error || {status,stage:pipeline().stage || "unknown"},null,2);
+      if(node("vxRecoveryMissing")) node("vxRecoveryMissing").textContent = status === "cancelled"
+        ? "Riavvio dell'elaborazione quando decidi tu"
+        : `Ripresa dalla fase ${text(pipeline().stage || "interrotta").replace(/_/g," ")}`;
       setView("error",{keepScroll:true});
     }else if(status === "completed" && Array.isArray(safeProject().reports) && safeProject().reports.length){
       setView("report",{keepScroll:true});
