@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse, Response
 
 from app.models.video_intelligence import EvidenceClipRequest, EvidenceCreateRequest, EvidenceFrameRequest, EvidenceLinkRequest, EvidenceReviewRequest, HalftimeAnalysisRequest, ProjectStateRequest, VideoPipelineRequest, VideoProjectCreate, VideoReportRequest
 from app.services.video_clip_service import update_evidence_clip
@@ -16,7 +17,13 @@ from app.services.video_intelligence_engine import (
     run_pipeline,
     update_project_state,
 )
-from app.services.video_report_service import generate_evidence_report
+from app.services.video_intelligence_pdf_service import build_evidence_report_pdf, report_pdf_filename
+from app.services.video_report_service import (
+    ReportConflictError,
+    generate_evidence_report_delivery,
+    get_evidence_report,
+    list_evidence_reports,
+)
 from usage_guard import require_user
 
 
@@ -187,12 +194,71 @@ def update_video_evidence_review(
 @router.post("/projects/{asset_id}/reports")
 def generate_video_intelligence_report(asset_id: int, data: VideoReportRequest, user=Depends(require_user)):
     try:
-        report = generate_evidence_report(int(user["id"]), asset_id, data)
+        delivery = generate_evidence_report_delivery(int(user["id"]), asset_id, data)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
-    return {"ok": True, "report": report}
+    except ReportConflictError as exc:
+        raise HTTPException(status_code=409, detail={
+            "code": exc.code,
+            "status": "not_ready",
+            "message": exc.message,
+            "pdf_ready": False,
+            "review_counts": exc.review_counts,
+        }) from exc
+    if delivery.get("status") == "processing":
+        return JSONResponse(status_code=202, content={"ok": True, **delivery})
+    return {"ok": True, **delivery}
+
+
+@router.get("/projects/{asset_id}/reports")
+def get_video_intelligence_reports(asset_id: int, user=Depends(require_user)):
+    try:
+        reports = list_evidence_reports(int(user["id"]), asset_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    items = []
+    for report in reports:
+        item = dict(report)
+        item["pdf_ready"] = str(item.get("status") or "ready") == "ready"
+        item["pdf_filename"] = report_pdf_filename(item)
+        items.append(item)
+    return {"ok": True, "status": "ready" if items else "empty", "items": items, "count": len(items)}
+
+
+@router.get("/projects/{asset_id}/reports/{report_id}")
+def get_video_intelligence_report(asset_id: int, report_id: str, user=Depends(require_user)):
+    try:
+        report = get_evidence_report(int(user["id"]), asset_id, report_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return {"ok": True, "status": "ready", "report": report, "pdf_ready": bool(report.get("pdf_ready"))}
+
+
+@router.get("/projects/{asset_id}/reports/{report_id}/pdf")
+def download_video_intelligence_report_pdf(asset_id: int, report_id: str, user=Depends(require_user)):
+    try:
+        report = get_evidence_report(int(user["id"]), asset_id, report_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if str(report.get("status") or "ready") != "ready":
+        raise HTTPException(status_code=409, detail={
+            "code": "pdf_not_ready",
+            "status": str(report.get("status") or "processing"),
+            "message": "Il PDF e ancora in preparazione.",
+            "pdf_ready": False,
+            "report_id": report_id,
+        })
+    payload = build_evidence_report_pdf(report)
+    filename = report_pdf_filename(report)
+    return Response(
+        content=payload,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(payload)),
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.post("/projects/{asset_id}/halftime")

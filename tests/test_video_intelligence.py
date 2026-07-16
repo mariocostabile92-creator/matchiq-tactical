@@ -4,6 +4,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from fastapi import HTTPException
+
+from app.routers import video_intelligence as video_intelligence_router
 from app.models.video_intelligence import (
     EvidenceClipRequest,
     EvidenceCreateRequest,
@@ -25,6 +28,7 @@ from app.services import (
     video_intelligence_engine,
     video_report_service,
 )
+from app.services.video_intelligence_pdf_service import build_evidence_report_pdf
 from app.services.video_segmentation_service import segment_frames
 
 
@@ -368,6 +372,78 @@ class CoachLinkAndReportTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 video_report_service.generate_evidence_report(1, 7, VideoReportRequest())
 
+    def test_report_conflict_exposes_stable_machine_readable_reason(self):
+        store = ProjectStore(base_project(evidences=[sample_evidence()]))
+        with patch.object(video_report_service, "load_project", store.load):
+            with self.assertRaises(HTTPException) as raised:
+                video_intelligence_router.generate_video_intelligence_report(
+                    7,
+                    VideoReportRequest(),
+                    user={"id": 1},
+                )
+        self.assertEqual(raised.exception.status_code, 409)
+        self.assertEqual(raised.exception.detail["code"], "no_accepted_evidence")
+        self.assertEqual(raised.exception.detail["status"], "not_ready")
+        self.assertEqual(raised.exception.detail["review_counts"]["pending"], 1)
+
+    def test_processing_project_returns_retryable_delivery_without_conflict(self):
+        store = ProjectStore(base_project(
+            pipeline={"status": "processing", "stage": "frame_ranking", "progress": 40},
+            evidences=[],
+        ))
+        with patch.object(video_report_service, "load_project", store.load):
+            delivery = video_report_service.generate_evidence_report_delivery(1, 7, VideoReportRequest())
+        self.assertEqual(delivery["status"], "processing")
+        self.assertFalse(delivery["pdf_ready"])
+        self.assertEqual(store.saves, 0)
+
+    def test_existing_report_is_recovered_when_current_review_has_no_accepted_evidence(self):
+        existing = {
+            "report_id": "vir_existing",
+            "title": "Report esistente",
+            "status": "ready",
+            "sections": [],
+            "summary": {},
+        }
+        store = ProjectStore(base_project(evidences=[sample_evidence()], reports=[existing]))
+        with patch.object(video_report_service, "load_project", store.load):
+            delivery = video_report_service.generate_evidence_report_delivery(1, 7, VideoReportRequest())
+        self.assertEqual(delivery["status"], "already_exists")
+        self.assertEqual(delivery["report_id"], "vir_existing")
+        self.assertTrue(delivery["idempotent_replay"])
+        self.assertTrue(delivery["pdf_ready"])
+        self.assertEqual(store.saves, 0)
+
+    def test_report_pdf_is_valid_and_download_response_is_an_attachment(self):
+        store = ProjectStore(base_project(evidences=[sample_evidence(status="confirmed")]))
+        with (
+            patch.object(video_report_service, "load_project", store.load),
+            patch.object(video_report_service, "save_project", store.save),
+        ):
+            delivery = video_report_service.generate_evidence_report_delivery(1, 7, VideoReportRequest(title="Analisi partita"))
+        report = delivery["report"]
+        pdf = build_evidence_report_pdf(report)
+        self.assertTrue(pdf.startswith(b"%PDF"))
+        with patch.object(video_intelligence_router, "get_evidence_report", return_value=report):
+            response = video_intelligence_router.download_video_intelligence_report_pdf(
+                7,
+                report["report_id"],
+                user={"id": 1},
+            )
+        self.assertEqual(response.media_type, "application/pdf")
+        self.assertTrue(response.body.startswith(b"%PDF"))
+        self.assertIn("attachment", response.headers["content-disposition"])
+        self.assertIn(".pdf", response.headers["content-disposition"])
+        self.assertEqual(int(response.headers["content-length"]), len(response.body))
+
+    def test_report_lookup_is_scoped_to_owner(self):
+        existing = {"report_id": "vir_owner", "title": "Owner", "status": "ready", "sections": []}
+        store = ProjectStore(base_project(reports=[existing]))
+        with patch.object(video_report_service, "load_project", store.load):
+            self.assertEqual(video_report_service.get_evidence_report(1, 7, "vir_owner")["report_id"], "vir_owner")
+            with self.assertRaises(LookupError):
+                video_report_service.get_evidence_report(2, 7, "vir_owner")
+
 
 class PipelineAndSecurityTests(unittest.TestCase):
     def test_pipeline_is_idempotent_without_client_key(self):
@@ -460,8 +536,8 @@ class HalftimeAndPwaTests(unittest.TestCase):
         self.assertIn('url.pathname.startsWith("/api/")', worker)
         for extension in ("pdf", "mp4", "webm", "mov", "avi"):
             self.assertIn(extension, worker)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v137"', worker)
-        self.assertIn('"/video.html?v=10537"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v138"', worker)
+        self.assertIn('"/video.html?v=10538"', worker)
 
     def test_video_workspace_exposes_review_and_halftime_controls(self):
         page = (ROOT / "frontend" / "video.html").read_text(encoding="utf-8")
