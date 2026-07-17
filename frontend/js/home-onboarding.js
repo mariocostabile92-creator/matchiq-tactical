@@ -16,7 +16,7 @@
     {
       label:"Video AI",
       title:"Dalla Sessione Video al report.",
-      description:"Carica il video, riapri la sessione corretta e continua l'analisi dal Video Hub.",
+      description:"Carica il video, riapri la sessione corretta e continua l'analisi dalla Libreria Video AI.",
       points:[["Stato reale","La Home distingue sessioni pronte, in elaborazione e archiviate."],["Ripristino","Il pulsante Continua usa l'identificativo della tua sessione."]]
     },
     {

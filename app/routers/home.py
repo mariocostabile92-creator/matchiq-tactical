@@ -80,7 +80,7 @@ def _asset_item(row):
         "id": row.get("id"),
         "record_key": f"video_session:{row.get('id')}",
         "kind": "video_session",
-        "module": "Video Hub",
+        "module": "Libreria Video AI",
         "title": row.get("title") or row.get("file_name") or "Sessione Video",
         "status": labels[workflow],
         "workflow_state": workflow,

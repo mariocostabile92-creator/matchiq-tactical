@@ -1394,8 +1394,9 @@ video{
 }
 </style>
 <link rel="stylesheet" href="/css/global-nav.css?v=10528">
-<link rel="stylesheet" href="/css/video-intelligence.css?v=10538">
-<link rel="stylesheet" href="/css/video-experience.css?v=10538">
+<link rel="stylesheet" href="/css/video-intelligence.css?v=10539">
+<link rel="stylesheet" href="/css/video-experience.css?v=10539">
+<link rel="stylesheet" href="/css/video-library.css?v=10539">
 </head>
 <body data-miq-module="video">
 <main class="wrap">
@@ -1444,8 +1445,8 @@ video{
                 </button>
             </div>
             <div class="vx-resume">
-                <div><span class="vx-eyebrow">RIPRENDI IL LAVORO</span><strong>Progetti, analisi e report restano nel Video Hub.</strong></div>
-                <button class="btn dark" type="button" data-vx-action="projects">Apri Video Hub</button>
+                <div><span class="vx-eyebrow">RIPRENDI IL LAVORO</span><strong>Progetti, analisi e report restano nella Libreria Video AI.</strong></div>
+                <button class="btn dark" type="button" data-vx-action="projects">Apri Libreria Video AI</button>
             </div>
         </section>
 
@@ -1474,7 +1475,7 @@ video{
             <div class="vx-processing-main">
                 <span class="vx-eyebrow">ANALISI IN CORSO</span>
                 <h2 id="vxProcessingTitle">MatchIQ sta preparando le evidenze</h2>
-                <p id="vxProcessingFile">Il progetto restera recuperabile dal Video Hub anche se lasci questa pagina.</p>
+                <p id="vxProcessingFile">Il progetto restera recuperabile dalla Libreria Video AI anche se lasci questa pagina.</p>
                 <div class="vx-progress" aria-label="Avanzamento elaborazione"><span id="vxProcessingBar"></span></div>
                 <div class="vx-processing-meta">
                     <div><span>Fase</span><strong id="vxProcessingStage">Preparazione video</strong></div>
@@ -1546,7 +1547,7 @@ video{
         </section>
 
         <dialog class="vx-projects" id="vxProjectsDialog" aria-labelledby="vxProjectsTitle">
-            <header><div><span class="vx-eyebrow">VIDEO HUB</span><h2 id="vxProjectsTitle">I tuoi progetti</h2></div><button class="btn dark small" type="button" data-vx-action="close-projects">Chiudi</button></header>
+            <header><div><span class="vx-eyebrow">LIBRERIA VIDEO AI</span><h2 id="vxProjectsTitle">I tuoi progetti</h2></div><button class="btn dark small" type="button" data-vx-action="close-projects">Chiudi</button></header>
             <div class="vx-project-summary" id="vxProjectSummary" aria-live="polite"></div>
             <div id="vxProjectsMount"></div>
         </dialog>
@@ -1565,7 +1566,7 @@ video{
             </div>
 
             <div class="flow-strip">
-                <div class="flow-step"><b>1</b><div><strong>Importa una Sessione Video</strong><span>Carica una partita, un allenamento o una clip dal dispositivo, dal Video Hub o da una sorgente autorizzata.</span></div></div>
+                <div class="flow-step"><b>1</b><div><strong>Importa una Sessione Video</strong><span>Carica una partita, un allenamento o una clip dal dispositivo, dalla Libreria Video AI o da una sorgente autorizzata.</span></div></div>
                 <div class="flow-step"><b>2</b><div><strong>MatchIQ AI analizza il video</strong><span>L'AI individua frame, momenti chiave e situazioni tattiche utili all'analisi.</span></div></div>
                 <div class="flow-step"><b>3</b><div><strong>Revisiona e completa</strong><span>Controlla i risultati, aggiungi note e seleziona il materiale davvero utile allo staff.</span></div></div>
                 <div class="flow-step"><b>4</b><div><strong>Prepara il lavoro dello staff</strong><span>Genera report, frame e materiali condivisibili a partire dall'analisi.</span></div></div>
@@ -1618,7 +1619,7 @@ video{
             <div class="quality-grid">
                 <div class="quality-card"><b>Ripresa utile</b><span>Laterale o dall'alto, campo visibile e azione riconoscibile.</span></div>
                 <div class="quality-card"><b>Focus chiaro</b><span>Piu il focus e preciso, piu l'analisi diventa utile per staff e allenamento.</span></div>
-                <div class="quality-card"><b>Video Hub</b><span>Organizza partite, allenamenti e analisi in un unico archivio. Riapri ogni Sessione Video e continua il lavoro senza ripartire da zero.</span></div>
+                <div class="quality-card"><b>Libreria Video AI</b><span>Organizza partite, allenamenti e analisi in un unico archivio. Riapri ogni Sessione Video e continua il lavoro senza ripartire da zero.</span></div>
             </div>
 
             <div class="plan-strip">
@@ -1799,24 +1800,31 @@ video{
                 <div class="video-library">
                     <div class="video-library-head">
                         <div class="video-hub-title">
-                            <span class="badge">VIDEO HUB</span>
-                            <h2>Tutto il lavoro video dello staff, in un unico posto</h2>
-                            <p>Organizza partite, allenamenti e analisi. Importa i video, riapri il lavoro precedente e continua direttamente nel Video AI.</p>
+                            <span class="badge">LIBRERIA VIDEO AI</span>
+                            <h2>I progetti video dello staff, sempre recuperabili</h2>
+                            <p>Cerca una sessione, riprendi la revisione e recupera report e PDF senza ricominciare da zero.</p>
                         </div>
-                        <div class="video-hub-actions" aria-label="Azioni principali Video Hub">
-                            <button class="btn small" type="button" onclick="openNewSessionWizard()">Nuova sessione</button>
+                        <div class="video-hub-actions" aria-label="Azioni principali Libreria Video AI">
+                            <button class="btn small" type="button" onclick="openNewSessionWizard()">Nuova analisi</button>
                             <button class="btn small" type="button" onclick="focusDeviceUpload()">Carica video</button>
                             <button class="btn dark small" type="button" onclick="focusAuthorizedImport()">Importa da sorgente autorizzata</button>
                             <button class="btn dark small" type="button" onclick="refreshVideoHub()">Aggiorna</button>
                         </div>
                     </div>
 
-                    <div class="hub-tabs" role="tablist" aria-label="Navigazione Video Hub">
-                        <button id="hubArchiveTab" class="hub-tab" type="button" role="tab" aria-selected="true" aria-controls="hubArchivePane" onclick="setVideoHubTab('archive')">Archivio MatchIQ</button>
+                    <div class="hub-tabs" role="tablist" aria-label="Navigazione Libreria Video AI">
+                        <button id="hubArchiveTab" class="hub-tab" type="button" role="tab" aria-selected="true" aria-controls="hubArchivePane" onclick="setVideoHubTab('archive')">I tuoi progetti</button>
                         <button id="hubCloudTab" class="hub-tab" type="button" role="tab" aria-selected="false" aria-controls="hubCloudPane" onclick="setVideoHubTab('cloud')">Cloud collegati</button>
                     </div>
 
                     <section id="hubArchivePane" class="hub-pane active" role="tabpanel" aria-labelledby="hubArchiveTab">
+                    <div class="library-summary" aria-label="Riepilogo Libreria Video AI">
+                        <div><span>Progetti</span><strong id="hubSummaryTotal">0</strong></div>
+                        <div><span>In lavorazione</span><strong id="hubSummaryProcessing">0</strong></div>
+                        <div><span>Da revisionare</span><strong id="hubSummaryReview">0</strong></div>
+                        <div><span>Report pronti</span><strong id="hubSummaryReports">0</strong></div>
+                        <div><span>Da recuperare</span><strong id="hubSummaryErrors">0</strong></div>
+                    </div>
                     <div class="hub-action-bar">
                         <div>
                             <label for="hubSearch">Cerca sessione</label>
@@ -1825,11 +1833,14 @@ video{
                         <button id="hubFilterToggleBtn" class="btn dark small hub-filter-toggle" type="button" aria-expanded="false" onclick="toggleHubFilters()">Filtri</button>
                         <div>
                             <label for="hubSort">Ordina</label>
-                            <select id="hubSort" onchange="renderVideoLibrary()">
+                            <select id="hubSort" onchange="loadVideoHubSessions()">
+                                <option value="attention">Richiedono attenzione</option>
                                 <option value="recent">Piu recenti</option>
                                 <option value="oldest">Meno recenti</option>
-                                <option value="last_used">Ultimo utilizzo</option>
+                                <option value="updated">Ultimo aggiornamento</option>
+                                <option value="match_date">Data partita</option>
                                 <option value="title">Titolo</option>
+                                <option value="status">Stato</option>
                             </select>
                         </div>
                         <button class="btn dark small" type="button" onclick="refreshVideoHub()">Aggiorna</button>
@@ -1867,11 +1878,15 @@ video{
                             <label for="hubWorkflowFilter">Stato</label>
                             <select id="hubWorkflowFilter" onchange="loadVideoHubSessions()">
                                 <option value="all">Tutti</option>
-                                <option value="to_analyze">Da analizzare</option>
-                                <option value="in_analysis">In analisi</option>
-                                <option value="report_ready">Report pronto</option>
-                                <option value="needs_review">Da rivedere</option>
-                                <option value="approved">Approvata</option>
+                                <option value="draft">Bozze</option>
+                                <option value="ready">Pronti da analizzare</option>
+                                <option value="uploading">In caricamento</option>
+                                <option value="processing">In analisi</option>
+                                <option value="review">Da revisionare</option>
+                                <option value="report_ready">Report pronti</option>
+                                <option value="complete">Completi</option>
+                                <option value="recoverable_error">Errori recuperabili</option>
+                                <option value="archived">Archiviati</option>
                             </select>
                         </div>
                         <div>
@@ -1886,10 +1901,35 @@ video{
                             <label for="hubProviderFilter">Sorgente</label>
                             <select id="hubProviderFilter" onchange="loadVideoHubSessions()">
                                 <option value="all">Tutte</option>
-                                <option value="matchiq">MatchIQ upload</option>
-                                <option value="authorized_url">Link autorizzato</option>
+                                <option value="upload">Upload</option>
+                                <option value="url">Link autorizzato</option>
                                 <option value="session">Sessione</option>
                             </select>
+                        </div>
+                        <div>
+                            <label for="hubModeFilter">Modalita</label>
+                            <select id="hubModeFilter" onchange="loadVideoHubSessions()">
+                                <option value="all">Tutte</option>
+                                <option value="coach">Coach</option>
+                                <option value="analysis">Analisi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="hubReportFilter">Report</label>
+                            <select id="hubReportFilter" onchange="loadVideoHubSessions()">
+                                <option value="all">Tutti</option>
+                                <option value="ready">Pronto</option>
+                                <option value="stale">Da aggiornare</option>
+                                <option value="absent">Assente</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="hubDateFrom">Dal</label>
+                            <input id="hubDateFrom" type="date" onchange="loadVideoHubSessions()" />
+                        </div>
+                        <div>
+                            <label for="hubDateTo">Al</label>
+                            <input id="hubDateTo" type="date" onchange="loadVideoHubSessions()" />
                         </div>
                         <div>
                             <label for="hubArchiveFilter">Archivio</label>
@@ -1949,8 +1989,13 @@ video{
                     </div>
                     <div id="libraryJobStatus" class="library-job"></div>
                     <div id="videoLibraryList" class="library-list">
-                        <div class="archive-empty">Accedi per usare il Video Hub.</div>
+                        <div class="archive-empty">Accedi per usare la Libreria Video AI.</div>
                     </div>
+                    <nav id="hubPagination" class="library-pagination" aria-label="Pagine Libreria Video AI" hidden>
+                        <button id="hubPrevPage" class="btn dark small" type="button" onclick="changeVideoLibraryPage(-1)">Precedente</button>
+                        <span id="hubPageLabel">Pagina 1</span>
+                        <button id="hubNextPage" class="btn dark small" type="button" onclick="changeVideoLibraryPage(1)">Successiva</button>
+                    </nav>
                     </section>
 
                     <section id="hubCloudPane" class="hub-pane" role="tabpanel" aria-labelledby="hubCloudTab">
@@ -2214,7 +2259,7 @@ video{
     <div class="session-modal" role="dialog" aria-modal="true" aria-labelledby="sessionModalTitle">
         <div class="session-modal-head">
             <div>
-                <span class="badge">VIDEO HUB</span>
+                <span class="badge">LIBRERIA VIDEO AI</span>
                 <h2 id="sessionModalTitle">Scheda sessione</h2>
                 <span id="sessionModalSubtitle">Organizza dati, stato e apertura nel Video AI.</span>
             </div>
@@ -2302,7 +2347,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10538";
+const APP_VERSION = "10539";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -2323,6 +2368,11 @@ let hubSessionTypes = [];
 let hubWorkflowStates = [];
 let selectedLibraryBlobUrl = "";
 let hubSearchTimer = null;
+let videoLibraryPage = 0;
+const videoLibraryPageSize = 12;
+let videoLibraryTotal = 0;
+let videoLibrarySummary = {};
+let videoLibraryRequestController = null;
 let currentVideoAssetId = null;
 let activeSessionModalId = null;
 let tacticalMode = false;
@@ -2376,6 +2426,10 @@ const hubWorkflowFilter = document.getElementById("hubWorkflowFilter");
 const hubFocusFilter = document.getElementById("hubFocusFilter");
 const hubTagFilter = document.getElementById("hubTagFilter");
 const hubProviderFilter = document.getElementById("hubProviderFilter");
+const hubModeFilter = document.getElementById("hubModeFilter");
+const hubReportFilter = document.getElementById("hubReportFilter");
+const hubDateFrom = document.getElementById("hubDateFrom");
+const hubDateTo = document.getElementById("hubDateTo");
 const hubArchiveFilter = document.getElementById("hubArchiveFilter");
 const hubFilterSummary = document.getElementById("hubFilterSummary");
 const hubSort = document.getElementById("hubSort");
@@ -2385,6 +2439,10 @@ const hubArchivePane = document.getElementById("hubArchivePane");
 const hubCloudPane = document.getElementById("hubCloudPane");
 const hubArchiveTab = document.getElementById("hubArchiveTab");
 const hubCloudTab = document.getElementById("hubCloudTab");
+const hubPagination = document.getElementById("hubPagination");
+const hubPrevPage = document.getElementById("hubPrevPage");
+const hubNextPage = document.getElementById("hubNextPage");
+const hubPageLabel = document.getElementById("hubPageLabel");
 const sessionModalBackdrop = document.getElementById("sessionModalBackdrop");
 const sessionDetailList = document.getElementById("sessionDetailList");
 
@@ -3727,6 +3785,10 @@ function getActiveHubFilters(){
         {label:"focus", value:getHubFilterValue(hubFocusFilter)},
         {label:"tag", value:getHubFilterValue(hubTagFilter)},
         {label:"sorgente", value:getHubFilterValue(hubProviderFilter), skip:"all"},
+        {label:"modalita", value:getHubFilterValue(hubModeFilter), skip:"all"},
+        {label:"report", value:getHubFilterValue(hubReportFilter), skip:"all"},
+        {label:"dal", value:getHubFilterValue(hubDateFrom)},
+        {label:"al", value:getHubFilterValue(hubDateTo)},
         {label:"archivio", value:getHubFilterValue(hubArchiveFilter), skip:"active"}
     ];
     return filters.filter(item => item.value && item.value !== item.skip);
@@ -3739,6 +3801,36 @@ function updateHubFilterSummary(visibleCount, totalCount){
         ? `Filtri attivi: ${active.map(item => `${item.label} ${item.value}`).join(" / ")}`
         : "Archivio pronto. Usa i filtri per trovare subito la sessione giusta.";
     hubFilterSummary.innerHTML = `<span>${escapeHtml(text)}</span><strong>${Number(visibleCount) || 0} di ${Number(totalCount) || 0} sessioni</strong>`;
+}
+
+function renderVideoLibrarySummary(){
+    const values = {
+        hubSummaryTotal: videoLibrarySummary.total,
+        hubSummaryProcessing: videoLibrarySummary.processing,
+        hubSummaryReview: videoLibrarySummary.review,
+        hubSummaryReports: videoLibrarySummary.report_ready,
+        hubSummaryErrors: videoLibrarySummary.errors
+    };
+    Object.entries(values).forEach(([id, value]) => {
+        const node = document.getElementById(id);
+        if(node) node.textContent = String(Number(value) || 0);
+    });
+}
+
+function renderVideoLibraryPagination(){
+    if(!hubPagination) return;
+    const pages = Math.max(1, Math.ceil(videoLibraryTotal / videoLibraryPageSize));
+    const current = Math.min(pages, videoLibraryPage + 1);
+    hubPagination.hidden = videoLibraryTotal <= videoLibraryPageSize;
+    if(hubPageLabel) hubPageLabel.textContent = `Pagina ${current} di ${pages}`;
+    if(hubPrevPage) hubPrevPage.disabled = videoLibraryPage <= 0;
+    if(hubNextPage) hubNextPage.disabled = current >= pages;
+}
+
+function changeVideoLibraryPage(direction){
+    const maxPage = Math.max(0, Math.ceil(videoLibraryTotal / videoLibraryPageSize) - 1);
+    videoLibraryPage = Math.max(0, Math.min(maxPage, videoLibraryPage + Number(direction || 0)));
+    loadVideoLibrary({keepPage:true});
 }
 
 function getSessionTypeLabel(item){
@@ -3773,7 +3865,6 @@ function applyHubTaxonomy(data){
     }
     if(data && Array.isArray(data.workflow_states) && data.workflow_states.length){
         hubWorkflowStates = data.workflow_states;
-        populateSelectOptions(hubWorkflowFilter, hubWorkflowStates, "Tutti");
         populateSelectOptions(document.getElementById("modalWorkflowState"), hubWorkflowStates);
     }
 }
@@ -3839,34 +3930,42 @@ function renderVideoLibrary(){
     if(!getAuthToken()){
         videoLibraryList.innerHTML = `<div class="archive-empty">Accedi per salvare e riaprire le sessioni video.</div>`;
         updateHubFilterSummary(0, 0);
+        renderVideoLibrarySummary();
+        renderVideoLibraryPagination();
         return;
     }
-    const visibleItems = getSortedVideoLibraryItems(videoLibraryItems.filter(videoHubMatchesSearch));
+    const visibleItems = videoLibraryItems;
     if(!visibleItems.length){
-        videoLibraryList.innerHTML = `<div class="archive-empty"><strong>${videoLibraryItems.length ? "Nessuna sessione corrisponde alla ricerca." : "Il tuo Video Hub e' ancora vuoto"}</strong><span>${videoLibraryItems.length ? "Modifica ricerca o filtri per ritrovare la sessione." : "Carica una partita, un allenamento o una clip per iniziare a costruire l'archivio tecnico della squadra."}</span><div class="hero-actions"><button class="btn small" type="button" onclick="openNewSessionWizard()">Crea la prima sessione</button><button class="btn dark small" type="button" onclick="focusDeviceUpload()">Carica un video</button></div></div>`;
-        updateHubFilterSummary(0, videoLibraryItems.length);
+        const hasFilters = getActiveHubFilters().length > 0;
+        videoLibraryList.innerHTML = `<div class="archive-empty"><strong>${hasFilters ? "Nessun progetto corrisponde ai filtri." : "La tua Libreria Video AI e' ancora vuota"}</strong><span>${hasFilters ? "Modifica ricerca o filtri per ritrovare il progetto." : "Crea una nuova analisi o carica un video autorizzato per iniziare."}</span><div class="hero-actions"><button class="btn small" type="button" onclick="openNewSessionWizard()">Nuova analisi</button><button class="btn dark small" type="button" onclick="focusDeviceUpload()">Carica un video</button></div></div>`;
+        updateHubFilterSummary(0, videoLibraryTotal);
+        renderVideoLibrarySummary();
+        renderVideoLibraryPagination();
         return;
     }
-    updateHubFilterSummary(visibleItems.length, videoLibraryItems.length);
+    updateHubFilterSummary(visibleItems.length, videoLibraryTotal);
+    renderVideoLibrarySummary();
+    renderVideoLibraryPagination();
     videoLibraryList.innerHTML = visibleItems.map(item => {
         const progress = getAssetProgress(item);
         const statusClass = getAssetStatusClass(item);
         const workflowClass = getWorkflowClass(item);
         const intelligence = item.intelligence && typeof item.intelligence === "object" ? item.intelligence : {};
         const intelligenceBadges = intelligence.enabled ? `
-            <b>${Number(intelligence.evidences || 0)} evidenze</b>
-            <b>${Number(intelligence.reviewed || 0)} revisionate</b>
-            <b>${Number(intelligence.reports || 0)} report</b>
+            <b>${Number(item.frame_count || 0)} frame</b>
+            <b>${Number(item.clip_count || 0)} clip</b>
+            <b>${Number(item.reviewed_count || 0)}/${Number(item.evidence_count || 0)} revisionate</b>
         ` : "";
         const tags = getLibraryTags(item);
         const duration = formatDurationLabel(item.duration_seconds);
         const lastUsed = formatDateLabel(item.last_used_at);
         const teamLine = getLibraryTeamsLabel(item);
-        const sourceProvider = item.source_provider || item.source_type || "matchiq";
+        const sourceProvider = item.source_label || item.source_provider || item.source_type || "MatchIQ";
         const isArchived = Boolean(item.is_archived || item.archive_state === "archived");
         const sessionDate = formatDateLabel(item.date) || formatDateLabel(item.created_at);
-        const latestReport = item.latest_report && typeof item.latest_report === "object" ? item.latest_report : {};
-        const reportBadge = latestReport.id ? `<b>Report #${Number(latestReport.id)}</b>` : "";
+        const report = item.report && typeof item.report === "object" ? item.report : {};
+        const reportBadge = report.id ? `<b>${escapeHtml(report.state_label || "Report pronto")}</b>` : `<b>Report assente</b>`;
+        const legacyBadge = item.incomplete_metadata ? `<b>Informazioni incomplete</b>` : "";
         return `
         <div class="library-item">
             ${item.thumbnail ? `<img class="library-thumb" src="${escapeHtml(item.thumbnail)}" alt="Anteprima ${escapeHtml(item.title || "video")}" loading="lazy" decoding="async">` : `<div class="library-thumb placeholder">Video</div>`}
@@ -3883,18 +3982,22 @@ function renderVideoLibrary(){
                     ${duration ? `<b>${escapeHtml(duration)}</b>` : ""}
                     ${lastUsed ? `<b>Usato ${escapeHtml(lastUsed)}</b>` : ""}
                     ${reportBadge}
+                    ${legacyBadge}
                     ${intelligenceBadges}
                     ${tags.map(tag => `<b>#${escapeHtml(tag)}</b>`).join("")}
                 </div>
                 <div class="library-state">
-                    <b class="library-chip ${workflowClass}">${escapeHtml(getWorkflowLabel(item))}</b>
+                    <b class="library-chip ${workflowClass}">${escapeHtml(item.library_state_label || getWorkflowLabel(item))}</b>
+                    <b class="library-chip">${escapeHtml(item.mode_label || "Analisi")}</b>
                     <b class="library-chip ${statusClass}">${escapeHtml(getAssetStatusLabel(item))}</b>
                     <div class="library-progress"><span style="width:${progress}%"></span></div>
                     ${item.error || intelligence.error ? `<span>${escapeHtml(item.error || intelligence.error)}</span>` : ""}
                 </div>
             </div>
             <div class="library-actions">
-                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})">Apri nel Video AI</button>
+                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})">${item.library_state === "draft" ? "Inizia analisi" : "Continua"}</button>
+                ${report.id ? `<button class="btn dark small" type="button" onclick="openLibraryReport(${Number(item.id)})">Apri report</button>` : ""}
+                ${report.id && report.pdf_ready ? `<button class="btn dark small" type="button" onclick="downloadLibraryPdf(${Number(item.id)}, '${escapeHtml(String(report.id))}')">PDF</button>` : ""}
                 ${intelligence.can_retry ? `<button class="btn dark small" type="button" onclick="retryVideoIntelligence(${Number(item.id)})">Riprova analisi</button>` : ""}
                 <div class="library-menu-wrap">
                     <button class="btn dark small" type="button" aria-expanded="false" onclick="toggleLibraryMenu(event, ${Number(item.id)})">Azioni</button>
@@ -3913,15 +4016,18 @@ function renderVideoLibrary(){
 
 function renderCloudProviders(){
     if(!cloudProvidersBox) return;
+    const availableProviders = cloudProviders.filter(provider => Boolean(provider?.configured || provider?.connected));
+    if(hubCloudTab) hubCloudTab.hidden = availableProviders.length === 0;
+    if(!availableProviders.length && hubCloudPane?.classList.contains("active")) setVideoHubTab("archive");
     if(!getAuthToken()){
         cloudProvidersBox.innerHTML = `<div class="archive-empty"><strong>Nessun cloud collegato</strong><span>Accedi per vedere le integrazioni cloud disponibili per il tuo account.</span></div>`;
         return;
     }
-    if(!cloudProviders.length){
+    if(!availableProviders.length){
         cloudProvidersBox.innerHTML = `<div class="archive-empty"><strong>Nessun cloud collegato</strong><span>Le integrazioni cloud permetteranno di importare i video gia presenti nei tuoi archivi personali o societari.</span></div>`;
         return;
     }
-    cloudProvidersBox.innerHTML = cloudProviders.map(provider => {
+    cloudProvidersBox.innerHTML = availableProviders.map(provider => {
         const configured = Boolean(provider.configured);
         const connected = Boolean(provider.connected);
         const status = String(provider.status || "").toLowerCase();
@@ -4149,29 +4255,43 @@ function uploadLibraryVideoWithProgress(form){
     });
 }
 
-async function loadVideoLibrary(){
+async function loadVideoLibrary(options={}){
     const token = getAuthToken();
     if(!token){
         videoLibraryItems = [];
+        videoLibraryTotal = 0;
+        videoLibrarySummary = {};
         renderVideoLibrary();
         return;
     }
+    if(!options.keepPage) videoLibraryPage = 0;
+    if(videoLibraryRequestController) videoLibraryRequestController.abort();
+    videoLibraryRequestController = new AbortController();
+    videoLibraryList.innerHTML = `<div class="library-loading" aria-live="polite"><span></span><span></span><span></span><strong>Carico i progetti video...</strong></div>`;
     try{
         const params = new URLSearchParams({
             search: hubSearch ? hubSearch.value.trim() : "",
             type: hubTypeFilter ? hubTypeFilter.value : "all",
-            workflow_state: hubWorkflowFilter ? hubWorkflowFilter.value : "all",
+            library_state: hubWorkflowFilter ? hubWorkflowFilter.value : "all",
             team: hubTeamFilter ? hubTeamFilter.value.trim() : "",
             season: hubSeasonFilter ? hubSeasonFilter.value.trim() : "",
             competition: hubCompetitionFilter ? hubCompetitionFilter.value.trim() : "",
             focus: hubFocusFilter ? hubFocusFilter.value.trim() : "",
             tag: hubTagFilter ? hubTagFilter.value.trim() : "",
-            provider: hubProviderFilter ? hubProviderFilter.value : "all",
+            source: hubProviderFilter ? hubProviderFilter.value : "all",
+            mode: hubModeFilter ? hubModeFilter.value : "all",
+            report_state: hubReportFilter ? hubReportFilter.value : "all",
+            date_from: hubDateFrom ? hubDateFrom.value : "",
+            date_to: hubDateTo ? hubDateTo.value : "",
             archive_state: hubArchiveFilter ? hubArchiveFilter.value : "active",
-            limit: "80",
-            offset: "0"
+            sort: hubSort ? hubSort.value : "attention",
+            limit: String(videoLibraryPageSize),
+            offset: String(videoLibraryPage * videoLibraryPageSize)
         });
-        const res = await fetch(`${API_BASE}/video/hub/sessions?${params.toString()}`, {headers:apiAuthHeaders()});
+        const res = await fetch(`${API_BASE}/video/hub/sessions?${params.toString()}`, {
+            headers:apiAuthHeaders(),
+            signal:videoLibraryRequestController.signal
+        });
         const data = await res.json();
         if(res.status === 401){
             clearAuthToken();
@@ -4183,8 +4303,15 @@ async function loadVideoLibrary(){
         if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Libreria non disponibile"));
         applyHubTaxonomy(data);
         videoLibraryItems = data.items || [];
+        videoLibraryTotal = Number(data.total) || 0;
+        videoLibrarySummary = data.summary && typeof data.summary === "object" ? data.summary : {};
+        if(!videoLibraryItems.length && videoLibraryPage > 0 && videoLibraryTotal){
+            videoLibraryPage = Math.max(0, videoLibraryPage - 1);
+            return loadVideoLibrary({keepPage:true});
+        }
         renderVideoLibrary();
     }catch(err){
+        if(err?.name === "AbortError") return;
         renderVideoLibrary();
         showStatus(err.message || "Non riesco a caricare la libreria video.", "warn");
     }
@@ -4195,7 +4322,6 @@ async function loadVideoHubSessions(){
 }
 
 function scheduleVideoHubSearch(){
-    renderVideoLibrary();
     if(hubSearchTimer) clearTimeout(hubSearchTimer);
     hubSearchTimer = setTimeout(() => {
         loadVideoHubSessions();
@@ -4203,13 +4329,16 @@ function scheduleVideoHubSearch(){
 }
 
 function clearHubFilters(){
-    [hubSearch, hubTeamFilter, hubSeasonFilter, hubCompetitionFilter, hubFocusFilter, hubTagFilter].forEach(el => {
+    [hubSearch, hubTeamFilter, hubSeasonFilter, hubCompetitionFilter, hubFocusFilter, hubTagFilter, hubDateFrom, hubDateTo].forEach(el => {
         if(el) el.value = "";
     });
     if(hubTypeFilter) hubTypeFilter.value = "all";
     if(hubWorkflowFilter) hubWorkflowFilter.value = "all";
     if(hubProviderFilter) hubProviderFilter.value = "all";
+    if(hubModeFilter) hubModeFilter.value = "all";
+    if(hubReportFilter) hubReportFilter.value = "all";
     if(hubArchiveFilter) hubArchiveFilter.value = "active";
+    if(hubSort) hubSort.value = "attention";
     loadVideoHubSessions();
 }
 
@@ -4266,7 +4395,7 @@ async function createDraftVideoSession(){
         const data = await res.json();
         if(!res.ok || !data.ok) throw new Error(getApiErrorMessage(data, "Sessione non creata"));
         await loadVideoLibrary();
-        showStatus("Sessione Video Hub creata. Puoi caricare il video o aprirla per preparare l'analisi.", "ok");
+        showStatus("Sessione creata nella Libreria Video AI. Puoi caricare il video o aprirla per preparare l'analisi.", "ok");
     }catch(err){
         showStatus(err.message || "Sessione non creata.", "err");
     }
@@ -4431,6 +4560,44 @@ async function openLibraryVideo(assetId){
     }
 }
 
+async function openLibraryReport(assetId){
+    await openLibraryVideo(assetId);
+    if(window.MatchIQVideoIntelligence?.loadProject){
+        await window.MatchIQVideoIntelligence.loadProject({quiet:true});
+    }
+    document.getElementById("reportBox")?.scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+async function downloadLibraryPdf(assetId, reportId){
+    try{
+        const response = await fetch(
+            `${API_BASE}/video/intelligence/projects/${encodeURIComponent(assetId)}/reports/${encodeURIComponent(reportId)}/pdf`,
+            {headers:apiAuthHeaders()}
+        );
+        if(!response.ok){
+            let payload = {};
+            try{ payload = await response.json(); }catch(err){}
+            throw new Error(getApiErrorMessage(payload, "Download PDF non riuscito"));
+        }
+        const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
+        if(!contentType.includes("application/pdf")) throw new Error("Il file ricevuto non e' un PDF valido.");
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if(bytes.length < 4 || String.fromCharCode(...bytes.slice(0, 4)) !== "%PDF") throw new Error("Il PDF ricevuto non e' valido.");
+        const disposition = response.headers.get("Content-Disposition") || "";
+        const filename = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1] || disposition.match(/filename="?([^";]+)"?/i)?.[1] || "matchiq-video-report.pdf";
+        const url = URL.createObjectURL(new Blob([bytes], {type:"application/pdf"}));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = decodeURIComponent(filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }catch(err){
+        showStatus(err.message || "Download PDF non riuscito.", "err");
+    }
+}
+
 function prefillVideoFormFromSession(item){
     document.getElementById("videoTitle").value = item.title || document.getElementById("videoTitle").value;
     if(item.club) document.getElementById("clubName").value = item.club;
@@ -4487,7 +4654,7 @@ async function saveSessionMetadata(assetId){
         videoLibraryItems = videoLibraryItems.map(item => Number(item.id) === targetId ? data.item : item);
         renderVideoLibrary();
         if(Number(activeSessionModalId) === targetId) fillSessionModal(data.item);
-        showStatus("Dati sessione aggiornati nel Video Hub.", "ok");
+        showStatus("Dati sessione aggiornati nella Libreria Video AI.", "ok");
     }catch(err){
         showStatus(err.message || "Salvataggio non riuscito.", "err");
     }
@@ -4572,7 +4739,7 @@ async function openSessionFromUrl(){
         }
         if(item){
             await openLibraryVideo(sessionId);
-            showStatus("Sessione caricata dal Video Hub.", "ok");
+            showStatus("Sessione caricata dalla Libreria Video AI.", "ok");
         }
     }catch(err){
         showStatus(err.message || "Non riesco ad aprire questa sessione.", "err");
@@ -4581,7 +4748,7 @@ async function openSessionFromUrl(){
 
 async function deleteLibraryVideo(assetId){
     if(!getAuthToken()) return;
-    const ok = window.confirm("Eliminare definitivamente questa Sessione Video?\n\nLa sessione verra rimossa dal tuo Video Hub. L'operazione non si puo annullare.");
+    const ok = window.confirm("Eliminare definitivamente questa Sessione Video?\n\nLa sessione verra rimossa dalla Libreria Video AI. L'operazione non si puo annullare.");
     if(!ok) return;
     try{
         const res = await fetch(`${API_BASE}/video/library/${encodeURIComponent(assetId)}`, {
@@ -5486,8 +5653,8 @@ if("serviceWorker" in navigator){
     });
 }
 </script>
-<script src="/js/video-intelligence.js?v=10538"></script>
-<script src="/js/video-experience.js?v=10538"></script>
+<script src="/js/video-intelligence.js?v=10539"></script>
+<script src="/js/video-experience.js?v=10539"></script>
 <script src="/js/app-meta.js"></script>
 <link rel="stylesheet" href="/css/knowledge-entry.css?v=10528">
 <link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10528">

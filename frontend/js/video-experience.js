@@ -164,7 +164,7 @@
     if(node("vxProcessingTitle")) node("vxProcessingTitle").textContent = title;
     if(node("vxProcessingFile")){
       const file = node("videoInput")?.files?.[0]?.name;
-      node("vxProcessingFile").textContent = file ? `${file} · Il progetto resta recuperabile dal Video Hub.` : "Il progetto resta recuperabile dal Video Hub anche se lasci questa pagina.";
+      node("vxProcessingFile").textContent = file ? `${file} · Il progetto resta recuperabile dalla Libreria Video AI.` : "Il progetto resta recuperabile dalla Libreria Video AI anche se lasci questa pagina.";
     }
     const progress = Math.max(0,Math.min(100,Number(currentPipeline.progress || 0)));
     if(node("vxProcessingBar")) node("vxProcessingBar").style.width = `${progress}%`;
