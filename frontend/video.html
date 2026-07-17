@@ -1,11 +1,155 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" class="video-ai-booting">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>MatchIQ Video AI</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#00f5a0">
+<style id="videoAiBootCritical">
+html.video-ai-booting body,
+html.video-ai-boot-error body{
+    min-height:100vh;
+    margin:0;
+    color:#fff;
+    background:
+        radial-gradient(circle at 18% 0%,rgba(0,245,160,.16),transparent 31%),
+        radial-gradient(circle at 86% 10%,rgba(47,124,255,.19),transparent 30%),
+        linear-gradient(180deg,#07101f,#03050b 62%,#02030a);
+}
+html.video-ai-booting body > main,
+html.video-ai-boot-error body > main,
+html.video-ai-booting body > .miq-global-nav,
+html.video-ai-boot-error body > .miq-global-nav{
+    display:none!important;
+}
+.video-ai-boot-shell{
+    display:none;
+    min-height:100dvh;
+    padding:
+        max(24px,env(safe-area-inset-top))
+        max(20px,env(safe-area-inset-right))
+        max(24px,env(safe-area-inset-bottom))
+        max(20px,env(safe-area-inset-left));
+    place-items:center;
+    font-family:Inter,Arial,sans-serif;
+}
+html.video-ai-booting .video-ai-boot-shell,
+html.video-ai-boot-error .video-ai-boot-shell{display:grid}
+.video-ai-boot-card{
+    width:min(520px,100%);
+    padding:24px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:20px;
+    background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+    box-shadow:0 24px 70px rgba(0,0,0,.25);
+}
+.video-ai-boot-brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;
+}
+.video-ai-boot-mark{
+    display:block;
+    width:42px;
+    height:42px;
+    border-radius:12px;
+    object-fit:contain;
+}
+.video-ai-boot-brand strong,
+.video-ai-boot-card > strong{display:block}
+.video-ai-boot-brand strong{font-size:18px}
+.video-ai-boot-brand span,
+.video-ai-boot-card p{color:#aebee7}
+.video-ai-boot-brand span{display:block;margin-top:3px;font-size:11px;font-weight:800}
+.video-ai-boot-card > strong{font-size:22px;line-height:1.15}
+.video-ai-boot-card p{margin:8px 0 0;line-height:1.55}
+.video-ai-boot-track{
+    height:5px;
+    margin-top:22px;
+    overflow:hidden;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+}
+.video-ai-boot-track span{
+    display:block;
+    width:38%;
+    height:100%;
+    border-radius:inherit;
+    background:linear-gradient(90deg,#00f5a0,#2f7cff);
+}
+html.video-ai-boot-error .video-ai-boot-track{display:none}
+.video-ai-boot-reload{
+    display:none;
+    min-height:44px;
+    margin-top:20px;
+    padding:11px 16px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:12px;
+    color:#fff;
+    background:rgba(255,255,255,.08);
+    font:inherit;
+    font-weight:900;
+    cursor:pointer;
+}
+html.video-ai-boot-error .video-ai-boot-reload{display:inline-flex;align-items:center}
+.video-ai-boot-reload:focus-visible{outline:3px solid #00f5a0;outline-offset:3px}
+@media(max-width:560px){
+    .video-ai-boot-card{padding:20px;border-radius:16px}
+    .video-ai-boot-card > strong{font-size:20px}
+}
+</style>
+<script>
+window.MatchIQVideoBoot = (function(){
+    var settled = false;
+
+    function shell(){
+        return document.getElementById("videoAiBootShell");
+    }
+
+    function app(){
+        return document.getElementById("videoAppRoot");
+    }
+
+    function ready(){
+        if(settled) return;
+        settled = true;
+        var root = document.documentElement;
+        var main = app();
+        var loading = shell();
+        if(main){
+            main.removeAttribute("aria-busy");
+            main.removeAttribute("aria-hidden");
+        }
+        if(loading) loading.hidden = true;
+        root.classList.remove("video-ai-booting","video-ai-boot-error");
+        root.classList.add("video-ai-ready");
+        document.dispatchEvent(new CustomEvent("matchiq:video-ready"));
+    }
+
+    function fail(error){
+        if(settled) return;
+        settled = true;
+        var root = document.documentElement;
+        var loading = shell();
+        root.classList.remove("video-ai-booting");
+        root.classList.add("video-ai-boot-error");
+        if(loading){
+            loading.hidden = false;
+            loading.setAttribute("role","alert");
+            loading.removeAttribute("aria-busy");
+            var title = loading.querySelector("[data-video-boot-title]");
+            var message = loading.querySelector("[data-video-boot-message]");
+            if(title) title.textContent = "Video AI non si e avviata correttamente";
+            if(message) message.textContent = "Il lavoro salvato non e stato modificato. Ricarica la pagina per riprovare.";
+        }
+        console.error("Video AI bootstrap non riuscito:",error);
+    }
+
+    return {ready:ready,fail:fail,isSettled:function(){return settled;}};
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1394,12 +1538,24 @@ video{
 }
 </style>
 <link rel="stylesheet" href="/css/global-nav.css?v=10528">
-<link rel="stylesheet" href="/css/video-intelligence.css?v=10540">
-<link rel="stylesheet" href="/css/video-experience.css?v=10540">
-<link rel="stylesheet" href="/css/video-library.css?v=10540">
+<link rel="stylesheet" href="/css/video-intelligence.css?v=10541">
+<link rel="stylesheet" href="/css/video-experience.css?v=10541">
+<link rel="stylesheet" href="/css/video-library.css?v=10541">
 </head>
 <body data-miq-module="video">
-<main class="wrap">
+<div class="video-ai-boot-shell" id="videoAiBootShell" role="status" aria-live="polite" aria-atomic="true" aria-busy="true">
+    <div class="video-ai-boot-card">
+        <div class="video-ai-boot-brand">
+            <img class="video-ai-boot-mark" src="/assets/matchiq-logo.png" width="42" height="42" alt="">
+            <div><strong>MatchIQ Video AI</strong><span>Workspace dello staff tecnico</span></div>
+        </div>
+        <strong data-video-boot-title>Preparazione della sala video</strong>
+        <p data-video-boot-message>Sto ripristinando progetto, stato di analisi e vista corretta.</p>
+        <div class="video-ai-boot-track" aria-hidden="true"><span></span></div>
+        <button class="video-ai-boot-reload" type="button" onclick="location.reload()">Ricarica Video AI</button>
+    </div>
+</div>
+<main class="wrap" id="videoAppRoot" aria-busy="true" aria-hidden="true">
     <section class="vx-shell" id="videoExperienceShell" aria-labelledby="vxExperienceTitle" hidden>
         <header class="vx-shell-head">
             <div>
@@ -2368,7 +2524,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10540";
+const APP_VERSION = "10541";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -5659,7 +5815,7 @@ renderArchive();
 restoreVideoHubUiState();
 updateAuthorizedImportState();
 loadCloudArchive();
-refreshVideoHub().then(openSessionFromUrl).catch(() => {});
+window.MatchIQVideoInitialRestore = refreshVideoHub().then(openSessionFromUrl).catch(() => {});
 refreshPlayerNameOptions();
 
 if("scrollRestoration" in history){
@@ -5684,8 +5840,8 @@ if("serviceWorker" in navigator){
     });
 }
 </script>
-<script src="/js/video-intelligence.js?v=10540"></script>
-<script src="/js/video-experience.js?v=10540"></script>
+<script src="/js/video-intelligence.js?v=10541" onerror="window.MatchIQVideoBoot?.fail(new Error('Impossibile caricare Video Intelligence'))"></script>
+<script src="/js/video-experience.js?v=10541" onerror="window.MatchIQVideoBoot?.fail(new Error('Impossibile caricare Video AI'))"></script>
 <script src="/js/app-meta.js"></script>
 <link rel="stylesheet" href="/css/knowledge-entry.css?v=10528">
 <link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10528">

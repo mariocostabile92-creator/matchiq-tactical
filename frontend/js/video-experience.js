@@ -1,6 +1,15 @@
 (function(){
+  const boot = window.MatchIQVideoBoot;
+  try{
   const shell = document.getElementById("videoExperienceShell");
-  if(!shell || shell.dataset.mounted === "true") return;
+  if(!shell){
+    boot?.fail(new Error("Contenitore Video AI non disponibile."));
+    return;
+  }
+  if(shell.dataset.mounted === "true"){
+    boot?.ready();
+    return;
+  }
   shell.dataset.mounted = "true";
 
   const views = new Map(Array.from(shell.querySelectorAll("[data-vx-view]")).map(node => [node.dataset.vxView,node]));
@@ -396,4 +405,11 @@
   updateChrome();
   scheduleStickyChrome();
   window.MatchIQVideoExperience = {setView,showProjects,applyExperienceState};
+  Promise.resolve(window.MatchIQVideoInitialRestore).then(() => {
+    applyExperienceState(window.MatchIQVideoIntelligence?.getExperienceState?.() || {});
+    boot?.ready();
+  }).catch(error => boot?.fail(error));
+  }catch(error){
+    boot?.fail(error);
+  }
 })();

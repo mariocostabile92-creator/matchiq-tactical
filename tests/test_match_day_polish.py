@@ -94,7 +94,7 @@ class MatchDayPolishTests(unittest.TestCase):
             # PWA, touch and release: 4
             ("touch targets", "@media(pointer:coarse)" in styles and "min-height:48px" in styles),
             ("standalone safe area", "@media(display-mode:standalone)" in styles and "safe-area-inset-bottom" in styles),
-            ("pwa cache release", 'const CACHE_NAME = "matchiq-pwa-v140"' in worker),
+            ("pwa cache release", 'const CACHE_NAME = "matchiq-pwa-v141"' in worker),
             ("pwa coach assets", all(x in worker for x in ("/coach.html?v=10534", "/css/coach.css?v=10534", "/js/coach-voice-actions.js?v=10534"))),
         ]
 

@@ -106,7 +106,7 @@ class ProductRepositioningTests(unittest.TestCase):
             "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
         )
         self.assertEqual(manifest["start_url"], "/index.html?v=10530")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v140"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v141"', worker)
         self.assertIn('version: "10530"', app_meta)
         self.assertIn('const VERSION = "10530"', config)
 
