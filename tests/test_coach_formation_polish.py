@@ -186,7 +186,7 @@ class CoachFormationPolishTests(unittest.TestCase):
             "/js/coach-lineup-interactions.js?v=10531",
             "/js/coach-lineup-player-menu.js?v=10531",
         )
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v139"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v140"', worker)
         for asset in assets:
             with self.subTest(asset=asset):
                 self.assertIn(asset, page)

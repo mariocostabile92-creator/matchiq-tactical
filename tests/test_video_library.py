@@ -154,8 +154,59 @@ class VideoLibraryFrontendContractTests(unittest.TestCase):
         worker = (ROOT / "frontend" / "service-worker.js").read_text(encoding="utf-8")
         self.assertIn('url.pathname.startsWith("/api/")', worker)
         self.assertIn("pdf|mp4|webm|mov|avi", worker)
-        self.assertIn("video-library.css?v=10539", worker)
-        self.assertIn('matchiq-pwa-v139', worker)
+        self.assertIn("video-library.css?v=10540", worker)
+        self.assertIn('matchiq-pwa-v140', worker)
+
+    def test_premium_library_hierarchy_keeps_existing_actions(self):
+        page = (ROOT / "frontend" / "video.html").read_text(encoding="utf-8")
+        for marker in (
+            "Tutte le analisi, i report e i progetti video del tuo staff",
+            "library-primary-action",
+            "library-secondary-action",
+            "library-utility-action",
+            "library-item-primary",
+            "library-item-secondary",
+            "library-item-facts",
+            "library-progress-wrap",
+        ):
+            self.assertIn(marker, page)
+        for handler in (
+            "openNewSessionWizard()",
+            "focusDeviceUpload()",
+            "focusAuthorizedImport()",
+            "openLibraryVideo(",
+            "openLibraryReport(",
+            "downloadLibraryPdf(",
+        ):
+            self.assertIn(handler, page)
+
+    def test_upload_consents_are_labelled_and_not_preselected(self):
+        page = (ROOT / "frontend" / "video.html").read_text(encoding="utf-8")
+        self.assertIn('class="library-check" for="libraryRights"', page)
+        self.assertIn('class="library-check" for="libraryUrlRights"', page)
+        self.assertIn('id="libraryRights" type="checkbox"', page)
+        self.assertIn('id="libraryUrlRights" type="checkbox"', page)
+        self.assertNotIn('id="libraryRights" type="checkbox" checked', page)
+        self.assertNotIn('id="libraryUrlRights" type="checkbox" checked', page)
+
+    def test_empty_state_and_responsive_contract_are_present(self):
+        page = (ROOT / "frontend" / "video.html").read_text(encoding="utf-8")
+        css = (ROOT / "frontend" / "css" / "video-library.css").read_text(encoding="utf-8")
+        self.assertIn("Il tuo primo progetto Video AI parte da qui.", page)
+        self.assertIn("Importa link autorizzato", page)
+        self.assertIn("@media (max-width: 820px)", css)
+        self.assertIn("@media (max-width: 560px)", css)
+        self.assertIn("env(safe-area-inset-bottom)", css)
+        self.assertIn("overflow-wrap: anywhere", css)
+        self.assertIn("body.video-experience-enhanced:has(#vxProjectsDialog[open])", css)
+
+    def test_accessible_filter_and_action_menus(self):
+        page = (ROOT / "frontend" / "video.html").read_text(encoding="utf-8")
+        css = (ROOT / "frontend" / "css" / "video-library.css").read_text(encoding="utf-8")
+        self.assertIn('aria-controls="hubFilterPanel"', page)
+        self.assertIn('aria-controls="libraryMenu${Number(item.id)}"', page)
+        self.assertIn('role="menuitem"', page)
+        self.assertIn(":focus-visible", css)
 
 
 if __name__ == "__main__":

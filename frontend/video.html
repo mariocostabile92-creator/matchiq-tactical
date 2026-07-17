@@ -1394,9 +1394,9 @@ video{
 }
 </style>
 <link rel="stylesheet" href="/css/global-nav.css?v=10528">
-<link rel="stylesheet" href="/css/video-intelligence.css?v=10539">
-<link rel="stylesheet" href="/css/video-experience.css?v=10539">
-<link rel="stylesheet" href="/css/video-library.css?v=10539">
+<link rel="stylesheet" href="/css/video-intelligence.css?v=10540">
+<link rel="stylesheet" href="/css/video-experience.css?v=10540">
+<link rel="stylesheet" href="/css/video-library.css?v=10540">
 </head>
 <body data-miq-module="video">
 <main class="wrap">
@@ -1547,7 +1547,14 @@ video{
         </section>
 
         <dialog class="vx-projects" id="vxProjectsDialog" aria-labelledby="vxProjectsTitle">
-            <header><div><span class="vx-eyebrow">LIBRERIA VIDEO AI</span><h2 id="vxProjectsTitle">I tuoi progetti</h2></div><button class="btn dark small" type="button" data-vx-action="close-projects">Chiudi</button></header>
+            <header>
+                <div class="vx-projects-heading">
+                    <span class="vx-eyebrow">LIBRERIA VIDEO AI</span>
+                    <h2 id="vxProjectsTitle">I tuoi progetti</h2>
+                    <p>Tutte le analisi, i report e i progetti video del tuo staff, sempre recuperabili.</p>
+                </div>
+                <button class="btn dark small vx-projects-close" type="button" data-vx-action="close-projects" aria-label="Chiudi Libreria Video AI">Chiudi</button>
+            </header>
             <div class="vx-project-summary" id="vxProjectSummary" aria-live="polite"></div>
             <div id="vxProjectsMount"></div>
         </dialog>
@@ -1805,10 +1812,10 @@ video{
                             <p>Cerca una sessione, riprendi la revisione e recupera report e PDF senza ricominciare da zero.</p>
                         </div>
                         <div class="video-hub-actions" aria-label="Azioni principali Libreria Video AI">
-                            <button class="btn small" type="button" onclick="openNewSessionWizard()">Nuova analisi</button>
-                            <button class="btn small" type="button" onclick="focusDeviceUpload()">Carica video</button>
-                            <button class="btn dark small" type="button" onclick="focusAuthorizedImport()">Importa da sorgente autorizzata</button>
-                            <button class="btn dark small" type="button" onclick="refreshVideoHub()">Aggiorna</button>
+                            <button class="btn small library-primary-action" type="button" onclick="openNewSessionWizard()">Nuova analisi</button>
+                            <button class="btn dark small library-secondary-action" type="button" onclick="focusDeviceUpload()">Carica video</button>
+                            <button class="btn dark small library-secondary-action" type="button" onclick="focusAuthorizedImport()">Importa link autorizzato</button>
+                            <button class="btn dark small library-utility-action" type="button" onclick="refreshVideoHub()" aria-label="Aggiorna Libreria Video AI">Aggiorna</button>
                         </div>
                     </div>
 
@@ -1825,13 +1832,13 @@ video{
                         <div><span>Report pronti</span><strong id="hubSummaryReports">0</strong></div>
                         <div><span>Da recuperare</span><strong id="hubSummaryErrors">0</strong></div>
                     </div>
-                    <div class="hub-action-bar">
-                        <div>
+                    <div class="hub-action-bar" role="search" aria-label="Ricerca e ordinamento progetti">
+                        <div class="hub-search-field">
                             <label for="hubSearch">Cerca sessione</label>
                             <input id="hubSearch" placeholder="Cerca per titolo, squadra, avversario o competizione" oninput="scheduleVideoHubSearch()" />
                         </div>
-                        <button id="hubFilterToggleBtn" class="btn dark small hub-filter-toggle" type="button" aria-expanded="false" onclick="toggleHubFilters()">Filtri</button>
-                        <div>
+                        <button id="hubFilterToggleBtn" class="btn dark small hub-filter-toggle" type="button" aria-expanded="false" aria-controls="hubFilterPanel" onclick="toggleHubFilters()">Filtri</button>
+                        <div class="hub-sort-field">
                             <label for="hubSort">Ordina</label>
                             <select id="hubSort" onchange="loadVideoHubSessions()">
                                 <option value="attention">Richiedono attenzione</option>
@@ -1843,10 +1850,10 @@ video{
                                 <option value="status">Stato</option>
                             </select>
                         </div>
-                        <button class="btn dark small" type="button" onclick="refreshVideoHub()">Aggiorna</button>
+                        <button class="btn dark small hub-refresh-button" type="button" onclick="refreshVideoHub()" aria-label="Aggiorna elenco progetti">Aggiorna</button>
                     </div>
 
-                    <div id="hubFilterPanel" class="hub-filter-panel" aria-label="Filtri Archivio MatchIQ">
+                    <div id="hubFilterPanel" class="hub-filter-panel" aria-label="Filtri Libreria Video AI">
                     <div class="hub-tools">
                         <div>
                             <label for="hubTeamFilter">Squadra</label>
@@ -1949,10 +1956,14 @@ video{
                         <span>Archivio pronto.</span>
                         <strong>0 sessioni</strong>
                     </div>
-                    <div class="library-grid">
-                        <div class="library-card">
-                            <strong>Upload dal dispositivo</strong>
-                            <span>Trascina qui il video oppure selezionalo dal dispositivo. Su smartphone usa il pulsante di scelta file sopra.</span>
+                    <div class="library-grid" aria-label="Importa un video nella libreria">
+                        <div class="library-card library-upload-card">
+                            <div class="library-card-heading">
+                                <span class="library-card-kicker">DAL DISPOSITIVO</span>
+                                <strong>Carica un video</strong>
+                                <p>Seleziona una partita, un allenamento o una clip dal tuo dispositivo.</p>
+                            </div>
+                            <label for="librarySessionType">Tipo di sessione</label>
                             <select id="librarySessionType">
                                 <option value="official_match">Partita ufficiale</option>
                                 <option value="friendly_match">Amichevole</option>
@@ -1964,27 +1975,37 @@ video{
                                 <option value="youth">Settore giovanile</option>
                                 <option value="other">Altro</option>
                             </select>
+                            <label for="libraryTitle">Titolo</label>
                             <input id="libraryTitle" placeholder="Titolo partita o clip" />
+                            <label for="libraryClub">Societa o squadra</label>
                             <input id="libraryClub" placeholder="Societa / squadra" />
-                            <input id="librarySeason" placeholder="Stagione, es. 2026/27" />
-                            <input id="libraryResult" placeholder="Risultato, es. 2-1" />
+                            <div class="library-compact-fields">
+                                <div><label for="librarySeason">Stagione</label><input id="librarySeason" placeholder="Es. 2026/27" /></div>
+                                <div><label for="libraryResult">Risultato</label><input id="libraryResult" placeholder="Es. 2-1" /></div>
+                            </div>
+                            <label for="libraryField">Campo o impianto</label>
                             <input id="libraryField" placeholder="Campo / impianto" />
-                            <label class="library-check">
+                            <label class="library-check" for="libraryRights">
                                 <input id="libraryRights" type="checkbox" />
-                                Confermo di avere diritto a usare questo video per analisi sportiva.
+                                <span>Confermo di avere diritto a usare questo video per analisi sportiva.</span>
                             </label>
-                            <button class="btn small" type="button" onclick="saveCurrentVideoToLibrary()">Salva in libreria</button>
+                            <button class="btn small library-card-submit" type="button" onclick="saveCurrentVideoToLibrary()">Salva in libreria</button>
                         </div>
-                        <div class="library-card">
-                            <strong>Importa da un link diretto autorizzato</strong>
-                            <span>Usa un collegamento diretto a un file video che puoi utilizzare legalmente. Non sono supportate pagine YouTube, servizi streaming o contenuti protetti.</span>
+                        <div class="library-card library-import-card">
+                            <div class="library-card-heading">
+                                <span class="library-card-kicker">LINK AUTORIZZATO</span>
+                                <strong>Importa un video</strong>
+                                <p>Usa il collegamento diretto a un file che puoi utilizzare legalmente. Pagine streaming e contenuti protetti non sono supportati.</p>
+                            </div>
+                            <label for="libraryUrl">Link diretto</label>
                             <input id="libraryUrl" placeholder="https://.../video.mp4" oninput="updateAuthorizedImportState()" />
+                            <label for="libraryUrlTitle">Titolo</label>
                             <input id="libraryUrlTitle" placeholder="Titolo link" oninput="updateAuthorizedImportState()" />
-                            <label class="library-check">
+                            <label class="library-check" for="libraryUrlRights">
                                 <input id="libraryUrlRights" type="checkbox" onchange="updateAuthorizedImportState()" />
-                                Confermo di avere il diritto o l'autorizzazione a utilizzare questo video.
+                                <span>Confermo di avere il diritto o l'autorizzazione a utilizzare questo video.</span>
                             </label>
-                            <button id="libraryUrlImportBtn" class="btn dark small" type="button" onclick="importVideoUrlToLibrary()" disabled>Importa link</button>
+                            <button id="libraryUrlImportBtn" class="btn dark small library-card-submit" type="button" onclick="importVideoUrlToLibrary()" disabled>Importa link</button>
                         </div>
                     </div>
                     <div id="libraryJobStatus" class="library-job"></div>
@@ -2347,7 +2368,7 @@ video{
 
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10539";
+const APP_VERSION = "10540";
 const VIDEO_ARCHIVE_KEY = "matchiq_video_report_archive_v1";
 let selectedVideoUrl = "";
 let extractedFrames = [];
@@ -3887,14 +3908,20 @@ function toggleLibraryMenu(event, assetId){
     const menu = document.getElementById(`libraryMenu${Number(assetId)}`);
     if(!menu) return;
     const willOpen = !menu.classList.contains("open");
-    document.querySelectorAll(".library-menu.open").forEach(openMenu => openMenu.classList.remove("open"));
+    document.querySelectorAll(".library-menu.open").forEach(openMenu => {
+        openMenu.classList.remove("open");
+        document.querySelector(`[aria-controls="${openMenu.id}"]`)?.setAttribute("aria-expanded", "false");
+    });
     menu.classList.toggle("open", willOpen);
     if(event && event.currentTarget) event.currentTarget.setAttribute("aria-expanded", willOpen ? "true" : "false");
 }
 
 document.addEventListener("click", event => {
     if(event.target && event.target.closest && event.target.closest(".library-menu-wrap")) return;
-    document.querySelectorAll(".library-menu.open").forEach(menu => menu.classList.remove("open"));
+    document.querySelectorAll(".library-menu.open").forEach(menu => {
+        menu.classList.remove("open");
+        document.querySelector(`[aria-controls="${menu.id}"]`)?.setAttribute("aria-expanded", "false");
+    });
 });
 
 function videoHubMatchesSearch(item){
@@ -3937,7 +3964,7 @@ function renderVideoLibrary(){
     const visibleItems = videoLibraryItems;
     if(!visibleItems.length){
         const hasFilters = getActiveHubFilters().length > 0;
-        videoLibraryList.innerHTML = `<div class="archive-empty"><strong>${hasFilters ? "Nessun progetto corrisponde ai filtri." : "La tua Libreria Video AI e' ancora vuota"}</strong><span>${hasFilters ? "Modifica ricerca o filtri per ritrovare il progetto." : "Crea una nuova analisi o carica un video autorizzato per iniziare."}</span><div class="hero-actions"><button class="btn small" type="button" onclick="openNewSessionWizard()">Nuova analisi</button><button class="btn dark small" type="button" onclick="focusDeviceUpload()">Carica un video</button></div></div>`;
+        videoLibraryList.innerHTML = `<div class="archive-empty library-empty-state"><span class="library-empty-icon" aria-hidden="true">+</span><strong>${hasFilters ? "Nessun progetto corrisponde ai filtri." : "Il tuo primo progetto Video AI parte da qui."}</strong><span>${hasFilters ? "Modifica ricerca o filtri per ritrovare il progetto." : "Carica una partita, importa un link autorizzato oppure avvia una nuova analisi."}</span><div class="hero-actions"><button class="btn small" type="button" onclick="openNewSessionWizard()">Nuova analisi</button><button class="btn dark small" type="button" onclick="focusDeviceUpload()">Carica video</button>${hasFilters ? "" : `<button class="btn dark small" type="button" onclick="focusAuthorizedImport()">Importa link autorizzato</button>`}</div></div>`;
         updateHubFilterSummary(0, videoLibraryTotal);
         renderVideoLibrarySummary();
         renderVideoLibraryPagination();
@@ -3951,11 +3978,6 @@ function renderVideoLibrary(){
         const statusClass = getAssetStatusClass(item);
         const workflowClass = getWorkflowClass(item);
         const intelligence = item.intelligence && typeof item.intelligence === "object" ? item.intelligence : {};
-        const intelligenceBadges = intelligence.enabled ? `
-            <b>${Number(item.frame_count || 0)} frame</b>
-            <b>${Number(item.clip_count || 0)} clip</b>
-            <b>${Number(item.reviewed_count || 0)}/${Number(item.evidence_count || 0)} revisionate</b>
-        ` : "";
         const tags = getLibraryTags(item);
         const duration = formatDurationLabel(item.duration_seconds);
         const lastUsed = formatDateLabel(item.last_used_at);
@@ -3964,16 +3986,21 @@ function renderVideoLibrary(){
         const isArchived = Boolean(item.is_archived || item.archive_state === "archived");
         const sessionDate = formatDateLabel(item.date) || formatDateLabel(item.created_at);
         const report = item.report && typeof item.report === "object" ? item.report : {};
-        const reportBadge = report.id ? `<b>${escapeHtml(report.state_label || "Report pronto")}</b>` : `<b>Report assente</b>`;
         const legacyBadge = item.incomplete_metadata ? `<b>Informazioni incomplete</b>` : "";
         return `
-        <div class="library-item">
+        <article class="library-item">
             ${item.thumbnail ? `<img class="library-thumb" src="${escapeHtml(item.thumbnail)}" alt="Anteprima ${escapeHtml(item.title || "video")}" loading="lazy" decoding="async">` : `<div class="library-thumb placeholder">Video</div>`}
-            <div>
-                <strong>${escapeHtml(item.title || "Partita MatchIQ")}</strong>
-                <span>${escapeHtml(teamLine)} - ${escapeHtml(getSessionTypeLabel(item))} - ${escapeHtml(sourceProvider)} ${item.size_bytes ? `- ${escapeHtml(formatBytes(item.size_bytes))}` : ""}</span>
+            <div class="library-item-content">
+                <div class="library-item-identity">
+                    <strong>${escapeHtml(item.title || "Partita MatchIQ")}</strong>
+                    <span>${escapeHtml(teamLine)} - ${escapeHtml(getSessionTypeLabel(item))}${sessionDate ? ` - ${escapeHtml(sessionDate)}` : ""}</span>
+                </div>
+                <div class="library-state" aria-label="Stato progetto">
+                    <b class="library-chip library-chip-primary ${workflowClass}">${escapeHtml(item.library_state_label || getWorkflowLabel(item))}</b>
+                    <b class="library-chip library-chip-secondary">${escapeHtml(item.mode_label || "Analisi")}</b>
+                    <b class="library-chip library-chip-secondary ${statusClass}">${escapeHtml(getAssetStatusLabel(item))}</b>
+                </div>
                 <div class="library-meta">
-                    ${sessionDate ? `<b>${escapeHtml(sessionDate)}</b>` : ""}
                     ${item.competition ? `<b>${escapeHtml(item.competition)}</b>` : ""}
                     ${item.season ? `<b>${escapeHtml(item.season)}</b>` : ""}
                     ${item.result ? `<b>${escapeHtml(item.result)}</b>` : ""}
@@ -3981,36 +4008,40 @@ function renderVideoLibrary(){
                     ${item.focus ? `<b>${escapeHtml(item.focus)}</b>` : ""}
                     ${duration ? `<b>${escapeHtml(duration)}</b>` : ""}
                     ${lastUsed ? `<b>Usato ${escapeHtml(lastUsed)}</b>` : ""}
-                    ${reportBadge}
-                    ${legacyBadge}
-                    ${intelligenceBadges}
                     ${tags.map(tag => `<b>#${escapeHtml(tag)}</b>`).join("")}
                 </div>
-                <div class="library-state">
-                    <b class="library-chip ${workflowClass}">${escapeHtml(item.library_state_label || getWorkflowLabel(item))}</b>
-                    <b class="library-chip">${escapeHtml(item.mode_label || "Analisi")}</b>
-                    <b class="library-chip ${statusClass}">${escapeHtml(getAssetStatusLabel(item))}</b>
-                    <div class="library-progress"><span style="width:${progress}%"></span></div>
-                    ${item.error || intelligence.error ? `<span>${escapeHtml(item.error || intelligence.error)}</span>` : ""}
+                <div class="library-item-facts" aria-label="Dati del progetto">
+                    <span><small>Origine</small><strong>${escapeHtml(sourceProvider)}</strong></span>
+                    ${item.size_bytes ? `<span><small>Dimensione</small><strong>${escapeHtml(formatBytes(item.size_bytes))}</strong></span>` : ""}
+                    <span><small>Report</small><strong>${report.id ? escapeHtml(report.state_label || "Pronto") : "Assente"}</strong></span>
+                    ${intelligence.enabled ? `<span><small>Evidenze</small><strong>${Number(item.reviewed_count || 0)}/${Number(item.evidence_count || 0)} revisionate</strong></span><span><small>Materiale</small><strong>${Number(item.frame_count || 0)} frame - ${Number(item.clip_count || 0)} clip</strong></span>` : ""}
                 </div>
+                ${legacyBadge ? `<div class="library-notice">${legacyBadge}<span>Completa i dettagli dal menu Azioni quando necessario.</span></div>` : ""}
+                <div class="library-progress-wrap">
+                    <span>${escapeHtml(item.library_state_label || getWorkflowLabel(item))}</span>
+                    <div class="library-progress" role="progressbar" aria-label="Avanzamento ${escapeHtml(item.title || "progetto")}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><span style="width:${progress}%"></span></div>
+                </div>
+                ${item.error || intelligence.error ? `<span class="library-inline-error">${escapeHtml(item.error || intelligence.error)}</span>` : ""}
             </div>
             <div class="library-actions">
-                <button class="btn small" type="button" onclick="openLibraryVideo(${Number(item.id)})">${item.library_state === "draft" ? "Inizia analisi" : "Continua"}</button>
+                <button class="btn small library-item-primary" type="button" onclick="openLibraryVideo(${Number(item.id)})">${item.library_state === "draft" ? "Inizia analisi" : "Continua"}</button>
+                <div class="library-item-secondary">
                 ${report.id ? `<button class="btn dark small" type="button" onclick="openLibraryReport(${Number(item.id)})">Apri report</button>` : ""}
                 ${report.id && report.pdf_ready ? `<button class="btn dark small" type="button" onclick="downloadLibraryPdf(${Number(item.id)}, '${escapeHtml(String(report.id))}')">PDF</button>` : ""}
                 ${intelligence.can_retry ? `<button class="btn dark small" type="button" onclick="retryVideoIntelligence(${Number(item.id)})">Riprova analisi</button>` : ""}
                 <div class="library-menu-wrap">
-                    <button class="btn dark small" type="button" aria-expanded="false" onclick="toggleLibraryMenu(event, ${Number(item.id)})">Azioni</button>
-                    <div id="libraryMenu${Number(item.id)}" class="library-menu">
-                        <button class="btn dark small" type="button" onclick="prepareSessionAnalysis(${Number(item.id)})">Analizza</button>
-                        <button class="btn dark small" type="button" onclick="openSessionModal(${Number(item.id)})">Modifica dettagli</button>
-                        <button class="btn dark small" type="button" onclick="saveSessionMetadata(${Number(item.id)})">Salva dati correnti</button>
-                        <button class="btn dark small" type="button" onclick="archiveVideoSession(${Number(item.id)}, ${isArchived ? "false" : "true"})">${isArchived ? "Ripristina" : "Archivia"}</button>
-                        <button class="btn red small" type="button" onclick="deleteLibraryVideo(${Number(item.id)})">Elimina</button>
+                    <button class="btn dark small" type="button" aria-expanded="false" aria-controls="libraryMenu${Number(item.id)}" onclick="toggleLibraryMenu(event, ${Number(item.id)})">Azioni</button>
+                    <div id="libraryMenu${Number(item.id)}" class="library-menu" role="menu">
+                        <button class="btn dark small" role="menuitem" type="button" onclick="prepareSessionAnalysis(${Number(item.id)})">Analizza</button>
+                        <button class="btn dark small" role="menuitem" type="button" onclick="openSessionModal(${Number(item.id)})">Modifica dettagli</button>
+                        <button class="btn dark small" role="menuitem" type="button" onclick="saveSessionMetadata(${Number(item.id)})">Salva dati correnti</button>
+                        <button class="btn dark small" role="menuitem" type="button" onclick="archiveVideoSession(${Number(item.id)}, ${isArchived ? "false" : "true"})">${isArchived ? "Ripristina" : "Archivia"}</button>
+                        <button class="btn red small" role="menuitem" type="button" onclick="deleteLibraryVideo(${Number(item.id)})">Elimina</button>
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
+        </article>
     `}).join("");
 }
 
@@ -5653,8 +5684,8 @@ if("serviceWorker" in navigator){
     });
 }
 </script>
-<script src="/js/video-intelligence.js?v=10539"></script>
-<script src="/js/video-experience.js?v=10539"></script>
+<script src="/js/video-intelligence.js?v=10540"></script>
+<script src="/js/video-experience.js?v=10540"></script>
 <script src="/js/app-meta.js"></script>
 <link rel="stylesheet" href="/css/knowledge-entry.css?v=10528">
 <link rel="stylesheet" href="/css/tactical-assistant-entry.css?v=10528">
