@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
 
 from database import (
+    count_video_assets,
     create_video_asset,
     get_video_asset,
     get_video_assets,
@@ -36,6 +38,18 @@ WORKFLOW_STATES = {
     "report_ready": "Report pronto",
     "needs_review": "Da rivedere",
     "approved": "Approvata",
+}
+
+LIBRARY_STATES = {
+    "draft": "Bozza",
+    "ready": "Pronto da analizzare",
+    "uploading": "Caricamento in corso",
+    "processing": "Analisi in corso",
+    "review": "Da revisionare",
+    "report_ready": "Report pronto",
+    "complete": "Completo",
+    "recoverable_error": "Errore recuperabile",
+    "archived": "Archiviato",
 }
 
 
@@ -73,6 +87,72 @@ def _metadata(row: Optional[dict]) -> Dict[str, Any]:
         except json.JSONDecodeError:
             metadata = {}
     return metadata if isinstance(metadata, dict) else {}
+
+
+def _datetime_value(value: Any) -> datetime:
+    raw = str(value or "").strip()
+    if not raw:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return datetime.min.replace(tzinfo=timezone.utc)
+
+
+def _report_summary(metadata: Dict[str, Any], intelligence: Dict[str, Any], evidences: List[dict]) -> Dict[str, Any]:
+    reports = [item for item in (intelligence.get("reports") or []) if isinstance(item, dict)]
+    legacy_report = metadata.get("latest_report") if isinstance(metadata.get("latest_report"), dict) else {}
+    latest = reports[-1] if reports else legacy_report
+    source = "intelligence" if reports else ("legacy" if legacy_report else "")
+    report_id = latest.get("report_id") or latest.get("id")
+    generated_at = latest.get("generated_at") or latest.get("created_at") or metadata.get("last_report_at") or ""
+    latest_review = max(
+        (_datetime_value(item.get("reviewed_at")) for item in evidences if isinstance(item, dict)),
+        default=datetime.min.replace(tzinfo=timezone.utc),
+    )
+    generated_value = _datetime_value(generated_at)
+    state = "absent"
+    if report_id:
+        state = "stale" if latest_review > generated_value else "ready"
+    return {
+        "id": report_id,
+        "source": source,
+        "state": state,
+        "state_label": {"ready": "Report pronto", "stale": "Da aggiornare", "absent": "Report assente"}[state],
+        "pdf_ready": bool(
+            source == "intelligence"
+            and report_id
+            and (latest.get("pdf_ready", True) is not False)
+            and str(latest.get("status") or "ready") == "ready"
+        ),
+        "filename": latest.get("pdf_filename") or "",
+        "generated_at": generated_at,
+        "title": latest.get("title") or "",
+    }
+
+
+def _library_state(status: str, archive_state: str, pipeline: Dict[str, Any], evidences: List[dict], report: Dict[str, Any]) -> str:
+    pipeline_status = str(pipeline.get("status") or "").lower()
+    if archive_state == "archived" or status == "archived":
+        return "archived"
+    if status in {"failed", "cancelled"} or pipeline_status in {"failed", "cancelled"}:
+        return "recoverable_error"
+    if status in {"uploading", "importing"}:
+        return "uploading"
+    if status in {"queued", "processing"} or pipeline_status in {"queued", "processing"}:
+        return "processing"
+    pending = sum(1 for item in evidences if item.get("review_status") == "pending")
+    accepted = sum(1 for item in evidences if item.get("review_status") in {"confirmed", "corrected"})
+    if pending:
+        return "review"
+    if report.get("state") in {"ready", "stale"}:
+        return "complete" if accepted and accepted == len(evidences) else "report_ready"
+    if status == "review_ready" or pipeline_status == "review_ready":
+        return "review"
+    if status == "draft":
+        return "draft"
+    return "ready"
 
 
 def _activity_list(metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -172,6 +252,17 @@ def public_video_session(row: dict) -> Dict[str, Any]:
     status = _pick_status(row.get("status") or job.get("status") or metadata.get("status"))
     archive_state = _pick_archive_state(metadata.get("archive_state"))
     workflow_state = _pick_workflow_state(metadata.get("workflow_state") or metadata.get("work_state"), status)
+    report = _report_summary(metadata, intelligence, evidences)
+    library_state = _library_state(status, archive_state, intelligence_pipeline, evidences, report)
+    frame_keys = {
+        str((item.get("representative_frame") or {}).get("frame_index") or item.get("representative_timestamp_ms") or "")
+        for item in evidences if isinstance(item, dict) and (item.get("representative_frame") or item.get("representative_timestamp_ms") is not None)
+    }
+    clip_count = sum(1 for item in evidences if isinstance(item, dict) and isinstance(item.get("clip_reference"), dict))
+    required_metadata = (metadata.get("session_type"), metadata.get("team") or metadata.get("home_team"), metadata.get("session_date") or metadata.get("date"))
+    incomplete_metadata = not all(required_metadata)
+    mode = str(intelligence.get("analysis_mode") or metadata.get("analysis_mode") or "analysis").lower()
+    source_type = row.get("source_type") or "session"
     return {
         "id": row.get("id"),
         "owner_id": row.get("user_id"),
@@ -190,7 +281,8 @@ def public_video_session(row: dict) -> Dict[str, Any]:
         "result": metadata.get("result") or "",
         "field": metadata.get("field") or metadata.get("field_name") or "",
         "duration_seconds": _clean_float(metadata.get("duration_seconds")),
-        "source_type": row.get("source_type") or "session",
+        "source_type": source_type,
+        "source_label": "Link autorizzato" if source_type == "url" else "Upload" if source_type == "upload" else "Sessione",
         "source_provider": metadata.get("source_provider") or metadata.get("provider") or metadata.get("storage") or "matchiq",
         "source_url": row.get("source_url") or "",
         "external_id": metadata.get("external_id") or "",
@@ -203,6 +295,9 @@ def public_video_session(row: dict) -> Dict[str, Any]:
         "status": status,
         "workflow_state": workflow_state,
         "workflow_label": WORKFLOW_STATES.get(workflow_state, "Da analizzare"),
+        "library_state": library_state,
+        "library_state_label": LIBRARY_STATES.get(library_state, "Pronto da analizzare"),
+        "attention_priority": 0 if library_state in {"recoverable_error", "review", "processing", "uploading"} else 1,
         "progress": max(0, min(100, int(job.get("progress") if job.get("progress") is not None else (100 if status == "ready" else 0)))),
         "notes": metadata.get("notes") or "",
         "tags": metadata.get("tags") if isinstance(metadata.get("tags"), list) else [],
@@ -210,6 +305,16 @@ def public_video_session(row: dict) -> Dict[str, Any]:
         "updated_at": row.get("updated_at") or "",
         "last_used_at": metadata.get("last_used_at") or "",
         "latest_report": metadata.get("latest_report") if isinstance(metadata.get("latest_report"), dict) else {},
+        "report": report,
+        "report_state": report.get("state"),
+        "frame_count": len(frame_keys),
+        "clip_count": clip_count,
+        "evidence_count": len(evidences),
+        "reviewed_count": sum(1 for item in evidences if isinstance(item, dict) and item.get("review_status") in {"confirmed", "corrected"}),
+        "mode": mode if mode in {"coach", "analysis"} else "analysis",
+        "mode_label": "Coach" if mode == "coach" else "Analisi",
+        "legacy_project": not bool(metadata.get("hub_version")),
+        "incomplete_metadata": incomplete_metadata,
         "activity": _activity_list(metadata),
         "rights_confirmed": bool(row.get("rights_confirmed")),
         "archive_state": archive_state,
@@ -238,11 +343,11 @@ def create_video_session(user_id: int, data: dict) -> Dict[str, Any]:
     now = utc_now()
     metadata = {
         **session,
-        "hub_version": 1,
+        "hub_version": 2,
         "created_from": "video_hub",
         "job": {"status": "draft", "stage": "draft", "progress": 0, "updated_at": now},
     }
-    _push_activity(metadata, "created", "Sessione creata", "Scheda nata nel Video Hub.")
+    _push_activity(metadata, "created", "Sessione creata", "Scheda nata nella Libreria Video AI.")
     result = create_video_asset(
         user_id=user_id,
         title=_clean_text(data.get("title"), 180) or "Nuova sessione video",
@@ -269,7 +374,7 @@ def patch_video_session(user_id: int, asset_id: int, data: dict) -> Optional[Dic
     metadata.update({key: value for key, value in patch.items() if value not in ("", [], 0.0)})
     metadata["updated_from"] = "video_hub"
     metadata["updated_at"] = utc_now()
-    _push_activity(metadata, "updated", "Scheda aggiornata", "Dati sessione modificati dal Video Hub.")
+    _push_activity(metadata, "updated", "Scheda aggiornata", "Dati sessione modificati dalla Libreria Video AI.")
     detailed = update_video_asset_details(
         user_id=user_id,
         asset_id=asset_id,
@@ -376,6 +481,7 @@ def list_video_sessions(user_id: int, filters: dict) -> Dict[str, Any]:
     type_filter = _clean_text(filters.get("type"), 80)
     status_filter = _clean_text(filters.get("status"), 40).lower()
     workflow_filter = _clean_text(filters.get("workflow_state") or filters.get("work_state"), 40).lower()
+    library_filter = _clean_text(filters.get("library_state"), 40).lower()
     provider_filter = _clean_text(filters.get("provider"), 80).lower()
     archive_filter = _clean_text(filters.get("archive_state") or "active", 40).lower()
     team_filter = _clean_text(filters.get("team"), 120).lower()
@@ -383,8 +489,21 @@ def list_video_sessions(user_id: int, filters: dict) -> Dict[str, Any]:
     competition_filter = _clean_text(filters.get("competition"), 120).lower()
     focus_filter = _clean_text(filters.get("focus"), 160).lower()
     tag_filter = _clean_text(filters.get("tag"), 60).lower().lstrip("#")
+    mode_filter = _clean_text(filters.get("mode"), 40).lower()
+    report_filter = _clean_text(filters.get("report_state"), 40).lower()
+    source_filter = _clean_text(filters.get("source"), 40).lower()
+    date_from = _datetime_value(filters.get("date_from"))
+    date_to = _datetime_value(filters.get("date_to"))
+    sort_mode = _clean_text(filters.get("sort") or "attention", 40).lower()
 
-    rows = get_video_assets(user_id, limit=500)
+    total_assets = count_video_assets(user_id)
+    rows: List[dict] = []
+    batch_size = 100
+    for batch_offset in range(0, total_assets, batch_size):
+        batch = get_video_assets(user_id, limit=batch_size, offset=batch_offset)
+        rows.extend(batch)
+        if len(batch) < batch_size:
+            break
     sessions = [public_video_session(row) for row in rows]
 
     def matches(session: dict) -> bool:
@@ -395,6 +514,8 @@ def list_video_sessions(user_id: int, filters: dict) -> Dict[str, Any]:
         if status_filter and status_filter != "all" and session.get("status") != status_filter:
             return False
         if workflow_filter and workflow_filter != "all" and session.get("workflow_state") != workflow_filter:
+            return False
+        if library_filter and library_filter != "all" and session.get("library_state") != library_filter:
             return False
         if provider_filter and provider_filter != "all":
             provider_text = " ".join(str(session.get(key) or "") for key in ("source_provider", "source_type")).lower()
@@ -414,23 +535,69 @@ def list_video_sessions(user_id: int, filters: dict) -> Dict[str, Any]:
             tag_text = " ".join(session.get("tags") or []).lower()
             if tag_filter not in tag_text:
                 return False
+        if mode_filter and mode_filter != "all" and session.get("mode") != mode_filter:
+            return False
+        if report_filter and report_filter != "all" and session.get("report_state") != report_filter:
+            return False
+        if source_filter and source_filter != "all" and session.get("source_type") != source_filter:
+            return False
+        session_date = _datetime_value(session.get("date") or session.get("created_at"))
+        if date_from > datetime.min.replace(tzinfo=timezone.utc) and session_date < date_from:
+            return False
+        if date_to > datetime.min.replace(tzinfo=timezone.utc) and session_date.date() > date_to.date():
+            return False
         if search:
             haystack = " ".join(str(session.get(key) or "") for key in (
-                "title", "team", "home_team", "away_team", "opponent", "competition", "season", "notes", "category", "result", "focus", "field", "workflow_label", "source_provider"
+                "id", "title", "team", "home_team", "away_team", "opponent", "competition", "season", "notes", "category", "result", "focus", "field", "workflow_label", "source_provider"
             ))
-            haystack = f"{haystack} {' '.join(session.get('tags') or [])}".lower()
+            metadata = session.get("metadata") if isinstance(session.get("metadata"), dict) else {}
+            intelligence = metadata.get("video_intelligence") if isinstance(metadata.get("video_intelligence"), dict) else {}
+            evidence_text = " ".join(
+                " ".join(str(item.get(key) or "") for key in ("title", "observation", "interpretation", "user_correction", "phase_type"))
+                for item in (intelligence.get("evidences") or []) if isinstance(item, dict)
+            )
+            haystack = f"{haystack} {' '.join(session.get('tags') or [])} {evidence_text}".lower()
             if search not in haystack:
                 return False
         return True
 
     filtered = [session for session in sessions if matches(session)]
+    date_key = lambda item, field: str(item.get(field) or item.get("created_at") or "")
+    if sort_mode == "oldest":
+        filtered.sort(key=lambda item: date_key(item, "created_at"))
+    elif sort_mode == "updated":
+        filtered.sort(key=lambda item: date_key(item, "updated_at"), reverse=True)
+    elif sort_mode == "title":
+        filtered.sort(key=lambda item: str(item.get("title") or "").casefold())
+    elif sort_mode == "match_date":
+        filtered.sort(key=lambda item: date_key(item, "date"), reverse=True)
+    elif sort_mode == "status":
+        filtered.sort(key=lambda item: (str(item.get("library_state_label") or "").casefold(), str(item.get("title") or "").casefold()))
+    else:
+        filtered.sort(key=lambda item: date_key(item, "updated_at"), reverse=True)
+        if sort_mode == "attention":
+            filtered.sort(key=lambda item: int(item.get("attention_priority") or 0))
+
+    summary_source = [item for item in sessions if archive_filter == "all" or item.get("archive_state") == archive_filter]
+    summary = {
+        "total": len(summary_source),
+        "processing": sum(1 for item in summary_source if item.get("library_state") in {"uploading", "processing"}),
+        "review": sum(1 for item in summary_source if item.get("library_state") == "review"),
+        "report_ready": sum(1 for item in summary_source if item.get("report_state") == "ready"),
+        "errors": sum(1 for item in summary_source if item.get("library_state") == "recoverable_error"),
+    }
+    page = filtered[offset:offset + limit]
     return {
-        "items": filtered[offset:offset + limit],
-        "count": len(filtered),
-        "total": len(sessions),
+        "items": page,
+        "count": len(page),
+        "total": len(filtered),
+        "library_total": len(sessions),
         "limit": limit,
         "offset": offset,
+        "has_more": offset + len(page) < len(filtered),
+        "summary": summary,
         "session_types": [{"id": key, "label": value} for key, value in SESSION_TYPES.items()],
         "workflow_states": [{"id": key, "label": value} for key, value in WORKFLOW_STATES.items()],
+        "library_states": [{"id": key, "label": value} for key, value in LIBRARY_STATES.items()],
         "states": sorted(SESSION_STATES),
     }

@@ -1808,7 +1808,7 @@ def create_video_asset(
     return {"success": True, "id": asset_id}
 
 
-def get_video_assets(user_id: int, limit: int = 50):
+def get_video_assets(user_id: int, limit: int = 50, offset: int = 0):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(q("""
@@ -1819,7 +1819,8 @@ def get_video_assets(user_id: int, limit: int = 50):
         WHERE user_id = ?
         ORDER BY created_at DESC
         LIMIT ?
-    """), (user_id, int(limit or 50)))
+        OFFSET ?
+    """), (user_id, int(limit or 50), max(0, int(offset or 0))))
     rows = fetchall(cur)
     conn.close()
     return rows
