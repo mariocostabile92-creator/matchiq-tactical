@@ -84,8 +84,8 @@ class HardeningThreeTests(unittest.TestCase):
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
         self.assertIn('"start_url": "/index.html?v=10530"', manifest)
         self.assertIn('version: "10530"', app_meta)
-        self.assertIn('const APP_VERSION = "10538"', video)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v138"', worker)
+        self.assertIn('const APP_VERSION = "10539"', video)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v139"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")

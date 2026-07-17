@@ -24,7 +24,7 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
 
     def test_home_removes_old_dashboard_and_product_shortcuts(self):
         home = read("index.html")
-        for text in ("Il tuo lavoro in numeri", "Quick Actions", "Video Hub"):
+        for text in ("Il tuo lavoro in numeri", "Quick Actions", "Libreria Video AI"):
             self.assertNotIn(text, home)
         self.assertNotIn('href="/live.html', home)
         self.assertNotIn('href="/scout.html', home)
@@ -152,7 +152,7 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         self.assertIn("safe-area-inset-bottom", styles)
         self.assertIn("focus-visible", styles)
         self.assertEqual(manifest["start_url"], "/index.html?v=10530")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v138"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v139"', worker)
         self.assertIn('"/css/home.css?v=10530"', worker)
         self.assertIn('caches.match("/index.html?v=10530")', worker)
         for asset in (
