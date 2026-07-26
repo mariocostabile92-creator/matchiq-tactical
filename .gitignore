@@ -1,10 +1,56 @@
+# Python environments and generated caches
+.venv/
+venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Local environment files (the documented template stays versionable)
 .env
-.env.local
+.env.*
+!.env.example
+
+# Local databases
 matchiq.db
 *.db
 *.sqlite
 *.sqlite3
+
+# Runtime-generated files
 reports/
 storage/.jwt_secret
+storage/video_library/
+*.log
+*.tmp
+*.temp
+
+# Vision Engine inputs, outputs, datasets and model artifacts
+research/vision_spike/input/
+research/vision_spike/vision_output*/
+research/vision_spike/vision_dataset_v3/
+research/vision_spike/**/vision_dataset_v3/
+research/vision_spike/**/checkpoints/
+research/vision_spike/**/training_output/
+research/vision_spike/**/tensorboard/
+research/vision_spike/**/wandb/
+research/vision_spike/**/*.mp4
+research/vision_spike/**/*.mov
+research/vision_spike/**/*.avi
+research/vision_spike/**/*.mkv
+research/vision_spike/**/*.webm
+research/vision_spike/**/*.pt
+research/vision_spike/**/*.pth
+research/vision_spike/**/*.onnx
+research/vision_spike/**/*.engine
+research/vision_spike/**/*.ckpt
+research/vision_spike/**/*.weights
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
