@@ -93,7 +93,7 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
     def test_intelligence_and_activity_are_coach_ai_scoped(self):
         render = read("js/home-render.js")
         state = read("js/home-state.js")
-        for module in ("Pattern Intelligence", "Tactical Identity", "Decision Engine", "Club Intelligence"):
+        for module in ("Cosa si ripete", "Come gioca la tua squadra", "Opzioni da valutare", "Vista società"):
             self.assertIn(module, render)
         self.assertIn('item?.kind!=="scout_report"', state)
         self.assertIn('!module.includes("scout")', state)
@@ -103,7 +103,7 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         home = read("index.html")
         render = read("js/home-render.js")
         entry = read("js/club-intelligence-entry.js")
-        self.assertEqual(render.count('"Club Intelligence"'), 1)
+        self.assertEqual(render.count('"Vista società"'), 1)
         self.assertNotIn("club-intelligence-entry", home)
         self.assertNotIn('path==="/"', entry)
         self.assertNotIn('"/index.html"', entry)
@@ -151,14 +151,14 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         self.assertIn("safe-area-inset-top", styles)
         self.assertIn("safe-area-inset-bottom", styles)
         self.assertIn("focus-visible", styles)
-        self.assertEqual(manifest["start_url"], "/index.html?v=10530")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v141"', worker)
-        self.assertIn('"/css/home.css?v=10530"', worker)
-        self.assertIn('caches.match("/index.html?v=10530")', worker)
+        self.assertEqual(manifest["start_url"], "/index.html?v=10542")
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v142"', worker)
+        self.assertIn('"/css/home.css?v=10542"', worker)
+        self.assertIn('caches.match("/index.html?v=10542")', worker)
         for asset in (
-            "/js/app-meta.js?v=10530", "/css/global-nav.css?v=10530",
-            "/js/auth.js?v=10530", "/js/global-nav-state.js?v=10530",
-            "/js/weekly-briefing-state.js?v=10530", "/js/weekly-briefing-api.js?v=10530",
+            "/js/app-meta.js?v=10542", "/css/global-nav.css?v=10542",
+            "/js/auth.js?v=10542", "/js/global-nav-state.js?v=10542",
+            "/js/weekly-briefing-state.js?v=10542", "/js/weekly-briefing-api.js?v=10542",
         ):
             self.assertIn(f'"{asset}"', worker)
 

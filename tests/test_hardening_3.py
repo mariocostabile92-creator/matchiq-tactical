@@ -82,10 +82,10 @@ class HardeningThreeTests(unittest.TestCase):
         app_meta = (FRONTEND / "js" / "app-meta.js").read_text(encoding="utf-8")
         video = (FRONTEND / "video.html").read_text(encoding="utf-8")
         worker = (FRONTEND / "service-worker.js").read_text(encoding="utf-8")
-        self.assertIn('"start_url": "/index.html?v=10530"', manifest)
-        self.assertIn('version: "10530"', app_meta)
+        self.assertIn('"start_url": "/index.html?v=10542"', manifest)
+        self.assertIn('version: "10542"', app_meta)
         self.assertIn('const APP_VERSION = "10541"', video)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v141"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v142"', worker)
 
     def test_shared_navigation_covers_operational_modules(self):
         config = (FRONTEND / "js" / "global-nav-config.js").read_text(encoding="utf-8")
@@ -233,7 +233,10 @@ class HardeningThreeTests(unittest.TestCase):
         actions = (FRONTEND / "js" / "home-actions.js").read_text(encoding="utf-8")
 
         self.assertIn("Oggi | MatchIQ Coach AI", home)
-        self.assertIn("La scrivania digitale dell'allenatore.", home)
+        self.assertIn(
+            "Il lavoro quotidiano dell'allenatore, prima, durante e dopo la partita.",
+            home,
+        )
         self.assertIn("PRIORITÀ DI OGGI", home)
         self.assertNotIn("Partite live disponibili", home)
         self.assertNotIn("Partite live disponibili", state)

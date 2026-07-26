@@ -1,10 +1,10 @@
-const CACHE_NAME = "matchiq-pwa-v141";
+const CACHE_NAME = "matchiq-pwa-v142";
 const APP_SHELL = [
-  "/index.html?v=10530",
-  "/coach.html?v=10534",
+  "/index.html?v=10542",
+  "/coach.html?v=10542",
   "/mobile.html?v=10526",
   "/live.html?v=10526",
-  "/video.html?v=10541",
+  "/video.html?v=10542",
   "/weekly-briefing.html",
   "/pattern-intelligence.html",
   "/training-planner.html",
@@ -16,13 +16,13 @@ const APP_SHELL = [
   "/privacy.html",
   "/terms.html",
   "/cookies.html",
-  "/js/app-meta.js?v=10530",
+  "/js/app-meta.js?v=10542",
   "/css/components.css?v=10526",
   "/css/video-intelligence.css?v=10541",
   "/css/video-experience.css?v=10541",
   "/css/video-library.css?v=10541",
   "/js/ux-hardening.js?v=10526",
-  "/css/home.css?v=10530",
+  "/css/home.css?v=10542",
   "/css/coach-lineup.css?v=10532",
   "/css/coach.css?v=10534",
   "/css/home-intelligence.css?v=10526",
@@ -43,17 +43,17 @@ const APP_SHELL = [
   "/css/decision-engine.css?v=10526",
   "/css/decision-engine-entry.css?v=10526",
   "/css/club-intelligence.css?v=10526",
-  "/css/club-intelligence-entry.css?v=10530",
-  "/css/global-nav.css?v=10530",
-  "/js/auth.js?v=10530",
+  "/css/club-intelligence-entry.css?v=10542",
+  "/css/global-nav.css?v=10542",
+  "/js/auth.js?v=10542",
   "/js/video-intelligence.js?v=10541",
   "/js/video-experience.js?v=10541",
   "/js/safe-render.js?v=10526",
-  "/js/global-nav-config.js?v=10530",
-  "/js/global-nav-state.js?v=10530",
-  "/js/global-nav-render.js?v=10530",
-  "/js/global-nav-menu.js?v=10530",
-  "/js/home-state.js?v=10530",
+  "/js/global-nav-config.js?v=10542",
+  "/js/global-nav-state.js?v=10542",
+  "/js/global-nav-render.js?v=10542",
+  "/js/global-nav-menu.js?v=10542",
+  "/js/home-state.js?v=10542",
   "/js/coach-lineup-layouts.js?v=10531",
   "/js/coach-lineup-interactions.js?v=10531",
   "/js/coach-lineup-player-menu.js?v=10531",
@@ -64,15 +64,15 @@ const APP_SHELL = [
   "/js/coach-voice-render.js?v=10534",
   "/js/coach-render.js?v=10534",
   "/js/coach-report.js?v=10533",
-  "/js/home-api.js?v=10530",
-  "/js/home-render.js?v=10530",
-  "/js/home-actions.js?v=10530",
+  "/js/home-api.js?v=10542",
+  "/js/home-render.js?v=10542",
+  "/js/home-actions.js?v=10542",
   "/js/live-page.js?v=10526",
   "/js/home-onboarding.js?v=10526",
-  "/js/home.js?v=10530",
+  "/js/home.js?v=10542",
   "/js/home-intelligence.js?v=10526",
-  "/js/weekly-briefing-state.js?v=10530",
-  "/js/weekly-briefing-api.js?v=10530",
+  "/js/weekly-briefing-state.js?v=10542",
+  "/js/weekly-briefing-api.js?v=10542",
   "/js/weekly-briefing-render.js?v=10526",
   "/js/weekly-briefing.js?v=10526",
   "/js/weekly-briefing-home.js?v=10526",
@@ -128,7 +128,7 @@ const APP_SHELL = [
   "/js/club-intelligence-api.js?v=10526",
   "/js/club-intelligence-render.js?v=10526",
   "/js/club-intelligence.js?v=10526",
-  "/js/club-intelligence-entry.js?v=10530",
+  "/js/club-intelligence-entry.js?v=10542",
   "/manifest.json",
   "/assets/matchiq-logo.png"
 ];
@@ -166,7 +166,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10530")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("/index.html?v=10542")))
     );
     return;
   }

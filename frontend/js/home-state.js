@@ -145,7 +145,7 @@
     const sources=[];
     [["report",materials.reports],["sessioni video",materials.video_sessions],["frame",materials.frames],["pagelle",materials.ratings],["partite",materials.history]]
       .forEach(([label,value])=>{if(Number(value)>0)sources.push(`${value} ${label}`)});
-    return {id:briefing.id,isRead:briefing.is_read===true,title:content.title||"Weekly AI Briefing",subtitle:content.subtitle||"Sintesi tecnica della settimana.",sources:sources.slice(0,3)};
+    return {id:briefing.id,isRead:briefing.is_read===true,title:content.title||"La tua settimana",subtitle:content.subtitle||"Sintesi tecnica della settimana.",sources:sources.slice(0,3)};
   };
 
   H.videoAttention = function(){
@@ -186,13 +186,13 @@
       hero={key:currentItem.record_key,kind:"coach-work",eyebrow:"LAVORO DA RIPRENDERE",title:currentItem.title,lead:"La preparazione è iniziata ma non è ancora completa.",statusTitle:"Continua da dove eri rimasto",statusText:"Completa formazione, obiettivi o note prima della gara.",action:"Continua in Coach",url:"/coach.html"};
     }else if(H.weeklyContext()&&!H.weeklyContext().isRead){
       const weekly=H.weeklyContext();
-      hero={key:`weekly:${weekly.id}`,kind:"weekly",eyebrow:"WEEKLY AI BRIEFING",title:weekly.title,lead:weekly.subtitle,statusTitle:"Briefing da leggere",statusText:"Inizia la settimana dalle evidenze già raccolte dallo staff.",action:"Inizia la settimana",url:"/weekly-briefing.html"};
+      hero={key:`weekly:${weekly.id}`,kind:"weekly",eyebrow:"LA TUA SETTIMANA",title:weekly.title,lead:weekly.subtitle,statusTitle:"Sintesi da leggere",statusText:"Inizia la settimana dalle evidenze già raccolte dallo staff.",action:"Inizia la settimana",url:"/weekly-briefing.html"};
     }else if(H.videoAttention()&&H.videoAttention().state!=="completed"){
       const item=H.videoAttention();
       hero={key:item.key,kind:"video",eyebrow:`VIDEO AI · ${item.label}`,title:item.title,lead:item.copy,statusTitle:item.action,statusText:"Controlla il progetto prima di passare al prossimo lavoro.",action:item.action,url:item.url};
     }else if(H.trainingContext()?.needsAttention){
       const training=H.trainingContext();
-      hero={key:`training:${training.id}`,kind:"training",eyebrow:"AI TRAINING PLANNER",title:"Il piano della settimana richiede attenzione.",lead:training.days?`${training.days} sedute sono disponibili per lo staff.`:"Il piano può essere rivisto prima della prossima seduta.",statusTitle:"Porta le evidenze in campo",statusText:"Controlla e adatta il lavoro proposto alle esigenze della squadra.",action:"Apri Training Planner",url:training.url};
+      hero={key:`training:${training.id}`,kind:"training",eyebrow:"PREPARA L'ALLENAMENTO",title:"Il piano della settimana richiede attenzione.",lead:training.days?`${training.days} sedute sono disponibili per lo staff.`:"Il piano può essere rivisto prima della prossima seduta.",statusTitle:"Porta le evidenze in campo",statusText:"Controlla e adatta il lavoro proposto alle esigenze della squadra.",action:"Apri il piano",url:training.url};
     }
     return {hero,currentItem};
   };
@@ -252,11 +252,11 @@
     }
     const weekly=H.weeklyContext();
     if(weekly&&!weekly.isRead&&String(today.hero.key)!==`weekly:${weekly.id}`){
-      priorities.unshift({type:"operational",title:"Weekly AI Briefing da leggere",text:weekly.subtitle,url:"/weekly-briefing.html",action:"Inizia la settimana"});
+      priorities.unshift({type:"operational",title:"La tua settimana è pronta",text:weekly.subtitle,url:"/weekly-briefing.html",action:"Inizia la settimana"});
     }
     const training=H.trainingContext();
     if(training?.needsAttention&&String(today.hero.key)!==`training:${training.id}`){
-      priorities.push({type:"operational",title:"Piano allenamento da controllare",text:training.days?`${training.days} sedute disponibili.`:"Training Planner disponibile.",url:training.url,action:"Apri piano"});
+      priorities.push({type:"operational",title:"Piano allenamento da controllare",text:training.days?`${training.days} sedute disponibili.`:"Il piano della settimana è disponibile.",url:training.url,action:"Apri piano"});
     }
     if(current && String(today.hero.key)!==String(current.record_key)){
       const ratings = Array.isArray(local.coachCurrent?.ratings) ? local.coachCurrent.ratings.length : 0;

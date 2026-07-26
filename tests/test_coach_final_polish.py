@@ -159,8 +159,8 @@ class CoachFinalPolishTests(unittest.TestCase):
     def test_28_pwa_safe_areas_and_release_are_current(self):
         self.assertIn("@media(display-mode:standalone)", self.styles)
         self.assertIn("safe-area-inset-left", self.styles)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v141"', self.worker)
-        self.assertIn('/coach.html?v=10534', self.worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v142"', self.worker)
+        self.assertIn('/coach.html?v=10542', self.worker)
 
     def test_29_modified_javascript_is_syntax_valid(self):
         scripts = (

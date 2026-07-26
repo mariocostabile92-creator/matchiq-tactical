@@ -26,7 +26,15 @@ class ProductRepositioningTests(unittest.TestCase):
         self.assertIn("MatchIQ Coach AI", home)
         self.assertIn("MatchIQ Coach AI", landing)
         self.assertIn('product: "MatchIQ Coach AI"', app_meta)
-        self.assertIn("La scrivania digitale dell'allenatore.", home)
+        self.assertIn(
+            "Il lavoro quotidiano dell'allenatore, prima, durante e dopo la partita.",
+            home,
+        )
+        self.assertIn(
+            "Prepara la gara, raccogli voce ed eventi a bordo campo, collega gli episodi video "
+            "e trasforma ciò che osservi nel lavoro della settimana.",
+            home,
+        )
         self.assertIn(
             "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
             landing,
@@ -76,7 +84,7 @@ class ProductRepositioningTests(unittest.TestCase):
         account = read_frontend("account.html")
         video = read_frontend("video.html")
 
-        self.assertIn("Account Private Beta - MatchIQ Coach AI", account)
+        self.assertIn("<title>Account | MatchIQ Coach AI</title>", account)
         for panel in ("#ctaPanel", "#proOnlyPanel", "#valuePanel", "#founderPanel", "#comparePanel"):
             self.assertIn(panel, account)
         self.assertIn("display:none !important", account)
@@ -105,10 +113,25 @@ class ProductRepositioningTests(unittest.TestCase):
             manifest["description"],
             "L'assistente AI che accompagna lo staff tecnico prima, durante e dopo ogni partita.",
         )
-        self.assertEqual(manifest["start_url"], "/index.html?v=10530")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v141"', worker)
-        self.assertIn('version: "10530"', app_meta)
-        self.assertIn('const VERSION = "10530"', config)
+        self.assertEqual(manifest["start_url"], "/index.html?v=10542")
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v142"', worker)
+        self.assertIn('version: "10542"', app_meta)
+        self.assertIn('const VERSION = "10542"', config)
+
+    def test_specialist_modules_use_staff_friendly_names_without_route_changes(self):
+        expectations = {
+            "weekly-briefing.html": "La tua settimana",
+            "pattern-intelligence.html": "Cosa si ripete",
+            "training-planner.html": "Prepara l'allenamento",
+            "knowledge.html": "Memoria dello staff",
+            "tactical-assistant.html": "Assistente tattico",
+            "tactical-identity.html": "Come gioca la tua squadra",
+            "decision-engine.html": "Opzioni da valutare",
+            "club-intelligence.html": "Vista società",
+        }
+        for relative_path, label in expectations.items():
+            self.assertTrue((FRONTEND / relative_path).is_file(), relative_path)
+            self.assertIn(label, read_frontend(relative_path))
 
     def test_live_and_scout_remain_available_as_direct_products(self):
         worker = read_frontend("service-worker.js")

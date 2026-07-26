@@ -155,7 +155,7 @@ class VideoLibraryFrontendContractTests(unittest.TestCase):
         self.assertIn('url.pathname.startsWith("/api/")', worker)
         self.assertIn("pdf|mp4|webm|mov|avi", worker)
         self.assertIn("video-library.css?v=10541", worker)
-        self.assertIn('matchiq-pwa-v141', worker)
+        self.assertIn('matchiq-pwa-v142', worker)
 
     def test_premium_library_hierarchy_keeps_existing_actions(self):
         page = (ROOT / "frontend" / "video.html").read_text(encoding="utf-8")

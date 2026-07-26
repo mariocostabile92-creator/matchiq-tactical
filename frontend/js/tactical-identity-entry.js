@@ -5,16 +5,16 @@
   const copyByPath={
     "/weekly-briefing.html":["CONTESTO IDENTITA","Il briefing puo leggere tratti consolidati e scostamenti nelle prossime generazioni."],
     "/training-planner.html":["CONTESTO IDENTITA","Scostamenti ed evoluzioni sono disponibili come contesto per i prossimi piani."],
-    "/pattern-intelligence.html":["IDENTITA E PATTERN","Solo i pattern validi e affidabili contribuiscono alla Tactical Identity."],
+    "/pattern-intelligence.html":["IDENTITÀ E RICORRENZE","Solo le ricorrenze valide e affidabili contribuiscono a descrivere come gioca la squadra."],
     "/video.html":["IDENTITA E VIDEO AI","Contribuiscono soltanto analisi persistenti, collegate a una partita e sufficientemente affidabili."],
     "/coach.html":["IMPATTO SULL'IDENTITA TATTICA","La partita salvata sara valutata al prossimo aggiornamento dell'identita, senza bloccare il report Coach."],
   };
   const create=(data)=>{
-    const section=document.createElement("section");section.id="tacticalIdentityEntry";section.className="identity-entry";section.setAttribute("aria-label","AI Tactical Identity");
+    const section=document.createElement("section");section.id="tacticalIdentityEntry";section.className="identity-entry";section.setAttribute("aria-label","Come gioca la tua squadra");
     const empty=!data||data.status==="empty",dims=data?.dimensions||[],consolidated=dims.filter(item=>item.observed_value&&item.confidence_level==="alta").length,evolving=dims.filter(item=>["in_aumento","in_diminuzione","in_trasformazione"].includes(item.trend_direction)).length;
     const custom=copyByPath[path];section.dataset.state=empty?"empty":"ready";
-    const copy=document.createElement("div");copy.className="identity-entry-copy";const label=document.createElement("small"),title=document.createElement("strong"),lead=document.createElement("span");label.textContent=custom?.[0]||"AI TACTICAL IDENTITY";title.textContent=empty?"Servono piu partite per costruire un'identita affidabile.":(custom?.[1]||`${consolidated} tratti consolidati - ${evolving} in evoluzione`);lead.textContent=empty?"MatchIQ non inventa: aggiorna l'identita quando esistono fonti reali.":(data.summary?.text||"Apri il profilo per verificare fonti, limiti e allineamento.");copy.append(label,title,lead);
-    const action=document.createElement("a");action.href="/tactical-identity.html";action.textContent=empty?"Costruisci identita":"Apri identita";section.append(copy,action);return section;
+    const copy=document.createElement("div");copy.className="identity-entry-copy";const label=document.createElement("small"),title=document.createElement("strong"),lead=document.createElement("span");label.textContent=custom?.[0]||"COME GIOCA LA TUA SQUADRA";title.textContent=empty?"Servono più partite per costruire un'identità affidabile.":(custom?.[1]||`${consolidated} tratti consolidati - ${evolving} in evoluzione`);lead.textContent=empty?"MatchIQ non inventa: aggiorna l'identità quando esistono fonti reali.":(data.summary?.text||"Apri il profilo per verificare fonti, limiti e allineamento.");copy.append(label,title,lead);
+    const action=document.createElement("a");action.href="/tactical-identity.html";action.textContent=empty?"Costruisci identità":"Apri identità";section.append(copy,action);return section;
   };
   const mount=(section)=>{
     if(path==="/coach.html"){

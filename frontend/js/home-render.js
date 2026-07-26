@@ -61,7 +61,7 @@
 
   H.renderWeekly=function(){
     const root=$("weeklyContent");if(!root)return;root.replaceChildren();const weekly=H.state.view?.weekly;
-    if(!weekly){root.append(H.emptyState("Il briefing di questa settimana non è ancora disponibile.","Apri Weekly per costruire la sintesi usando partite, osservazioni e materiali già raccolti.",[{label:"Prepara il briefing",url:"/weekly-briefing.html",primary:true}]));return}
+    if(!weekly){root.append(H.emptyState("La sintesi di questa settimana non è ancora disponibile.","Apri La tua settimana per riunire partite, osservazioni e materiali già raccolti.",[{label:"Prepara la settimana",url:"/weekly-briefing.html",primary:true}]));return}
     const card=node("article",undefined,"weekly-summary"),copy=node("div"),facts=node("div",undefined,"summary-facts");
     copy.append(node("span",weekly.isRead?"GIÀ LETTO":"DA LEGGERE","summary-kicker"),node("strong",weekly.title,"summary-title"),node("p",weekly.subtitle,"summary-copy"));
     weekly.sources.forEach(source=>facts.append(node("span",source)));if(weekly.sources.length)copy.append(facts);
@@ -90,11 +90,11 @@
   H.renderIntelligence=function(){
     const grid=$("homeIntelligenceGrid");if(!grid)return;grid.replaceChildren();
     [
-      ["Pattern Intelligence","Scopri cosa si ripete nel tempo.","/pattern-intelligence.html"],
-      ["Tactical Identity","Confronta principi dichiarati ed evidenze.","/tactical-identity.html"],
-      ["Decision Engine","Valuta alternative con fonti verificabili.","/decision-engine.html"],
-      ["Club Intelligence","Condividi priorità tecniche con la società.","/club-intelligence.html"]
-    ].forEach(([title,copy,url])=>{const card=node("article",undefined,"intelligence-card");card.append(node("span","INTELLIGENCE","intelligence-tag"),node("h3",title),node("p",copy),link("Apri",url));grid.append(card)});
+      ["Cosa si ripete","Rivedi comportamenti ricorrenti e le evidenze che li sostengono.","/pattern-intelligence.html"],
+      ["Come gioca la tua squadra","Confronta i principi dello staff con ciò che emerge dal campo.","/tactical-identity.html"],
+      ["Opzioni da valutare","Confronta poche alternative verificabili: la decisione resta allo staff.","/decision-engine.html"],
+      ["Vista società","Condividi priorità tecniche con la società senza mescolare i contesti.","/club-intelligence.html"]
+    ].forEach(([title,copy,url])=>{const card=node("article",undefined,"intelligence-card");card.append(node("span","APPROFONDISCI","intelligence-tag"),node("h3",title),node("p",copy),link("Apri",url));grid.append(card)});
   };
 
   H.renderActivity=function(){

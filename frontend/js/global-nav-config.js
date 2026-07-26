@@ -1,26 +1,26 @@
 (function(){
   "use strict";
 
-  const VERSION = "10530";
+  const VERSION = "10542";
   const withVersion = (path) => `${path}${path.includes("?") ? "&" : "?"}v=${VERSION}`;
 
   const modules = {
-    home: { title: "MatchIQ Coach AI", subtitle: "L'assistente AI dello staff tecnico", href: withVersion("/index.html") },
-    coach: { title: "MatchIQ Coach", subtitle: "L'assistente AI dello staff tecnico", href: withVersion("/coach.html") },
-    video: { title: "MatchIQ Video AI", subtitle: "Video analysis intelligente per staff e match analyst", href: withVersion("/video.html") },
+    home: { title: "MatchIQ Coach AI", subtitle: "Prima, durante e dopo la partita", href: withVersion("/index.html") },
+    coach: { title: "MatchIQ Coach AI", subtitle: "Il lavoro operativo dello staff", href: withVersion("/coach.html") },
+    video: { title: "MatchIQ Video AI", subtitle: "Rivedi, organizza e collega gli episodi", href: withVersion("/video.html") },
     live: { title: "MatchIQ Live", subtitle: "Partite, eventi e analisi in tempo reale", href: withVersion("/live.html") },
     scout: { title: "MatchIQ Scout", subtitle: "Player intelligence e scouting", href: withVersion("/scout.html") },
     account: { title: "MatchIQ Account", subtitle: "Profilo, piano e accesso", href: withVersion("/account.html") },
     admin: { title: "MatchIQ Admin", subtitle: "Controllo operativo e analytics", href: withVersion("/admin-beta.html") },
     auth: { title: "MatchIQ Coach AI", subtitle: "Accedi al workspace dello staff", href: withVersion("/index.html") },
-    weekly: { title: "MatchIQ Weekly", subtitle: "Briefing tecnico settimanale", href: withVersion("/weekly-briefing.html") },
-    pattern: { title: "MatchIQ Pattern", subtitle: "Ricorrenze tattiche verificate", href: withVersion("/pattern-intelligence.html") },
-    training: { title: "MatchIQ Training", subtitle: "Pianificazione dello staff", href: withVersion("/training-planner.html") },
-    knowledge: { title: "MatchIQ Knowledge", subtitle: "Memoria tecnica della squadra", href: withVersion("/knowledge.html") },
-    assistant: { title: "MatchIQ Assistant", subtitle: "Supporto tattico con fonti", href: withVersion("/tactical-assistant.html") },
-    identity: { title: "MatchIQ Identity", subtitle: "Identita tattica dichiarata e osservata", href: withVersion("/tactical-identity.html") },
-    decision: { title: "MatchIQ Decision", subtitle: "Alternative e supporto alle decisioni", href: withVersion("/decision-engine.html") },
-    club: { title: "MatchIQ Club", subtitle: "Intelligence tecnica societaria", href: withVersion("/club-intelligence.html") }
+    weekly: { title: "La tua settimana", subtitle: "La sintesi operativa dello staff", href: withVersion("/weekly-briefing.html") },
+    pattern: { title: "Cosa si ripete", subtitle: "Ricorrenze tattiche verificate", href: withVersion("/pattern-intelligence.html") },
+    training: { title: "Prepara l'allenamento", subtitle: "Dal lavoro raccolto alla seduta", href: withVersion("/training-planner.html") },
+    knowledge: { title: "Memoria dello staff", subtitle: "Fonti e osservazioni della squadra", href: withVersion("/knowledge.html") },
+    assistant: { title: "Assistente tattico", subtitle: "Supporto con fonti verificabili", href: withVersion("/tactical-assistant.html") },
+    identity: { title: "Come gioca la tua squadra", subtitle: "Principi dichiarati e osservati", href: withVersion("/tactical-identity.html") },
+    decision: { title: "Opzioni da valutare", subtitle: "Alternative per lo staff tecnico", href: withVersion("/decision-engine.html") },
+    club: { title: "Vista società", subtitle: "Priorità tecniche condivise", href: withVersion("/club-intelligence.html") }
   };
 
   const navigation = [
