@@ -1,2 +1,2 @@
-numpy==2.4.1
-opencv-python-headless==4.13.0.92
+# Canonical lightweight Vision/test dependencies.
+-r ../../requirements-dev.txt

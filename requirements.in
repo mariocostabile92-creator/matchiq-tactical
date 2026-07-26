@@ -1,0 +1,13 @@
+# Direct runtime dependencies for MatchIQ Coach AI.
+# Keep this list small: transitive packages belong to their parent dependency.
+fastapi==0.140.0
+uvicorn==0.51.0
+requests==2.34.2
+python-dotenv==1.2.2
+pydantic==2.13.4
+stripe==15.3.1
+reportlab==5.0.0
+python-jose==3.5.0
+python-multipart==0.0.32
+email-validator==2.3.0
+psycopg2-binary==2.9.12

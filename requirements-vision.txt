@@ -1,0 +1,6 @@
+# Optional RF-DETR research environment. This is not installed by default.
+-r requirements.txt
+numpy==2.4.1
+rfdetr==1.8.3
+torch==2.13.0
+torchvision==0.28.0
