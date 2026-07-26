@@ -19,6 +19,7 @@
   const stepAnchor = node("vxStepAnchor");
   let projectDialogOpener = null;
   let stickyFrame = 0;
+  let analysisStartPromise = null;
   const state = {
     view:"start",
     previousView:"start",
@@ -29,6 +30,7 @@
     mode:"analysis",
     processingStarted:0,
     elapsedTimer:0,
+    startError:false,
     mounted:false
   };
 
@@ -290,9 +292,20 @@
   }
 
   async function startAnalysis(){
+    if(analysisStartPromise) return analysisStartPromise;
+    analysisStartPromise = runAnalysisStart();
+    try{
+      return await analysisStartPromise;
+    }finally{
+      analysisStartPromise = null;
+    }
+  }
+
+  async function runAnalysisStart(){
     const hint = node("vxSetupHint");
     try{
       if(!hasVideo() && state.mode !== "coach") throw new Error("Seleziona prima un video da analizzare.");
+      state.startError = false;
       state.processingStarted = Date.now();
       setView("processing");
       if(typeof extractedFrameTimes !== "undefined" && Array.isArray(extractedFrameTimes) && !extractedFrameTimes.length){
@@ -301,8 +314,18 @@
       if(!window.MatchIQVideoIntelligence?.runPipeline) throw new Error("Video Intelligence non e ancora disponibile.");
       await window.MatchIQVideoIntelligence.runPipeline();
     }catch(err){
+      state.startError = true;
       if(hint) hint.textContent = err.message || "Analisi non avviata.";
-      if(!safeProject().pipeline || !["failed","cancelled"].includes(pipeline().status)) setView("setup");
+      if(node("vxErrorMessage")) node("vxErrorMessage").textContent = err.message || "Analisi non avviata. Il video e il contesto sono rimasti disponibili.";
+      if(node("vxErrorDetails")) node("vxErrorDetails").textContent = JSON.stringify({
+        status:err.status || 0,
+        authentication_required:Boolean(err.authRequired),
+        stage:"frame_selection"
+      },null,2);
+      if(node("vxRecoveryMissing")) node("vxRecoveryMissing").textContent = err.authRequired
+        ? "Rinnovo della sessione e nuova selezione dei frame"
+        : "Nuovo tentativo di selezione dei frame";
+      setView("error",{keepScroll:true});
     }
   }
 
@@ -363,7 +386,10 @@
       if(window.MatchIQVideoIntelligence?.downloadReport) window.MatchIQVideoIntelligence.downloadReport();
       else node("downloadPdfBtn")?.click();
     }
-    if(action === "retry") node("viProjectState")?.querySelector('[data-project-action="retry"]')?.click();
+    if(action === "retry"){
+      if(state.startError) startAnalysis();
+      else node("viProjectState")?.querySelector('[data-project-action="retry"]')?.click();
+    }
     if(action === "cancel") node("viProjectState")?.querySelector('[data-project-action="cancel"]')?.click();
   });
 

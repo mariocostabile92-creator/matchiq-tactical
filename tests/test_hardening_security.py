@@ -137,7 +137,7 @@ class HardeningSecurityTests(unittest.TestCase):
         self.assertIn('"/video.html?v=10542"', worker)
         self.assertIn('"start_url": "/index.html?v=10542"', manifest)
         self.assertIn('version: "10542"', app_meta)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v142"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v143"', worker)
         self.assertIn('"/js/auth.js?v=10542"', worker)
         self.assertIn('"/js/safe-render.js?v=10526"', worker)
 

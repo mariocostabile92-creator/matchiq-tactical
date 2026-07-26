@@ -86,11 +86,11 @@ class VideoBootstrapRegressionTests(unittest.TestCase):
     def test_essential_assets_have_real_error_paths(self):
         self.assertRegex(
             VIDEO,
-            r'<script src="/js/video-intelligence\.js\?v=10541" onerror="[^"]*MatchIQVideoBoot',
+            r'<script src="/js/video-intelligence\.js\?v=10542" onerror="[^"]*MatchIQVideoBoot',
         )
         self.assertRegex(
             VIDEO,
-            r'<script src="/js/video-experience\.js\?v=10541" onerror="[^"]*MatchIQVideoBoot',
+            r'<script src="/js/video-experience\.js\?v=10542" onerror="[^"]*MatchIQVideoBoot',
         )
         self.assertIn("}catch(error){\n    boot?.fail(error);", EXPERIENCE)
 
@@ -99,7 +99,7 @@ class VideoBootstrapRegressionTests(unittest.TestCase):
 
     def test_adapter_is_mounted_once(self):
         self.assertEqual(
-            VIDEO.count('/js/video-experience.js?v=10541'),
+            VIDEO.count('/js/video-experience.js?v=10542'),
             1,
         )
         self.assertIn('shell.dataset.mounted === "true"', EXPERIENCE)
@@ -118,7 +118,7 @@ class VideoBootstrapRegressionTests(unittest.TestCase):
         self.assertNotIn("video-legacy", NAV_CONFIG.lower())
 
     def test_pwa_release_precaches_only_current_video_assets(self):
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v142"', WORKER)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v143"', WORKER)
         self.assertIn('"/video.html?v=10542"', WORKER)
         self.assertNotIn("10540", "\n".join(
             line for line in WORKER.splitlines()

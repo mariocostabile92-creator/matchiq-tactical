@@ -109,6 +109,7 @@ class VideoSlide(BaseModel):
 
 
 class FrameSelectionRequest(BaseModel):
+    video_asset_id: Optional[int] = None
     focus: Optional[str] = "Analisi tattica generale"
     observed_team: Optional[str] = ""
     home_team: Optional[str] = ""
@@ -1513,6 +1514,7 @@ def select_video_frames(data: FrameSelectionRequest, request: Request, user=Depe
             }
         )
 
+    _require_owned_video_asset(int(user["id"]), data.video_asset_id)
     usage = can_use_feature(user["id"], "video_report")
     if not usage.get("allowed"):
         raise HTTPException(
