@@ -18,7 +18,7 @@
   };
   const mount=(section)=>{
     if(path==="/coach.html"){
-      const post=document.getElementById("coachPhasePost");if(!post)return false;post.prepend(section);return true;
+      const post=document.getElementById("coachPhasePost");if(!post)return false;post.append(section);return true;
     }
     if(path==="/index.html"||path==="/"){
       const grid=document.getElementById("homeIntelligenceGrid");if(!grid)return false;grid.appendChild(section);return true;

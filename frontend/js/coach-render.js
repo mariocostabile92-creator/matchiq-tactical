@@ -695,28 +695,72 @@ function moveCoachBlock(target, block){
     }
 }
 
+function createCoachDisclosure(target, block, label, options={}){
+    if(!target || !block) return null;
+    const existing = block.closest(".coach-context-disclosure");
+    if(existing){
+        if(existing.parentElement !== target) target.appendChild(existing);
+        return existing;
+    }
+    const disclosure = document.createElement("details");
+    disclosure.className = `coach-context-disclosure ${options.className || ""}`.trim();
+    disclosure.open = Boolean(options.open);
+    const summary = document.createElement("summary");
+    summary.innerHTML = `<span>${esc(label)}</span><small>${esc(options.hint || "Apri quando serve")}</small>`;
+    disclosure.append(summary);
+    target.appendChild(disclosure);
+    disclosure.appendChild(block);
+    return disclosure;
+}
+
 function organizeCoachPhaseBlocks(){
     const pre = document.getElementById("coachPhasePre");
     const match = document.getElementById("coachPhaseMatch");
     const post = document.getElementById("coachPhasePost");
-    if(!pre || !match || !post || pre.dataset.organized === "1") return;
+    const history = document.getElementById("coachPhaseHistory");
+    if(!pre || !match || !post || !history || pre.dataset.organized === "1") return;
 
     const setup = document.querySelector(".setup-section");
     const precheck = findCoachBlockByText(".section", "Piano partita");
     const lineup = findCoachBlockByText(".section", "Campo e formazione");
     const onboarding = document.querySelector(".coach-onboarding");
     const live = document.querySelector(".coach-live-board");
+    const liveAssistant = live?.querySelector(".coach-ai-panel");
     const ratings = findCoachBlockByText(".grid.section", "Pagelle giocatori");
     const playerArchive = findCoachBlockByText(".section", "Storico prestazioni");
     const memoryTraining = findCoachBlockByText(".grid.section", "Pattern che si ripetono");
+    const trainingPlanner = document.getElementById("coachAiTrainingPlannerMount");
     const timelineReportGrid = findCoachBlockByText(".grid.section", "Report tecnico automatico");
     const timelinePanel = findCoachBlockByText(".panel", "Eventi partita");
     const reportPanel = findCoachBlockByText(".panel", "Report tecnico automatico");
-    const history = findCoachBlockByText(".grid.section", "Archivio partite");
+    const historyGrid = findCoachBlockByText(".grid.section", "Archivio partite");
+    const historySavePanel = findCoachBlockByText(".panel", "Archivio partite");
+    const historyListPanel = document.getElementById("coachHistoryList")?.closest(".panel");
 
     [setup, precheck, lineup, onboarding].forEach(block => moveCoachBlock(pre, block));
     [live, timelinePanel].forEach(block => moveCoachBlock(match, block));
-    [reportPanel, ratings, playerArchive, memoryTraining, history].forEach(block => moveCoachBlock(post, block));
+    [reportPanel, historySavePanel].forEach(block => moveCoachBlock(post, block));
+    [historyListPanel, playerArchive].forEach(block => moveCoachBlock(history, block));
+
+    createCoachDisclosure(live, liveAssistant, "Assistente, sintesi e promemoria", {
+        className:"coach-live-assistant-disclosure",
+        hint:"Apri solo quando ti serve un approfondimento"
+    });
+    createCoachDisclosure(post, ratings, "Pagelle e valutazioni", {
+        className:"coach-post-disclosure",
+        hint:"Completa le valutazioni dopo il riepilogo"
+    });
+    createCoachDisclosure(post, memoryTraining, "Pattern e priorita della settimana", {
+        className:"coach-post-disclosure",
+        hint:"Approfondisci dopo aver chiuso il report"
+    });
+    createCoachDisclosure(post, trainingPlanner, "Piano per il prossimo allenamento", {
+        className:"coach-post-disclosure",
+        hint:"Apri le proposte collegate alle evidenze"
+    });
+
+    historyListPanel?.classList.add("coach-history");
+    historyListPanel?.classList.add("history-section");
     if(post && !document.getElementById("coachPostSummary")){
         const summary = document.createElement("div");
         summary.id = "coachPostSummary";
@@ -725,6 +769,9 @@ function organizeCoachPhaseBlocks(){
     }
     if(timelineReportGrid && !timelineReportGrid.children.length){
         timelineReportGrid.remove();
+    }
+    if(historyGrid && !historyGrid.children.length){
+        historyGrid.remove();
     }
 
     pre.dataset.organized = "1";
@@ -770,7 +817,7 @@ function renderCoachPostSummary(){
 
 function getCoachPhaseCopy(phase){
     const m = coachState.match;
-    const title = phase === "match" ? "Match Day" : phase === "post" ? "Post-partita" : "Pre-partita";
+    const title = phase === "match" ? "Match Day" : phase === "post" ? "Post-partita" : phase === "history" ? "Storico" : "Pre-partita";
     if(phase === "match"){
         const periodMap = { "1T":"Primo tempo", "INT":"Intervallo", "2T":"Secondo tempo", "REC":"Recupero", "ET1":"Supplementare 1", "ET2":"Supplementare 2" };
         const periodLabel = periodMap[coachState.live?.period || "1T"] || "Live";
@@ -778,7 +825,8 @@ function getCoachPhaseCopy(phase){
             title,
             text: m ? `${getTeamName("home")} - ${getTeamName("away")} | ${getGoals("home")} - ${getGoals("away")} | ${periodLabel} | minuto ${getLiveMinuteLabel()}'` : "Crea una partita prima di usare la console live.",
             action: m ? "Termina partita" : "Vai al setup",
-            actionFn: m ? "finishCoachMatchDay()" : "setCoachPhase('pre')"
+            actionFn: m ? "finishCoachMatchDay()" : "setCoachPhase('pre')",
+            actionClass:"btn dark small-btn coach-secondary-cta"
         };
     }
     if(phase === "post"){
@@ -786,14 +834,26 @@ function getCoachPhaseCopy(phase){
             title,
             text: m ? "Completa pagelle, report, sintesi WhatsApp e salvataggio nello storico." : "Nessuna partita attiva: crea una gara nel Pre-partita.",
             action: coachState.report ? "Salva nello storico" : "Genera report",
-            actionFn: coachState.report ? "saveCurrentMatchToHistory()" : "generateCoachReport()"
+            actionFn: coachState.report ? "saveCurrentMatchToHistory()" : "generateCoachReport()",
+            actionClass:"btn green small-btn coach-primary-cta"
+        };
+    }
+    if(phase === "history"){
+        const historyCount = loadHistory().length;
+        return {
+            title,
+            text: historyCount ? `${historyCount} partite salvate. Riapri una gara o copia il report che serve allo staff.` : "Nessuna partita salvata: completa il Post-partita e archiviala.",
+            action: "Aggiorna archivio",
+            actionFn: "renderHistory()",
+            actionClass:"btn green small-btn coach-primary-cta"
         };
     }
     return {
         title,
         text: m ? `${getTeamName("home")} vs ${getTeamName("away")} preparata. Controlla piano, formazione e checklist.` : "Crea la partita e prepara il lavoro dello staff.",
         action: m ? "Avvia Match Day" : "Crea partita",
-        actionFn: m ? "startCoachMatchDay()" : "document.getElementById('homeTeamInput')?.focus()"
+        actionFn: m ? "startCoachMatchDay()" : "document.getElementById('homeTeamInput')?.focus()",
+        actionClass:"btn green small-btn coach-primary-cta"
     };
 }
 
@@ -813,12 +873,14 @@ function renderCoachPhaseShell(){
     const sections = {
         pre: document.getElementById("coachPhasePre"),
         match: document.getElementById("coachPhaseMatch"),
-        post: document.getElementById("coachPhasePost")
+        post: document.getElementById("coachPhasePost"),
+        history: document.getElementById("coachPhaseHistory")
     };
     const buttons = {
         pre: document.getElementById("coachPhasePreBtn"),
         match: document.getElementById("coachPhaseMatchBtn"),
-        post: document.getElementById("coachPhasePostBtn")
+        post: document.getElementById("coachPhasePostBtn"),
+        history: document.getElementById("coachPhaseHistoryBtn")
     };
 
     Object.entries(sections).forEach(([key, el]) => {
@@ -831,6 +893,7 @@ function renderCoachPhaseShell(){
         btn.classList.toggle("active", key === phase);
         btn.setAttribute("aria-selected", key === phase ? "true" : "false");
     });
+    document.body.dataset.coachPhase = phase;
 
     const status = document.getElementById("coachPhaseStatus");
     if(status){
@@ -838,9 +901,16 @@ function renderCoachPhaseShell(){
         status.innerHTML = `
             <strong>${esc(copy.title)}</strong>
             <span>${esc(copy.text)}</span>
-            <button class="btn green small-btn" type="button" onclick="${copy.actionFn}">${esc(copy.action)}</button>
+            <button class="${copy.actionClass}" type="button" onclick="${copy.actionFn}">${esc(copy.action)}</button>
         `;
     }
+    syncCoachStickyOffset();
+}
+
+function syncCoachStickyOffset(){
+    const topbar = document.querySelector(".topbar");
+    const height = topbar ? Math.ceil(topbar.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty("--coach-sticky-offset", `${height}px`);
 }
 
 function renderAll(){
@@ -872,6 +942,11 @@ function coachPlanRenderRetryV162(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    syncCoachStickyOffset();
+    if(document.body.dataset.coachContextResizeBound !== "1"){
+        document.body.dataset.coachContextResizeBound = "1";
+        window.addEventListener("resize", syncCoachStickyOffset, {passive:true});
+    }
     setTimeout(coachPlanRenderRetryV162, 150);
     setTimeout(coachPlanRenderRetryV162, 700);
 });

@@ -594,7 +594,7 @@
 html,
 body{
     min-height:100%;
-    overflow-x:hidden;
+    overflow-x:clip;
 }
 
 body{
@@ -1172,9 +1172,18 @@ select option{
 
 .coach-phase-nav{
     display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns:repeat(4,minmax(0,1fr));
     gap:12px;
     margin:22px 0 14px;
+    position:sticky;
+    top:var(--coach-sticky-offset,0);
+    z-index:42;
+    padding:10px 0;
+    background:linear-gradient(180deg,rgba(5,8,17,.98) 72%,rgba(5,8,17,.78),transparent);
+}
+
+.coach-overview{
+    display:none;
 }
 
 .coach-phase-tab{
@@ -1257,6 +1266,19 @@ select option{
     line-height:1.35;
 }
 
+.coach-phase-status .coach-primary-cta{
+    min-height:48px;
+    padding-inline:18px;
+    box-shadow:0 12px 30px rgba(24,240,139,.16);
+}
+
+.coach-phase-status .coach-secondary-cta{
+    justify-self:start;
+    min-height:40px;
+    padding:10px 14px;
+    opacity:.88;
+}
+
 .coach-phase-content.hidden{
     display:none;
 }
@@ -1268,6 +1290,100 @@ select option{
 .coach-phase-content > .panel + .panel,
 .coach-phase-content > .coach-live-board + .panel{
     margin-top:18px;
+}
+
+.coach-context-disclosure{
+    border:1px solid rgba(255,255,255,.11);
+    border-radius:20px;
+    background:rgba(255,255,255,.035);
+    overflow:hidden;
+}
+
+.coach-context-disclosure > summary{
+    min-height:52px;
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    cursor:pointer;
+    list-style:none;
+    font-weight:1000;
+    color:#fff;
+}
+
+.coach-context-disclosure > summary::-webkit-details-marker{
+    display:none;
+}
+
+.coach-context-disclosure > summary::after{
+    content:"+";
+    width:28px;
+    height:28px;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(56,169,255,.13);
+    border:1px solid rgba(56,169,255,.22);
+    color:#9fd7ff;
+    font-size:18px;
+    flex:0 0 auto;
+}
+
+.coach-context-disclosure[open] > summary::after{
+    content:"−";
+}
+
+.coach-context-disclosure > summary small{
+    margin-left:auto;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:850;
+}
+
+.coach-context-disclosure > .panel,
+.coach-context-disclosure > .grid.section,
+.coach-context-disclosure > .section{
+    margin:0;
+    border:0;
+    border-top:1px solid rgba(255,255,255,.08);
+    border-radius:0;
+    box-shadow:none;
+    background:transparent;
+}
+
+.coach-live-assistant-disclosure{
+    align-self:start;
+}
+
+.coach-live-assistant-disclosure .coach-ai-panel{
+    position:static !important;
+    max-height:none !important;
+    overflow:visible !important;
+}
+
+#coachPhaseMatch > .panel{
+    padding:16px;
+}
+
+#coachPhaseMatch > .panel h2{
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+#coachPhaseHistory{
+    display:grid;
+    gap:18px;
+}
+
+#coachPhaseHistory.hidden{
+    display:none;
+}
+
+#coachPhaseHistory .history-list,
+#coachPhaseHistory .player-archive-list{
+    margin-top:14px;
 }
 
 .coach-preflight-list{
@@ -1541,14 +1657,37 @@ select option{
     }
 
     .coach-phase-nav{
-        grid-template-columns:1fr;
-        gap:10px;
-        margin-top:16px;
+        grid-template-columns:repeat(4,minmax(78px,1fr));
+        gap:7px;
+        margin:6px -14px 12px;
+        padding:8px 14px 10px;
+        overflow-x:auto;
+        overscroll-behavior-inline:contain;
+        scrollbar-width:none;
     }
 
     .coach-phase-tab{
-        min-height:72px;
-        padding:14px;
+        min-height:58px;
+        padding:9px 8px;
+        border-radius:16px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        gap:4px;
+    }
+
+    .coach-phase-tab span{
+        display:none;
+    }
+
+    .coach-phase-tab strong{
+        font-size:12px;
+    }
+
+    .coach-phase-tab small{
+        display:none;
     }
 
     .coach-phase-status{
@@ -1561,6 +1700,11 @@ select option{
         min-height:52px;
     }
 
+    .coach-phase-status .coach-secondary-cta{
+        width:auto;
+        min-height:44px;
+    }
+
     .coach-preflight-list{
         grid-template-columns:1fr 1fr;
     }
@@ -1569,17 +1713,20 @@ select option{
         grid-template-columns:1fr;
     }
 
-    #coachPhaseMatch .coach-ai-panel{
-        position:static;
-        max-height:none;
-    }
-
     #coachPhaseMatch .timeline{
-        max-height:300px;
+        max-height:260px;
     }
 
     .coach-post-grid{
         grid-template-columns:1fr 1fr;
+    }
+
+    .coach-context-disclosure > summary{
+        min-height:56px;
+    }
+
+    .coach-context-disclosure > summary small{
+        display:none;
     }
 
     h1{
@@ -2022,7 +2169,7 @@ select option{
     }
 
     .btn.small-btn{
-        min-height:42px;
+        min-height:48px;
     }
 
     .bottom-nav{

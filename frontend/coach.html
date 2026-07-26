@@ -849,7 +849,7 @@
 
 <div class="main">
     <div id="pageNotice" class="notice"></div>
-    <div class="hero">
+    <div class="hero coach-overview" aria-hidden="true">
         <div class="card hero-card">
             <span class="badge green">MATCHIQ COACH AI</span>
 
@@ -940,7 +940,12 @@
         <button id="coachPhasePostBtn" class="coach-phase-tab" type="button" role="tab" aria-controls="coachPhasePost" onclick="setCoachPhase('post')">
             <span>3</span>
             <strong>Post-partita</strong>
-            <small>Pagelle, report, storico</small>
+            <small>Report, consegna, pagelle</small>
+        </button>
+        <button id="coachPhaseHistoryBtn" class="coach-phase-tab" type="button" role="tab" aria-controls="coachPhaseHistory" onclick="setCoachPhase('history')">
+            <span>4</span>
+            <strong>Storico</strong>
+            <small>Archivio e report salvati</small>
         </button>
     </div>
 
@@ -953,6 +958,7 @@
     <div id="coachPhasePre" class="coach-phase-content" role="tabpanel" aria-labelledby="coachPhasePreBtn"></div>
     <div id="coachPhaseMatch" class="coach-phase-content hidden" role="tabpanel" aria-labelledby="coachPhaseMatchBtn"></div>
     <div id="coachPhasePost" class="coach-phase-content hidden" role="tabpanel" aria-labelledby="coachPhasePostBtn"></div>
+    <div id="coachPhaseHistory" class="coach-phase-content hidden" role="tabpanel" aria-labelledby="coachPhaseHistoryBtn"></div>
 
     <div class="coach-onboarding" hidden aria-hidden="true">
         <div class="coach-plan-card" id="coachPlanCard">

@@ -22,6 +22,9 @@ class CoachFinalPolishTests(unittest.TestCase):
         cls.voice = read_frontend("js/coach-voice-actions.js")
         cls.voice_render = read_frontend("js/coach-voice-render.js")
         cls.render = read_frontend("js/coach-render.js")
+        cls.state = read_frontend("js/coach-state.js")
+        cls.pattern_impact = read_frontend("js/coach-pattern-impact.js")
+        cls.identity_entry = read_frontend("js/tactical-identity-entry.js")
         cls.worker = read_frontend("service-worker.js")
 
     def test_01_timer_keeps_match_semantics(self):
@@ -180,6 +183,58 @@ class CoachFinalPolishTests(unittest.TestCase):
     def test_30_non_match_day_coach_surfaces_remain_present(self):
         for marker in ('id="lineupWorkspace"', 'id="lineupPitch"', 'id="lineupBench"', "Aggiungi pagella", 'id="trainingPlanList"'):
             self.assertIn(marker, self.page)
+
+    def test_31_context_navigation_has_four_accessible_states(self):
+        for phase in ("Pre", "Match", "Post", "History"):
+            self.assertIn(f'id="coachPhase{phase}"', self.page)
+            self.assertIn(f'id="coachPhase{phase}Btn"', self.page)
+            self.assertIn(f'aria-controls="coachPhase{phase}"', self.page)
+
+    def test_32_history_is_a_persisted_context_without_active_match(self):
+        self.assertIn('["pre","match","post","history"]', self.state)
+        self.assertIn('if(coachState.phase === "history") return "history"', self.state)
+
+    def test_33_operational_blocks_are_sorted_by_context(self):
+        self.assertIn("[setup, precheck, lineup, onboarding]", self.render)
+        self.assertIn("[live, timelinePanel]", self.render)
+        self.assertIn("[reportPanel, historySavePanel]", self.render)
+        self.assertIn("[historyListPanel, playerArchive]", self.render)
+        self.assertIn('document.getElementById("coachHistoryList")?.closest(".panel")', self.render)
+
+    def test_34_secondary_content_is_collapsible(self):
+        for label in (
+            "Assistente, sintesi e promemoria",
+            "Pagelle e valutazioni",
+            "Pattern e priorita della settimana",
+            "Piano per il prossimo allenamento",
+        ):
+            self.assertIn(label, self.render)
+        self.assertIn('document.createElement("details")', self.render)
+        self.assertIn("min-height:52px", self.styles)
+
+    def test_35_each_context_exposes_a_clear_primary_action(self):
+        self.assertIn("coach-primary-cta", self.render)
+        self.assertIn("Avvia Match Day", self.render)
+        self.assertIn("Genera report", self.render)
+        self.assertIn("Salva nello storico", self.render)
+        self.assertIn("Aggiorna archivio", self.render)
+        self.assertIn('actionClass:"btn dark small-btn coach-secondary-cta"', self.render)
+
+    def test_36_history_integrations_mount_in_history_context(self):
+        self.assertIn('document.getElementById("coachPhaseHistory")', self.pattern_impact)
+        self.assertIn("history.appendChild(panel)", self.pattern_impact)
+        self.assertIn("post.append(section)", self.identity_entry)
+
+    def test_37_dashboard_noise_is_removed_without_deleting_features(self):
+        self.assertIn('class="hero coach-overview"', self.page)
+        self.assertIn(".coach-overview", self.styles)
+        self.assertIn("display:none", self.styles)
+
+    def test_38_mobile_context_navigation_is_compact_and_touch_ready(self):
+        self.assertIn("grid-template-columns:repeat(4,minmax(78px,1fr))", self.styles)
+        self.assertIn("overflow-x:auto", self.styles)
+        self.assertIn("overscroll-behavior-inline:contain", self.styles)
+        self.assertIn("--coach-sticky-offset", self.styles + self.render)
 
 
 if __name__ == "__main__":

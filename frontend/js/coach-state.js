@@ -68,10 +68,11 @@ function normalizeCoachMemory(memory){
 }
 function normalizeCoachPhase(phase){
     const value = String(phase || "").toLowerCase();
-    return ["pre","match","post"].includes(value) ? value : "pre";
+    return ["pre","match","post","history"].includes(value) ? value : "pre";
 }
 function getCoachSuggestedPhase(){
     ensureCoachStateShape();
+    if(coachState.phase === "history") return "history";
     if(!coachState.match) return "pre";
     if(coachState.live?.running) return "match";
     if(coachState.phase === "match" || coachState.phase === "post") return coachState.phase;
