@@ -160,7 +160,8 @@ class VideoLibraryFrontendContractTests(unittest.TestCase):
     def test_premium_library_hierarchy_keeps_existing_actions(self):
         page = (ROOT / "frontend" / "video.html").read_text(encoding="utf-8")
         for marker in (
-            "Tutte le analisi, i report e i progetti video del tuo staff",
+            "Memoria video dello staff",
+            "Partite, revisioni e report restano organizzati come patrimonio tecnico della stagione.",
             "library-primary-action",
             "library-secondary-action",
             "library-utility-action",

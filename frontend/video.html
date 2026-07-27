@@ -1619,11 +1619,11 @@ video{
 
         <span class="vx-step-anchor" id="vxStepAnchor" aria-hidden="true"></span>
         <nav class="vx-steps" aria-label="Avanzamento analisi video">
-            <span data-vx-step="start"><b aria-hidden="true">○</b><span class="vx-step-label">Carica</span></span>
-            <span data-vx-step="setup"><b aria-hidden="true">○</b><span class="vx-step-label">Prepara</span></span>
-            <span data-vx-step="processing"><b aria-hidden="true">○</b><span class="vx-step-label">Analizza</span></span>
-            <span data-vx-step="review"><b aria-hidden="true">○</b><span class="vx-step-label">Revisiona</span></span>
-            <span data-vx-step="report"><b aria-hidden="true">○</b><span class="vx-step-label">Consegna</span></span>
+            <span data-vx-step="start"><b aria-hidden="true">○</b><span><span class="vx-step-label">Carica</span><small class="vx-step-context">Scegli il video</small></span></span>
+            <span data-vx-step="setup"><b aria-hidden="true">○</b><span><span class="vx-step-label">Prepara</span><small class="vx-step-context">Definisci il focus</small></span></span>
+            <span data-vx-step="processing"><b aria-hidden="true">○</b><span><span class="vx-step-label">Analizza</span><small class="vx-step-context">Organizza le evidenze</small></span></span>
+            <span data-vx-step="review"><b aria-hidden="true">○</b><span><span class="vx-step-label">Revisiona</span><small class="vx-step-context">Verifica il materiale</small></span></span>
+            <span data-vx-step="report"><b aria-hidden="true">○</b><span><span class="vx-step-label">Consegna</span><small class="vx-step-context">Produci il report</small></span></span>
         </nav>
 
         <section class="vx-view vx-start" id="vxStartView" data-vx-view="start">
@@ -1680,6 +1680,11 @@ video{
                 <span class="vx-eyebrow">ANALISI IN CORSO</span>
                 <h2 id="vxProcessingTitle">MatchIQ sta preparando le evidenze</h2>
                 <p id="vxProcessingFile">Il progetto restera recuperabile dalla Libreria Video AI anche se lasci questa pagina.</p>
+                <div class="vx-processing-flow" aria-label="Attivita di analisi">
+                    <span><b>1</b> Video acquisito</span>
+                    <span><b>2</b> Contesto collegato</span>
+                    <span class="active"><b>3</b> Evidenze in preparazione</span>
+                </div>
                 <div class="vx-progress" aria-label="Avanzamento elaborazione"><span id="vxProcessingBar"></span></div>
                 <div class="vx-processing-meta">
                     <div><span>Fase</span><strong id="vxProcessingStage">Preparazione video</strong></div>
@@ -1693,7 +1698,7 @@ video{
 
         <section class="vx-view vx-review" id="vxReviewView" data-vx-view="review" hidden>
             <header class="vx-workspace-head">
-                <div><span class="vx-eyebrow">REVIEW WORKSPACE</span><h2 id="vxProjectTitle">Analisi video</h2><p id="vxProjectMeta">Revisiona le evidenze proposte prima di generare il report.</p></div>
+                <div><span class="vx-eyebrow">REVIEW WORKSPACE</span><h2 id="vxProjectTitle">Analisi video</h2><p id="vxProjectMeta">Guarda il momento, verifica l'evidenza e decidi cosa portare nel report.</p></div>
                 <div class="vx-workspace-actions">
                     <button class="btn dark small" type="button" data-vx-action="projects">Torna ai progetti</button>
                     <button class="btn dark small" type="button" data-vx-action="settings">Impostazioni</button>
@@ -1724,9 +1729,9 @@ video{
             <div class="vx-report-stats" id="vxReportStats"></div>
             <div class="vx-report-actions">
                 <button class="btn" type="button" data-vx-action="show-report">Apri report</button>
+                <button class="btn" type="button" data-vx-action="download" disabled aria-disabled="true">Scarica PDF</button>
                 <button class="btn dark" type="button" data-vx-action="review">Torna alla review</button>
                 <button class="btn dark" type="button" data-vx-action="pending">Completa evidenze pendenti</button>
-                <button class="btn" type="button" data-vx-action="download" disabled aria-disabled="true">Scarica PDF</button>
             </div>
             <details class="vx-report-document" id="vxReportDocument">
                 <summary>Documento tecnico generato</summary>
@@ -1754,8 +1759,8 @@ video{
             <header>
                 <div class="vx-projects-heading">
                     <span class="vx-eyebrow">LIBRERIA VIDEO AI</span>
-                    <h2 id="vxProjectsTitle">I tuoi progetti</h2>
-                    <p>Tutte le analisi, i report e i progetti video del tuo staff, sempre recuperabili.</p>
+                    <h2 id="vxProjectsTitle">Memoria video dello staff</h2>
+                    <p>Partite, revisioni e report restano organizzati come patrimonio tecnico della stagione.</p>
                 </div>
                 <button class="btn dark small vx-projects-close" type="button" data-vx-action="close-projects" aria-label="Chiudi Libreria Video AI">Chiudi</button>
             </header>
@@ -2375,37 +2380,40 @@ video{
                     <div class="vi-halftime-verify" id="viHalftimeVerify"></div>
                 </section>
                 <div class="vi-review-progress" id="viReviewProgress" aria-live="polite"></div>
-                <div class="vi-toolbar">
-                    <div class="vi-field">
-                        <label for="viStatusFilter">Stato revisione</label>
-                        <select id="viStatusFilter">
-                            <option value="all">Tutti</option>
-                            <option value="pending">Da revisionare</option>
-                            <option value="confirmed">Confermate</option>
-                            <option value="corrected">Corrette</option>
-                            <option value="rejected">Scartate</option>
-                        </select>
+                <details class="vi-review-tools">
+                    <summary>Filtri e strumenti di review</summary>
+                    <div class="vi-toolbar">
+                        <div class="vi-field">
+                            <label for="viStatusFilter">Stato revisione</label>
+                            <select id="viStatusFilter">
+                                <option value="all">Tutti</option>
+                                <option value="pending">Da revisionare</option>
+                                <option value="confirmed">Confermate</option>
+                                <option value="corrected">Corrette</option>
+                                <option value="rejected">Scartate</option>
+                            </select>
+                        </div>
+                        <div class="vi-field">
+                            <label for="viPhaseFilter">Fase</label>
+                            <select id="viPhaseFilter"><option value="all">Tutte le fasi</option></select>
+                        </div>
+                        <div class="vi-field">
+                            <label for="viSourceFilter">Fonte</label>
+                            <select id="viSourceFilter"><option value="all">Tutte le fonti</option></select>
+                        </div>
+                        <div class="vi-field">
+                            <label for="viMediaFilter">Contenuto</label>
+                            <select id="viMediaFilter">
+                                <option value="all">Frame e clip</option>
+                                <option value="frame">Con frame</option>
+                                <option value="clip">Con clip</option>
+                            </select>
+                        </div>
+                        <div class="vi-toolbar-actions">
+                            <button class="btn dark small" id="viPendingBtn" type="button">Mostra da revisionare</button>
+                        </div>
                     </div>
-                    <div class="vi-field">
-                        <label for="viPhaseFilter">Fase</label>
-                        <select id="viPhaseFilter"><option value="all">Tutte le fasi</option></select>
-                    </div>
-                    <div class="vi-field">
-                        <label for="viSourceFilter">Fonte</label>
-                        <select id="viSourceFilter"><option value="all">Tutte le fonti</option></select>
-                    </div>
-                    <div class="vi-field">
-                        <label for="viMediaFilter">Contenuto</label>
-                        <select id="viMediaFilter">
-                            <option value="all">Frame e clip</option>
-                            <option value="frame">Con frame</option>
-                            <option value="clip">Con clip</option>
-                        </select>
-                    </div>
-                    <div class="vi-toolbar-actions">
-                        <button class="btn dark small" id="viPendingBtn" type="button">Mostra da revisionare</button>
-                    </div>
-                </div>
+                </details>
                 <div class="vi-review-layout">
                     <nav class="vi-evidence-queue" id="viEvidenceQueue" aria-label="Coda evidenze da revisionare"></nav>
                     <div class="vi-evidence-list" id="viEvidenceList"></div>

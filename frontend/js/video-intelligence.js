@@ -570,17 +570,20 @@
               <button class="btn dark small" type="button" data-action="play">Riproduci clip</button>
             </div>
           </div>
-          <div class="vi-evidence-copy">
-            <label>Titolo<input data-field="title" value="${html(item.title)}"></label>
-            <label>Fase<input data-field="phase_type" value="${html(item.phase_type || "unclassified")}"></label>
-            <label class="full">Osservazione<textarea data-field="observation">${html(item.observation || "")}</textarea></label>
-            <label class="full">Interpretazione<textarea data-field="interpretation">${html(item.interpretation || "")}</textarea></label>
-          </div>
-          <div class="vi-evidence-meta">
-            <div>Affidabilità<strong>${confidence}% · ${html(item.confidence_label || "")}</strong></div>
-            <div>Fonte<strong>${html(item.source_type || "video")}</strong></div>
-            <div>Collegamento Coach<strong>${html(item.linked_match_event_id || item.linked_note_id || "Nessuno")}</strong></div>
-          </div>
+          <details class="vi-evidence-details">
+            <summary>Note, classificazione e provenienza</summary>
+            <div class="vi-evidence-copy">
+              <label>Titolo<input data-field="title" value="${html(item.title)}"></label>
+              <label>Fase<input data-field="phase_type" value="${html(item.phase_type || "unclassified")}"></label>
+              <label class="full">Osservazione<textarea data-field="observation">${html(item.observation || "")}</textarea></label>
+              <label class="full">Interpretazione<textarea data-field="interpretation">${html(item.interpretation || "")}</textarea></label>
+            </div>
+            <div class="vi-evidence-meta">
+              <div>Affidabilità<strong>${confidence}% · ${html(item.confidence_label || "")}</strong></div>
+              <div>Fonte<strong>${html(item.source_type || "video")}</strong></div>
+              <div>Collegamento Coach<strong>${html(item.linked_match_event_id || item.linked_note_id || "Nessuno")}</strong></div>
+            </div>
+          </details>
           <div class="vi-media-stack" aria-label="Timeline, frame e clip">
             <div class="vi-media-review" aria-label="Riepilogo frame e clip">
               <section>
@@ -596,23 +599,26 @@
                 <small>Pre-roll ${preRoll} s / Post-roll ${postRoll} s</small>
               </section>
             </div>
-            <div class="vi-editors">
-              <div class="vi-clip-editor">
-                <label>Inizio clip<input type="number" min="0" step="1" data-field="clip_start" value="${Math.max(0,Math.round(start))}"></label>
-                <label>Fine clip<input type="number" min="0" step="1" data-field="clip_end" value="${Math.max(0,Math.round(end))}"></label>
-                <button class="btn dark small" type="button" data-action="shift-clip" data-delta="-5" aria-label="Sposta la clip indietro di 5 secondi">-5 s</button>
-                <button class="btn dark small" type="button" data-action="shift-clip" data-delta="5" aria-label="Sposta la clip avanti di 5 secondi">+5 s</button>
-                <button class="btn dark small" type="button" data-action="save-clip">Salva clip</button>
-                <button class="btn dark small" type="button" data-action="reset-clip">Ripristina proposta</button>
+            <details class="vi-media-adjustments">
+              <summary>Regola frame e clip</summary>
+              <div class="vi-editors">
+                <div class="vi-clip-editor">
+                  <label>Inizio clip<input type="number" min="0" step="1" data-field="clip_start" value="${Math.max(0,Math.round(start))}"></label>
+                  <label>Fine clip<input type="number" min="0" step="1" data-field="clip_end" value="${Math.max(0,Math.round(end))}"></label>
+                  <button class="btn dark small" type="button" data-action="shift-clip" data-delta="-5" aria-label="Sposta la clip indietro di 5 secondi">-5 s</button>
+                  <button class="btn dark small" type="button" data-action="shift-clip" data-delta="5" aria-label="Sposta la clip avanti di 5 secondi">+5 s</button>
+                  <button class="btn dark small" type="button" data-action="save-clip">Salva clip</button>
+                  <button class="btn dark small" type="button" data-action="reset-clip">Ripristina proposta</button>
+                </div>
+                <div class="vi-frame-editor">
+                  <label>Frame rappresentativo<select data-field="frame_timestamp">${frameOptions(item)}</select></label>
+                  <button class="btn dark small" type="button" data-action="previous-frame">Frame prec.</button>
+                  <button class="btn dark small" type="button" data-action="next-frame">Frame succ.</button>
+                  <button class="btn dark small" type="button" data-action="preview-frame">Anteprima</button>
+                  <button class="btn dark small" type="button" data-action="save-frame">Sostituisci frame</button>
+                </div>
               </div>
-              <div class="vi-frame-editor">
-                <label>Frame rappresentativo<select data-field="frame_timestamp">${frameOptions(item)}</select></label>
-                <button class="btn dark small" type="button" data-action="previous-frame">Frame prec.</button>
-                <button class="btn dark small" type="button" data-action="next-frame">Frame succ.</button>
-                <button class="btn dark small" type="button" data-action="preview-frame">Anteprima</button>
-                <button class="btn dark small" type="button" data-action="save-frame">Sostituisci frame</button>
-              </div>
-            </div>
+            </details>
           </div>
           <div class="vi-card-actions vi-review-decisions" aria-label="Decisione sulla evidenza">
             <button class="btn small vi-review-decision vi-review-confirm" type="button" data-action="confirm">Conferma</button>
