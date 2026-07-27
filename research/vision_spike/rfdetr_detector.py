@@ -61,6 +61,13 @@ class RFDETRDetector(VisionDetector):
         self._weights_sha256: str | None = None
         self._weights_size_bytes: int | None = None
         self._rfdetr_version = "unavailable"
+        self._last_inference: dict[str, int] = {
+            "raw_detection_count": 0,
+            "person_detection_count": 0,
+            "invalid_boxes_removed": 0,
+            "kept_detection_count": 0,
+            "limited_by_max_detections": 0,
+        }
 
     def _resolve_device(self, torch: Any) -> str:
         cuda_available = bool(torch.cuda.is_available())
@@ -128,6 +135,9 @@ class RFDETRDetector(VisionDetector):
         class_ids = getattr(prediction, "class_id", None)
         data = getattr(prediction, "data", {}) or {}
         class_names = data.get("class_name", [])
+        raw_detection_count = len(boxes)
+        person_detection_count = 0
+        invalid_boxes_removed = 0
         candidates: list[tuple[float, int, str, tuple[float, float, float, float]]] = []
         for index, box in enumerate(boxes):
             score = float(scores[index]) if scores is not None else 0.0
@@ -135,6 +145,7 @@ class RFDETRDetector(VisionDetector):
             mapped_name = self.class_mapping.get(source_name)
             if mapped_name != "person":
                 continue
+            person_detection_count += 1
             class_id = int(class_ids[index]) if class_ids is not None else -1
             coords = restore_letterbox_box(
                 tuple(float(value) for value in box),
@@ -145,9 +156,19 @@ class RFDETRDetector(VisionDetector):
                 original_height=original_height,
             )
             if coords[2] <= coords[0] or coords[3] <= coords[1]:
+                invalid_boxes_removed += 1
                 continue
             candidates.append((score, class_id, source_name, coords))
-        candidates.sort(key=lambda item: item[0], reverse=True)
+        candidates.sort(
+            key=lambda item: (
+                -item[0],
+                item[3][0],
+                item[3][1],
+                item[3][2],
+                item[3][3],
+                item[1],
+            )
+        )
 
         detections: list[Detection] = []
         for sequence, (score, class_id, source_name, coords) in enumerate(candidates[: self.max_detections]):
@@ -168,6 +189,13 @@ class RFDETRDetector(VisionDetector):
                     },
                 )
             )
+        self._last_inference = {
+            "raw_detection_count": raw_detection_count,
+            "person_detection_count": person_detection_count,
+            "invalid_boxes_removed": invalid_boxes_removed,
+            "kept_detection_count": len(detections),
+            "limited_by_max_detections": max(0, len(candidates) - len(detections)),
+        }
         return detections
 
     def warmup(self) -> None:
@@ -221,6 +249,7 @@ class RFDETRDetector(VisionDetector):
             "half_precision_active": bool(self.half_precision_requested and self._device == "cuda"),
             "load_seconds": round(self._load_seconds, 4),
             "classes": ["person"],
+            "last_inference": dict(self._last_inference),
             "ball_supported": False,
             "roles_supported": False,
             "football_specific_weights": "unavailable",

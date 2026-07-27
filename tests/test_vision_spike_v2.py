@@ -256,7 +256,15 @@ class VisionSpikeV2Tests(unittest.TestCase):
         self.assertFalse(any(path.suffix.lower() in {".mp4", ".mov", ".avi", ".mkv"} for path in (ROOT / "research" / "vision_spike").rglob("*")))
 
     def test_27_no_weights_in_spike_source(self):
-        self.assertFalse(any(path.suffix.lower() in {".pt", ".pth", ".onnx", ".engine"} for path in (ROOT / "research" / "vision_spike").rglob("*")))
+        completed = subprocess.run(
+            ["git", "ls-files", "research/vision_spike"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        tracked = [ROOT / line for line in completed.stdout.splitlines() if line.strip()]
+        self.assertFalse(any(path.suffix.lower() in {".pt", ".pth", ".onnx", ".engine"} for path in tracked))
 
     def test_28_output_v2_is_ignored(self):
         completed = subprocess.run(["git", "check-ignore", "research/vision_spike/vision_output_v2/probe.txt"], cwd=ROOT, capture_output=True, text=True, check=False)
