@@ -680,7 +680,7 @@ p{
             <div class="divider"></div>
             <div>
                 Non hai un account?
-                <a href="/register.html?v=10526">Registrati</a>
+                <a id="registerLink" href="/register.html?v=10543">Registrati</a>
             </div>
             <a href="/index.html?v=10526">← Torna alla Home</a>
         </div>
@@ -691,7 +691,7 @@ p{
         </div>
 
         <div class="small">
-            Desktop e telefono/PWA usano lo stesso account. Dopo il login verrai riportato alla Home.
+            Desktop e telefono/PWA usano lo stesso account. Dopo il login tornerai al punto da cui eri partito.
         </div>
     </section>
 
@@ -706,17 +706,35 @@ p{
 
 </div>
 
-<script src="/js/auth.js?v=10542"></script>
+<script src="/js/auth.js?v=10543"></script>
 <script>
 const API_BASE = `${window.location.origin}/api`;
-const APP_VERSION = "10330";
+const APP_VERSION = "10543";
+const AUTH_RETURN_REQUESTED = new URLSearchParams(window.location.search).has("next")
+    || Boolean(sessionStorage.getItem("matchiq_auth_return_url"));
+const AUTH_RETURN_URL = AUTH_RETURN_REQUESTED
+    ? window.MatchIQAuth.setReturnUrl(window.MatchIQAuth.requestedReturnUrl())
+    : "";
+
+function postAuthDestination(){
+    return AUTH_RETURN_URL
+        ? window.MatchIQAuth.consumeReturnUrl(`/index.html?v=${APP_VERSION}`)
+        : `/index.html?v=${APP_VERSION}`;
+}
+
+if(document.getElementById("registerLink")){
+    document.getElementById("registerLink").href = window.MatchIQAuth.authPageUrl(
+        `/register.html?v=${APP_VERSION}`,
+        AUTH_RETURN_URL || `/index.html?v=${APP_VERSION}`
+    );
+}
 
 function getToken(){
     return localStorage.getItem("matchiq_auth_token") || "";
 }
 
 function saveAuth(token,user){
-    window.MatchIQAuth?.clearSensitiveLocalState();
+    window.MatchIQAuth?.clearAuthSession();
     localStorage.setItem("matchiq_auth_token", token);
     localStorage.setItem("matchiq_auth_user", JSON.stringify(user || {}));
 
@@ -730,6 +748,7 @@ function saveAuth(token,user){
 }
 
 function clearOldAuth(){
+    window.MatchIQAuth?.clearAuthSession();
     localStorage.removeItem("matchiq_user");
     sessionStorage.removeItem("matchiq_user");
     sessionStorage.removeItem("matchiq_auth_user");
@@ -817,7 +836,7 @@ async function verifyExistingToken(){
 
         if(res.ok && data.success && data.user){
             saveAuth(token, data.user);
-            window.location.href = `/index.html?v=${APP_VERSION}`;
+            window.location.href = postAuthDestination();
         }
     }catch(e){
         console.warn("Token esistente non verificato", e);
@@ -875,7 +894,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         setMessage("Login completato. Reindirizzamento...", "success");
 
         setTimeout(() => {
-            window.location.href = `/index.html?v=${APP_VERSION}`;
+            window.location.href = postAuthDestination();
         },600);
 
     }catch(err){

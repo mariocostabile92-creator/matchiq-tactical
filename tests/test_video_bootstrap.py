@@ -67,9 +67,10 @@ class VideoBootstrapRegressionTests(unittest.TestCase):
         self.assertLess(initial_restore, final_restore)
         self.assertLess(final_restore, ready)
         self.assertIn(
-            "window.MatchIQVideoInitialRestore = refreshVideoHub().then(openSessionFromUrl)",
+            "window.MatchIQVideoInitialRestore = window.MatchIQVideoAuthReady.then(auth =>",
             VIDEO,
         )
+        self.assertIn("refreshVideoHub().then(openSessionFromUrl)", VIDEO)
         self.assertIn('root.classList.add("video-ai-ready")', VIDEO)
         self.assertIn('main.removeAttribute("aria-hidden")', VIDEO)
 
@@ -86,11 +87,11 @@ class VideoBootstrapRegressionTests(unittest.TestCase):
     def test_essential_assets_have_real_error_paths(self):
         self.assertRegex(
             VIDEO,
-            r'<script src="/js/video-intelligence\.js\?v=10542" onerror="[^"]*MatchIQVideoBoot',
+            r'<script src="/js/video-intelligence\.js\?v=10543" onerror="[^"]*MatchIQVideoBoot',
         )
         self.assertRegex(
             VIDEO,
-            r'<script src="/js/video-experience\.js\?v=10542" onerror="[^"]*MatchIQVideoBoot',
+            r'<script src="/js/video-experience\.js\?v=10543" onerror="[^"]*MatchIQVideoBoot',
         )
         self.assertIn("}catch(error){\n    boot?.fail(error);", EXPERIENCE)
 
@@ -99,7 +100,7 @@ class VideoBootstrapRegressionTests(unittest.TestCase):
 
     def test_adapter_is_mounted_once(self):
         self.assertEqual(
-            VIDEO.count('/js/video-experience.js?v=10542'),
+            VIDEO.count('/js/video-experience.js?v=10543'),
             1,
         )
         self.assertIn('shell.dataset.mounted === "true"', EXPERIENCE)
@@ -118,8 +119,8 @@ class VideoBootstrapRegressionTests(unittest.TestCase):
         self.assertNotIn("video-legacy", NAV_CONFIG.lower())
 
     def test_pwa_release_precaches_only_current_video_assets(self):
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v143"', WORKER)
-        self.assertIn('"/video.html?v=10542"', WORKER)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v144"', WORKER)
+        self.assertIn('"/video.html?v=10543"', WORKER)
         self.assertNotIn("10540", "\n".join(
             line for line in WORKER.splitlines()
             if "video" in line.lower()

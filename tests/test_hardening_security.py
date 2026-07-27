@@ -134,11 +134,11 @@ class HardeningSecurityTests(unittest.TestCase):
         manifest = (ROOT / "frontend" / "manifest.json").read_text(encoding="utf-8")
         worker = (ROOT / "frontend" / "service-worker.js").read_text(encoding="utf-8")
         app_meta = (ROOT / "frontend" / "js" / "app-meta.js").read_text(encoding="utf-8")
-        self.assertIn('"/video.html?v=10542"', worker)
+        self.assertIn('"/video.html?v=10543"', worker)
         self.assertIn('"start_url": "/index.html?v=10542"', manifest)
         self.assertIn('version: "10542"', app_meta)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v143"', worker)
-        self.assertIn('"/js/auth.js?v=10542"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v144"', worker)
+        self.assertIn('"/js/auth.js?v=10543"', worker)
         self.assertIn('"/js/safe-render.js?v=10526"', worker)
 
 

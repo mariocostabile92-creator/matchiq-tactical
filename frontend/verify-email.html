@@ -25,18 +25,28 @@
           <p id="message">Attendi qualche secondo. Stiamo confermando il link di verifica.</p>
         </div>
         <div class="actions">
-          <a class="btn" href="/account.html?v=10526">Vai all’account</a>
-          <a class="btn secondary" href="/login.html?v=10526">Torna al login</a>
+          <a class="btn" id="verificationContinue" href="/account.html?v=10543">Continua</a>
+          <a class="btn secondary" id="verificationLogin" href="/login.html?v=10543">Torna al login</a>
         </div>
         <p class="small">Se il link risulta scaduto, accedi al tuo account e richiedi un nuovo link di verifica.</p>
       </div>
     </section>
   </main>
+<script src="/js/auth.js?v=10543"></script>
 <script>
 (function(){
   const API_BASE = window.location.origin;
   const params = new URLSearchParams(window.location.search);
   const token = (params.get('token') || '').trim();
+  const requestedReturn = params.has("next")
+    ? window.MatchIQAuth.setReturnUrl(window.MatchIQAuth.requestedReturnUrl())
+    : "";
+  const loginUrl = window.MatchIQAuth.authPageUrl(
+    "/login.html?v=10543",
+    requestedReturn || "/account.html?v=10543"
+  );
+  document.getElementById("verificationLogin").href = loginUrl;
+  document.getElementById("verificationContinue").href = requestedReturn ? loginUrl : "/account.html?v=10543";
   const box = document.getElementById('statusBox');
   const title = document.getElementById('title');
   const msg = document.getElementById('message');

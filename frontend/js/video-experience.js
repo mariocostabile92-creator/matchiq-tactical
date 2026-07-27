@@ -1,6 +1,11 @@
-(function(){
+(async function(){
   const boot = window.MatchIQVideoBoot;
   try{
+  const auth = await Promise.resolve(window.MatchIQVideoAuthReady);
+  if(!auth?.authenticated){
+    boot?.authRequired(auth?.reason || "missing");
+    return;
+  }
   const shell = document.getElementById("videoExperienceShell");
   if(!shell){
     boot?.fail(new Error("Contenitore Video AI non disponibile."));
@@ -31,6 +36,8 @@
     processingStarted:0,
     elapsedTimer:0,
     startError:false,
+    authRecovery:false,
+    authRestored:false,
     mounted:false
   };
 
@@ -315,6 +322,11 @@
       await window.MatchIQVideoIntelligence.runPipeline();
     }catch(err){
       state.startError = true;
+      if(err.authRequired){
+        showSessionExpired();
+        return;
+      }
+      resetErrorActions();
       if(hint) hint.textContent = err.message || "Analisi non avviata.";
       if(node("vxErrorMessage")) node("vxErrorMessage").textContent = err.message || "Analisi non avviata. Il video e il contesto sono rimasti disponibili.";
       if(node("vxErrorDetails")) node("vxErrorDetails").textContent = JSON.stringify({
@@ -326,6 +338,66 @@
         ? "Rinnovo della sessione e nuova selezione dei frame"
         : "Nuovo tentativo di selezione dei frame";
       setView("error",{keepScroll:true});
+    }
+  }
+
+  function errorActionButtons(){
+    return {
+      primary:shell.querySelector('.vx-error-actions [data-vx-action="retry"],.vx-error-actions [data-vx-action="auth-recover"],.vx-error-actions [data-vx-action="resume-auth"]'),
+      projects:shell.querySelector('.vx-error-actions [data-vx-action="projects"]'),
+      setup:shell.querySelector('.vx-error-actions [data-vx-action="setup"]')
+    };
+  }
+
+  function resetErrorActions(){
+    const actions = errorActionButtons();
+    state.authRecovery = false;
+    state.authRestored = false;
+    if(node("vxErrorView")?.querySelector("h2")) node("vxErrorView").querySelector("h2").textContent = "Il progetto si e fermato, ma il lavoro salvato resta disponibile.";
+    if(actions.primary){
+      actions.primary.dataset.vxAction = "retry";
+      actions.primary.textContent = "Riprova analisi";
+    }
+    if(actions.projects) actions.projects.hidden = false;
+    if(actions.setup) actions.setup.hidden = false;
+  }
+
+  function showSessionExpired(){
+    window.MatchIQAuth?.clearAuthSession();
+    state.authRecovery = true;
+    state.authRestored = false;
+    const actions = errorActionButtons();
+    if(node("vxErrorView")?.querySelector("h2")) node("vxErrorView").querySelector("h2").textContent = "Sessione scaduta";
+    if(node("vxErrorMessage")) node("vxErrorMessage").textContent = "Il video, il contesto e i fotogrammi restano disponibili. Accedi di nuovo per continuare da questo punto.";
+    if(node("vxErrorDetails")) node("vxErrorDetails").textContent = JSON.stringify({status:401,authentication_required:true,workspace_preserved:true},null,2);
+    if(node("vxRecoveryMissing")) node("vxRecoveryMissing").textContent = "Nuovo accesso e ripresa dell'analisi";
+    if(actions.primary){
+      actions.primary.dataset.vxAction = "auth-recover";
+      actions.primary.textContent = "Accedi e riprendi";
+      actions.primary.hidden = false;
+    }
+    if(actions.projects) actions.projects.hidden = true;
+    if(actions.setup) actions.setup.hidden = true;
+    setView("error",{keepScroll:true});
+  }
+
+  function openAuthRecovery(){
+    const returnUrl = window.location.pathname + window.location.search + window.location.hash;
+    const loginUrl = window.MatchIQAuth.authPageUrl("/login.html?v=10543",returnUrl);
+    const authWindow = window.open(loginUrl,"matchiq-video-auth","popup=yes,width=560,height=760");
+    if(authWindow) authWindow.focus();
+    else window.location.href = loginUrl;
+  }
+
+  function checkAuthRecovery(){
+    if(!state.authRecovery || !window.MatchIQAuth?.isLoggedIn()) return;
+    state.authRestored = true;
+    const actions = errorActionButtons();
+    if(node("vxErrorMessage")) node("vxErrorMessage").textContent = "Accesso ripristinato. Il progetto e ancora disponibile e puoi riprendere l'analisi.";
+    if(actions.primary){
+      actions.primary.dataset.vxAction = "resume-auth";
+      actions.primary.textContent = "Riprendi analisi";
+      actions.primary.focus({preventScroll:true});
     }
   }
 
@@ -390,6 +462,11 @@
       if(state.startError) startAnalysis();
       else node("viProjectState")?.querySelector('[data-project-action="retry"]')?.click();
     }
+    if(action === "auth-recover") openAuthRecovery();
+    if(action === "resume-auth"){
+      resetErrorActions();
+      startAnalysis();
+    }
     if(action === "cancel") node("viProjectState")?.querySelector('[data-project-action="cancel"]')?.click();
   });
 
@@ -421,6 +498,11 @@
   window.addEventListener("scroll",scheduleStickyChrome,{passive:true});
   window.addEventListener("resize",scheduleStickyChrome,{passive:true});
   window.addEventListener("matchiq:global-nav-ready",scheduleStickyChrome);
+  window.addEventListener("storage",event => {
+    if(event.key === "matchiq_auth_token" && event.newValue) checkAuthRecovery();
+  });
+  window.addEventListener("focus",checkAuthRecovery);
+  document.addEventListener("matchiq:video-session-expired",showSessionExpired);
 
   mountExistingExperience();
   updateSelectedFile();

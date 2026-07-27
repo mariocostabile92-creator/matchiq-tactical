@@ -1,4 +1,9 @@
-(function(){
+(async function(){
+  const auth = await Promise.resolve(window.MatchIQVideoAuthReady);
+  if(!auth?.authenticated){
+    window.MatchIQVideoBoot?.authRequired(auth?.reason || "missing");
+    return;
+  }
   const setup = document.getElementById("videoIntelligenceSetup");
   const workspace = document.getElementById("videoEvidenceWorkspace");
   if(!setup || !workspace) return;
@@ -85,7 +90,8 @@
   async function request(path, options={}){
     const response = await fetch(`${window.location.origin}/api/video/intelligence${path}`, {
       ...options,
-      headers: authJsonHeaders()
+      headers: authJsonHeaders(),
+      credentials:"same-origin"
     });
     let payload = {};
     try{ payload = await response.json(); }catch(err){}
@@ -95,6 +101,11 @@
       error.status = response.status;
       error.code = detail?.code || payload.code || "request_failed";
       error.details = typeof detail === "object" && detail ? detail : payload;
+      if(response.status === 401 || response.status === 403){
+        window.MatchIQAuth?.clearAuthSession();
+        error.authRequired = true;
+        document.dispatchEvent(new CustomEvent("matchiq:video-session-expired"));
+      }
       throw error;
     }
     return payload;
@@ -839,12 +850,22 @@
     if(report.pdf_ready === false) throw new Error("Il PDF non e ancora pronto. Riprova tra qualche istante.");
     const headers = authJsonHeaders();
     delete headers["Content-Type"];
-    const response = await fetch(`${window.location.origin}/api/video/intelligence/projects/${assetId()}/reports/${encodeURIComponent(report.report_id)}/pdf`, {headers});
+    const response = await fetch(`${window.location.origin}/api/video/intelligence/projects/${assetId()}/reports/${encodeURIComponent(report.report_id)}/pdf`, {
+      headers,
+      credentials:"same-origin"
+    });
     if(!response.ok){
       let payload = {};
       try{ payload = await response.json(); }catch(err){}
       const detail = payload?.detail;
-      throw new Error(typeof detail === "string" ? detail : (detail?.message || "Download PDF non riuscito"));
+      const error = new Error(typeof detail === "string" ? detail : (detail?.message || "Download PDF non riuscito"));
+      error.status = response.status;
+      if(response.status === 401 || response.status === 403){
+        window.MatchIQAuth?.clearAuthSession();
+        error.authRequired = true;
+        document.dispatchEvent(new CustomEvent("matchiq:video-session-expired"));
+      }
+      throw error;
     }
     const contentType = (response.headers.get("Content-Type") || "").toLowerCase();
     if(!contentType.includes("application/pdf")) throw new Error("Il server non ha restituito un PDF valido");

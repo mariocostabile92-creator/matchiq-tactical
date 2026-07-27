@@ -147,10 +147,24 @@ class VideoAnalysisAuthFrontendContractTests(unittest.TestCase):
         cls.experience = (FRONTEND / "js" / "video-experience.js").read_text(encoding="utf-8")
 
     def test_shared_auth_helper_and_bearer_request_are_used(self):
-        self.assertIn('<script src="/js/auth.js?v=10542"></script>', self.page)
+        self.assertIn('<script src="/js/auth.js?v=10543"></script>', self.page)
         self.assertIn("window.MatchIQAuth.authHeaders", self.page)
         self.assertIn('credentials:"same-origin"', self.page)
         self.assertIn("video_asset_id: currentVideoAssetId || null", self.page)
+
+    def test_session_is_revalidated_immediately_before_frame_selection(self):
+        helper_start = self.page.index("async function requireActiveFrameSelectionSession()")
+        helper_end = self.page.index("async function performFrameSelectionRequest", helper_start)
+        helper = self.page[helper_start:helper_end]
+        self.assertIn("window.MatchIQAuth.validateSession()", helper)
+        self.assertIn("session?.authenticated", helper)
+
+        request_start = helper_end
+        request_end = self.page.index("const selectedIndexes", request_start)
+        request = self.page[request_start:request_end]
+        validation = request.index("await requireActiveFrameSelectionSession()")
+        post = request.index('fetch(`${API_BASE}/video/select-frames`')
+        self.assertLess(validation, post)
 
     def test_duplicate_frame_selection_is_guarded(self):
         self.assertIn("let activeFrameSelectionRequest = null", self.page)

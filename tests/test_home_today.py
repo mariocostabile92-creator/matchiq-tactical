@@ -152,12 +152,12 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         self.assertIn("safe-area-inset-bottom", styles)
         self.assertIn("focus-visible", styles)
         self.assertEqual(manifest["start_url"], "/index.html?v=10542")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v143"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v144"', worker)
         self.assertIn('"/css/home.css?v=10542"', worker)
         self.assertIn('caches.match("/index.html?v=10542")', worker)
         for asset in (
             "/js/app-meta.js?v=10542", "/css/global-nav.css?v=10542",
-            "/js/auth.js?v=10542", "/js/global-nav-state.js?v=10542",
+            "/js/auth.js?v=10543", "/js/global-nav-state.js?v=10542",
             "/js/weekly-briefing-state.js?v=10542", "/js/weekly-briefing-api.js?v=10542",
         ):
             self.assertIn(f'"{asset}"', worker)
