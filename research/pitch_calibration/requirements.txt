@@ -1,0 +1,10 @@
+# MatchIQ VE-005B integration layer only.
+# The existing research environment already supplies these pinned packages.
+numpy==2.4.1
+opencv-python==4.13.0.92
+
+# TVCalib is intentionally not vendored or installed here.
+# Official upstream environment (audited 2026-07-28):
+# Python 3.9, PyTorch 1.11, torchvision 0.12, NumPy 1.19.5.
+# Its segmentation submodule and pretrained checkpoint require separate
+# licensing clarification before MatchIQ can redistribute or automate them.
