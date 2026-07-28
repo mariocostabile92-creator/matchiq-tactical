@@ -82,6 +82,8 @@ from app.services.decision_engine_service import initialize_decision_engine
 from app.routers.decision_engine import router as decision_engine_router
 from app.services.club_intelligence_service import initialize_club_intelligence
 from app.routers.club_intelligence import router as club_intelligence_router
+from app.services.match_evidence_service import initialize_match_evidence
+from app.routers.match_evidence import router as match_evidence_router
 from auth import create_verification_for_user
 from brevo_service import send_verification_email, is_email_configured
 from usage_guard import (
@@ -165,6 +167,7 @@ initialize_tactical_assistant()
 initialize_tactical_identity()
 initialize_decision_engine()
 initialize_club_intelligence()
+initialize_match_evidence()
 app.include_router(auth_router)
 app.include_router(payments_router)
 app.include_router(coach_tracking_router)
@@ -181,6 +184,7 @@ app.include_router(tactical_assistant_router)
 app.include_router(tactical_identity_router)
 app.include_router(decision_engine_router)
 app.include_router(club_intelligence_router)
+app.include_router(match_evidence_router)
 
 
 # =========================================================

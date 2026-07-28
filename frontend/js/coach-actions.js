@@ -426,6 +426,10 @@ function finishCoachMatchDay(){
         generateCoachReport();
     }
     saveState();
+    finalizeCoachMatchEvidence().catch(error=>{
+        console.warn("[Coach MatchEvidence]",error);
+        showNotice("Post-partita disponibile. Sincronizzazione cloud da riprovare.","warn",5000);
+    });
     renderAll();
     showNotice("Partita spostata nel Post-partita. Completa pagelle, report e storico.", "ok", 4000);
 }
