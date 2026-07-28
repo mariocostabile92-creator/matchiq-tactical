@@ -15,6 +15,7 @@ from app.routers.home import router as home_router
 from app.routers.knowledge import router as knowledge_router
 from app.routers.weekly_briefing import router as weekly_briefing_router
 from app.routers.pattern_intelligence import router as pattern_intelligence_router
+from app.routers.weekly_priorities import router as weekly_priorities_router
 from app.routers.training_planner import router as training_planner_router
 from app.routers.knowledge_intelligence import router as knowledge_intelligence_router
 from app.routers.frontend import router as frontend_router, FRONTEND_DIR
@@ -72,6 +73,7 @@ from app.services.knowledge_service import initialize_foundation
 from app.services.voice_coach_intelligence_service import initialize_voice_coach_intelligence
 from app.services.weekly_briefing_service import initialize_weekly_briefing
 from app.services.pattern_intelligence_service import initialize_pattern_intelligence
+from app.services.weekly_priority_service import initialize_weekly_priorities
 from app.services.training_planner_service import initialize_training_planner
 from app.services.knowledge_intelligence_service import initialize_knowledge_intelligence
 from app.services.tactical_assistant_service import initialize_tactical_assistant
@@ -160,6 +162,7 @@ init_db()
 initialize_foundation()
 initialize_voice_coach_intelligence()
 initialize_pattern_intelligence()
+initialize_weekly_priorities()
 initialize_training_planner()
 initialize_weekly_briefing()
 initialize_knowledge_intelligence()
@@ -178,6 +181,7 @@ app.include_router(home_router)
 app.include_router(knowledge_router)
 app.include_router(weekly_briefing_router)
 app.include_router(pattern_intelligence_router)
+app.include_router(weekly_priorities_router)
 app.include_router(training_planner_router)
 app.include_router(knowledge_intelligence_router)
 app.include_router(tactical_assistant_router)

@@ -13,6 +13,7 @@ from database import (
     get_video_reports,
 )
 from usage_guard import get_optional_user, is_owner_user, normalize_plan
+from app.services import weekly_priority_service
 
 
 router = APIRouter(prefix="/api/home", tags=["home"])
@@ -121,6 +122,7 @@ def home_summary(user=Depends(get_optional_user)):
             "continue_items": [],
             "activities": [],
             "ai_priorities": [],
+            "weekly_priorities": [],
             "section_errors": [],
         }
 
@@ -132,6 +134,11 @@ def home_summary(user=Depends(get_optional_user)):
     scout_reports = _safe_call("scout_reports", lambda: get_scout_reports(user_id), errors)
     saved_matches = _safe_call("saved_matches", lambda: get_saved_matches(user_id), errors)
     usage = _safe_call("usage", lambda: get_usage_summary(user_id), errors)
+    weekly_priorities = _safe_call(
+        "weekly_priorities",
+        lambda: weekly_priority_service.list_current(user_id),
+        errors,
+    )
     if not isinstance(usage, dict):
         usage = {}
 
@@ -223,6 +230,7 @@ def home_summary(user=Depends(get_optional_user)):
         "continue_items": continue_items,
         "activities": activity[:8],
         "ai_priorities": priorities[:3],
+        "weekly_priorities": weekly_priorities[:5],
         "section_errors": errors,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }

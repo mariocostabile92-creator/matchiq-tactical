@@ -10,6 +10,7 @@ from app.repositories import (
     knowledge_repository,
     match_evidence_repository,
     pattern_intelligence_repository,
+    weekly_priority_repository,
 )
 from app.repositories import knowledge_intelligence_schema
 from app.services import (
@@ -44,6 +45,7 @@ class MatchEvidenceIntelligenceSyncTest(unittest.TestCase):
             match_evidence_repository,
             pattern_intelligence_repository,
             pattern_intelligence_aggregator,
+            weekly_priority_repository,
         )
         for module in modules:
             self.originals.append(
@@ -94,6 +96,7 @@ class MatchEvidenceIntelligenceSyncTest(unittest.TestCase):
         knowledge_service.initialize_foundation()
         initialize_knowledge_intelligence()
         pattern_intelligence_service.initialize_pattern_intelligence()
+        weekly_priority_repository.initialize_weekly_priority_schema()
         match_evidence_service.initialize_match_evidence()
 
     def tearDown(self):
@@ -227,6 +230,19 @@ class MatchEvidenceIntelligenceSyncTest(unittest.TestCase):
         self.assertEqual(
             {entry["match_id"] for entry in evidence},
             set(canonical_ids),
+        )
+        priorities=weekly_priority_repository.list_latest(1)
+        self.assertEqual(len(priorities),1)
+        self.assertEqual(
+            set(priorities[0]["canonical_match_ids"]),
+            set(canonical_ids),
+        )
+        self.assertEqual(priorities[0]["status"],"PROPOSED")
+
+        match_evidence_service.finalize(1,self.request(3))
+        self.assertEqual(
+            self.scalar("SELECT COUNT(*) FROM weekly_priorities"),
+            1,
         )
 
     def test_local_history_remains_fallback_without_match_evidence(self):

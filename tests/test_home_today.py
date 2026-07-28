@@ -16,7 +16,7 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         home = read("index.html")
         section_ids = [
             "todayHero", "todayPriorities", "todayContinue", "nextMatch",
-            "weeklyBriefing", "videoFocus", "weeklyFlow",
+            "weeklyBriefing", "weeklyPriorities", "videoFocus", "weeklyFlow",
             "homeIntelligence", "recentWork",
         ]
         positions = [home.index(f'id="{section_id}"') for section_id in section_ids]
@@ -90,6 +90,29 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         for phase in ("Prepara", "Match Day", "Analizza", "Allena", "Riparti"):
             self.assertIn(f'["{phase}"', render)
 
+    def test_weekly_priorities_are_structured_and_actionable(self):
+        home = read("index.html")
+        state = read("js/home-state.js")
+        api = read("js/home-api.js")
+        render = read("js/home-render.js")
+        actions = read("js/home-actions.js")
+        styles = read("css/home.css")
+
+        self.assertIn('id="weeklyPriorities"', home)
+        self.assertIn('id="weeklyPrioritiesContent"', home)
+        self.assertIn("weekly_priorities:[]", state)
+        self.assertIn("weeklyPriorities", state)
+        self.assertIn("/api/weekly-priorities/", api)
+        self.assertIn('method:"PUT"', api)
+        for status in ("CONFIRMED", "DISMISSED", "MODIFIED"):
+            self.assertIn(status, actions)
+        for reference in (
+            "Partite", "Pattern", "Evidenze",
+            "Voice Coach", "Video AI", "Note Coach",
+        ):
+            self.assertIn(reference, render)
+        self.assertIn(".weekly-priority", styles)
+
     def test_intelligence_and_activity_are_coach_ai_scoped(self):
         render = read("js/home-render.js")
         state = read("js/home-state.js")
@@ -153,7 +176,12 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         self.assertIn("focus-visible", styles)
         self.assertEqual(manifest["start_url"], "/index.html?v=10542")
         self.assertIn('const CACHE_NAME = "matchiq-pwa-v144"', worker)
-        self.assertIn('"/css/home.css?v=10542"', worker)
+        self.assertIn('"/css/home.css?v=10543"', worker)
+        for asset in (
+            "/js/home-state.js?v=10543", "/js/home-api.js?v=10543",
+            "/js/home-render.js?v=10543", "/js/home-actions.js?v=10543",
+        ):
+            self.assertIn(f'"{asset}"', worker)
         self.assertIn('caches.match("/index.html?v=10542")', worker)
         for asset in (
             "/js/app-meta.js?v=10542", "/css/global-nav.css?v=10542",

@@ -68,6 +68,81 @@
     card.append(copy,link(weekly.isRead?"Rileggi":"Inizia la settimana","/weekly-briefing.html","card-action primary"));root.append(card);
   };
 
+  H.renderWeeklyPriorities=function(){
+    const root=$("weeklyPrioritiesContent");if(!root)return;root.replaceChildren();
+    const items=H.state.view?.weeklyPriorities||[];
+    if(!items.length){
+      root.append(H.emptyState(
+        "Le priorita emergeranno dalle partite.",
+        "Dopo almeno tre partite coerenti, MatchIQ mostrera qui i pattern consolidati senza richiedere un'azione manuale."
+      ));
+      return;
+    }
+    items.slice(0,5).forEach(item=>{
+      const card=node("article",undefined,"weekly-priority");
+      card.dataset.priorityId=item.priority_id;
+      const heading=node("div",undefined,"weekly-priority__heading");
+      const copy=node("div");
+      copy.append(
+        node("span",`LIVELLO ${item.priority_level}`,"summary-kicker"),
+        node("h3",item.topic),
+        node("p",item.reason?.summary||"Priorita sostenuta da evidenze consolidate.")
+      );
+      const status=node("span",item.status==="CONFIRMED"?"CONFERMATA":item.status,"status-chip");
+      heading.append(copy,status);
+
+      const details=document.createElement("details");
+      details.className="weekly-priority__details";
+      const summary=node("summary","Visualizza dettagli");
+      const references=item.references||{};
+      const facts=node("div",undefined,"weekly-priority__facts");
+      [
+        ["Partite",(references.matches||[]).length],
+        ["Pattern",(references.patterns||[]).length],
+        ["Evidenze",(references.evidence||[]).length],
+        ["Voice Coach",(references.voice_coach||[]).length],
+        ["Video AI",(references.video_ai||[]).length],
+        ["Note Coach",(references.coach_notes||[]).length]
+      ].forEach(([label,value])=>facts.append(node("span",`${label}: ${value}`)));
+      const factors=node("div",undefined,"weekly-priority__factors");
+      Object.entries(item.reason?.factors||{})
+        .filter(([key])=>["frequency","recency","confidence","staff_confirmation","impact"].includes(key))
+        .forEach(([key,value])=>factors.append(node("span",`${key.replace("_"," ")} ${Math.round(Number(value)||0)}/100`)));
+      details.append(summary,facts,factors);
+
+      const actions=node("div",undefined,"weekly-priority__actions");
+      const confirm=node("button","Conferma","button button-primary");
+      confirm.type="button";confirm.dataset.priorityAction="CONFIRMED";
+      const dismiss=node("button","Ignora","button button-muted");
+      dismiss.type="button";dismiss.dataset.priorityAction="DISMISSED";
+      const edit=node("button","Modifica","button button-muted");
+      edit.type="button";edit.dataset.priorityEdit="toggle";
+      actions.append(confirm,dismiss,edit);
+
+      const form=document.createElement("form");
+      form.className="weekly-priority__form";form.hidden=true;
+      form.dataset.priorityForm="";
+      const topicLabel=node("label","Titolo");
+      const topic=document.createElement("input");
+      topic.name="topic";topic.value=item.topic;topic.required=true;topic.maxLength=160;
+      topicLabel.append(topic);
+      const levelLabel=node("label","Livello");
+      const level=document.createElement("select");level.name="priority_level";
+      ["HIGH","MEDIUM","LOW"].forEach(value=>{
+        const option=node("option",value);option.value=value;option.selected=value===item.priority_level;level.append(option);
+      });
+      levelLabel.append(level);
+      const reasonLabel=node("label","Nota staff");
+      const reason=document.createElement("textarea");
+      reason.name="staff_reason";reason.maxLength=1200;reason.rows=2;
+      reason.value=item.staff_reason||"";reasonLabel.append(reason);
+      const save=node("button","Salva modifica","button button-primary");save.type="submit";
+      form.append(topicLabel,levelLabel,reasonLabel,save);
+
+      card.append(heading,details,actions,form);root.append(card);
+    });
+  };
+
   H.renderVideoFocus=function(){
     const root=$("videoFocusContent");if(!root)return;root.replaceChildren();const item=H.state.view?.videoAttention;
     if(!item){root.append(H.emptyState("Nessun progetto Video AI richiede attenzione.","Quando carichi una sessione, qui comparirà lo stato operativo più importante.",[{label:"Apri Video AI",url:"/video.html",primary:true}]));return}
@@ -116,6 +191,6 @@
   };
 
   H.renderHome=function(){
-    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderNextMatch();H.renderWeekly();H.renderVideoFocus();H.renderWeeklyFlow();H.renderIntelligence();H.renderActivity();H.renderNotice();
+    H.renderAccount();H.renderHero();H.renderPriorities();H.renderContinue();H.renderNextMatch();H.renderWeekly();H.renderWeeklyPriorities();H.renderVideoFocus();H.renderWeeklyFlow();H.renderIntelligence();H.renderActivity();H.renderNotice();
   };
 })();

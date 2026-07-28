@@ -6,11 +6,20 @@
     return token ? {Authorization:`Bearer ${token}`} : {};
   };
 
-  H.fetchJson = async function(url, timeoutMs=9000){
+  H.fetchJson = async function(url, timeoutMs=9000, options={}){
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try{
-      const response = await fetch(url, {headers:{Accept:"application/json", ...H.authHeaders()}, cache:"no-store", signal:controller.signal});
+      const response = await fetch(url, {
+        ...options,
+        headers:{
+          Accept:"application/json",
+          ...H.authHeaders(),
+          ...(options.headers||{})
+        },
+        cache:"no-store",
+        signal:controller.signal
+      });
       if(!response.ok){
         const payload = await response.json().catch(() => ({}));
         throw new Error(payload?.detail?.message || payload?.detail || `Errore ${response.status}`);
@@ -57,11 +66,23 @@
       }
     }else{
       H.state.error = "Alcuni dati personali non sono disponibili. I collegamenti ai moduli restano attivi.";
-      H.state.remote = {stats:{}, stats_available:{}, continue_items:[], activities:[], ai_priorities:[], section_errors:["home_summary"]};
+      H.state.remote = {stats:{}, stats_available:{}, continue_items:[], activities:[], ai_priorities:[], weekly_priorities:[], section_errors:["home_summary"]};
     }
     H.state.weekly = weeklyResult.status === "fulfilled" ? (weeklyResult.value?.briefing || null) : null;
     H.state.training = trainingResult.status === "fulfilled" ? (trainingResult.value?.data?.plan || null) : null;
     H.state.loading = false;
     return H.mergeData();
+  };
+
+  H.updateWeeklyPriority = async function(priorityId,payload){
+    return H.fetchJson(
+      `/api/weekly-priorities/${encodeURIComponent(priorityId)}/staff`,
+      9000,
+      {
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(payload)
+      }
+    );
   };
 })();
