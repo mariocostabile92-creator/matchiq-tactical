@@ -2,7 +2,7 @@ from typing import Dict, FrozenSet
 
 
 NODE_TYPES: Dict[str, dict] = {
-    "match": {"owner": "coach", "source": "saved_match", "versioned": True, "on_delete": "invalidate"},
+    "match": {"owner": "coach", "source": "match_evidence", "versioned": True, "on_delete": "invalidate"},
     "coach_session": {"owner": "coach", "source": "coach_session", "versioned": True, "on_delete": "invalidate"},
     "coach_event": {"owner": "coach", "source": "coach_event", "versioned": True, "on_delete": "invalidate"},
     "voice_observation": {"owner": "voice_coach", "source": "voice_observation", "versioned": True, "on_delete": "invalidate"},

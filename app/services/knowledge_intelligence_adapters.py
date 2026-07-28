@@ -37,9 +37,16 @@ def foundation(user_id: int,workspace_id: int) -> Dict[str,Any]:
 
 def coach(user_id: int,workspace_id: int) -> Dict[str,Any]:
     nodes=[]
-    for row in _rows("SELECT * FROM saved_matches WHERE user_id=? ORDER BY created_at",(user_id,)):
-        title=f"{row.get('home') or 'Casa'} - {row.get('away') or 'Trasferta'}"
-        nodes.append({"node_type":"match","source_type":"saved_match","source_id":str(row["id"]),"match_id":str(row.get("match_id") or row["id"]),"title":title,"summary":row.get("league") or "Partita salvata","occurred_at":row.get("created_at"),"source_updated_at":row.get("created_at"),"reliability_level":"alta","validation_state":"source_confirmed","nature":"oggettiva","team_name":row.get("home"),"competition":row.get("league"),"opponent":row.get("away"),"metadata":{"home":row.get("home"),"away":row.get("away"),"league":row.get("league")},"tags":["partita",row.get("league") or ""]})
+    canonical_matches=_rows("SELECT * FROM match_evidence WHERE user_id=? ORDER BY match_date,created_at",(user_id,))
+    for row in canonical_matches:
+        match=_load(row.get("match_data")); coach_data=_load(row.get("coach_data"))
+        result=match.get("result") or {}; formation=match.get("formation") or {}
+        title=" - ".join(value for value in ("MatchIQ",row.get("opponent")) if value) or "Partita finalizzata"
+        nodes.append({"node_type":"match","source_type":"match_evidence","source_id":str(row["canonical_match_id"]),"match_id":str(row["canonical_match_id"]),"title":title,"summary":coach_data.get("final_report") or result.get("score") or row.get("competition") or "Partita finalizzata","occurred_at":row.get("match_date") or row.get("created_at"),"source_updated_at":row.get("match_date") or row.get("created_at"),"reliability_level":"alta","validation_state":"source_confirmed","nature":"oggettiva","team_name":row.get("team_id"),"competition":row.get("competition"),"opponent":row.get("opponent"),"metadata":{"canonical_match_id":row.get("canonical_match_id"),"source_match_id":row.get("source_match_id"),"season_id":row.get("season_id"),"result":result,"formation":formation,"module":match.get("module"),"timeline_events":match.get("timeline_events") or [],"substitutions":match.get("substitutions") or [],"cards":match.get("cards") or [],"goals":match.get("goals") or [],"coach_notes":coach_data.get("notes") or [],"coach_observations":coach_data.get("observations") or [],"ratings":coach_data.get("ratings") or []},"tags":["partita",row.get("competition") or ""]})
+    if not canonical_matches:
+        for row in _rows("SELECT * FROM saved_matches WHERE user_id=? ORDER BY created_at",(user_id,)):
+            title=f"{row.get('home') or 'Casa'} - {row.get('away') or 'Trasferta'}"
+            nodes.append({"node_type":"match","source_type":"saved_match","source_id":str(row["id"]),"match_id":str(row.get("match_id") or row["id"]),"title":title,"summary":row.get("league") or "Partita salvata","occurred_at":row.get("created_at"),"source_updated_at":row.get("created_at"),"reliability_level":"alta","validation_state":"source_confirmed","nature":"oggettiva","team_name":row.get("home"),"competition":row.get("league"),"opponent":row.get("away"),"metadata":{"home":row.get("home"),"away":row.get("away"),"league":row.get("league")},"tags":["partita",row.get("league") or ""]})
     return {"module":"coach","nodes":nodes,"edges":[]}
 
 

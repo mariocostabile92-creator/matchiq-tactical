@@ -7,7 +7,7 @@ from app.services.knowledge_intelligence_adapters import ADAPTERS
 
 
 MODULE_SOURCE_TYPES={
-  "knowledge":{"coach_profile","team_profile","roster_player"},"coach":{"saved_match","coach_session","coach_event","coach_report"},
+  "knowledge":{"coach_profile","team_profile","roster_player"},"coach":{"match_evidence","saved_match","coach_session","coach_event","coach_report"},
   "voice_coach":{"voice_observation","voice_match_theme"},"pattern_intelligence":{"pattern","pattern_evidence"},
   "weekly_briefing":{"weekly_briefing"},"training_planner":{"training_plan","training_session","training_exercise"},
   "video_ai":{"video_asset","video_frame","video_clip","video_report"},"scout":{"scout_report"},

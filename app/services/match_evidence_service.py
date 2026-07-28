@@ -48,6 +48,11 @@ def finalize(
         finalized_at=finalized_at,
         updated_at=now,
     )
+    from app.services.match_evidence_intelligence_sync import (
+        sync_finalized_match_safely,
+    )
+
+    sync_finalized_match_safely(user_id,item)
     return item, existing is None
 
 

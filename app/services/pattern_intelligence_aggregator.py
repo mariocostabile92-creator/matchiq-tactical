@@ -50,42 +50,118 @@ def _evidence(source_type: str, source_id: str, match_id: str, topic: str, label
     }
 
 
+def _canonical_records(user_id: int) -> List[Dict[str, Any]]:
+    conn=get_connection(); cur=conn.cursor()
+    try:
+        cur.execute(q("SELECT * FROM match_evidence WHERE user_id=? ORDER BY match_date,created_at"),(user_id,))
+        return [dict(row) for row in fetchall(cur)]
+    except Exception as exc:
+        message=str(exc).lower()
+        if "no such table" in message or "does not exist" in message:
+            return []
+        raise
+    finally:
+        conn.close()
+
+
+def _text(value: Any) -> str:
+    if isinstance(value,dict):
+        return str(value.get("note") or value.get("text") or value.get("summary") or value.get("label") or "")
+    return str(value or "")
+
+
+def _collect_canonical_records(
+    records: List[Dict[str, Any]],
+    start: datetime,
+    matches: Dict[str, Dict[str, Any]],
+    evidence: List[Dict[str, Any]],
+) -> tuple:
+    voice_matches={}; video_reports={}; video_frames={}
+    for row in records:
+        match=_json(row.get("match_data"),{}); coach=_json(row.get("coach_data"),{})
+        played=_iso(row.get("match_date") or row.get("created_at"))
+        if _date_value(played)<start:
+            continue
+        match_id=str(row["canonical_match_id"]); formation=match.get("module") or match.get("formation")
+        matches[match_id]={"id":match_id,"date":played,"home":row.get("team_id") or "MatchIQ","away":row.get("opponent"),"category":row.get("competition"),"formation":formation}
+        for index,event in enumerate(match.get("timeline_events") or []):
+            if not isinstance(event,dict):
+                continue
+            normalized=normalize_event(event); source_id=str(event.get("id") or f"{match_id}:event:{index}")
+            evidence.append(_evidence("match_evidence_event",source_id,match_id,normalized["topic"],normalized["label"],str(event.get("note") or event.get("type") or normalized["label"]),"objective",minute=int(event.get("minute") or 0),event_type=str(event.get("type") or ""),player_id=str(event.get("player") or event.get("playerId") or ""),zone=normalized["zone"],phase=normalized["phase"],formation=formation,polarity=normalized["polarity"],created_at=played))
+        for group_name in ("notes","observations"):
+            for index,item in enumerate(coach.get(group_name) or []):
+                summary=_text(item)
+                if not summary:
+                    continue
+                normalized=normalize_event(item if isinstance(item,dict) else {"type":"nota","note":summary})
+                source_id=str(item.get("id") if isinstance(item,dict) and item.get("id") else f"{match_id}:{group_name}:{index}")
+                evidence.append(_evidence("match_evidence_observation",source_id,match_id,normalized["topic"],normalized["label"],summary,"staff_observation",minute=int(item.get("minute") or 0) if isinstance(item,dict) else 0,event_type=group_name,player_id=str(item.get("player") or item.get("playerId") or "") if isinstance(item,dict) else "",zone=normalized["zone"],phase=normalized["phase"],formation=formation,polarity=normalized["polarity"],created_at=played))
+        for index,rating in enumerate(coach.get("ratings") or []):
+            if not isinstance(rating,dict):
+                continue
+            try:
+                vote=float(rating.get("vote") or rating.get("rating") or 0)
+            except (TypeError,ValueError):
+                vote=0
+            if vote<=0:
+                continue
+            polarity="positive" if vote>=7 else ("negative" if vote<6 else "neutral")
+            topic="positive_behavior" if polarity=="positive" else ("individual_difficulty" if polarity=="negative" else "general_note")
+            player=str(rating.get("player") or rating.get("playerName") or rating.get("playerId") or "Giocatore")
+            evidence.append(_evidence("match_evidence_rating",str(rating.get("id") or f"{match_id}:rating:{index}"),match_id,topic,"Valutazione giocatore",f"{player}: voto {vote:g}. {rating.get('note') or ''}".strip(),"staff_observation",player_id=player,zone="individual",phase="post_match",formation=formation,polarity=polarity,created_at=played))
+        for reference in (_json(row.get("voice_references"),{}).get("observation_ids") or []):
+            voice_matches[str(reference)]=match_id
+        video_refs=_json(row.get("video_references"),{})
+        for reference in video_refs.get("video_report_ids") or []:
+            video_reports[str(reference)]=match_id
+        for reference in video_refs.get("reviewed_frame_ids") or []:
+            video_frames[str(reference)]=match_id
+    return voice_matches,video_reports,video_frames
+
+
 def collect_sources(user_id: int, local_matches: List[Dict[str, Any]], period_days: int) -> Dict[str, Any]:
     now=datetime.now(timezone.utc); start=now-timedelta(days=period_days)
     matches: Dict[str, Dict[str, Any]]={}; evidence=[]
-    for index,item in enumerate(local_matches[:100]):
-        if not isinstance(item,dict): continue
-        match=item.get("match") or {}; metadata=item.get("metadata") or {}; match_id=_match_id(item,index)
-        played=_iso(item.get("savedAt") or match.get("date") or metadata.get("date"))
-        if _date_value(played)<start: continue
-        matches[match_id]={"id":match_id,"date":played,"home":match.get("homeTeam") or metadata.get("homeTeam"),"away":match.get("awayTeam") or metadata.get("awayTeam"),"category":match.get("category") or metadata.get("category"),"formation":match.get("formation") or metadata.get("formation")}
-        seen=set()
-        for event_index,event in enumerate(item.get("events") or []):
-            if not isinstance(event,dict): continue
-            if event.get("voiceObservationId"): continue
-            normalized=normalize_event(event); source_id=str(event.get("id") or f"{match_id}:event:{event_index}")
-            dedup=(match_id,source_id,normalized["topic"],normalized["zone"])
-            if dedup in seen: continue
-            seen.add(dedup)
-            evidence.append(_evidence("coach_event",source_id,match_id,normalized["topic"],normalized["label"],str(event.get("note") or event.get("type") or normalized["label"]),"objective",minute=int(event.get("minute") or 0),event_type=str(event.get("type") or ""),player_id=str(event.get("player") or ""),zone=normalized["zone"],phase=normalized["phase"],formation=match.get("formation") or metadata.get("formation"),polarity=normalized["polarity"],created_at=played))
-        for rating_index,rating in enumerate(item.get("ratings") or []):
-            if not isinstance(rating,dict): continue
-            try: vote=float(rating.get("vote") or 0)
-            except (TypeError,ValueError): vote=0
-            if vote <= 0: continue
-            polarity="positive" if vote>=7 else ("negative" if vote<6 else "neutral")
-            topic="positive_behavior" if polarity=="positive" else ("individual_difficulty" if polarity=="negative" else "general_note")
-            evidence.append(_evidence("coach_rating",str(rating.get("id") or f"{match_id}:rating:{rating_index}"),match_id,topic,"Valutazione giocatore",f"{rating.get('player') or 'Giocatore'}: voto {vote:g}. {rating.get('note') or ''}".strip(),"staff_observation",player_id=str(rating.get("player") or ""),zone="individual",phase="post_match",formation=match.get("formation") or metadata.get("formation"),polarity=polarity,created_at=played))
+    canonical=_canonical_records(user_id)
+    voice_matches={}; video_reports={}; video_frames={}
+    if canonical:
+        voice_matches,video_reports,video_frames=_collect_canonical_records(canonical,start,matches,evidence)
+    else:
+        for index,item in enumerate(local_matches[:100]):
+            if not isinstance(item,dict): continue
+            match=item.get("match") or {}; metadata=item.get("metadata") or {}; match_id=_match_id(item,index)
+            played=_iso(item.get("savedAt") or match.get("date") or metadata.get("date"))
+            if _date_value(played)<start: continue
+            matches[match_id]={"id":match_id,"date":played,"home":match.get("homeTeam") or metadata.get("homeTeam"),"away":match.get("awayTeam") or metadata.get("awayTeam"),"category":match.get("category") or metadata.get("category"),"formation":match.get("formation") or metadata.get("formation")}
+            seen=set()
+            for event_index,event in enumerate(item.get("events") or []):
+                if not isinstance(event,dict): continue
+                if event.get("voiceObservationId"): continue
+                normalized=normalize_event(event); source_id=str(event.get("id") or f"{match_id}:event:{event_index}")
+                dedup=(match_id,source_id,normalized["topic"],normalized["zone"])
+                if dedup in seen: continue
+                seen.add(dedup)
+                evidence.append(_evidence("coach_event",source_id,match_id,normalized["topic"],normalized["label"],str(event.get("note") or event.get("type") or normalized["label"]),"objective",minute=int(event.get("minute") or 0),event_type=str(event.get("type") or ""),player_id=str(event.get("player") or ""),zone=normalized["zone"],phase=normalized["phase"],formation=match.get("formation") or metadata.get("formation"),polarity=normalized["polarity"],created_at=played))
+            for rating_index,rating in enumerate(item.get("ratings") or []):
+                if not isinstance(rating,dict): continue
+                try: vote=float(rating.get("vote") or 0)
+                except (TypeError,ValueError): vote=0
+                if vote <= 0: continue
+                polarity="positive" if vote>=7 else ("negative" if vote<6 else "neutral")
+                topic="positive_behavior" if polarity=="positive" else ("individual_difficulty" if polarity=="negative" else "general_note")
+                evidence.append(_evidence("coach_rating",str(rating.get("id") or f"{match_id}:rating:{rating_index}"),match_id,topic,"Valutazione giocatore",f"{rating.get('player') or 'Giocatore'}: voto {vote:g}. {rating.get('note') or ''}".strip(),"staff_observation",player_id=str(rating.get("player") or ""),zone="individual",phase="post_match",formation=match.get("formation") or metadata.get("formation"),polarity=polarity,created_at=played))
 
     conn=get_connection(); cur=conn.cursor(); cutoff=start.isoformat()
-    cur.execute(q("SELECT id,match_id,home,away,league,created_at FROM saved_matches WHERE user_id=? AND created_at>=? ORDER BY created_at,id"),(user_id,cutoff))
-    for row in fetchall(cur):
-        item=dict(row); match_id=f"saved:{item.get('match_id') or item['id']}"
-        matches.setdefault(match_id,{"id":match_id,"date":item.get("created_at"),"home":item.get("home"),"away":item.get("away"),"category":item.get("league"),"formation":None})
+    if not canonical:
+        cur.execute(q("SELECT id,match_id,home,away,league,created_at FROM saved_matches WHERE user_id=? AND created_at>=? ORDER BY created_at,id"),(user_id,cutoff))
+        for row in fetchall(cur):
+            item=dict(row); match_id=f"saved:{item.get('match_id') or item['id']}"
+            matches.setdefault(match_id,{"id":match_id,"date":item.get("created_at"),"home":item.get("home"),"away":item.get("away"),"category":item.get("league"),"formation":None})
     cur.execute(q("""SELECT id,client_id,match_key,match_id,minute,match_phase,tactical_topic,topic_label,zone,polarity,priority,player_ids,original_text,created_at
       FROM voice_coach_observations WHERE user_id=? AND status='confirmed' AND created_at>=? ORDER BY created_at,id"""),(user_id,cutoff))
     for row in fetchall(cur):
-        item=dict(row); match_id=str(item.get("match_key") or item.get("match_id") or f"voice:{item['id']}")
+        item=dict(row); reference=str(item.get("client_id") or item["id"]); match_id=voice_matches.get(reference) or str(item.get("match_key") or item.get("match_id") or f"voice:{item['id']}")
         matches.setdefault(match_id,{"id":match_id,"date":item.get("created_at"),"home":None,"away":None,"category":None,"formation":None})
         topic=item.get("tactical_topic") or "general_note"
         evidence.append(_evidence("voice_observation",str(item.get("client_id") or item["id"]),match_id,topic,item.get("topic_label") or topic.replace("_"," ").title(),item.get("original_text") or item.get("topic_label") or "Osservazione staff","staff_observation",minute=int(item.get("minute") or 0),event_type="voice_note",player_id=str((_json(item.get("player_ids"),[]) or [""])[0]),zone=item.get("zone") or "not_specified",phase=item.get("match_phase") or match_phase(item.get("minute")),polarity=item.get("polarity") or "neutral",created_at=item.get("created_at")))
@@ -94,14 +170,14 @@ def collect_sources(user_id: int, local_matches: List[Dict[str, Any]], period_da
     for row in fetchall(cur):
         item=dict(row); text=" ".join(str(item.get(key) or "") for key in ("corrected_phase","detected_phase","requested_phase","notes")); classified=classify_tactical_topic(text)
         if classified["topic"]=="general_note": continue
-        match_id=f"video:{item.get('video_asset_id') or item.get('report_id') or item['id']}"
+        match_id=video_frames.get(str(item["id"])) or video_reports.get(str(item.get("report_id") or "")) or f"video:{item.get('video_asset_id') or item.get('report_id') or item['id']}"
         matches.setdefault(match_id,{"id":match_id,"date":item.get("created_at"),"home":None,"away":None,"category":"Video AI","formation":None})
         evidence.append(_evidence("video_frame",str(item["id"]),match_id,classified["topic"],classified["topic_label"],text or "Frame Video AI classificato","ai_interpretation",minute=int(float(item.get("frame_time") or 0)//60),event_type="video_frame",player_id="",zone=classified["zone"],phase=match_phase(float(item.get("frame_time") or 0)//60),polarity="neutral",created_at=item.get("created_at")))
     cur.execute(q("SELECT id,title,focus,observed_team,frames_analyzed,created_at FROM video_reports WHERE user_id=? AND created_at>=? ORDER BY created_at,id"),(user_id,cutoff))
     for row in fetchall(cur):
         item=dict(row); classified=classify_tactical_topic(" ".join([str(item.get("title") or ""),str(item.get("focus") or "")]))
         if classified["topic"]=="general_note": continue
-        match_id=f"video-report:{item['id']}"; matches.setdefault(match_id,{"id":match_id,"date":item.get("created_at"),"home":item.get("observed_team"),"away":None,"category":"Video AI","formation":None})
+        match_id=video_reports.get(str(item["id"])) or f"video-report:{item['id']}"; matches.setdefault(match_id,{"id":match_id,"date":item.get("created_at"),"home":item.get("observed_team"),"away":None,"category":"Video AI","formation":None})
         evidence.append(_evidence("video_report",str(item["id"]),match_id,classified["topic"],classified["topic_label"],f"Report Video AI: {item.get('title') or classified['topic_label']}","ai_interpretation",minute=None,event_type="video_report",player_id="",zone=classified["zone"],phase="video_analysis",polarity="neutral",created_at=item.get("created_at")))
     conn.close()
     evidence=deduplicate(evidence)
