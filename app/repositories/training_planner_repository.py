@@ -70,6 +70,12 @@ def latest_plan(user_id: int,include_archived: bool=False) -> Optional[Dict[str,
     cur.execute(q(f"SELECT * FROM training_plans WHERE user_id=?{clause} ORDER BY updated_at DESC,id DESC LIMIT 1"),(user_id,)); row=fetchone(cur); conn.close(); return _decode(row)
 
 
+def get_by_fingerprint(user_id: int,fingerprint: str) -> Optional[Dict[str,Any]]:
+    conn=get_connection(); cur=conn.cursor()
+    cur.execute(q("SELECT * FROM training_plans WHERE user_id=? AND source_fingerprint=? AND status<>'archiviata' ORDER BY id DESC LIMIT 1"),(user_id,fingerprint))
+    row=fetchone(cur); conn.close(); return _decode(row)
+
+
 def get_plan(user_id: int,plan_id: int) -> Optional[Dict[str,Any]]:
     conn=get_connection(); cur=conn.cursor(); cur.execute(q("SELECT * FROM training_plans WHERE id=? AND user_id=?"),(plan_id,user_id)); row=fetchone(cur); conn.close(); return _decode(row)
 

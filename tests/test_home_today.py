@@ -174,12 +174,13 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         self.assertIn("safe-area-inset-top", styles)
         self.assertIn("safe-area-inset-bottom", styles)
         self.assertIn("focus-visible", styles)
+        self.assertIn("weekly-priority__training", styles)
         self.assertEqual(manifest["start_url"], "/index.html?v=10542")
         self.assertIn('const CACHE_NAME = "matchiq-pwa-v144"', worker)
-        self.assertIn('"/css/home.css?v=10543"', worker)
+        self.assertIn('"/css/home.css?v=10544"', worker)
         for asset in (
             "/js/home-state.js?v=10543", "/js/home-api.js?v=10543",
-            "/js/home-render.js?v=10543", "/js/home-actions.js?v=10543",
+            "/js/home-render.js?v=10544", "/js/home-actions.js?v=10543",
         ):
             self.assertIn(f'"{asset}"', worker)
         self.assertIn('caches.match("/index.html?v=10542")', worker)
@@ -189,6 +190,12 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
             "/js/weekly-briefing-state.js?v=10542", "/js/weekly-briefing-api.js?v=10542",
         ):
             self.assertIn(f'"{asset}"', worker)
+
+    def test_confirmed_priority_can_expose_training_draft(self):
+        render = (FRONTEND / "js" / "home-render.js").read_text(encoding="utf-8")
+        self.assertIn("Bozza allenamento disponibile", render)
+        self.assertIn("priority.priority_id===item.priority_id", render)
+        self.assertIn('"/training-planner.html"', render)
 
 
 if __name__ == "__main__":

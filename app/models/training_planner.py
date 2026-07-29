@@ -28,6 +28,38 @@ class TrainingPlanActionRequest(TrainingModel):
     note: Optional[str]=Field(default=None,max_length=1200)
 
 
+class TrainingDraftReferences(TrainingModel):
+    canonical_match_ids: List[str]=Field(default_factory=list)
+    pattern_ids: List[int]=Field(default_factory=list)
+    evidence_ids: List[int]=Field(default_factory=list)
+
+
+class TrainingDraftSession(TrainingModel):
+    session_id: str
+    title: str
+    day: str
+    objective: str
+    why: str
+    theme: str
+    duration: int
+    players: int
+    goalkeepers: int
+    intensity: str
+    drills: List[Dict[str,Any]]=Field(default_factory=list)
+    notes: str=""
+    status: str="proposta_ai"
+    priority_ids: List[str]=Field(default_factory=list)
+    references: TrainingDraftReferences
+
+
+class TrainingDraftPayload(TrainingModel):
+    contract: str="weekly-priority-training-draft-v1"
+    title: str
+    sessions: List[TrainingDraftSession]=Field(default_factory=list)
+    priorities: List[Dict[str,Any]]=Field(default_factory=list)
+    disclaimer: str
+
+
 class TrainingEnvelope(TrainingModel):
     ok: bool=True
     generated: bool=False

@@ -14,9 +14,9 @@ except ModuleNotFoundError:
 
 from app.models.pattern_intelligence import PatternRunRequest
 from app.models.training_planner import TrainingPlanGenerateRequest
-from app.repositories import knowledge_intelligence_repository,knowledge_intelligence_search_repository,knowledge_repository,pattern_intelligence_repository,training_planner_repository,voice_coach_repository,weekly_briefing_repository
+from app.repositories import knowledge_intelligence_repository,knowledge_intelligence_search_repository,knowledge_repository,pattern_intelligence_repository,training_planner_repository,voice_coach_repository,weekly_briefing_repository,weekly_priority_repository
 from app.repositories import knowledge_intelligence_schema
-from app.services import knowledge_intelligence_adapters,knowledge_intelligence_service,knowledge_intelligence_sync,knowledge_service,pattern_intelligence_aggregator,pattern_intelligence_service,training_planner_service,voice_coach_intelligence_service,weekly_briefing_service
+from app.services import knowledge_intelligence_adapters,knowledge_intelligence_service,knowledge_intelligence_sync,knowledge_service,pattern_intelligence_aggregator,pattern_intelligence_service,training_planner_service,voice_coach_intelligence_service,weekly_briefing_service,weekly_priority_service
 from app.services.knowledge_intelligence_registry import validate_relation
 
 
@@ -25,7 +25,7 @@ class KnowledgeIntelligenceTest(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory(); self.db_path=Path(self.tmp.name)/"knowledge-intelligence.db"; self.originals=[]
         def connection():
             conn=sqlite3.connect(self.db_path); conn.row_factory=sqlite3.Row; conn.execute("PRAGMA foreign_keys=ON"); return conn
-        modules=(knowledge_repository,voice_coach_repository,pattern_intelligence_repository,pattern_intelligence_aggregator,weekly_briefing_repository,training_planner_repository,knowledge_intelligence_schema,knowledge_intelligence_repository,knowledge_intelligence_search_repository,knowledge_intelligence_adapters)
+        modules=(knowledge_repository,voice_coach_repository,pattern_intelligence_repository,pattern_intelligence_aggregator,weekly_briefing_repository,weekly_priority_repository,training_planner_repository,knowledge_intelligence_schema,knowledge_intelligence_repository,knowledge_intelligence_search_repository,knowledge_intelligence_adapters)
         for module in modules:
             self.originals.append((module,module.get_connection,getattr(module,"USE_POSTGRES",None))); module.get_connection=connection
             if hasattr(module,"USE_POSTGRES"): module.USE_POSTGRES=False
@@ -36,7 +36,7 @@ class KnowledgeIntelligenceTest(unittest.TestCase):
         conn.execute("CREATE TABLE video_reports(id INTEGER PRIMARY KEY,user_id INTEGER,title TEXT,club_name TEXT,category TEXT,focus TEXT,observed_team TEXT,report_style TEXT,frames_analyzed INTEGER,report TEXT,pdf_base64 TEXT,payload TEXT,created_at TEXT)")
         conn.execute("CREATE TABLE video_assets(id INTEGER PRIMARY KEY,user_id INTEGER,title TEXT,club_name TEXT,category TEXT,source_type TEXT,source_url TEXT,file_path TEXT,file_name TEXT,mime_type TEXT,size_bytes INTEGER,rights_confirmed INTEGER,status TEXT,metadata TEXT,created_at TEXT,updated_at TEXT)")
         conn.execute("CREATE TABLE video_frame_feedback(id INTEGER PRIMARY KEY,user_id INTEGER,video_asset_id INTEGER,report_id INTEGER,frame_index INTEGER,frame_time REAL,source TEXT,status TEXT,requested_phase TEXT,detected_phase TEXT,corrected_phase TEXT,confidence REAL,notes TEXT,metadata TEXT,created_at TEXT)")
-        conn.commit(); conn.close(); knowledge_service.initialize_foundation(); voice_coach_intelligence_service.initialize_voice_coach_intelligence(); pattern_intelligence_service.initialize_pattern_intelligence(); weekly_briefing_service.initialize_weekly_briefing(); training_planner_service.initialize_training_planner(); knowledge_intelligence_service.initialize_knowledge_intelligence()
+        conn.commit(); conn.close(); knowledge_service.initialize_foundation(); voice_coach_intelligence_service.initialize_voice_coach_intelligence(); pattern_intelligence_service.initialize_pattern_intelligence(); weekly_briefing_service.initialize_weekly_briefing(); weekly_priority_service.initialize_weekly_priorities(); training_planner_service.initialize_training_planner(); knowledge_intelligence_service.initialize_knowledge_intelligence()
         self.connection=connection; self.seed_sources()
 
     def tearDown(self):
@@ -54,6 +54,8 @@ class KnowledgeIntelligenceTest(unittest.TestCase):
         conn=self.connection(); now=date.today().isoformat(); conn.execute("INSERT INTO saved_matches VALUES(1,1,101,'MatchIQ','Rivale','Promozione',?)",(now,)); conn.execute("INSERT INTO video_assets VALUES(1,1,'Partita 1','MatchIQ','Dilettanti','upload',NULL,NULL,'match.mp4','video/mp4',1000,1,'ready',?, ?, ?)",('{"match_id":101}',now,now)); conn.execute("INSERT INTO video_reports VALUES(1,1,'Report partita','MatchIQ','Dilettanti','transizione negativa','MatchIQ','staff',4,'Sintesi',NULL,?,?)",('{"video_asset_id":1,"match_id":101}',now)); conn.execute("INSERT INTO video_frame_feedback VALUES(1,1,1,1,2,35.0,'ai','confirmed','transizione','negative_transition',NULL,0.8,'Frame utile','{}',?)",(now,)); conn.execute("INSERT INTO scout_reports VALUES(1,1,101,'Rossi','player',?,?)",(f'{{"player_id":"{player["id"]}","player_name":"Mario Rossi","summary":"Profilo osservato"}}',now)); conn.commit(); conn.close()
         voice_coach_repository.upsert_observation(1,wid,{"client_id":"voice-1","match_key":"101","match_id":"101","intent":"tactical_note","confidence":0.9,"original_text":"Rossi perde palla centralmente","normalized_summary":"Palla persa centrale","minute":30,"match_phase":"first_half","team":"ours","player_ids":[str(player["id"])],"player_names":["Mario Rossi"],"tactical_topic":"lost_ball","topic_label":"Transizione negativa","zone":"central","polarity":"negative","priority":"high","source":"voice","requires_confirmation":False,"ambiguities":[],"warnings":[],"evidence":[],"explanation":"Nota staff","status":"confirmed","metadata":{}}); voice_coach_repository.rebuild_themes(1,wid,"101")
         pattern_intelligence_service.run(1,PatternRunRequest(local_matches=[self.match(i) for i in range(1,4)]))
+        priority=weekly_priority_service.sync_from_patterns(1)["priorities"][0]
+        weekly_priority_service.set_staff_status(1,priority["priority_id"],status="CONFIRMED",staff_reason="Priorita confermata",topic=None,phase=None,priority_level=None)
         weekly_briefing_repository.save_week(1,wid,date.today().isoformat(),"weekly-fp",{"patterns":1},{"title":"Briefing MatchIQ","summary":"Lavorare sulla transizione negativa"},[{"title":"Palla persa","topic":"negative_transition","reason":"Pattern ricorrente"}])
         training_planner_service.generate(1,TrainingPlanGenerateRequest(training_days=["Martedi","Giovedi"],players=18,goalkeepers=2,session_duration=90,intensity="media",category="Dilettanti",local_context={}))
 

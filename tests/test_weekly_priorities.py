@@ -7,11 +7,13 @@ from pathlib import Path
 from app.repositories import (
     knowledge_repository,
     pattern_intelligence_repository,
+    training_planner_repository,
     weekly_priority_repository,
 )
 from app.services import (
     knowledge_service,
     pattern_intelligence_service,
+    training_planner_service,
     weekly_priority_service,
 )
 
@@ -31,6 +33,7 @@ class WeeklyPriorityServiceTest(unittest.TestCase):
         for module in (
             knowledge_repository,
             pattern_intelligence_repository,
+            training_planner_repository,
             weekly_priority_repository,
         ):
             self.originals.append(
@@ -57,6 +60,7 @@ class WeeklyPriorityServiceTest(unittest.TestCase):
         knowledge_service.initialize_foundation()
         pattern_intelligence_service.initialize_pattern_intelligence()
         weekly_priority_service.initialize_weekly_priorities()
+        training_planner_service.initialize_training_planner()
         self.workspace = knowledge_repository.get_or_create_workspace(1)
 
     def tearDown(self):
@@ -242,6 +246,12 @@ class WeeklyPriorityServiceTest(unittest.TestCase):
         self.assertEqual(confirmed["evidence_ids"], original_evidence)
         self.assertEqual(confirmed["staff_updated_by"], 1)
         self.assertIsNotNone(confirmed["staff_updated_at"])
+        draft = training_planner_repository.latest_plan(1)
+        self.assertIsNotNone(draft)
+        self.assertEqual(
+            draft["current_plan"]["sessions"][0]["priority_ids"],
+            [priority["priority_id"]],
+        )
 
         modified = weekly_priority_service.set_staff_status(
             1,

@@ -24,14 +24,17 @@ from app.repositories import (
     training_planner_repository,
     voice_coach_repository,
     weekly_briefing_repository,
+    weekly_priority_repository,
 )
 from app.services import (
     knowledge_service,
     pattern_intelligence_aggregator,
     pattern_intelligence_service,
+    training_planner_selector,
     training_planner_service,
     voice_coach_intelligence_service,
     weekly_briefing_service,
+    weekly_priority_service,
 )
 
 
@@ -54,6 +57,7 @@ class TrainingPlannerTest(unittest.TestCase):
             pattern_intelligence_aggregator,
             weekly_briefing_repository,
             training_planner_repository,
+            weekly_priority_repository,
         )
         for module in modules:
             self.originals.append((module,module.get_connection,getattr(module,"USE_POSTGRES",None)))
@@ -73,6 +77,7 @@ class TrainingPlannerTest(unittest.TestCase):
         voice_coach_intelligence_service.initialize_voice_coach_intelligence()
         pattern_intelligence_service.initialize_pattern_intelligence()
         weekly_briefing_service.initialize_weekly_briefing()
+        weekly_priority_service.initialize_weekly_priorities()
         training_planner_service.initialize_training_planner()
 
     def tearDown(self):
@@ -103,6 +108,18 @@ class TrainingPlannerTest(unittest.TestCase):
         matches=[self.match(index) for index in range(1,4)]
         result=pattern_intelligence_service.run(1,PatternRunRequest(local_matches=matches))
         self.assertEqual(result["data"]["items"][0]["status"],"established")
+        priorities=weekly_priority_service.sync_from_patterns(1)["priorities"]
+        self.assertTrue(priorities)
+        weekly_priority_service.set_staff_status(
+            1,
+            priorities[0]["priority_id"],
+            status="CONFIRMED",
+            staff_reason="Priorita confermata per la seduta",
+            topic=None,
+            phase=None,
+            priority_level=None,
+        )
+        return priorities[0]
 
     def test_library_is_curated_and_complete(self):
         items=training_planner_repository.list_exercises(limit=50)
@@ -115,19 +132,63 @@ class TrainingPlannerTest(unittest.TestCase):
         result=training_planner_service.generate(1,self.request())
         self.assertFalse(result["data"]["sufficient"])
         self.assertIsNone(result["data"]["plan"])
-        self.assertIn("dati sufficienti",result["data"]["message"])
+        self.assertIn("Conferma",result["data"]["message"])
 
     def test_builds_a_motivated_week_from_real_priorities(self):
-        self.establish_pattern()
+        priority=self.establish_pattern()
         result=training_planner_service.generate(1,self.request())
         plan=result["data"]["plan"]
-        self.assertTrue(result["generated"])
-        self.assertLessEqual(len(plan["priorities"]),3)
-        self.assertEqual(plan["training_days"],["Martedi","Giovedi"])
-        self.assertEqual([item["day"] for item in plan["current_plan"]["sessions"]],["Martedi","Giovedi"])
+        self.assertEqual(len(plan["priorities"]),1)
+        self.assertEqual(plan["training_days"],["Da programmare"])
+        self.assertEqual([item["day"] for item in plan["current_plan"]["sessions"]],["Da programmare"])
         self.assertTrue(all(len(item["drills"])<=2 for item in plan["current_plan"]["sessions"]))
         self.assertTrue(plan["sources"])
         self.assertTrue(all(priority["reason"] and priority["sources"] for priority in plan["priorities"]))
+        session=plan["current_plan"]["sessions"][0]
+        self.assertEqual(session["priority_ids"],[priority["priority_id"]])
+        self.assertEqual(session["references"]["canonical_match_ids"],priority["canonical_match_ids"])
+        self.assertEqual(session["references"]["pattern_ids"],priority["pattern_ids"])
+        self.assertEqual(session["references"]["evidence_ids"],priority["evidence_ids"])
+
+    def test_selector_keeps_every_confirmed_priority_without_inventing_drills(self):
+        settings={
+            "players":18,
+            "goalkeepers":2,
+            "session_duration":90,
+            "intensity":"media",
+            "category":"Dilettanti",
+        }
+        priorities=[
+            {
+                "priority_id":f"priority-{index}",
+                "topic":f"unsupported-{index}",
+                "title":f"Priorita {index}",
+                "reason":"Evidenza confermata",
+                "level":"medium",
+                "priority_level":"MEDIUM",
+                "confidence":70,
+                "phase":"unknown",
+                "sources":[],
+                "references":{
+                    "canonical_match_ids":[f"match-{index}"],
+                    "pattern_ids":[index],
+                    "evidence_ids":[index],
+                },
+            }
+            for index in range(1,5)
+        ]
+        proposals=training_planner_selector.select(
+            priorities,
+            training_planner_repository.list_exercises(limit=50),
+            settings,
+        )
+        draft=training_planner_selector.build_priority_drafts(proposals,settings)
+        self.assertEqual(len(draft["sessions"]),4)
+        self.assertTrue(all(not session["drills"] for session in draft["sessions"]))
+        self.assertEqual(
+            [session["priority_ids"][0] for session in draft["sessions"]],
+            [f"priority-{index}" for index in range(1,5)],
+        )
 
     def test_idempotence_regeneration_and_history(self):
         self.establish_pattern()
@@ -136,10 +197,10 @@ class TrainingPlannerTest(unittest.TestCase):
         self.assertFalse(same["generated"])
         self.assertEqual(first["data"]["plan"]["id"],same["data"]["plan"]["id"])
         regenerated=training_planner_service.generate(1,self.request(force=True))
-        self.assertNotEqual(first["data"]["plan"]["id"],regenerated["data"]["plan"]["id"])
+        self.assertEqual(first["data"]["plan"]["id"],regenerated["data"]["plan"]["id"])
         old=training_planner_repository.get_plan(1,first["data"]["plan"]["id"])
-        self.assertEqual(old["status"],"archiviata")
-        self.assertGreaterEqual(len(training_planner_repository.history(1,old["id"])),2)
+        self.assertNotEqual(old["status"],"archiviata")
+        self.assertEqual(len(training_planner_repository.history(1,old["id"])),1)
 
     def test_edit_preserves_original_and_actions_are_persistent(self):
         self.establish_pattern()

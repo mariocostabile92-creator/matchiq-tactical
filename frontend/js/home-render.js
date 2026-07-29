@@ -91,6 +91,14 @@
       const status=node("span",item.status==="CONFIRMED"?"CONFERMATA":item.status,"status-chip");
       heading.append(copy,status);
 
+      const hasTrainingDraft=(H.state.training?.priorities||[])
+        .some(priority=>priority.priority_id===item.priority_id);
+      const trainingDraft=hasTrainingDraft?link(
+        "Bozza allenamento disponibile",
+        "/training-planner.html",
+        "weekly-priority__training"
+      ):null;
+
       const details=document.createElement("details");
       details.className="weekly-priority__details";
       const summary=node("summary","Visualizza dettagli");
@@ -139,7 +147,9 @@
       const save=node("button","Salva modifica","button button-primary");save.type="submit";
       form.append(topicLabel,levelLabel,reasonLabel,save);
 
-      card.append(heading,details,actions,form);root.append(card);
+      card.append(heading);
+      if(trainingDraft)card.append(trainingDraft);
+      card.append(details,actions,form);root.append(card);
     });
   };
 

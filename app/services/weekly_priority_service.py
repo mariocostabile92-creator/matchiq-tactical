@@ -304,7 +304,7 @@ def set_staff_status(
     phase: Optional[str],
     priority_level: Optional[str],
 ) -> Optional[Dict[str, Any]]:
-    return weekly_priority_repository.update_staff_status(
+    item = weekly_priority_repository.update_staff_status(
         user_id,
         priority_id,
         status=status,
@@ -314,3 +314,8 @@ def set_staff_status(
         priority_level=priority_level,
         staff_user_id=user_id,
     )
+    if item and status == "CONFIRMED":
+        from app.services.training_planner_service import sync_confirmed_priorities
+
+        sync_confirmed_priorities(user_id)
+    return item
