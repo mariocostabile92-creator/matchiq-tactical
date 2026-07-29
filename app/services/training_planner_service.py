@@ -5,12 +5,13 @@ from app.models.training_planner import TrainingDraftPayload, TrainingPlanGenera
 from app.repositories import knowledge_repository, training_planner_repository
 from app.services.knowledge_intelligence_sync import sync_module_safely
 from app.services.training_library import library_items
-from app.services.training_planner_selector import build_priority_drafts, select
+from app.services.training_planner_selector import select
 from app.services.training_priority_adapter import (
     collect_confirmed,
     default_settings,
     source_fingerprint,
 )
+from app.services.training_session_composer import compose_session
 
 
 PLAN_STATUSES = {
@@ -49,6 +50,7 @@ def generate(user_id: int, request: TrainingPlanGenerateRequest) -> Dict[str, An
         "session_duration": request.session_duration,
         "intensity": request.intensity.lower(),
         "category": request.category,
+        "training_days": request.training_days,
     }
     fingerprint = source_fingerprint(bundle, settings)
     existing = training_planner_repository.get_by_fingerprint(user_id, fingerprint)
@@ -96,7 +98,12 @@ def generate(user_id: int, request: TrainingPlanGenerateRequest) -> Dict[str, An
         }
 
     plan_payload = TrainingDraftPayload(
-        **build_priority_drafts(proposals, settings)
+        **compose_session(
+            proposals,
+            settings,
+            bundle.get("team_profile") or {},
+            request.training_days,
+        )
     ).model_dump()
     if latest and request.force:
         training_planner_repository.update_plan(
@@ -111,7 +118,7 @@ def generate(user_id: int, request: TrainingPlanGenerateRequest) -> Dict[str, An
         user_id,
         int(bundle["workspace"]["id"]),
         week_key(),
-        ["Da programmare"],
+        request.training_days,
         bundle["priorities"],
         sources,
         plan_payload,
@@ -146,8 +153,12 @@ def sync_confirmed_priorities(user_id: int) -> Dict[str, Any]:
             "changed": False,
             "data": {"plan": None, "sufficient": False},
         }
+    training_days = (bundle.get("constraints") or {}).get("training_days") or [
+        "Da programmare"
+    ]
     request = TrainingPlanGenerateRequest(
-        training_days=["Da programmare"],
+        training_days=training_days,
+        force=training_planner_repository.latest_plan(user_id) is not None,
         **default_settings(bundle),
     )
     return generate(user_id, request)

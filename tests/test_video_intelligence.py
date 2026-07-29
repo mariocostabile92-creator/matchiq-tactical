@@ -536,7 +536,7 @@ class HalftimeAndPwaTests(unittest.TestCase):
         self.assertIn('url.pathname.startsWith("/api/")', worker)
         for extension in ("pdf", "mp4", "webm", "mov", "avi"):
             self.assertIn(extension, worker)
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v144"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v145"', worker)
         self.assertIn('"/video.html?v=10543"', worker)
 
     def test_video_workspace_exposes_review_and_halftime_controls(self):

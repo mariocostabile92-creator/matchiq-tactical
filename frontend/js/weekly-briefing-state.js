@@ -1,6 +1,6 @@
 (function initWeeklyBriefingState(){
   const W = window.MatchIQWeekly = window.MatchIQWeekly || {};
-  W.authToken = () => localStorage.getItem("matchiq_auth_token") || sessionStorage.getItem("matchiq_auth_token") || "";
+  W.authToken = () => window.MatchIQAuth?.getAuthToken?.() || localStorage.getItem("matchiq_auth_token") || sessionStorage.getItem("matchiq_auth_token") || "";
   W.authHeaders = () => ({"Accept":"application/json","Content-Type":"application/json",...(W.authToken()?{"Authorization":`Bearer ${W.authToken()}`}:{})});
   W.readJson = (key, fallback) => { try{ const raw=localStorage.getItem(key)||sessionStorage.getItem(key); return raw?JSON.parse(raw):fallback; }catch{return fallback;} };
   W.weekStart = () => { const d=new Date(); const day=(d.getDay()+6)%7; d.setHours(0,0,0,0); d.setDate(d.getDate()-day); return d; };

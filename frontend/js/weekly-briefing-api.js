@@ -1,7 +1,7 @@
 (function initWeeklyBriefingApi(){
   const W=window.MatchIQWeekly;
   W.request=async function(url,options={}){
-    const response=await fetch(url,{cache:"no-store",...options,headers:{...W.authHeaders(),...(options.headers||{})}});
+    const response=await fetch(url,{cache:"no-store",credentials:"same-origin",...options,headers:{...W.authHeaders(),...(options.headers||{})}});
     if(!response.ok){ const data=await response.json().catch(()=>({})); throw new Error(data?.detail?.message||data?.detail||`Errore ${response.status}`); }
     return response.json();
   };

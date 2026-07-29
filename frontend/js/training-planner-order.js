@@ -23,11 +23,14 @@
       title.textContent=`Seduta ${index+1}`;
       tools.append(title,makeButton(-1,"Su","moveSession",index===0),makeButton(1,"Giu","moveSession",index===cards.length-1));
       card.prepend(tools);
-      card.querySelectorAll(".drill").forEach((drill,drillIndex,drills)=>{
+      card.querySelectorAll(".composer-block").forEach(block=>{
+        const drills=[...block.querySelectorAll(".drill")];
+        drills.forEach((drill,drillIndex)=>{
         const drillTools=document.createElement("div");
         drillTools.className="order-tools drill-order";
         drillTools.append(makeButton(-1,"Su","moveDrill",drillIndex===0),makeButton(1,"Giu","moveDrill",drillIndex===drills.length-1));
         drill.prepend(drillTools);
+        });
       });
     });
   };
@@ -49,10 +52,16 @@
       const box=drillButton.closest(".drill");
       const session=current.sessions[Number(card.dataset.index)];
       const from=Number(box.dataset.drill);
-      const to=from+Number(drillButton.dataset.moveDrill);
-      if(to>=0&&to<session.drills.length){
-        const [drill]=session.drills.splice(from,1);
-        session.drills.splice(to,0,drill);
+      const block=session.drills[from]?.composer_block||"situational";
+      const indexes=session.drills
+        .map((drill,index)=>({drill,index}))
+        .filter(item=>(item.drill.composer_block||"situational")===block)
+        .map(item=>item.index);
+      const position=indexes.indexOf(from);
+      const targetPosition=position+Number(drillButton.dataset.moveDrill);
+      if(position>=0&&targetPosition>=0&&targetPosition<indexes.length){
+        const to=indexes[targetPosition];
+        [session.drills[from],session.drills[to]]=[session.drills[to],session.drills[from]];
       }
     }
     T.state.plan.current_plan=current;

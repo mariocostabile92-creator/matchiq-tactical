@@ -314,8 +314,48 @@ def set_staff_status(
         priority_level=priority_level,
         staff_user_id=user_id,
     )
-    if item and status == "CONFIRMED":
+    if item and status in {"CONFIRMED", "MODIFIED"}:
+        from app.services.intelligence_pipeline_log import (
+            canonical_ids,
+            log_pipeline_step,
+        )
         from app.services.training_planner_service import sync_confirmed_priorities
 
-        sync_confirmed_priorities(user_id)
+        match_ids=canonical_ids(item.get("canonical_match_ids") or [])
+        for canonical_id in match_ids:
+            log_pipeline_step(
+                step="training_draft",
+                status="START",
+                user_id=user_id,
+                canonical_match_id=canonical_id,
+                detail={"priority_id":priority_id,"staff_status":status},
+            )
+        try:
+            training_result=sync_confirmed_priorities(user_id)
+        except Exception:
+            for canonical_id in match_ids:
+                log_pipeline_step(
+                    step="training_draft",
+                    status="FAILED",
+                    user_id=user_id,
+                    canonical_match_id=canonical_id,
+                    detail={"priority_id":priority_id,"staff_status":status},
+                    exc_info=True,
+                )
+            raise
+        generated=bool(training_result.get("generated"))
+        plan=((training_result.get("data") or {}).get("plan"))
+        for canonical_id in match_ids:
+            log_pipeline_step(
+                step="training_draft",
+                status="SUCCESS" if generated else "SKIPPED",
+                user_id=user_id,
+                canonical_match_id=canonical_id,
+                detail={
+                    "priority_id":priority_id,
+                    "staff_status":status,
+                    "plan_id":(plan or {}).get("id"),
+                    "reason":"generated" if generated else "up_to_date",
+                },
+            )
     return item

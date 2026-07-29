@@ -7,8 +7,12 @@
 
   async function load(){
     try{
-      const [planPayload,libraryPayload]=await Promise.all([T.current(),T.library()]);
+      const [planPayload,libraryPayload,knowledgePayload]=await Promise.all([
+        T.current(),T.library(),T.knowledge()
+      ]);
       T.state.library=libraryPayload.data?.items||[];
+      T.state.profile=knowledgePayload.knowledge?.team_profile||{};
+      T.applyTeamProfile(T.state.profile);
       const plan=planPayload.data?.plan;
       T.render(plan);
       T.notice(
@@ -24,7 +28,9 @@
 
   async function generate(force){
     try{
-      T.notice("Seleziono esercitazioni dalla libreria MatchIQ...");
+      T.notice("Leggo contesto, calendario e priorità confermate...");
+      const knowledge=await T.saveTeamProfile(T.profilePayload());
+      T.state.profile=knowledge.knowledge?.team_profile||T.state.profile;
       const payload=await T.generate(force);
       if(!payload.data?.sufficient){
         T.render(null);
@@ -34,8 +40,8 @@
       T.render(payload.data.plan);
       T.notice(
         payload.generated
-          ?"Nuova bozza creata dalle priorita confermate."
-          :"Le priorita non sono cambiate: mostro la bozza gia disponibile."
+          ?"Seduta composta con la libreria verificata MatchIQ."
+          :"Contesto e priorità non sono cambiati: mostro la seduta disponibile."
       );
     }catch(error){
       T.notice(error.message,true);
@@ -62,6 +68,7 @@
     );
     drill.selected_duration=drill.duration;
     drill.selected_intensity=session.intensity||drill.intensity;
+    drill.composer_block=document.getElementById("exerciseBlock").value;
     session.drills=session.drills||[];
     session.drills.push(drill);
     session.status="modificata";

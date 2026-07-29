@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.models.match_evidence import MatchEvidenceFinalizeRequest
 from app.repositories import match_evidence_repository
+from app.services.intelligence_pipeline_log import log_pipeline_step
 
 
 MATCH_EVIDENCE_SCHEMA_VERSION = 1
@@ -40,13 +41,38 @@ def finalize(
     created_at = existing["created_at"].isoformat() if existing and hasattr(existing["created_at"], "isoformat") else (
         existing["created_at"] if existing else now
     )
-    item = match_evidence_repository.upsert(
+    log_pipeline_step(
+        step="match_evidence",
+        status="START",
         user_id=user_id,
         canonical_match_id=canonical_id,
-        evidence=payload,
-        created_at=created_at,
-        finalized_at=finalized_at,
-        updated_at=now,
+        detail={"operation": "update" if existing else "create"},
+    )
+    try:
+        item = match_evidence_repository.upsert(
+            user_id=user_id,
+            canonical_match_id=canonical_id,
+            evidence=payload,
+            created_at=created_at,
+            finalized_at=finalized_at,
+            updated_at=now,
+        )
+    except Exception:
+        log_pipeline_step(
+            step="match_evidence",
+            status="FAILED",
+            user_id=user_id,
+            canonical_match_id=canonical_id,
+            detail={"operation": "update" if existing else "create"},
+            exc_info=True,
+        )
+        raise
+    log_pipeline_step(
+        step="match_evidence",
+        status="SUCCESS",
+        user_id=user_id,
+        canonical_match_id=canonical_id,
+        detail={"created": existing is None},
     )
     from app.services.match_evidence_intelligence_sync import (
         sync_finalized_match_safely,

@@ -88,7 +88,7 @@ def collect_confirmed(user_id: int) -> Dict[str, Any]:
             include_dismissed=True,
             limit=20,
         )
-        if item.get("status") == "CONFIRMED"
+        if item.get("status") in {"CONFIRMED", "MODIFIED"}
     ]
     priorities = []
     for item in confirmed:
@@ -126,6 +126,8 @@ def collect_confirmed(user_id: int) -> Dict[str, Any]:
     )
     constraints = {
         "category": team.get("category"),
+        "level": team.get("level"),
+        "average_age": team.get("average_age"),
         "player_count": team.get("player_count") or len(roster),
         "goalkeeper_count": team.get("goalkeeper_count")
         or len(
@@ -135,10 +137,21 @@ def collect_confirmed(user_id: int) -> Dict[str, Any]:
                 if str(player.get("role") or "").lower() in {"portiere", "gk"}
             ]
         ),
+        "training_days": team.get("training_days") or [],
+        "training_duration": team.get("training_duration"),
+        "match_day": team.get("match_day"),
+        "pitch_type": team.get("pitch_type"),
+        "pitch_dimensions": team.get("pitch_dimensions"),
+        "available_materials": team.get("available_materials") or [],
+        "playing_principles": team.get("playing_principles") or [],
+        "preferred_formation": team.get("preferred_formation"),
+        "average_intensity": team.get("average_intensity"),
+        "season_objectives": team.get("season_objectives") or [],
     }
     return {
         "workspace": workspace,
         "priorities": priorities,
+        "team_profile": team,
         "constraints": constraints,
         "sources_count": sum(len(item["sources"]) for item in priorities),
     }
@@ -149,15 +162,39 @@ def source_fingerprint(
     settings: Dict[str, Any],
 ) -> str:
     stable = {
-        "contract": "weekly-priority-training-draft-v1",
+        "contract": "weekly-priority-session-composer-v2",
         "priorities": [
             {
                 "priority_id": item["priority_id"],
                 "topic": item["topic"],
+                "title": item["title"],
+                "phase": item["phase"],
+                "priority_level": item["priority_level"],
+                "confidence": item["confidence"],
                 "references": item["references"],
             }
             for item in bundle["priorities"]
         ],
+        "team_profile": {
+            key: (bundle.get("team_profile") or {}).get(key)
+            for key in (
+                "category",
+                "level",
+                "average_age",
+                "player_count",
+                "goalkeeper_count",
+                "training_days",
+                "training_duration",
+                "match_day",
+                "pitch_type",
+                "pitch_dimensions",
+                "available_materials",
+                "playing_principles",
+                "preferred_formation",
+                "average_intensity",
+                "season_objectives",
+            )
+        },
         "settings": settings,
     }
     raw = json.dumps(
@@ -175,7 +212,7 @@ def default_settings(bundle: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "players": max(6, int(constraints.get("player_count") or 18)),
         "goalkeepers": max(0, int(constraints.get("goalkeeper_count") or 2)),
-        "session_duration": 90,
-        "intensity": "media",
+        "session_duration": int(constraints.get("training_duration") or 90),
+        "intensity": constraints.get("average_intensity") or "media",
         "category": constraints.get("category") or "Dilettanti",
     }

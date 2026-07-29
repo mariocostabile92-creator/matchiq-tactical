@@ -176,7 +176,7 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         self.assertIn("focus-visible", styles)
         self.assertIn("weekly-priority__training", styles)
         self.assertEqual(manifest["start_url"], "/index.html?v=10542")
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v144"', worker)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v145"', worker)
         self.assertIn('"/css/home.css?v=10544"', worker)
         for asset in (
             "/js/home-state.js?v=10543", "/js/home-api.js?v=10543",
@@ -187,7 +187,7 @@ class HomeTodayWorkspaceTests(unittest.TestCase):
         for asset in (
             "/js/app-meta.js?v=10542", "/css/global-nav.css?v=10542",
             "/js/auth.js?v=10543", "/js/global-nav-state.js?v=10542",
-            "/js/weekly-briefing-state.js?v=10542", "/js/weekly-briefing-api.js?v=10542",
+            "/js/weekly-briefing-state.js?v=10545", "/js/weekly-briefing-api.js?v=10545",
         ):
             self.assertIn(f'"{asset}"', worker)
 

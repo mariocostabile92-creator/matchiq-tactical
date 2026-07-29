@@ -49,6 +49,9 @@ def set_status(user_id: int, pattern_id: int, status: str) -> Optional[Dict[str,
         workspace=knowledge_repository.get_or_create_workspace(user_id)
         knowledge_repository.upsert_source_link(int(workspace["id"]),"pattern_intelligence_pattern",str(pattern_id),{"run_id":item["run_id"],"topic":item["canonical_topic"],"status":item["status"],"confidence":item["confidence_level"]})
         sync_module_safely(user_id,"pattern_intelligence")
+        from app.services.weekly_priority_service import sync_from_patterns
+
+        sync_from_patterns(user_id)
     return item
 
 

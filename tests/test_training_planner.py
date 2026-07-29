@@ -139,12 +139,29 @@ class TrainingPlannerTest(unittest.TestCase):
         result=training_planner_service.generate(1,self.request())
         plan=result["data"]["plan"]
         self.assertEqual(len(plan["priorities"]),1)
-        self.assertEqual(plan["training_days"],["Da programmare"])
-        self.assertEqual([item["day"] for item in plan["current_plan"]["sessions"]],["Da programmare"])
+        self.assertEqual(plan["training_days"],["Martedi","Giovedi"])
+        self.assertEqual([item["day"] for item in plan["current_plan"]["sessions"]],["Martedi"])
         self.assertTrue(all(len(item["drills"])<=2 for item in plan["current_plan"]["sessions"]))
         self.assertTrue(plan["sources"])
         self.assertTrue(all(priority["reason"] and priority["sources"] for priority in plan["priorities"]))
         session=plan["current_plan"]["sessions"][0]
+        self.assertEqual(plan["current_plan"]["contract"],"weekly-priority-session-composer-v2")
+        self.assertEqual(
+            [item["label"] for item in session["blocks"]],
+            [
+                "Attivazione",
+                "Tecnica",
+                "Situazionale",
+                "Gioco di posizione",
+                "Partita a tema",
+                "Defaticamento",
+            ],
+        )
+        self.assertEqual(sum(item["duration"] for item in session["blocks"]),90)
+        self.assertEqual(
+            plan["current_plan"]["explainability"]["chain"],
+            ["Pattern","Priorità","Decisione","Seduta"],
+        )
         self.assertEqual(session["priority_ids"],[priority["priority_id"]])
         self.assertEqual(session["references"]["canonical_match_ids"],priority["canonical_match_ids"])
         self.assertEqual(session["references"]["pattern_ids"],priority["pattern_ids"])

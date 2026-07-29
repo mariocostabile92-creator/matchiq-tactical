@@ -46,6 +46,8 @@ class TrainingDraftSession(TrainingModel):
     goalkeepers: int
     intensity: str
     drills: List[Dict[str,Any]]=Field(default_factory=list)
+    blocks: List[Dict[str,Any]]=Field(default_factory=list)
+    decision_summary: str=""
     notes: str=""
     status: str="proposta_ai"
     priority_ids: List[str]=Field(default_factory=list)
@@ -53,10 +55,14 @@ class TrainingDraftSession(TrainingModel):
 
 
 class TrainingDraftPayload(TrainingModel):
-    contract: str="weekly-priority-training-draft-v1"
+    contract: str="weekly-priority-session-composer-v2"
     title: str
     sessions: List[TrainingDraftSession]=Field(default_factory=list)
     priorities: List[Dict[str,Any]]=Field(default_factory=list)
+    team_profile: Dict[str,Any]=Field(default_factory=dict)
+    calendar_context: Dict[str,Any]=Field(default_factory=dict)
+    decisions: List[Dict[str,Any]]=Field(default_factory=list)
+    explainability: Dict[str,Any]=Field(default_factory=dict)
     disclaimer: str
 
 

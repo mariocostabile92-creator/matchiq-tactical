@@ -3,6 +3,7 @@
   T.request=async(url,options={})=>{
     const response=await fetch(url,{
       cache:"no-store",
+      credentials:"same-origin",
       ...options,
       headers:{...T.headers(),...(options.headers||{})}
     });
@@ -14,6 +15,11 @@
   };
   T.current=()=>T.request("/api/training-planner/current");
   T.library=()=>T.request("/api/training-planner/library");
+  T.knowledge=()=>T.request("/api/knowledge");
+  T.saveTeamProfile=profile=>T.request("/api/knowledge/team-profile",{
+    method:"PUT",
+    body:JSON.stringify(profile)
+  });
   T.generate=force=>T.request("/api/training-planner/generate",{
     method:"POST",
     body:JSON.stringify(T.settings(force))

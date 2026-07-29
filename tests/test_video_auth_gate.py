@@ -213,7 +213,7 @@ class VideoBackendAndPwaAuthContractTests(unittest.TestCase):
         self.assertIn("def _require_owned_video_report", VIDEO_ROUTER)
 
     def test_pwa_precaches_gate_and_auth_flow(self):
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v144"', WORKER)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v145"', WORKER)
         for asset in (
             '"/video.html?v=10543"',
             '"/login.html?v=10543"',

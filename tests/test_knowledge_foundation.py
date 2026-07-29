@@ -72,11 +72,23 @@ class KnowledgeFoundationTest(unittest.TestCase):
                 average_age=24.5,
                 player_count=23,
                 goalkeeper_count=3,
+                training_days=["Martedì", "Giovedì"],
+                training_duration=95,
+                match_day="Domenica",
+                pitch_type="Sintetico",
+                pitch_dimensions="100 x 60 m",
+                available_materials=["Palloni", "Cinesini"],
                 strengths=["Transizioni"],
+                playing_principles=["Pressing orientato"],
+                preferred_formation="4-3-3",
+                average_intensity="media",
             ),
         )
         self.assertEqual(updated.team_profile.player_count, 23)
         self.assertEqual(updated.team_profile.strengths, ["Transizioni"])
+        self.assertEqual(updated.team_profile.training_days, ["Martedì", "Giovedì"])
+        self.assertEqual(updated.team_profile.available_materials, ["Palloni", "Cinesini"])
+        self.assertEqual(updated.team_profile.preferred_formation, "4-3-3")
 
         player = knowledge_service.add_roster_player(
             1,

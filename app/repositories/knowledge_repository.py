@@ -21,13 +21,22 @@ COACH_COLUMNS = {
 
 TEAM_COLUMNS = {
     "category",
+    "level",
     "average_age",
     "player_count",
     "goalkeeper_count",
+    "training_days",
+    "training_duration",
+    "match_day",
+    "pitch_type",
+    "pitch_dimensions",
+    "available_materials",
     "strengths",
     "weaknesses",
     "formations_used",
     "playing_principles",
+    "preferred_formation",
+    "average_intensity",
     "average_availability",
     "physical_level",
     "technical_level",
@@ -59,6 +68,8 @@ JSON_COLUMNS = {
     "formations_used",
     "playing_principles",
     "season_objectives",
+    "training_days",
+    "available_materials",
     "characteristics",
     "secondary_roles",
     "metadata",
@@ -67,6 +78,21 @@ JSON_COLUMNS = {
 
 def _id_definition() -> str:
     return "SERIAL PRIMARY KEY" if USE_POSTGRES else "INTEGER PRIMARY KEY AUTOINCREMENT"
+
+
+def _ensure_columns(cur, table: str, definitions: Dict[str, str]) -> None:
+    if USE_POSTGRES:
+        for column, definition in definitions.items():
+            cur.execute(
+                f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {definition}"
+            )
+        return
+
+    cur.execute(f"PRAGMA table_info({table})")
+    existing = {row[1] for row in cur.fetchall()}
+    for column, definition in definitions.items():
+        if column not in existing:
+            cur.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
 
 def initialize_knowledge_schema() -> None:
@@ -108,13 +134,22 @@ def initialize_knowledge_schema() -> None:
             id {id_column},
             knowledge_id INTEGER NOT NULL UNIQUE,
             category TEXT,
+            level TEXT,
             average_age REAL,
             player_count INTEGER,
             goalkeeper_count INTEGER,
+            training_days TEXT,
+            training_duration INTEGER,
+            match_day TEXT,
+            pitch_type TEXT,
+            pitch_dimensions TEXT,
+            available_materials TEXT,
             strengths TEXT,
             weaknesses TEXT,
             formations_used TEXT,
             playing_principles TEXT,
+            preferred_formation TEXT,
+            average_intensity TEXT,
             average_availability REAL,
             physical_level TEXT,
             technical_level TEXT,
@@ -124,6 +159,21 @@ def initialize_knowledge_schema() -> None:
             FOREIGN KEY(knowledge_id) REFERENCES knowledge_workspaces(id) ON DELETE CASCADE
         )
     """)
+    _ensure_columns(
+        cur,
+        "knowledge_team_profiles",
+        {
+            "level": "TEXT",
+            "training_days": "TEXT",
+            "training_duration": "INTEGER",
+            "match_day": "TEXT",
+            "pitch_type": "TEXT",
+            "pitch_dimensions": "TEXT",
+            "available_materials": "TEXT",
+            "preferred_formation": "TEXT",
+            "average_intensity": "TEXT",
+        },
+    )
     cur.execute(f"""
         CREATE TABLE IF NOT EXISTS knowledge_roster_players (
             id {id_column},

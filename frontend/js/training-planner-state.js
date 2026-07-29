@@ -1,7 +1,7 @@
 (function(){
   const T=window.MatchIQTraining=window.MatchIQTraining||{};
-  T.state={plan:null,library:[]};
-  T.token=()=>localStorage.getItem("matchiq_auth_token")||sessionStorage.getItem("matchiq_auth_token")||"";
+  T.state={plan:null,library:[],profile:null};
+  T.token=()=>window.MatchIQAuth?.getAuthToken?.()||localStorage.getItem("matchiq_auth_token")||sessionStorage.getItem("matchiq_auth_token")||"";
   T.headers=()=>({
     "Content-Type":"application/json",
     "Accept":"application/json",
@@ -12,13 +12,38 @@
     catch{return[]}
   };
   T.days=()=>[...document.querySelectorAll('input[name="day"]:checked')].map(input=>input.value);
+  T.listValue=id=>document.getElementById(id).value.split(",").map(value=>value.trim()).filter(Boolean);
+  T.profilePayload=()=>({
+    category:document.getElementById("category").value.trim()||null,
+    level:document.getElementById("teamLevel").value.trim()||null,
+    average_age:Number(document.getElementById("averageAge").value)||null,
+    player_count:Number(document.getElementById("players").value||18),
+    goalkeeper_count:Number(document.getElementById("keepers").value||2),
+    training_days:T.days(),
+    training_duration:Number(document.getElementById("duration").value||90),
+    match_day:document.getElementById("matchDay").value||null,
+    pitch_type:document.getElementById("pitchType").value.trim()||null,
+    pitch_dimensions:document.getElementById("pitchDimensions").value.trim()||null,
+    available_materials:T.listValue("availableMaterials"),
+    strengths:T.state.profile?.strengths||[],
+    weaknesses:T.state.profile?.weaknesses||[],
+    formations_used:T.state.profile?.formations_used||[],
+    playing_principles:T.listValue("playingPrinciples"),
+    preferred_formation:document.getElementById("preferredFormation").value.trim()||null,
+    average_intensity:document.getElementById("intensity").value,
+    average_availability:T.state.profile?.average_availability??null,
+    physical_level:T.state.profile?.physical_level||null,
+    technical_level:T.state.profile?.technical_level||null,
+    season_objectives:T.listValue("seasonObjectives"),
+    notes:T.state.profile?.notes||null
+  });
   T.settings=force=>({
     training_days:T.days().length?T.days():["Da programmare"],
     players:Number(document.getElementById("players").value||18),
     goalkeepers:Number(document.getElementById("keepers").value||2),
     session_duration:Number(document.getElementById("duration").value||90),
     intensity:document.getElementById("intensity").value,
-    category:"Dilettanti",
+    category:document.getElementById("category").value.trim()||"Dilettanti",
     local_context:{history:T.history()},
     force:Boolean(force)
   });

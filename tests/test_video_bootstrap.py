@@ -119,7 +119,7 @@ class VideoBootstrapRegressionTests(unittest.TestCase):
         self.assertNotIn("video-legacy", NAV_CONFIG.lower())
 
     def test_pwa_release_precaches_only_current_video_assets(self):
-        self.assertIn('const CACHE_NAME = "matchiq-pwa-v144"', WORKER)
+        self.assertIn('const CACHE_NAME = "matchiq-pwa-v145"', WORKER)
         self.assertIn('"/video.html?v=10543"', WORKER)
         self.assertNotIn("10540", "\n".join(
             line for line in WORKER.splitlines()

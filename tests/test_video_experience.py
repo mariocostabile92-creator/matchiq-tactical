@@ -110,7 +110,7 @@ CONTRACT_CASES = [
     ("safe_area", "css", 'env(safe-area-inset-bottom)'),
     ("reduced_motion", "css", '@media(prefers-reduced-motion:reduce)'),
     ("focus_visible", "css", '.vx-shell :focus-visible,.vx-projects :focus-visible'),
-    ("pwa_cache", "worker", 'const CACHE_NAME = "matchiq-pwa-v144"'),
+    ("pwa_cache", "worker", 'const CACHE_NAME = "matchiq-pwa-v145"'),
     ("pwa_video_entry", "worker", '"/video.html?v=10543"'),
     ("pwa_css_entry", "worker", '"/css/video-experience.css?v=10543"'),
     ("pwa_intelligence_css_entry", "worker", '"/css/video-intelligence.css?v=10543"'),
