@@ -14,10 +14,53 @@ COACH_RESPONSE_FIELDS = repository.COACH_COLUMNS | {"updated_at"}
 TEAM_RESPONSE_FIELDS = repository.TEAM_COLUMNS | {"updated_at"}
 ROSTER_RESPONSE_FIELDS = repository.ROSTER_COLUMNS | {"id", "created_at", "updated_at"}
 SOURCE_RESPONSE_FIELDS = {"id", "source_type", "source_id", "metadata", "created_at"}
+TEAM_LIST_FIELDS = {
+    "training_days",
+    "available_materials",
+    "strengths",
+    "weaknesses",
+    "formations_used",
+    "playing_principles",
+    "season_objectives",
+}
+TEAM_INTEGER_BOUNDS = {
+    "player_count": (0, 200),
+    "goalkeeper_count": (0, 30),
+    "training_duration": (30, 180),
+}
+TEAM_FLOAT_BOUNDS = {
+    "average_age": (0.0, 100.0),
+    "average_availability": (0.0, 100.0),
+}
 
 
 def _only(data: Dict, fields: set) -> Dict:
     return {key: data.get(key) for key in fields if key in data}
+
+
+def _bounded_number(value, minimum, maximum, converter):
+    if value is None or value == "" or isinstance(value, bool):
+        return None
+    try:
+        normalized = converter(value)
+    except (TypeError, ValueError):
+        return None
+    return normalized if minimum <= normalized <= maximum else None
+
+
+def _normalize_team_profile(data: Dict) -> Dict:
+    profile = _only(data, TEAM_RESPONSE_FIELDS)
+    for field in TEAM_LIST_FIELDS:
+        value = profile.get(field)
+        profile[field] = [str(item) for item in value if item is not None] if isinstance(value, list) else []
+    for field, bounds in TEAM_INTEGER_BOUNDS.items():
+        profile[field] = _bounded_number(profile.get(field), *bounds, int)
+    for field, bounds in TEAM_FLOAT_BOUNDS.items():
+        profile[field] = _bounded_number(profile.get(field), *bounds, float)
+    for field in repository.TEAM_COLUMNS - TEAM_LIST_FIELDS - set(TEAM_INTEGER_BOUNDS) - set(TEAM_FLOAT_BOUNDS):
+        value = profile.get(field)
+        profile[field] = value if value is None or isinstance(value, str) else None
+    return profile
 
 
 def initialize_foundation() -> None:
@@ -43,7 +86,7 @@ def get_knowledge(user_id: int) -> MatchIQKnowledge:
         id=knowledge_id,
         user_id=int(workspace["user_id"]),
         coach_profile=_only(coach, COACH_RESPONSE_FIELDS),
-        team_profile=_only(team, TEAM_RESPONSE_FIELDS),
+        team_profile=_normalize_team_profile(team),
         roster=[_only(player, ROSTER_RESPONSE_FIELDS) for player in roster],
         source_links=[_only(link, SOURCE_RESPONSE_FIELDS) for link in links],
         created_at=workspace["created_at"],

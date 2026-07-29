@@ -30,6 +30,11 @@ def load_knowledge(user=Depends(require_user)):
     return KnowledgeEnvelope(knowledge=knowledge_service.get_knowledge(_user_id(user)))
 
 
+@router.get("/team-profile", response_model=KnowledgeEnvelope)
+def load_team_profile(user=Depends(require_user)):
+    return KnowledgeEnvelope(knowledge=knowledge_service.get_knowledge(_user_id(user)))
+
+
 @router.put("/coach-profile", response_model=KnowledgeEnvelope)
 def save_coach_profile(payload: CoachProfileUpdate, user=Depends(require_user)):
     knowledge = knowledge_service.update_coach_profile(_user_id(user), payload)

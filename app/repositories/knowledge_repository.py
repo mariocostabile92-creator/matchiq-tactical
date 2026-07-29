@@ -220,11 +220,12 @@ def _json_dump(value: Any) -> str:
 
 def _json_load(value: Any, fallback: Any) -> Any:
     if isinstance(value, (list, dict)):
-        return value
+        return value if isinstance(value, type(fallback)) else fallback
     if not value:
         return fallback
     try:
-        return json.loads(value)
+        decoded = json.loads(value)
+        return decoded if isinstance(decoded, type(fallback)) else fallback
     except (TypeError, ValueError):
         return fallback
 

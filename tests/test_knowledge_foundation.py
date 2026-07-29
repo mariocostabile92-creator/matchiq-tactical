@@ -5,6 +5,9 @@ import types
 import unittest
 from pathlib import Path
 
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
 try:
     import psycopg2  # noqa: F401
 except ModuleNotFoundError:
@@ -17,7 +20,9 @@ except ModuleNotFoundError:
 
 from app.models.knowledge import CoachProfileUpdate, RosterPlayerCreate, RosterPlayerUpdate, TeamProfileUpdate
 from app.repositories import knowledge_repository as repository
+from app.routers.knowledge import router
 from app.services import knowledge_service
+from usage_guard import require_user
 
 
 class KnowledgeFoundationTest(unittest.TestCase):
@@ -131,6 +136,101 @@ class KnowledgeFoundationTest(unittest.TestCase):
         knowledge_service.update_coach_profile(2, CoachProfileUpdate(coach_name="Staff Due"))
         self.assertEqual(knowledge_service.get_knowledge(1).coach_profile.coach_name, "Staff Uno")
         self.assertEqual(knowledge_service.get_knowledge(2).coach_profile.coach_name, "Staff Due")
+
+    def _client(self, user_id=1):
+        app = FastAPI()
+        app.include_router(router)
+        app.dependency_overrides[require_user] = lambda: {"id": user_id}
+        return TestClient(app)
+
+    def test_team_profile_get_without_existing_profile_returns_empty_200(self):
+        response = self._client().get("/api/knowledge/team-profile")
+        self.assertEqual(response.status_code, 200)
+        profile = response.json()["knowledge"]["team_profile"]
+        self.assertIsNone(profile["category"])
+        self.assertEqual(profile["training_days"], [])
+        self.assertEqual(profile["available_materials"], [])
+
+    def test_legacy_team_profile_and_null_fields_are_normalized(self):
+        conn = repository.get_connection()
+        workspace_id = knowledge_service.get_knowledge(1).id
+        conn.execute(
+            """
+            INSERT INTO knowledge_team_profiles (
+                knowledge_id, category, average_age, player_count,
+                goalkeeper_count, strengths, weaknesses, formations_used,
+                playing_principles, average_availability, physical_level,
+                technical_level, season_objectives, notes, training_days,
+                training_duration, available_materials, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                workspace_id,
+                "Dilettanti",
+                "dato-non-valido",
+                None,
+                3,
+                "null",
+                "{}",
+                None,
+                '["4-3-3"]',
+                None,
+                None,
+                None,
+                "null",
+                None,
+                "null",
+                0,
+                "{}",
+                "2026-07-29T10:00:00+00:00",
+            ),
+        )
+        conn.commit()
+        conn.close()
+
+        response = self._client().get("/api/knowledge/team-profile")
+        self.assertEqual(response.status_code, 200)
+        profile = response.json()["knowledge"]["team_profile"]
+        self.assertEqual(profile["category"], "Dilettanti")
+        self.assertIsNone(profile["average_age"])
+        self.assertIsNone(profile["training_duration"])
+        self.assertEqual(profile["strengths"], [])
+        self.assertEqual(profile["weaknesses"], [])
+        self.assertEqual(profile["formations_used"], [])
+        self.assertEqual(profile["playing_principles"], ["4-3-3"])
+        self.assertEqual(profile["training_days"], [])
+        self.assertEqual(profile["available_materials"], [])
+
+    def test_team_profile_save_refresh_and_user_isolation(self):
+        conn = repository.get_connection()
+        conn.execute("INSERT INTO users (id, email) VALUES (2, 'other@matchiq.test')")
+        conn.commit()
+        conn.close()
+
+        payload = {
+            "category": "Under 17",
+            "level": "Regionale",
+            "training_days": ["Martedi", "Giovedi"],
+            "training_duration": 90,
+            "available_materials": ["Palloni", "Cinesini"],
+            "preferred_formation": "4-3-3",
+        }
+        saved = self._client(1).put("/api/knowledge/team-profile", json=payload)
+        self.assertEqual(saved.status_code, 200)
+
+        reloaded = self._client(1).get("/api/knowledge/team-profile")
+        self.assertEqual(reloaded.status_code, 200)
+        self.assertEqual(reloaded.json()["knowledge"]["team_profile"]["training_days"], ["Martedi", "Giovedi"])
+
+        isolated = self._client(2).get("/api/knowledge/team-profile")
+        self.assertEqual(isolated.status_code, 200)
+        self.assertIsNone(isolated.json()["knowledge"]["team_profile"]["category"])
+
+    def test_team_profile_requires_authentication(self):
+        app = FastAPI()
+        app.include_router(router)
+        response = TestClient(app).get("/api/knowledge/team-profile")
+        self.assertEqual(response.status_code, 401)
 
 
 if __name__ == "__main__":
